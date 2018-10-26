@@ -1,18 +1,33 @@
 import inspect
-from typing import Generator, Sequence
+from typing import Any, Callable, Generator, Iterable, Mapping
 
+from python_tester.collect.fixtures import FixtureError, FixtureRegistry
 from python_tester.models.test_result import TestResult
 
 
-def run_tests_in_modules(modules: Sequence) -> Generator[TestResult, None, None]:
+def resolve_fixtures(fixture_map: Mapping[str, Callable]) -> Mapping[str, Any]:
+    return {name: func() for name, func in fixture_map.items()}
+
+
+def run_tests_in_modules(
+    modules: Iterable[Any], fixture_registry: FixtureRegistry
+) -> Generator[TestResult, None, None]:
     for mod in modules:
         for item in dir(mod):
             if item.startswith("test_"):
                 test_name = item
                 test_fn = getattr(mod, test_name)
-                try:
-                    if inspect.isfunction(test_fn):
-                        test_fn()
+                if inspect.isfunction(test_fn):
+                    try:
+                        fixtures = fixture_registry.get_fixtures_for_test(test_fn)
+                    except FixtureError as e:
+                        yield TestResult(test_name, False, e, message=str(e))
+                        continue
+
+                    args = resolve_fixtures(fixtures)
+
+                    try:
+                        test_fn(**args)
                         yield TestResult(test_name, True, None)
-                except Exception as e:
-                    yield TestResult(test_name, False, e)
+                    except Exception as e:
+                        yield TestResult(test_name, False, e)

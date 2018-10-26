@@ -11,5 +11,7 @@ def another_fixture():
     return 1234
 
 
-def test_one_plus_two_equals_three():
+def test_one_plus_two_equals_three(i_am_a_fixture, another_fixture):
+    print('inside test using fixture: ', i_am_a_fixture)
+    print('inside test using fixture: ', another_fixture)
     assert 1 + 2 == 4

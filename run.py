@@ -9,7 +9,7 @@ from python_tester.runner.runner import run_tests_in_modules
 
 def setup_cmd_line():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', help='path of directory containing tests')
+    parser.add_argument("--path", help="path of directory containing tests")
     return parser
 
 
@@ -27,13 +27,11 @@ def run():
 
     mod_infos = get_info_for_modules(path_to_tests)
     test_mod_infos = (info for info in mod_infos if is_test_module(info))
-    modules = list(load_modules(test_mod_infos))
-    # fixtures = load_fixtures_in_modules(mods)
+    modules = load_modules(test_mod_infos)
+    test_results = run_tests_in_modules(modules, fixture_registry)
 
     # Fixtures are now loaded (since the modules have been loaded)
     print("Loaded fixtures", set(fixture_registry.get_all()))
-
-    test_results = run_tests_in_modules(modules)
 
     passed, failed = 0, 0
     for result in test_results:
