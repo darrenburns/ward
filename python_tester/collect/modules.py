@@ -4,7 +4,7 @@ import os
 import pkgutil
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
-from typing import Any, Generator, TypeVar, List, Iterable
+from typing import Any, Generator, Iterable, List
 
 
 def get_info_for_modules(path: str) -> Generator[pkgutil.ModuleInfo, None, None]:

@@ -5,8 +5,9 @@ from python_tester.collect.fixtures import FixtureError, FixtureRegistry
 from python_tester.models.test_result import TestResult
 
 
-def resolve_fixtures(fixture_map: Mapping[str, Callable]) -> Mapping[str, Any]:
-    return {name: func() for name, func in fixture_map.items()}
+# def resolve_fixtures(fixture_map: Mapping[str, Callable]) -> Mapping[str, Any]:
+    # Check if the fixture takes any args (other fixtures itself)
+    # return {name: func() for name, func in fixture_map.items()}
 
 
 def run_tests_in_modules(
@@ -19,12 +20,10 @@ def run_tests_in_modules(
                 test_fn = getattr(mod, test_name)
                 if inspect.isfunction(test_fn):
                     try:
-                        fixtures = fixture_registry.get_fixtures_for_test(test_fn)
+                        args = fixture_registry.resolve_fixtures_for_test(test_fn)
                     except FixtureError as e:
                         yield TestResult(test_name, False, e, message=str(e))
                         continue
-
-                    args = resolve_fixtures(fixtures)
 
                     try:
                         test_fn(**args)
