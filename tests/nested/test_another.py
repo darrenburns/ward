@@ -1,4 +1,4 @@
-from python_tester.collect.fixture_loader import fixture
+from python_tester.collect.fixtures import fixture
 
 
 @fixture

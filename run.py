@@ -1,17 +1,16 @@
 import argparse
 import pkgutil
-from typing import Any, Dict, Sequence
+from typing import Any, Dict
 
-from python_tester.collect.module_loader import get_info_for_modules, load_modules
+from python_tester.collect.fixtures import fixture_registry
+from python_tester.collect.modules import get_info_for_modules, load_modules
 from python_tester.runner.runner import run_tests_in_modules
 
-parser = argparse.ArgumentParser()
 
-parser.add_argument('--path', help='path of directory containing tests')
-
-
-class Fixture:
-    pass
+def setup_cmd_line():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path', help='path of directory containing tests')
+    return parser
 
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:
@@ -20,16 +19,21 @@ def is_test_module(module: pkgutil.ModuleInfo) -> bool:
 
 def run():
     print("... Running! ...")
-    args: Dict[str, Any] = vars(parser.parse_args())
+
+    cmd_line = setup_cmd_line()
+    args: Dict[str, Any] = vars(cmd_line.parse_args())
 
     path_to_tests = args.get("path") or "."
 
-    # fixtures: Sequence[Fixture] = collect_fixtures()
-
     mod_infos = get_info_for_modules(path_to_tests)
     test_mod_infos = (info for info in mod_infos if is_test_module(info))
-    mods = load_modules(test_mod_infos)
-    test_results = run_tests_in_modules(mods)
+    modules = list(load_modules(test_mod_infos))
+    # fixtures = load_fixtures_in_modules(mods)
+
+    # Fixtures are now loaded (since the modules have been loaded)
+    print("Loaded fixtures", set(fixture_registry.get_all()))
+
+    test_results = run_tests_in_modules(modules)
 
     passed, failed = 0, 0
     for result in test_results:

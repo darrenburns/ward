@@ -1,10 +1,10 @@
 import inspect
-from typing import Generator, Any
+from typing import Generator, Sequence
 
 from python_tester.models.test_result import TestResult
 
 
-def run_tests_in_modules(modules: Generator[Any, None, None]) -> Generator[TestResult, None, None]:
+def run_tests_in_modules(modules: Sequence) -> Generator[TestResult, None, None]:
     for mod in modules:
         for item in dir(mod):
             if item.startswith("test_"):
