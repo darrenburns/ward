@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Mapping, Dict
+from typing import Callable, Dict, Mapping
 
 
 class FixtureError(Exception):
@@ -31,11 +31,8 @@ class FixtureRegistry:
 
     def resolve_fixtures_for_test(self, test_func: Callable) -> Mapping[str, Callable]:
         resolved_fixtures = {}
-        # TODO Problem - this will call the test function as well as the fixtures
-        # we just want this to resolve the fixtures so we can pass them up.
         args = self._get_fixtures_for_func(test_func, resolved_fixtures, 0)
-        print(f"RESOLVED ARGS FOR {test_func.__name__} ARE {args}")
-        return resolved_fixtures
+        return args
 
     def _get_fixtures_for_func(self, func, out_fixtures, depth) -> Dict:
         dep_names = inspect.signature(func).parameters
@@ -43,23 +40,20 @@ class FixtureRegistry:
             # We've a leaf node of the fixture dependency tree (base case)
             resolved = func()
             out_fixtures[func.__name__] = resolved
+            return {}
         else:
             # Resolve as we traverse fixture tree
-            print(f"{func.__name__} has deps {dep_names}")
             args = {}
             for dep_name in dep_names:
                 fixture = self._get_fixture(dep_name)
                 self._get_fixtures_for_func(fixture, out_fixtures, depth + 1)
+                args = {dep_name: out_fixtures.get(dep_name), **args}
 
-                args.update({dep_name: out_fixtures.get(dep_name)})
-                if depth == 0:
-                    return args
+            if depth == 0:
+                return args
 
-            print(f"{depth} calling {func.__name__} with args {args}")
             resolved = func(**args)
             out_fixtures[func.__name__] = resolved
-
-
 
 
 fixture_registry = FixtureRegistry()

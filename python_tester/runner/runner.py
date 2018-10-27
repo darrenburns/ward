@@ -1,4 +1,5 @@
 import inspect
+import logging
 from typing import Any, Callable, Generator, Iterable, Mapping
 
 from python_tester.collect.fixtures import FixtureError, FixtureRegistry
@@ -29,4 +30,5 @@ def run_tests_in_modules(
                         test_fn(**args)
                         yield TestResult(test_name, True, None)
                     except Exception as e:
+                        logging.exception("Test failed")
                         yield TestResult(test_name, False, e)
