@@ -36,24 +36,29 @@ class FixtureRegistry:
 
     def _get_fixtures_for_func(self, func, out_fixtures, depth) -> Dict:
         dep_names = inspect.signature(func).parameters
+        fixture_name = func.__name__
         if len(dep_names) == 0:
-            # We've a leaf node of the fixture dependency tree (base case)
-            resolved = func()
-            out_fixtures[func.__name__] = resolved
+            # We've reached a leaf node of the fixture dependency tree (base case)
+            out_fixtures[fixture_name] = func()
             return {}
         else:
             # Resolve as we traverse fixture tree
             args = {}
             for dep_name in dep_names:
+                is_recursive_dependency = dep_name == fixture_name
+                if is_recursive_dependency:
+                    raise FixtureError(f"Fixture {func} depends on itself.")
+
                 fixture = self._get_fixture(dep_name)
                 self._get_fixtures_for_func(fixture, out_fixtures, depth + 1)
                 args = {dep_name: out_fixtures.get(dep_name), **args}
 
+            # Don't execute the root of the fixture tree (the test itself)
             if depth == 0:
                 return args
 
-            resolved = func(**args)
-            out_fixtures[func.__name__] = resolved
+            out_fixtures[fixture_name] = func(**args)
+            return args
 
 
 fixture_registry = FixtureRegistry()
