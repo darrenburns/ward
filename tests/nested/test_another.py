@@ -11,5 +11,10 @@ def another_fixture():
     return 1234
 
 
-def test_one_plus_two_equals_three(i_am_a_fixture):
+@fixture
+def some_other_fixture():
+    return "hello"
+
+
+def test_one_plus_two_equals_three(i_am_a_fixture, some_other_fixture):
     assert 1 + 2 == 4
