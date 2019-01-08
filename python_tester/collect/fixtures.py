@@ -11,7 +11,10 @@ class FixtureRegistry:
         self._fixtures = {}
 
         def wrapper(func):
-            self._fixtures[func.__name__] = func
+            if func.__name__ not in self._fixtures:
+                self._fixtures[func.__name__] = func
+            else:
+                raise FixtureError(f"Multiple fixtures named '{func.__name__}'.")
             return func
 
         self._wrapper = wrapper
@@ -39,8 +42,7 @@ class FixtureRegistry:
         fixture_name = func.__name__
         if len(dep_names) == 0:
             # We've reached a leaf node of the fixture dependency tree (base case)
-            if not fixture_name in out_fixtures:
-                out_fixtures[fixture_name] = func()
+            out_fixtures[fixture_name] = func()
             return {}
         else:
             # Resolve as we traverse fixture tree
@@ -58,8 +60,8 @@ class FixtureRegistry:
             if depth == 0:
                 return args
 
-            if not fixture_name in out_fixtures:
-                out_fixtures[fixture_name] = func(**args)
+            out_fixtures[fixture_name] = func(**args)
+
             return args
 
 
