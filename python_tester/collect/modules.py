@@ -12,7 +12,7 @@ def get_info_for_modules(path: str) -> Generator[pkgutil.ModuleInfo, None, None]
     for module in pkgutil.iter_modules([path]):
         yield module
 
-    # Check for modules in the subdirecories
+    # Recursively traverse subdirectories
     for root, dirs, _ in os.walk(path):
         for dir_name in dirs:
             dir_path = os.path.join(root, dir_name)
