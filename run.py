@@ -74,6 +74,10 @@ def run():
 
         sleep(0.1)
 
+    total = passed + failed
+    if total == 0:
+        write_over_line(term.cyan_bold(f"No tests found in directory '{path_to_tests}'"), 1, term)
+
     reset_cursor(term)
 
 
