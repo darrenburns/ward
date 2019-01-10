@@ -1,27 +1,26 @@
 import inspect
-import logging
-from typing import Generator, Callable
+from typing import Generator
 
 from python_tester.collect.fixtures import FixtureError, FixtureRegistry
+from python_tester.models.test import Test
 from python_tester.models.test_result import TestResult
 
 
 def run_tests(
-        tests: Generator[Callable, None, None],
+        tests: Generator[Test, None, None],
         fixture_registry: FixtureRegistry
 ) -> Generator[TestResult, None, None]:
-    for test_fn in tests:
-        test_name = test_fn.__name__
-        if inspect.isfunction(test_fn):
-            try:
-                args = fixture_registry.resolve_fixtures_for_test(test_fn)
-            except FixtureError as e:
-                yield TestResult(test_name, False, e, message="Error! " + str(e))
-                continue
+    for test in tests:
+        test_name = test.get_test_name()
+        try:
+            args = fixture_registry.resolve_fixtures_for_test(test)
+        except FixtureError as e:
+            yield TestResult(test_name, False, e, message="Error! " + str(e))
+            continue
 
-            try:
-                test_fn(**args)
-                yield TestResult(test_name, True, None)
-            except Exception as e:
-                logging.exception("Test failed")
-                yield TestResult(test_name, False, e)
+        try:
+            test(**args)
+            yield TestResult(test_name, True, None)
+        except Exception as e:
+            # logging.exception("Test failed")
+            yield TestResult(test_name, False, e)

@@ -43,7 +43,7 @@ def run():
 
     passed, failed = 0, 0
     for result in test_results:
-        sleep(1)
+        sleep(0.1)
         if result.was_success:
             passed += 1
         else:
@@ -56,7 +56,7 @@ def run():
 
         write_over_progress_bar(pass_pct, fail_pct, term)
 
-        sleep(1)
+        sleep(0.1)
 
     print(f"{passed} tests passed, {failed} tests failed")
 

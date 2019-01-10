@@ -1,6 +1,8 @@
 import inspect
 from typing import Callable, Dict, Mapping
 
+from python_tester.models.test import Test
+
 
 class FixtureError(Exception):
     pass
@@ -32,9 +34,9 @@ class FixtureRegistry:
     def get_all(self):
         return self._fixtures
 
-    def resolve_fixtures_for_test(self, test_func: Callable) -> Mapping[str, Callable]:
+    def resolve_fixtures_for_test(self, test: Test) -> Mapping[str, Callable]:
         resolved_fixtures = {}
-        args = self._get_fixtures_for_func(test_func, resolved_fixtures, 0)
+        args = self._get_fixtures_for_func(test.test_function, resolved_fixtures, 0)
         return args
 
     def _get_fixtures_for_func(self, func, out_fixtures, depth) -> Dict:

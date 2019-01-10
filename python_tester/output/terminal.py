@@ -8,8 +8,16 @@ ESCAPE_CODE_MARGIN_BUFFER = 18
 def write_over_live_message(str_to_write: str, term: Terminal):
     write_over_line(str_to_write, 2, term)
 
+
 def write_over_progress_bar(green_pct: float, red_pct: float, term: Terminal):
-    bar = term.green("█" * int(green_pct * term.width)) + term.red("█" * int(red_pct * term.width))
+    num_green_bars = int(green_pct * term.width)
+    num_red_bars = int(red_pct * term.width)
+
+    # Deal with rounding, converting to int could leave us with 1 bar less, so make it green
+    if term.width - num_green_bars - num_red_bars == 1:
+        num_green_bars += 1
+
+    bar = term.green("█" * num_green_bars) + term.red("█" * num_red_bars)
     write_over_line(bar, 1, term)
 
 
