@@ -36,6 +36,9 @@ class FixtureRegistry:
 
     def resolve_fixtures_for_test(self, test: Test) -> Mapping[str, Callable]:
         resolved_fixtures = {}
+        if len(inspect.signature(test.test_function).parameters) == 0:
+            # If the test has no fixtures, don't try to traverse fixture tree at all
+            return {}
         args = self._get_fixtures_for_func(test.test_function, resolved_fixtures, 0)
         return args
 

@@ -7,4 +7,5 @@ def something_three():
 
 
 def test_something_or_other():
+    raise ValueError()
     assert 1 + 1 == 2

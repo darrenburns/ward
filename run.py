@@ -50,7 +50,7 @@ def run():
     passed, failed = 0, 0
     spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
     for result in test_results:
-        sleep(.1)
+        # sleep(.1)
         if result.was_success:
             passed += 1
         else:
@@ -72,11 +72,19 @@ def run():
 
         write_over_line(info_bar, 1, term)
 
-        sleep(0.1)
+        # sleep(0.1)
 
     total = passed + failed
     if total == 0:
         write_over_line(term.cyan_bold(f"No tests found in directory '{path_to_tests}'"), 1, term)
+
+    if failing_test_results:
+        print()
+        for test_result in failing_test_results:
+            output = test_result.test.get_test_name()
+
+            print(output)
+            print(test_result.error.__traceback__)
 
     reset_cursor(term)
 
