@@ -1,6 +1,7 @@
 import argparse
 import pkgutil
 import sys
+from itertools import cycle
 from time import sleep
 from typing import Any, Dict
 
@@ -43,6 +44,7 @@ def run():
 
 
     passed, failed = 0, 0
+    spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
     for result in test_results:
         sleep(0.1)
         if result.was_success:
@@ -56,7 +58,7 @@ def run():
         fail_pct = 1.0 - pass_pct
 
         write_over_progress_bar(pass_pct, fail_pct, term)
-        write_over_line(f"{passed} tests passed, {failed} tests failed", 1, term)
+        write_over_line(f"{next(spinner)} {passed} tests passed, {failed} tests failed", 1, term)
 
         sleep(0.1)
 
