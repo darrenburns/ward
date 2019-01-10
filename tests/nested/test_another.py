@@ -28,11 +28,17 @@ def test_one_plus_two_equals_threeb(one, two, three):
 def test_one_plus_two_equals_threec(one, two, three):
     assert one + two == three
 
+def test_one_plus_two_equals_three_ERROR(one, two):
+    assert one + two == 9
+
 def test_one_plus_two_equals_threed(one, two, three):
     assert one + two == three
 
 def test_one_plus_two_equals_threee(one, two, three):
     assert one + two == three
+
+def test_something_or_other(i_am_a_fixture):
+    assert 1 + 1 == 2
 
 def test_one_plus_two_equals_threef(one, two, three):
     assert one + two == three
@@ -43,8 +49,6 @@ def test_one_plus_two_equals_threeg(one, two, three):
 def test_one_plus_two_equals_threeh(one, two, three):
     assert one + two == three
 
-def test_one_plus_two_equals_three_ERROR(one, two):
-    assert one + two == 9
 
 def test_one_plus_two_equals_threej(one, two, three):
     assert one + two == three

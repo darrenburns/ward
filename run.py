@@ -14,6 +14,9 @@ from python_tester.output.terminal import write_test_result, write_over_progress
 from python_tester.runner.runner import run_tests
 
 
+HEADER = "python-tester v0.0.1"
+
+
 def setup_cmd_line():
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", help="path of directory containing tests")
@@ -40,14 +43,14 @@ def run():
 
     # Fixtures are now loaded (since the modules have been loaded)
     print(term.hide_cursor())
-    print()
-    print()
+    print("\n")
+    write_over_line(term.cyan_bold(HEADER), 4, term)
 
     failing_test_results = []
     passed, failed = 0, 0
     spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
     for result in test_results:
-        sleep(.2)
+        sleep(.1)
         if result.was_success:
             passed += 1
         else:
@@ -62,16 +65,16 @@ def run():
         write_over_progress_bar(pass_pct, fail_pct, term)
 
         info_bar = term.cyan_bold(f"{next(spinner)}"
-                                  f" {passed} tests passed | "
-                                    f"{failed} tests failed | "
+                                  f" {passed + failed} tests ran | "
+                                  f"{failed} tests failed | "
+                                  f"{passed} tests passed | "
                                   f"{pass_pct * 100:.2f}% success rate ")
 
         write_over_line(info_bar, 1, term)
 
-        sleep(0.2)
+        sleep(0.1)
 
     reset_cursor(term)
-
 
 
 if __name__ == "__main__":
