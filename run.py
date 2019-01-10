@@ -1,16 +1,16 @@
 import argparse
 import pkgutil
-import sys
 from itertools import cycle
 from time import sleep
-from typing import Any, Dict
+from typing import Any, Dict, Generator
 
 from blessings import Terminal
 
 from python_tester.collect.fixtures import fixture_registry
 from python_tester.collect.modules import get_info_for_modules, load_modules
 from python_tester.collect.tests import get_tests_in_modules
-from python_tester.output.terminal import write_test_result, write_over_progress_bar, write_over_line
+from python_tester.models.test_result import TestResult
+from python_tester.output.terminal import write_test_result, write_over_progress_bar, write_over_line, reset_cursor
 from python_tester.runner.runner import run_tests
 
 
@@ -36,21 +36,23 @@ def run():
     test_mod_infos = (info for info in mod_infos if is_test_module(info))
     modules = load_modules(test_mod_infos)
     tests = get_tests_in_modules(modules)
-    test_results = run_tests(tests, fixture_registry)
+    test_results: Generator[TestResult, None, None] = run_tests(tests, fixture_registry)
 
     # Fixtures are now loaded (since the modules have been loaded)
-    print(f"Found {len(set(fixture_registry.get_all()))} fixtures. Use --show-fixtures to list them.")
+    print(term.hide_cursor())
+    print()
     print()
 
-
+    failing_test_results = []
     passed, failed = 0, 0
     spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
     for result in test_results:
-        sleep(0.1)
+        sleep(.2)
         if result.was_success:
             passed += 1
         else:
             failed += 1
+            failing_test_results.append(result)
 
         write_test_result(str(result), term)
 
@@ -58,11 +60,17 @@ def run():
         fail_pct = 1.0 - pass_pct
 
         write_over_progress_bar(pass_pct, fail_pct, term)
-        write_over_line(f"{next(spinner)} {passed} tests passed, {failed} tests failed", 1, term)
 
-        sleep(0.1)
+        info_bar = term.cyan_bold(f"{next(spinner)}"
+                                  f" {passed} tests passed | "
+                                    f"{failed} tests failed | "
+                                  f"{pass_pct * 100:.2f}% success rate ")
 
-    print(term.move(term.height - 1, 0))
+        write_over_line(info_bar, 1, term)
+
+        sleep(0.2)
+
+    reset_cursor(term)
 
 
 

@@ -26,3 +26,8 @@ def write_over_line(str_to_write: str, offset_from_bottom: int, term: Terminal):
         right_margin = max(0, term.width - len(str_to_write) + ESC_CODE_RHS_BUFFER) * " "
         sys.stdout.write(f"{str_to_write}{right_margin}")
         sys.stdout.flush()
+
+
+def reset_cursor(term: Terminal):
+    print(term.normal_cursor(), )
+    print(term.move(term.height - 1, 0), )
