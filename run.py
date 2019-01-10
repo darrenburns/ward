@@ -9,7 +9,7 @@ from blessings import Terminal
 from python_tester.collect.fixtures import fixture_registry
 from python_tester.collect.modules import get_info_for_modules, load_modules
 from python_tester.collect.tests import get_tests_in_modules
-from python_tester.output.terminal import write_over_live_message, write_over_progress_bar
+from python_tester.output.terminal import write_test_result, write_over_progress_bar, write_over_line
 from python_tester.runner.runner import run_tests
 
 
@@ -41,6 +41,7 @@ def run():
     print(f"Found {len(set(fixture_registry.get_all()))} fixtures. Use --show-fixtures to list them.")
     print()
 
+
     passed, failed = 0, 0
     for result in test_results:
         sleep(0.1)
@@ -49,16 +50,18 @@ def run():
         else:
             failed += 1
 
-        write_over_live_message(str(result), term)
+        write_test_result(str(result), term)
 
         pass_pct = passed / (passed + failed)
         fail_pct = 1.0 - pass_pct
 
         write_over_progress_bar(pass_pct, fail_pct, term)
+        write_over_line(f"{passed} tests passed, {failed} tests failed", 1, term)
 
         sleep(0.1)
 
-    print(f"{passed} tests passed, {failed} tests failed")
+    print(term.move(term.height - 1, 0))
+
 
 
 if __name__ == "__main__":
