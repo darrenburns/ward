@@ -21,5 +21,4 @@ def run_tests(
             yield TestResult(test, True, None)
         except Exception as e:
             # logging.exception("Test failed")
-            breakpoint()
             yield TestResult(test, False, e)

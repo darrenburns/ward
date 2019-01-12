@@ -1,4 +1,7 @@
+from parametrized import parametrized
+
 from python_tester.collect.fixtures import fixture
+from python_tester.collect.param import with_params
 
 
 @fixture
@@ -25,11 +28,15 @@ def test_one_plus_two_equals_threea(one, two, three):
 def test_one_plus_two_equals_threeb(one, two, three):
     assert one + two == three
 
-def test_one_plus_two_equals_threec(one, two, three):
-    assert one + two == three
+@with_params([
+    ('param', 'another'),
+    ('valueA', 'valueB'),
+])
+def test_one_plus_two_equals_threec(param, another, one, two, three):
+    assert one + two + param == three + param
 
 def test_one_plus_two_equals_three_ERROR(one, two):
-    assert one + two == 9
+    assert one + two  == 9
 
 def test_one_plus_two_equals_threed(one, two, three):
     assert one + two == three

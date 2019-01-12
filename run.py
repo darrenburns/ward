@@ -1,5 +1,8 @@
 import argparse
+import itertools
 import pkgutil
+import sys
+import traceback
 from itertools import cycle
 from time import sleep
 from typing import Any, Dict, Generator
@@ -50,7 +53,7 @@ def run():
     passed, failed = 0, 0
     spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
     for result in test_results:
-        # sleep(.1)
+        sleep(.1)
         if result.was_success:
             passed += 1
         else:
@@ -72,7 +75,7 @@ def run():
 
         write_over_line(info_bar, 1, term)
 
-        # sleep(0.1)
+        sleep(0.1)
 
     total = passed + failed
     if total == 0:
@@ -81,10 +84,26 @@ def run():
     if failing_test_results:
         print()
         for test_result in failing_test_results:
-            output = test_result.test.get_test_name()
+            test_name = test_result.test.get_test_name()
+            test_result_heading = f"{term.cyan_bold}{test_name}{term.normal}"
+            num_non_separator_chars = 4
+            write_over_line(
+                f"-- {test_result_heading}{term.dim} "
+                f"{'-' * (term.width - num_non_separator_chars - len(test_name))}{term.normal}",
+                1,
+                term,
+            )
 
-            print(output)
-            print(test_result.error.__traceback__)
+            print()
+
+            err = test_result.error
+            trc = traceback.format_exception(None, err, err.__traceback__)
+            write_over_line(
+                "".join(trc),
+                1,
+                term,
+            )
+
 
     reset_cursor(term)
 
