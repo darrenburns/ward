@@ -2,11 +2,9 @@ import sys
 
 from blessings import Terminal
 
-ESC_CODE_RHS_BUFFER = 18
-
 
 def write_test_result(str_to_write: str, term: Terminal):
-    write_over_line(str_to_write, 3, term)
+    write_over_line(str_to_write, 2, term)
 
 
 def write_over_progress_bar(green_pct: float, red_pct: float, term: Terminal):
@@ -22,8 +20,9 @@ def write_over_progress_bar(green_pct: float, red_pct: float, term: Terminal):
 
 
 def write_over_line(str_to_write: str, offset_from_bottom: int, term: Terminal):
+    esc_code_rhs_margin = 28  # chars that are part of escape code, but NOT actually printed.
     with term.location(None, term.height - offset_from_bottom):
-        right_margin = max(0, term.width - len(str_to_write) + ESC_CODE_RHS_BUFFER) * " "
+        right_margin = max(0, term.width - len(str_to_write) + esc_code_rhs_margin) * " "
         sys.stdout.write(f"{str_to_write}{right_margin}")
         sys.stdout.flush()
 

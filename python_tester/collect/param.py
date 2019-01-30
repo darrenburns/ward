@@ -5,10 +5,10 @@ from parametrized import parametrized
 
 from python_tester.models.test import Test
 
-PARAMETRISED_TESTS: Mapping[str, Callable] = {}
+PARAMETERISED_TESTS: Mapping[str, Callable] = {}
 
 
-class ParametrisedTest(Test):
+class parameterisedTest(Test):
     def __init__(self, test_function: Callable, module: Any):
         super().__init__(test_function, module)
 
@@ -17,7 +17,7 @@ def with_params(*args, **kwargs):
     arguments = args
 
     def decorator_with_params(test_func):
-        PARAMETRISED_TESTS[get_identifier_for_test(test_func)] = test_func
+        PARAMETERISED_TESTS[get_identifier_for_test(test_func)] = test_func
 
         @functools.wraps(test_func)
         def wrapped(*args, **kwargs):
@@ -28,10 +28,10 @@ def with_params(*args, **kwargs):
     return decorator_with_params
 
 
-def is_parametrised(function: Callable):
+def is_parameterised(function: Callable):
     wrapped_fn = getattr(function, '__wrapped__', function)
     identifier = get_identifier_for_test(wrapped_fn)
-    return identifier and identifier in PARAMETRISED_TESTS
+    return identifier and identifier in PARAMETERISED_TESTS
 
 
 def get_identifier_for_test(test_func: Callable) -> str:

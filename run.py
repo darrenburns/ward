@@ -1,13 +1,12 @@
 import argparse
-import itertools
 import pkgutil
-import sys
 import traceback
 from itertools import cycle
 from time import sleep
 from typing import Any, Dict, Generator
 
 from blessings import Terminal
+from colorama import Fore, Style
 
 from python_tester.collect.fixtures import fixture_registry
 from python_tester.collect.modules import get_info_for_modules, load_modules
@@ -15,7 +14,6 @@ from python_tester.collect.tests import get_tests_in_modules
 from python_tester.models.test_result import TestResult
 from python_tester.output.terminal import write_test_result, write_over_progress_bar, write_over_line, reset_cursor
 from python_tester.runner.runner import run_tests
-
 
 HEADER = "python-tester v0.0.1"
 
@@ -47,13 +45,13 @@ def run():
     # Fixtures are now loaded (since the modules have been loaded)
     print(term.hide_cursor())
     print("\n")
-    write_over_line(term.cyan_bold(HEADER), 4, term)
+    write_over_line(f"{Fore.CYAN}{HEADER}", 4, term)
 
     failing_test_results = []
     passed, failed = 0, 0
     spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
     for result in test_results:
-        sleep(.1)
+        sleep(.3)
         if result.was_success:
             passed += 1
         else:
@@ -61,21 +59,23 @@ def run():
             failing_test_results.append(result)
 
         write_test_result(str(result), term)
+        print()
 
         pass_pct = passed / (passed + failed)
         fail_pct = 1.0 - pass_pct
 
         write_over_progress_bar(pass_pct, fail_pct, term)
 
-        info_bar = term.cyan_bold(f"{next(spinner)}"
-                                  f" {passed + failed} tests ran | "
-                                  f"{failed} tests failed | "
-                                  f"{passed} tests passed | "
-                                  f"{pass_pct * 100:.2f}% success rate ")
+        info_bar = f"{Fore.CYAN}{next(spinner)}" \
+        f" {passed + failed} tests ran {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
+        f"{failed} tests failed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
+        f"{passed} tests passed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
+        f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
 
         write_over_line(info_bar, 1, term)
 
-        sleep(0.1)
+        sleep(.3)
+
 
     total = passed + failed
     if total == 0:

@@ -1,7 +1,7 @@
 import inspect
 from typing import Callable, Dict
 
-from python_tester.collect.param import is_parametrised, PARAMETRISED_TESTS, get_identifier_for_test
+from python_tester.collect.param import is_parameterised, PARAMETERISED_TESTS, get_identifier_for_test
 from python_tester.models.test import Test
 
 
@@ -36,16 +36,11 @@ class FixtureRegistry:
         return self._fixtures
 
     def resolve_fixtures_for_test(self, test: Test) -> Dict[str, Callable]:
-        if is_parametrised(test.test_function):
-            # The test is parametrized, so we need to differentiate between fixtures and params
-            breakpoint()
-            inspect.signature(test.test_function)
-
         if len(inspect.signature(test.test_function).parameters) == 0:
             # If the test has no fixtures, don't try to traverse fixture tree at all
             return {}
 
-            # parametrised_test_registry
+            # parameterised_test_registry
 
         resolved_fixtures = {}
         args = self._get_fixtures_for_func(test.test_function, resolved_fixtures, 0)

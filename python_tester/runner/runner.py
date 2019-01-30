@@ -10,6 +10,9 @@ def run_tests(
         fixture_registry: FixtureRegistry
 ) -> Generator[TestResult, None, None]:
     for test in tests:
+        # Check if the test is parameterised
+
+
         try:
             args = fixture_registry.resolve_fixtures_for_test(test)
         except FixtureError as e:
