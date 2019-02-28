@@ -19,6 +19,13 @@ def one():
     return 1
 
 
+@with_params([
+    ('param', 'another'),
+    ('valueA', 'valueB'),
+])
+def test_one_plus_two_equals_threec(param, another, one, two, three):
+    assert one + two + param == three + param
+
 def test_one_plus_two_equals_three(one, two, three):
     assert one + two == three
 
@@ -27,13 +34,6 @@ def test_one_plus_two_equals_threea(one, two, three):
 
 def test_one_plus_two_equals_threeb(one, two, three):
     assert one + two == three
-
-@with_params([
-    ('param', 'another'),
-    ('valueA', 'valueB'),
-])
-def test_one_plus_two_equals_threec(param, another, one, two, three):
-    assert one + two + param == three + param
 
 def test_one_plus_two_equals_threed(one, two, three):
     assert one + two == three

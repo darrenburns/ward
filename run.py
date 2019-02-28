@@ -45,11 +45,14 @@ def run():
     # Fixtures are now loaded (since the modules have been loaded)
     print(term.hide_cursor())
     print("\n")
-    write_over_line(f"{Fore.CYAN}{HEADER}", 4, term)
+    num_fixtures = len(fixture_registry)
+    write_over_line(f"{Fore.CYAN}[{HEADER}] Discovered {num_fixtures} fixtures.\nRunning tests...", 4, term)
+
 
     failing_test_results = []
     passed, failed = 0, 0
     spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
+    info_bar = ""
     for result in test_results:
         sleep(.3)
         if result.was_success:
@@ -59,7 +62,6 @@ def run():
             failing_test_results.append(result)
 
         write_test_result(str(result), term)
-        print()
 
         pass_pct = passed / (passed + failed)
         fail_pct = 1.0 - pass_pct
@@ -72,9 +74,11 @@ def run():
         f"{passed} tests passed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
         f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
 
-        write_over_line(info_bar, 1, term)
+        write_over_line(info_bar, 0, term)
 
         sleep(.3)
+
+    print()
 
 
     total = passed + failed
@@ -82,7 +86,6 @@ def run():
         write_over_line(term.cyan_bold(f"No tests found in directory '{path_to_tests}'"), 1, term)
 
     if failing_test_results:
-        print()
         for test_result in failing_test_results:
             test_name = test_result.test.get_test_name()
             test_result_heading = f"{term.cyan_bold}{test_name}{term.normal}"
@@ -90,22 +93,21 @@ def run():
             write_over_line(
                 f"-- {test_result_heading}{term.dim} "
                 f"{'-' * (term.width - num_non_separator_chars - len(test_name))}{term.normal}",
-                1,
+                0,
                 term,
             )
-
-            print()
 
             err = test_result.error
             trc = traceback.format_exception(None, err, err.__traceback__)
             write_over_line(
                 "".join(trc),
-                1,
+                0,
                 term,
             )
 
-
     reset_cursor(term)
+    print()
+    print(info_bar)
 
 
 if __name__ == "__main__":

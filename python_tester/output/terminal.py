@@ -16,7 +16,7 @@ def write_over_progress_bar(green_pct: float, red_pct: float, term: Terminal):
         num_green_bars += 1
 
     bar = term.red("█" * num_red_bars) + term.green("█" * num_green_bars)
-    write_over_line(bar, 2, term)
+    write_over_line(bar, 1, term)
 
 
 def write_over_line(str_to_write: str, offset_from_bottom: int, term: Terminal):

@@ -1,7 +1,6 @@
 import inspect
 from typing import Callable, Dict
 
-from python_tester.collect.param import is_parameterised, PARAMETERISED_TESTS, get_identifier_for_test
 from python_tester.models.test import Test
 
 
@@ -72,6 +71,9 @@ class FixtureRegistry:
             out_fixtures[fixture_name] = func(**args)
 
             return args
+
+    def __len__(self):
+        return len(self._fixtures)
 
 
 fixture_registry = FixtureRegistry()
