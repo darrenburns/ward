@@ -3,7 +3,7 @@ appnope==0.1.0
 backcall==0.1.0
 blessings==1.7
 colorama==0.4.1
-decorator==4.3.0
+decorator==4.4.0
 ipython==7.5.0
 ipython-genutils==0.2.0
 jedi==0.13.3
