@@ -1,4 +1,4 @@
-anytree==2.4.3
+anytree==2.6.0
 appnope==0.1.0
 backcall==0.1.0
 blessings==1.7
