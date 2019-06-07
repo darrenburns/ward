@@ -1,5 +1,7 @@
 import inspect
-from typing import Callable, Dict, Mapping
+from typing import Callable, Dict
+
+from python_tester.models.test import Test
 
 
 class FixtureError(Exception):
@@ -32,9 +34,15 @@ class FixtureRegistry:
     def get_all(self):
         return self._fixtures
 
-    def resolve_fixtures_for_test(self, test_func: Callable) -> Mapping[str, Callable]:
+    def resolve_fixtures_for_test(self, test: Test) -> Dict[str, Callable]:
+        if len(inspect.signature(test.test_function).parameters) == 0:
+            # If the test has no fixtures, don't try to traverse fixture tree at all
+            return {}
+
+            # parameterised_test_registry
+
         resolved_fixtures = {}
-        args = self._get_fixtures_for_func(test_func, resolved_fixtures, 0)
+        args = self._get_fixtures_for_func(test.test_function, resolved_fixtures, 0)
         return args
 
     def _get_fixtures_for_func(self, func, out_fixtures, depth) -> Dict:
@@ -63,6 +71,9 @@ class FixtureRegistry:
             out_fixtures[fixture_name] = func(**args)
 
             return args
+
+    def __len__(self):
+        return len(self._fixtures)
 
 
 fixture_registry = FixtureRegistry()

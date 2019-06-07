@@ -6,5 +6,5 @@ def something_three():
     return "three"
 
 
-def test_something_or_other(i_am_a_fixture):
+def test_something_or_other():
     assert 1 + 1 == 2
