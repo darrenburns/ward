@@ -1,8 +1,7 @@
 import argparse
-import pkgutil
 import traceback
 from itertools import cycle
-from typing import Any, Dict, Generator
+from typing import Any, Dict
 
 from blessings import Terminal
 from colorama import Fore, Style
@@ -10,7 +9,6 @@ from colorama import Fore, Style
 from python_tester.collect.fixtures import TestSetupError, fixture_registry
 from python_tester.collect.modules import get_info_for_modules, load_modules
 from python_tester.collect.tests import get_tests_in_modules
-from python_tester.models.test_result import TestResult
 from python_tester.output.terminal import reset_cursor, write_over_line, write_over_progress_bar, write_test_result
 from python_tester.runner.runner import run_tests
 
@@ -23,10 +21,6 @@ def setup_cmd_line():
     return parser
 
 
-def is_test_module(module: pkgutil.ModuleInfo) -> bool:
-    return module.name.startswith("test_")
-
-
 def run():
     term = Terminal()
 
@@ -36,16 +30,15 @@ def run():
     path_to_tests = args.get("path") or "."
 
     mod_infos = get_info_for_modules(path_to_tests)
-    test_mod_infos = (info for info in mod_infos if is_test_module(info))
-    modules = load_modules(test_mod_infos)
-    tests = get_tests_in_modules(modules)
-    test_results: Generator[TestResult, None, None] = run_tests(tests, fixture_registry)
+    modules = load_modules(mod_infos)
+    tests = list(get_tests_in_modules(modules))
+    test_results = run_tests(tests, fixture_registry)
 
     # Fixtures are now loaded (since the modules have been loaded)
     print(term.hide_cursor())
     print("\n")
-    num_fixtures = len(fixture_registry)
-    write_over_line(f"{Fore.CYAN}[{HEADER}] Discovered {num_fixtures} fixtures.\nRunning tests...", 4, term)
+    write_over_line(f"{Fore.CYAN}[{HEADER}] Discovered {len(tests)} tests and "
+                    f"{len(fixture_registry)} fixtures.\nRunning tests...", 4, term)
 
     failing_test_results = []
     passed, failed = 0, 0
@@ -66,10 +59,10 @@ def run():
         write_over_progress_bar(pass_pct, fail_pct, term)
 
         info_bar = f"{Fore.CYAN}{next(spinner)}" \
-                   f" {passed + failed} tests ran {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
-                   f"{failed} tests failed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
-                   f"{passed} tests passed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
-                   f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
+            f" {passed + failed} tests ran {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
+            f"{failed} tests failed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
+            f"{passed} tests passed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
+            f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
 
         write_over_line(info_bar, 0, term)
 
