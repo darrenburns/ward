@@ -44,8 +44,6 @@ class FixtureRegistry:
             # If the test has no fixtures, don't try to traverse fixture tree at all
             return {}
 
-            # parameterised_test_registry
-
         resolved_fixtures = {}
         args = self._get_fixtures_for_func(test.test_function, resolved_fixtures, 0)
         return args

@@ -16,10 +16,11 @@ class TestResult:
 
     def __str__(self):
         pass_str, fail_str = f"PASS", f"FAIL"
-        status = (
-            f"{Back.GREEN}{Fore.BLACK} {pass_str} {Style.RESET_ALL}" if self.was_success else f"{Back.RED}{Fore.BLACK} {fail_str} {Style.RESET_ALL}"
-        )
-        parameterised_flag = " (Parameterised) " if self.test.is_parameterised else " "
-        test_name = f"{Fore.LIGHTBLACK_EX}{self.test.module.__name__}" + "." + f"{Fore.WHITE}{self.test.get_test_name()}{parameterised_flag}{Style.RESET_ALL}"
-        # additional = f"({self.message})" if self.message else ""
+
+        if self.was_success:
+            status = f"{Back.GREEN}{Fore.BLACK} {pass_str} {Style.RESET_ALL}"
+        else:
+            status = f"{Back.RED}{Fore.BLACK} {fail_str} {Style.RESET_ALL}"
+
+        test_name = f"{Fore.LIGHTBLACK_EX}{self.test.module.__name__}.{Fore.WHITE}{self.test.get_test_name()}{Style.RESET_ALL}"
         return f"{status} {test_name}"

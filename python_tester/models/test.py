@@ -10,9 +10,5 @@ class Test:
     def __call__(self, *args, **kwargs):
         return self.test_function(*args, **kwargs)
 
-    @property
-    def is_parameterised(self):
-        return len(self.parameters) > 0
-
     def get_test_name(self):
         return self.test_function.__name__
