@@ -6,15 +6,12 @@ from python_tester.models.test_result import TestResult
 
 
 def run_tests(
-        tests: Generator[Test, None, None],
-        fixture_registry: FixtureRegistry
+    tests: Generator[Test, None, None],
+    fixture_registry: FixtureRegistry
 ) -> Generator[TestResult, None, None]:
     for test in tests:
-        # Check if the test is parameterised
-
-
         try:
-            args = fixture_registry.resolve_fixtures_for_test(test)
+            args = fixture_registry.execute_fixtures_for_test(test)
         except FixtureError as e:
             yield TestResult(test, False, e, message="Error! " + str(e))
             continue
@@ -23,5 +20,4 @@ def run_tests(
             test(**args)
             yield TestResult(test, True, None)
         except Exception as e:
-            # logging.exception("Test failed")
             yield TestResult(test, False, e)

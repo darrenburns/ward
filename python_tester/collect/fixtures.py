@@ -1,5 +1,4 @@
 import inspect
-from pprint import pprint
 from typing import Callable, Dict
 
 from python_tester.models.test import Test
@@ -39,7 +38,7 @@ class FixtureRegistry:
     def get_all(self):
         return self._fixtures
 
-    def resolve_fixtures_for_test(self, test: Test) -> Dict[str, Callable]:
+    def execute_fixtures_for_test(self, test: Test) -> Dict[str, Callable]:
         if len(inspect.signature(test.test_function).parameters) == 0:
             # If the test has no fixtures, don't try to traverse fixture tree at all
             return {}
