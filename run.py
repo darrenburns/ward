@@ -2,7 +2,6 @@ import argparse
 import pkgutil
 import traceback
 from itertools import cycle
-from time import sleep
 from typing import Any, Dict, Generator
 
 from blessings import Terminal
@@ -53,7 +52,6 @@ def run():
     spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
     info_bar = ""
     for result in test_results:
-        sleep(.3)
         if result.was_success:
             passed += 1
         else:
@@ -74,8 +72,6 @@ def run():
                    f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
 
         write_over_line(info_bar, 0, term)
-
-        sleep(.3)
 
     print()
 
