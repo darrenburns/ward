@@ -27,7 +27,7 @@ def run():
     cmd_line = setup_cmd_line()
     args: Dict[str, Any] = vars(cmd_line.parse_args())
 
-    path_to_tests = args.get("path") or "."
+    path_to_tests = args.get("path", ".") or "."
 
     mod_infos = get_info_for_modules(path_to_tests)
     modules = load_modules(mod_infos)
