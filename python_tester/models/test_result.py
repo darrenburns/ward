@@ -1,10 +1,11 @@
 from typing import Optional
 
-from colorama import init, Fore, Back, Style
+from colorama import Back, Fore, Style, init
 
 from python_tester.models.test import Test
 
 init()
+
 
 class TestResult:
     def __init__(self, test: Test, was_success: bool, error: Optional[Exception], message: str = None):

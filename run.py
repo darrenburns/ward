@@ -8,7 +8,7 @@ from typing import Any, Dict, Generator
 from blessings import Terminal
 from colorama import Fore, Style
 
-from python_tester.collect.fixtures import fixture_registry
+from python_tester.collect.fixtures import fixture_registry, InternalError, FixtureError
 from python_tester.collect.modules import get_info_for_modules, load_modules
 from python_tester.collect.tests import get_tests_in_modules
 from python_tester.models.test_result import TestResult
@@ -98,12 +98,20 @@ def run():
             )
 
             err = test_result.error
-            trc = traceback.format_exception(None, err, err.__traceback__)
-            write_over_line(
-                "".join(trc),
-                0,
-                term,
-            )
+            if isinstance(err, FixtureError):
+                write_over_line(
+                    str(err),
+                    0,
+                    term,
+                )
+            else:
+                trc = traceback.format_exception(None, err, err.__traceback__)
+                write_over_line(
+                    "".join(trc),
+                    0,
+                    term,
+                )
+
 
     reset_cursor(term)
     print()

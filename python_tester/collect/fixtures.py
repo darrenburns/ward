@@ -1,10 +1,15 @@
 import inspect
+from pprint import pprint
 from typing import Callable, Dict
 
 from python_tester.models.test import Test
 
 
-class FixtureError(Exception):
+class InternalError(Exception):
+    pass
+
+
+class FixtureError(InternalError):
     pass
 
 
@@ -27,6 +32,7 @@ class FixtureRegistry:
 
     def _get_fixture(self, fixture_name: str) -> Callable:
         try:
+            pprint(self._fixtures)
             return self._fixtures[fixture_name]
         except KeyError:
             raise FixtureError(f"Couldn't find fixture '{fixture_name}'")
