@@ -5,11 +5,11 @@ from typing import Callable, Dict
 from python_tester.models.test import Test
 
 
-class InternalError(Exception):
+class TestSetupError(Exception):
     pass
 
 
-class FixtureError(InternalError):
+class FixtureError(TestSetupError):
     pass
 
 
@@ -32,7 +32,6 @@ class FixtureRegistry:
 
     def _get_fixture(self, fixture_name: str) -> Callable:
         try:
-            pprint(self._fixtures)
             return self._fixtures[fixture_name]
         except KeyError:
             raise FixtureError(f"Couldn't find fixture '{fixture_name}'")
