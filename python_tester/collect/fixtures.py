@@ -14,7 +14,7 @@ class FixtureError(TestSetupError):
 
 class FixtureRegistry:
     def __init__(self):
-        self._fixtures = {}
+        self._fixtures: Dict[str, Callable] = {}
 
         def wrapper(func):
             if func.__name__ not in self._fixtures:
@@ -58,15 +58,15 @@ class FixtureRegistry:
             # Resolve as we traverse fixture tree
             args = {}
             for dep_name in dep_names:
-                is_recursive_dependency = dep_name == fixture_name
-                if is_recursive_dependency:
+                is_circular_dependency = dep_name == fixture_name
+                if is_circular_dependency:
                     raise FixtureError(f"Fixture {func} depends on itself.")
 
                 fixture = self._get_fixture(dep_name)
                 self._get_fixtures_for_func(fixture, out_fixtures, depth + 1)
                 args = {dep_name: out_fixtures.get(dep_name), **args}
 
-            # Don't execute the root of the fixture tree (the test itself)
+            # Don't execute the root of the tree (the test itself)
             if depth == 0:
                 return args
 

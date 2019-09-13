@@ -7,6 +7,10 @@ from importlib._bootstrap_external import FileFinder
 from typing import Any, Generator, Iterable, List
 
 
+def is_test_module(module: pkgutil.ModuleInfo) -> bool:
+    return module.name.startswith("test_")
+
+
 def get_info_for_modules(path: str) -> Generator[pkgutil.ModuleInfo, None, None]:
     # Check for modules at the root of the specified path
     for module in pkgutil.iter_modules([path]):
@@ -17,7 +21,8 @@ def get_info_for_modules(path: str) -> Generator[pkgutil.ModuleInfo, None, None]
         for dir_name in dirs:
             dir_path = os.path.join(root, dir_name)
             for module in pkgutil.iter_modules([dir_path]):
-                yield module
+                if is_test_module(module):
+                    yield module
 
 
 def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> List[Any]:

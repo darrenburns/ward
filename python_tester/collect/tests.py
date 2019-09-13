@@ -11,4 +11,5 @@ def get_tests_in_modules(
             if item.startswith("test_"):
                 test_name = item
                 test_fn = getattr(mod, test_name)
-                yield Test(test_fn, [], mod)
+                if test_fn:
+                    yield Test(test_fn, [], mod)
