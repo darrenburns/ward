@@ -21,7 +21,7 @@ class Suite:
     def generate_test_runs(self) -> Generator[TestResult, None, None]:
         for test in self.tests:
             try:
-                resolved_fixtures = self.fixture_registry.resolve_fixtures_for_test(test)
+                resolved_fixtures = self.fixture_registry.resolve_args_for_test(test)
             except CollectionError as e:
                 yield TestResult(test, False, e, message="[Error] " + str(e))
                 continue
