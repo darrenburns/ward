@@ -6,6 +6,8 @@ from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from typing import Any, Generator, Iterable, List
 
+from python_tester.test import Test
+
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:
     return module.name.startswith("test_")
@@ -34,3 +36,15 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> List[Any]:
         spec.loader.exec_module(mod)
         loaded.append(mod)
     return loaded
+
+
+def get_tests_in_modules(
+    modules: Iterable[Any]
+) -> Generator[Test, None, None]:
+    for mod in modules:
+        for item in dir(mod):
+            if item.startswith("test_"):
+                test_name = item
+                test_fn = getattr(mod, test_name)
+                if test_fn:
+                    yield Test(test_fn, (), mod)
