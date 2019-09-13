@@ -19,5 +19,4 @@ def run_tests(
             test(**args)
             yield TestResult(test, True, None)
         except Exception as e:
-            # logging.exception("Test failed")
             yield TestResult(test, False, e)
