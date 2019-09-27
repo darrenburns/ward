@@ -7,6 +7,7 @@ from typing import Iterable
 from blessings import Terminal
 from colorama import Fore, Style
 
+from python_tester.diff import build_split_diff
 from python_tester.expect import ExpectationError
 from python_tester.fixtures import TestSetupError
 from python_tester.suite import Suite
@@ -99,8 +100,8 @@ class TestResultWriter:
             if isinstance(result.error, ExpectationError):
                 # TODO: Handle case where ExpectationError is raised with custom output.
                 pass
-            else:
-                write_test_result(result, self.terminal)
+
+            write_test_result(result, self.terminal)
 
             pass_pct = passed / (passed + failed)
             fail_pct = 1.0 - pass_pct
