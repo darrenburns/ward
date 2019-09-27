@@ -30,9 +30,8 @@ def write_test_failure_output(term, test_result):
     if isinstance(err, TestSetupError):
         write_over_line(str(err), 0, term)
     elif isinstance(err, ExpectationError):
-        lhs = err.this
-        rhs = err.that
-
+        # TODO: Render expectation chain
+        pass
     else:
         trc = traceback.format_exception(None, err, err.__traceback__)
         write_over_line("".join(trc), 0, term)

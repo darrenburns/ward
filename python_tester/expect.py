@@ -1,4 +1,6 @@
-from typing import Type, Any
+import functools
+from dataclasses import dataclass
+from typing import Type, Any, List
 
 
 class raises:
@@ -16,34 +18,43 @@ class raises:
         return True
 
 
+@dataclass
+class Expected:
+    this: Any
+    op: str
+    that: Any
+    success: bool = True
+
+
 class ExpectationError(Exception):
-    def __init__(self, message: str, this: Any, that: Any, method: str):
+    def __init__(self, message: str, history: List[Expected]):
         self.message = message
-        self.this = this
-        self.that = that
-        self.method = method
+        self.history = history
+
+
+def record_expect_in_history(func):
+    @functools.wraps(func)
+    def wrapped_func(self, that: Any, *args, **kwargs) -> "expect":
+        rv = func(self, that, *args, **kwargs)
+        if rv:
+            self.history.append(Expected(this=self.this, op=func.__name__, that=that, success=True))
+            return self
+        else:
+            self.history.append(Expected(this=self.this, op=func.__name__, that=that, success=False))
+            raise ExpectationError(f"{func.__name__} expectation failed", self.history)
+
+    return wrapped_func
 
 
 class expect:
     def __init__(self, this: Any):
         self.this = this
+        self.history: List[Expected] = []
 
-    def equals(self, that: Any) -> "expect":
-        if self.this == that:
-            return self
-        raise ExpectationError(
-            "Equality test failed",
-            self.this,
-            that,
-            self.equals.__name__,
-        )
+    @record_expect_in_history
+    def equals(self, that: Any):
+        return self.this == that
 
-    def less_than(self, that: Any) -> "expect":
-        if self.this < that:
-            return self
-        raise ExpectationError(
-            "Less than check failed",
-            self.this,
-            that,
-            self.less_than.__name__,
-        )
+    @record_expect_in_history
+    def less_than(self, that: Any):
+        return self.this < that
