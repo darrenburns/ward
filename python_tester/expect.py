@@ -14,5 +14,3 @@ class raises:
                 f"Expected exception {self.expected_ex_type}, but {exc_type} was raised instead."
             )
         return True
-
-

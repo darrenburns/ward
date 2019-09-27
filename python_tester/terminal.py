@@ -30,7 +30,8 @@ def write_over_progress_bar(green_pct: float, red_pct: float, term: Terminal):
 
 
 def write_over_line(str_to_write: str, offset_from_bottom: int, term: Terminal):
-    esc_code_rhs_margin = 28  # chars that are part of escape code, but NOT actually printed.
+    # TODO: Smarter way of tracking margins based on escape codes used.
+    esc_code_rhs_margin = 37  # chars that are part of escape code, but NOT actually printed. Yeah I know...
     with term.location(None, term.height - offset_from_bottom):
         right_margin = max(0, term.width - len(str_to_write) + esc_code_rhs_margin) * " "
         sys.stdout.write(f"{str_to_write}{right_margin}")
@@ -85,7 +86,6 @@ def write_test_results_to_terminal(
         )
 
         write_over_line(info_bar, 0, term)
-    print()
     total = passed + failed
     if total == 0:
         write_over_line(term.cyan_bold(f"No tests found."), 1, term)
@@ -107,6 +107,7 @@ def write_test_results_to_terminal(
             else:
                 trc = traceback.format_exception(None, err, err.__traceback__)
                 write_over_line("".join(trc), 0, term)
+
     reset_cursor(term)
-    print()
-    print(info_bar)
+    if failing_test_results:
+        print(info_bar)

@@ -24,4 +24,6 @@ class TestResult:
             status = f"{Back.RED}{Fore.BLACK} {fail_str} {Style.RESET_ALL}"
 
         test_name = f"{Fore.LIGHTBLACK_EX}{self.test.module.__name__}.{Fore.WHITE}{self.test.name}{Style.RESET_ALL}"
-        return f"{status} {test_name}"
+        params = ", ".join(list(self.test.deps()))
+        params_coloured = f"({Fore.LIGHTBLACK_EX}{params}{Style.RESET_ALL})"
+        return f"{status} {test_name}{params_coloured}"
