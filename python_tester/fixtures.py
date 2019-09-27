@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Iterable
 
 
 class TestSetupError(Exception):
@@ -89,6 +89,10 @@ class FixtureRegistry:
         # TODO: Caching can be used to implement fixture scoping,
         #  but currently resolved cached fixtures aren't used.
         self._fixtures[fixture.name] = fixture
+
+    def cache_fixtures(self, fixtures: Iterable[Fixture]):
+        for fixture in fixtures:
+            self.cache_fixture(fixture)
 
     def __getitem__(self, item):
         return self._fixtures[item]
