@@ -45,7 +45,6 @@ def reset_cursor(term: Terminal):
 def write_test_results_to_terminal(
     suite: Suite, term: Terminal, test_results: Generator[TestResult, None, None]
 ):
-    # Fixtures are now loaded (since the modules have been loaded)
     print(term.hide_cursor())
     print("\n")
     write_over_line(
@@ -54,6 +53,7 @@ def write_test_results_to_terminal(
         4,
         term,
     )
+
     failing_test_results = []
     passed, failed = 0, 0
     spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
@@ -65,9 +65,9 @@ def write_test_results_to_terminal(
             failed += 1
             failing_test_results.append(result)
 
-            if isinstance(result.error, AssertionError):
-                # TODO: Handle case where test assertion failed.
-                pass
+        if isinstance(result.error, AssertionError):
+            # TODO: Handle case where test assertion failed.
+            pass
 
         write_test_result(str(result), term)
 
