@@ -38,16 +38,22 @@ def write_over_line(str_to_write: str, offset_from_bottom: int, term: Terminal):
 
 
 def reset_cursor(term: Terminal):
-    print(term.normal_cursor(), )
-    print(term.move(term.height - 1, 0), )
+    print(term.normal_cursor())
+    print(term.move(term.height - 1, 0))
 
 
-def write_test_results_to_terminal(suite: Suite, term: Terminal, test_results: Generator[TestResult, None, None]):
+def write_test_results_to_terminal(
+    suite: Suite, term: Terminal, test_results: Generator[TestResult, None, None]
+):
     # Fixtures are now loaded (since the modules have been loaded)
     print(term.hide_cursor())
     print("\n")
-    write_over_line(f"{Fore.CYAN}[{HEADER}] Discovered {suite.num_tests} tests and "
-                    f"{suite.num_fixtures} fixtures.\nRunning tests...", 4, term)
+    write_over_line(
+        f"{Fore.CYAN}[{HEADER}] Discovered {suite.num_tests} tests and "
+        f"{suite.num_fixtures} fixtures.\nRunning tests...",
+        4,
+        term,
+    )
     failing_test_results = []
     passed, failed = 0, 0
     spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
@@ -59,6 +65,10 @@ def write_test_results_to_terminal(suite: Suite, term: Terminal, test_results: G
             failed += 1
             failing_test_results.append(result)
 
+            if isinstance(result.error, AssertionError):
+                # TODO: Handle case where test assertion failed.
+                pass
+
         write_test_result(str(result), term)
 
         pass_pct = passed / (passed + failed)
@@ -66,11 +76,13 @@ def write_test_results_to_terminal(suite: Suite, term: Terminal, test_results: G
 
         write_over_progress_bar(pass_pct, fail_pct, term)
 
-        info_bar = f"{Fore.CYAN}{next(spinner)} " \
-                   f"{passed + failed} tests ran {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
-                   f"{failed} tests failed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
-                   f"{passed} tests passed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} " \
-                   f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
+        info_bar = (
+            f"{Fore.CYAN}{next(spinner)} "
+            f"{passed + failed} tests ran {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
+            f"{failed} tests failed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
+            f"{passed} tests passed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
+            f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
+        )
 
         write_over_line(info_bar, 0, term)
     print()
@@ -91,18 +103,10 @@ def write_test_results_to_terminal(suite: Suite, term: Terminal, test_results: G
 
             err = test_result.error
             if isinstance(err, TestSetupError):
-                write_over_line(
-                    str(err),
-                    0,
-                    term,
-                )
+                write_over_line(str(err), 0, term)
             else:
                 trc = traceback.format_exception(None, err, err.__traceback__)
-                write_over_line(
-                    "".join(trc),
-                    0,
-                    term,
-                )
+                write_over_line("".join(trc), 0, term)
     reset_cursor(term)
     print()
     print(info_bar)

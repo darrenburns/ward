@@ -36,9 +36,7 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
         yield mod
 
 
-def get_tests_in_modules(
-    modules: Iterable[Any]
-) -> Generator[Test, None, None]:
+def get_tests_in_modules(modules: Iterable[Any]) -> Generator[Test, None, None]:
     for mod in modules:
         for item in dir(mod):
             if item.startswith("test_"):

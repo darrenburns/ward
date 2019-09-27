@@ -1,14 +1,15 @@
+from dataclasses import dataclass
 from typing import Generator, List
 
-from python_tester.fixtures import CollectionError, FixtureRegistry, FixtureExecutionError
+from python_tester.fixtures import FixtureExecutionError, FixtureRegistry
 from python_tester.test import Test
 from python_tester.test_result import TestResult
 
 
+@dataclass
 class Suite:
-    def __init__(self, tests: List[Test], fixture_registry: FixtureRegistry):
-        self.tests = tests
-        self.fixture_registry = fixture_registry
+    tests: List[Test]
+    fixture_registry: FixtureRegistry
 
     @property
     def num_tests(self):

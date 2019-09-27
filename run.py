@@ -25,11 +25,8 @@ def run():
     mod_infos = get_info_for_modules(path_to_tests)
     modules = list(load_modules(mod_infos))
     tests = list(get_tests_in_modules(modules))
-    
-    suite = Suite(
-        tests=tests,
-        fixture_registry=fixture_registry,
-    )
+
+    suite = Suite(tests=tests, fixture_registry=fixture_registry)
 
     test_results = suite.generate_test_runs()
     write_test_results_to_terminal(suite, term, test_results)
