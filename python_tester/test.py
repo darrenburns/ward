@@ -6,9 +6,8 @@ from python_tester.fixtures import FixtureRegistry
 
 
 class Test:
-    def __init__(self, test_function: Callable, parameters: Tuple, module: Any):
+    def __init__(self, test_function: Callable, module: Any):
         self.test_function = test_function
-        self.parameters = parameters
         self.module = module
 
         self.name = test_function.__name__

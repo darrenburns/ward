@@ -45,4 +45,4 @@ def get_tests_in_modules(
                 test_name = item
                 test_fn = getattr(mod, test_name)
                 if test_fn:
-                    yield Test(test_fn, (), mod)
+                    yield Test(test_fn, mod)

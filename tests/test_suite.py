@@ -1,6 +1,6 @@
 from types import ModuleType
 
-from python_tester.fixtures import FixtureRegistry, fixture, Fixture
+from python_tester.fixtures import Fixture, FixtureRegistry, fixture
 from python_tester.suite import Suite
 from python_tester.test import Test
 
@@ -8,17 +8,23 @@ NUMBER_OF_TESTS = 5
 
 
 @fixture
-def example_test():
+def example_test(fixtures):
     return Test(
-        lambda: 1, (), ModuleType("test_module")
+        lambda fixture_a: fixture_a, ModuleType("test_module")
     )
 
 
 @fixture
 def fixtures():
     return {
-        "fixture_a": Fixture("fixture_a", lambda: 1),
-        "fixture_b": Fixture("fixture_b", lambda: 2),
+        "fixture_a": Fixture(
+            name="fixture_a",
+            fn=lambda fixture_b: fixture_b * 2,
+        ),
+        "fixture_b": Fixture(
+            name="fixture_b",
+            fn=lambda: 2,
+        ),
     }
 
 
@@ -43,3 +49,8 @@ def test_suite_num_tests(suite):
 
 def test_suite_num_fixtures(suite, fixtures):
     assert suite.num_fixtures == len(fixtures)
+
+
+def test_generate_test_runs__correct_number_of_runs_generated(suite):
+    runs = suite.generate_test_runs()
+    assert len(list(runs)) == NUMBER_OF_TESTS

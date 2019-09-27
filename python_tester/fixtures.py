@@ -50,7 +50,12 @@ class Fixture:
             children_resolved.append(child_resolved_val)
 
         # We've resolved the values of all child fixtures
-        self.resolved_val = self.fn(*children_resolved)
+        try:
+            self.resolved_val = self.fn(*children_resolved)
+        except Exception as e:
+            raise FixtureExecutionError(
+                f"Unable to execute fixture '{self.name}'"
+            ) from e
 
         fix_registry.cache_fixture(self)
         return self.resolved_val

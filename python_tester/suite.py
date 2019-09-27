@@ -1,6 +1,6 @@
 from typing import Generator, List
 
-from python_tester.fixtures import CollectionError, FixtureRegistry
+from python_tester.fixtures import CollectionError, FixtureRegistry, FixtureExecutionError
 from python_tester.test import Test
 from python_tester.test_result import TestResult
 
@@ -22,7 +22,7 @@ class Suite:
         for test in self.tests:
             try:
                 resolved_fixtures = test.resolve_args(self.fixture_registry)
-            except CollectionError as e:
+            except FixtureExecutionError as e:
                 yield TestResult(test, False, e, message="[Error] " + str(e))
                 continue
             try:
