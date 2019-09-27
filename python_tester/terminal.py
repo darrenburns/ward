@@ -1,7 +1,8 @@
 import sys
 import traceback
+from dataclasses import dataclass
 from itertools import cycle
-from typing import Generator
+from typing import Callable, Iterable
 
 from blessings import Terminal
 from colorama import Fore, Style
@@ -11,6 +12,24 @@ from python_tester.suite import Suite
 from python_tester.test_result import TestResult
 
 HEADER = f"python-tester"
+
+
+def write_test_failure_output(term, test_result):
+    test_name = test_result.test.name
+    test_result_heading = f"{term.cyan_bold}{test_name}{term.normal}"
+    num_non_separator_chars = 4
+    write_over_line(
+        f"-- {test_result_heading}{term.dim} "
+        f"{'-' * (term.width - num_non_separator_chars - len(test_name))}{term.normal}",
+        0,
+        term,
+    )
+    err = test_result.error
+    if isinstance(err, TestSetupError):
+        write_over_line(str(err), 0, term)
+    else:
+        trc = traceback.format_exception(None, err, err.__traceback__)
+        write_over_line("".join(trc), 0, term)
 
 
 def write_test_result(test_result: TestResult, term: Terminal):
@@ -45,71 +64,66 @@ def reset_cursor(term: Terminal):
     print(term.move(term.height - 1, 0))
 
 
-def write_test_results_to_terminal(
-    suite: Suite, term: Terminal, test_results: Generator[TestResult, None, None]
-):
-    print(term.hide_cursor())
-    print("\n")
-    write_over_line(
-        f"{Fore.CYAN}[{HEADER}] Discovered {suite.num_tests} tests and "
-        f"{suite.num_fixtures} fixtures.\nRunning tests...",
-        4,
-        term,
-    )
+@dataclass
+class TestResultWriter:
+    suite: Suite
+    terminal: Terminal
+    test_results: Iterable[TestResult]
 
-    failing_test_results = []
-    passed, failed = 0, 0
-    spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
-    info_bar = ""
-    for result in test_results:
-        if result.was_success:
-            passed += 1
-        else:
-            failed += 1
-            failing_test_results.append(result)
+    # Optionally pass in alternative functions to handle the writing
+    # of test results or failure outputs
+    # TODO: Tidy up this API.
+    single_test_result_output_strategy: Callable[[TestResult, Terminal], None] = write_test_result
+    assertion_failure_output_strategy: Callable[[TestResult, Terminal], None] = write_test_failure_output
 
-        if isinstance(result.error, AssertionError):
-            # TODO: Handle case where test assertion failed.
-            pass
-
-        write_test_result(result, term)
-
-        pass_pct = passed / (passed + failed)
-        fail_pct = 1.0 - pass_pct
-
-        write_over_progress_bar(pass_pct, fail_pct, term)
-
-        info_bar = (
-            f"{Fore.CYAN}{next(spinner)} "
-            f"{passed + failed} tests ran {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
-            f"{failed} tests failed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
-            f"{passed} tests passed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
-            f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
+    def write_test_results_to_terminal(self, ):
+        print(self.terminal.hide_cursor())
+        print("\n")
+        write_over_line(
+            f"{Fore.CYAN}[{HEADER}] Discovered {self.suite.num_tests} tests and "
+            f"{self.suite.num_fixtures} fixtures.\nRunning tests...",
+            4,
+            self.terminal,
         )
 
-        write_over_line(info_bar, 0, term)
-    total = passed + failed
-    if total == 0:
-        write_over_line(term.cyan_bold(f"No tests found."), 1, term)
-    if failing_test_results:
-        for test_result in failing_test_results:
-            test_name = test_result.test.name
-            test_result_heading = f"{term.cyan_bold}{test_name}{term.normal}"
-            num_non_separator_chars = 4
-            write_over_line(
-                f"-- {test_result_heading}{term.dim} "
-                f"{'-' * (term.width - num_non_separator_chars - len(test_name))}{term.normal}",
-                0,
-                term,
+        failing_test_results = []
+        passed, failed = 0, 0
+        spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
+        info_bar = ""
+        for result in self.test_results:
+            if result.was_success:
+                passed += 1
+            else:
+                failed += 1
+                failing_test_results.append(result)
+
+            if isinstance(result.error, AssertionError):
+                # TODO: Handle case where test assertion failed.
+                pass
+
+            write_test_result(result, self.terminal)
+
+            pass_pct = passed / (passed + failed)
+            fail_pct = 1.0 - pass_pct
+
+            write_over_progress_bar(pass_pct, fail_pct, self.terminal)
+
+            info_bar = (
+                f"{Fore.CYAN}{next(spinner)} "
+                f"{passed + failed} tests ran {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
+                f"{failed} tests failed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
+                f"{passed} tests passed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
+                f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
             )
 
-            err = test_result.error
-            if isinstance(err, TestSetupError):
-                write_over_line(str(err), 0, term)
-            else:
-                trc = traceback.format_exception(None, err, err.__traceback__)
-                write_over_line("".join(trc), 0, term)
+            write_over_line(info_bar, 0, self.terminal)
+        total = passed + failed
+        if total == 0:
+            write_over_line(self.terminal.cyan_bold(f"No tests found."), 1, self.terminal)
+        if failing_test_results:
+            for test_result in failing_test_results:
+                write_test_failure_output(self.terminal, test_result)
 
-    reset_cursor(term)
-    if failing_test_results:
-        print(info_bar)
+        reset_cursor(self.terminal)
+        if failing_test_results:
+            print(info_bar)

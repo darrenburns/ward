@@ -6,7 +6,7 @@ from blessings import Terminal
 from python_tester.collect import get_info_for_modules, get_tests_in_modules, load_modules
 from python_tester.fixtures import fixture_registry
 from python_tester.suite import Suite
-from python_tester.terminal import write_test_results_to_terminal
+from python_tester.terminal import TestResultWriter
 
 
 def setup_cmd_line():
@@ -29,7 +29,13 @@ def run():
     suite = Suite(tests=tests, fixture_registry=fixture_registry)
 
     test_results = suite.generate_test_runs()
-    write_test_results_to_terminal(suite, term, test_results)
+
+
+    TestResultWriter(
+        suite=suite,
+        terminal=term,
+        test_results=test_results,
+    ).write_test_results_to_terminal()
 
 
 if __name__ == "__main__":
