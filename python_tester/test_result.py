@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Optional
 
 from colorama import Back, Fore, Style, init
@@ -7,12 +8,12 @@ from python_tester.test import Test
 init()
 
 
+@dataclass
 class TestResult:
-    def __init__(self, test: Test, was_success: bool, error: Optional[Exception], message: str = None):
-        self.test = test
-        self.was_success = was_success
-        self.error = error
-        self.message = message
+    test: Test
+    was_success: bool
+    error: Optional[Exception]
+    message: str
 
     def __str__(self):
         pass_str, fail_str = "PASS", "FAIL"

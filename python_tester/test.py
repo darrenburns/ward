@@ -1,25 +1,25 @@
 import inspect
-from types import MappingProxyType
-from typing import Any, Callable, Dict, Tuple
+from dataclasses import dataclass
+from types import MappingProxyType, ModuleType
+from typing import Any, Callable, Dict
 
 from python_tester.fixtures import FixtureRegistry
 
 
+@dataclass
 class Test:
-    def __init__(self, test_function: Callable, module: Any):
-        self.test_function = test_function
-        self.module = module
-
-        self.name = test_function.__name__
+    fn: Callable
+    module: ModuleType
 
     def __call__(self, *args, **kwargs):
-        return self.test_function(*args, **kwargs)
+        return self.fn(*args, **kwargs)
 
-    def fn(self) -> Callable:
-        return self.test_function
+    @property
+    def name(self):
+        return self.fn.__name__
 
     def deps(self) -> MappingProxyType:
-        return inspect.signature(self.fn()).parameters
+        return inspect.signature(self.fn).parameters
 
     def has_deps(self) -> bool:
         return len(self.deps()) > 0

@@ -27,6 +27,6 @@ class Suite:
                 continue
             try:
                 test(**resolved_fixtures)
-                yield TestResult(test, True, None)
+                yield TestResult(test, True, None, message="")
             except Exception as e:
-                yield TestResult(test, False, e)
+                yield TestResult(test, False, e, message="")
