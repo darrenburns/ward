@@ -13,8 +13,8 @@ from python_tester.test_result import TestResult
 HEADER = f"python-tester"
 
 
-def write_test_result(str_to_write: str, term: Terminal):
-    write_over_line(str_to_write, 2, term)
+def write_test_result(test_result: TestResult, term: Terminal):
+    write_over_line(str(test_result), 2, term)
 
 
 def write_over_progress_bar(green_pct: float, red_pct: float, term: Terminal):
@@ -69,7 +69,7 @@ def write_test_results_to_terminal(
             # TODO: Handle case where test assertion failed.
             pass
 
-        write_test_result(str(result), term)
+        write_test_result(result, term)
 
         pass_pct = passed / (passed + failed)
         fail_pct = 1.0 - pass_pct
