@@ -23,7 +23,7 @@ def run():
 
     path_to_tests = args.get("path", ".") or "."
     mod_infos = get_info_for_modules(path_to_tests)
-    modules = load_modules(mod_infos)
+    modules = list(load_modules(mod_infos))
     tests = list(get_tests_in_modules(modules))
     
     suite = Suite(

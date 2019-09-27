@@ -1,8 +1,6 @@
 import inspect
 from typing import Any, Callable, Dict
 
-from python_tester.test import Test
-
 
 class TestSetupError(Exception):
     pass
@@ -29,12 +27,32 @@ class Fixture:
     def deps(self):
         return inspect.signature(self.fn).parameters
 
-    def resolve(self, *args, **kwargs) -> Any:
-        try:
-            self.resolved_val = self.fn(*args, **kwargs)
-        except Exception as e:
-            raise FixtureExecutionError(f"Error occurred in fixture '{self.name}'.") from e
-        self.is_resolved = True
+    def resolve(self, fix_registry) -> Any:
+        """Traverse the fixture tree to resolve the value of this fixture"""
+
+        # If this fixture has no children, cache and return the resolved value
+        if not self.deps():
+            try:
+                self.resolved_val = self.fn()
+            except Exception as e:
+                raise FixtureExecutionError(
+                    f"Unable to execute fixture '{self.name}'"
+                ) from e
+            fix_registry.cache_fixture(self)
+            return self.resolved_val
+
+        # Otherwise, we have to find the child fixture vals, and call self
+        children = self.deps()
+        children_resolved = []
+        for child in children:
+            child_fixture = fix_registry[child]
+            child_resolved_val = child_fixture.resolve(fix_registry)
+            children_resolved.append(child_resolved_val)
+
+        # We've resolved the values of all child fixtures
+        self.resolved_val = self.fn(*children_resolved)
+
+        fix_registry.cache_fixture(self)
         return self.resolved_val
 
 
@@ -65,57 +83,14 @@ class FixtureRegistry:
     def get_all(self):
         return self._fixtures
 
-    def resolve_args_for_test(self, test: Test) -> Dict[str, Fixture]:
-        if not test.has_deps():
-            return {}
+    def cache_fixture(self, fixture: Fixture):
+        """Update the fixture in the registry, for example, replace it with its resolved analogue"""
+        # TODO: Caching can be used to implement fixture scoping,
+        #  but currently resolved cached fixtures aren't used.
+        self._fixtures[fixture.name] = fixture
 
-        # TODO: We want to recurse over the test deps here rather than inside the recursive function below
-        # This will save us from having to check whether we're dealing with a test or a fixture.
-        resolved_args: Dict[str, Fixture] = {}
-        for arg in test.deps():
-            self.resolve_arg(arg)
-            breakpoint()
-        return resolved_args
-
-    def resolve_arg(self, param: str):
-        fixture = self._get_fixture(param)
-        deps = fixture.deps()
-        if len(deps) == 0:
-            return {}
-
-        args = {}
-        for dep in deps:
-            args[dep] = self.resolve_arg(dep)
-
-        return args
-
-    # def _resolve_deps(self, unit: Union[Test, Fixture], out_fixtures, depth) -> Dict:
-    #     dep_names = inspect.signature(unit.fn).parameters
-    #     breakpoint()
-    #     fixture_name = unit.name
-    #     if len(dep_names) == 0:
-    #         # We've reached a leaf node of the fixture dependency tree (base case)
-    #         out_fixtures[fixture_name] = unit()
-    #         return {}
-    #     else:
-    #         # Resolve as we traverse fixture tree
-    #         args = {}
-    #         for dep_name in dep_names:
-    #             is_circular_dependency = dep_name == fixture_name
-    #             if is_circular_dependency:
-    #                 raise CollectionError(f"Fixture {unit} depends on itself.")
-    #
-    #             fixture = self._get_fixture(dep_name)
-    #             self._resolve_deps(fixture, out_fixtures, depth + 1)
-    #             args = {dep_name: out_fixtures.get(dep_name), **args}
-    #
-    #         # Don't execute the root of the tree (the test itself)
-    #         if depth == 0:
-    #             return args
-    #
-    #         out_fixtures[fixture_name] = unit(**args)
-    #
-    #         return args
+    def __getitem__(self, item):
+        return self._fixtures[item]
 
     def __len__(self):
         return len(self._fixtures)

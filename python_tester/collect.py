@@ -4,7 +4,7 @@ import os
 import pkgutil
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
-from typing import Any, Generator, Iterable, List
+from typing import Any, Generator, Iterable
 
 from python_tester.test import Test
 
@@ -27,15 +27,13 @@ def get_info_for_modules(path: str) -> Generator[pkgutil.ModuleInfo, None, None]
                     yield module
 
 
-def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> List[Any]:
-    loaded = []
+def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, None]:
     for m in modules:
         file_finder: FileFinder = m.module_finder
         spec: ModuleSpec = file_finder.find_spec(m.name)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        loaded.append(mod)
-    return loaded
+        yield mod
 
 
 def get_tests_in_modules(
