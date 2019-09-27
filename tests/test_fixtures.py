@@ -7,7 +7,7 @@ def exception_raising_fixture():
     def i_raise_an_exception():
         raise ZeroDivisionError()
 
-    return Fixture(name="fix_a", fn=i_raise_an_exception)
+    return Fixture(key="fix_a", fn=i_raise_an_exception)
 
 
 def test_fixture_resolve_resolves_tree_correctly():
@@ -23,10 +23,10 @@ def test_fixture_resolve_resolves_tree_correctly():
     def parent(child_a, child_b):
         return child_a + child_b + 1
 
-    grandchild_a_fix = Fixture(name="grandchild_a", fn=grandchild_a)
-    child_a_fix = Fixture(name="child_a", fn=child_a)
-    child_b_fix = Fixture(name="child_b", fn=child_b)
-    parent_fix = Fixture(name="fix_a", fn=parent)
+    grandchild_a_fix = Fixture(key="grandchild_a", fn=grandchild_a)
+    child_a_fix = Fixture(key="child_a", fn=child_a)
+    child_b_fix = Fixture(key="child_b", fn=child_b)
+    parent_fix = Fixture(key="fix_a", fn=parent)
 
     registry = FixtureRegistry()
     registry.cache_fixtures((grandchild_a_fix, child_a_fix, child_b_fix, parent_fix))

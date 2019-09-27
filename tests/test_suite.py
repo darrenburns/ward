@@ -17,8 +17,8 @@ def module():
 @fixture
 def fixtures():
     return {
-        "fixture_a": Fixture(name="fixture_a", fn=lambda fixture_b: fixture_b * 2),
-        "fixture_b": Fixture(name="fixture_b", fn=lambda: 2),
+        "fixture_a": Fixture(key="fixture_a", fn=lambda fixture_b: fixture_b * 2),
+        "fixture_b": Fixture(key="fixture_b", fn=lambda: 2),
     }
 
 

@@ -15,8 +15,8 @@ class FixtureExecutionError(Exception):
 
 
 class Fixture:
-    def __init__(self, name: str, fn: Callable):
-        self.name = name
+    def __init__(self, key: str, fn: Callable):
+        self.name = key
         self.fn = fn
         self.resolved_val = None
         self.is_resolved = False
@@ -64,7 +64,7 @@ class FixtureRegistry:
         def wrapper(func):
             name = func.__name__
             if name not in self._fixtures:
-                self._fixtures[name] = Fixture(name=name, fn=func)
+                self._fixtures[name] = Fixture(key=name, fn=func)
             else:
                 raise CollectionError(f"Multiple fixtures named '{func.__name__}'.")
             return func
