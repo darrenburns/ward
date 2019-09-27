@@ -38,6 +38,13 @@ def test_fixture_resolve_resolves_tree_correctly():
     assert resolved_parent == 4
 
 
+def test_fixture_registry_cache_fixture(exception_raising_fixture):
+    registry = FixtureRegistry()
+    registry.cache_fixture(exception_raising_fixture)
+
+    assert registry[exception_raising_fixture.name] == exception_raising_fixture
+
+
 def test_fixture_resolve_raises_FixtureExecutionError_when_fixture_cant_be_executed(exception_raising_fixture):
     registry = FixtureRegistry()
     registry.cache_fixtures([exception_raising_fixture])
