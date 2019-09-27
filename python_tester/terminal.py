@@ -97,10 +97,6 @@ class TestResultWriter:
                 failed += 1
                 failing_test_results.append(result)
 
-            if isinstance(result.error, ExpectationError):
-                # TODO: Handle case where ExpectationError is raised with custom output.
-                pass
-
             write_test_result(result, self.terminal)
 
             pass_pct = passed / (passed + failed)
