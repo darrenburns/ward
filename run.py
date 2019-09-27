@@ -30,7 +30,6 @@ def run():
 
     test_results = suite.generate_test_runs()
 
-
     TestResultWriter(
         suite=suite,
         terminal=term,

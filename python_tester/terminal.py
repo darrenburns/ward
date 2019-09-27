@@ -2,11 +2,12 @@ import sys
 import traceback
 from dataclasses import dataclass
 from itertools import cycle
-from typing import Callable, Iterable
+from typing import Iterable
 
 from blessings import Terminal
 from colorama import Fore, Style
 
+from python_tester.expect import ExpectationError
 from python_tester.fixtures import TestSetupError
 from python_tester.suite import Suite
 from python_tester.test_result import TestResult
@@ -27,6 +28,10 @@ def write_test_failure_output(term, test_result):
     err = test_result.error
     if isinstance(err, TestSetupError):
         write_over_line(str(err), 0, term)
+    elif isinstance(err, ExpectationError):
+        lhs = err.this
+        rhs = err.that
+
     else:
         trc = traceback.format_exception(None, err, err.__traceback__)
         write_over_line("".join(trc), 0, term)
@@ -70,12 +75,6 @@ class TestResultWriter:
     terminal: Terminal
     test_results: Iterable[TestResult]
 
-    # Optionally pass in alternative functions to handle the writing
-    # of test results or failure outputs
-    # TODO: Tidy up this API.
-    single_test_result_output_strategy: Callable[[TestResult, Terminal], None] = write_test_result
-    assertion_failure_output_strategy: Callable[[TestResult, Terminal], None] = write_test_failure_output
-
     def write_test_results_to_terminal(self, ):
         print(self.terminal.hide_cursor())
         print("\n")
@@ -97,11 +96,11 @@ class TestResultWriter:
                 failed += 1
                 failing_test_results.append(result)
 
-            if isinstance(result.error, AssertionError):
-                # TODO: Handle case where test assertion failed.
+            if isinstance(result.error, ExpectationError):
+                # TODO: Handle case where ExpectationError is raised with custom output.
                 pass
-
-            write_test_result(result, self.terminal)
+            else:
+                write_test_result(result, self.terminal)
 
             pass_pct = passed / (passed + failed)
             fail_pct = 1.0 - pass_pct

@@ -1,6 +1,8 @@
 from types import ModuleType
 from unittest import mock
 
+from python_tester import expect
+from python_tester.expect import expect
 from python_tester.fixtures import Fixture, FixtureRegistry, fixture
 from python_tester.suite import Suite
 from python_tester.test import Test
@@ -40,7 +42,9 @@ def suite(example_test, fixture_registry):
 
 
 def test_suite_num_tests(suite):
-    assert suite.num_tests == NUMBER_OF_TESTS
+    expect(suite.num_tests) \
+        .equals(NUMBER_OF_TESTS) \
+        .less_than(8)
 
 
 def test_suite_num_fixtures(suite, fixtures):
