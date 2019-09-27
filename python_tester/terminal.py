@@ -10,7 +10,7 @@ from python_tester.fixtures import TestSetupError
 from python_tester.suite import Suite
 from python_tester.test_result import TestResult
 
-HEADER = "python-tester v0.0.1"
+HEADER = f"python-tester"
 
 
 def write_test_result(str_to_write: str, term: Terminal):

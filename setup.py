@@ -1,8 +1,10 @@
 from setuptools import setup
 
+version = "0.1.0a0"
+
 setup(
     name="python-tester",
-    version="0.1.0a",
+    version=version,
     description="Doing your tests",
     url="http://github.com/darrenburns/python-tester",
     author="Darren Burns",
