@@ -52,7 +52,7 @@ def test_generate_test_runs__correct_number_of_runs_generated(suite):
     assert len(list(runs)) == NUMBER_OF_TESTS
 
 
-def test_generate_test_runs__yields_correct_test_results_when_exhausted(suite,):
+def test_generate_test_runs__yields_correct_test_results_when_exhausted(suite):
     results = list(suite.generate_test_runs())
     assert results == [
         TestResult(test=test, was_success=True, error=None, message="") for test in suite.tests

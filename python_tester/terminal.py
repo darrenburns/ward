@@ -31,7 +31,9 @@ def write_over_progress_bar(green_pct: float, red_pct: float, term: Terminal):
 
 def write_over_line(str_to_write: str, offset_from_bottom: int, term: Terminal):
     # TODO: Smarter way of tracking margins based on escape codes used.
-    esc_code_rhs_margin = 37  # chars that are part of escape code, but NOT actually printed. Yeah I know...
+    esc_code_rhs_margin = (
+        37
+    )  # chars that are part of escape code, but NOT actually printed. Yeah I know...
     with term.location(None, term.height - offset_from_bottom):
         right_margin = max(0, term.width - len(str_to_write) + esc_code_rhs_margin) * " "
         sys.stdout.write(f"{str_to_write}{right_margin}")
