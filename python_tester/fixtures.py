@@ -81,9 +81,6 @@ class FixtureRegistry:
         except KeyError:
             raise CollectionError(f"Couldn't find fixture '{fixture_name}'.")
 
-    def get_all(self):
-        return self._fixtures
-
     def cache_fixture(self, fixture: Fixture):
         """Update the fixture in the registry, for example, replace it with its resolved analogue"""
         # TODO: Caching can be used to implement fixture scoping,

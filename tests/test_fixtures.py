@@ -1,5 +1,13 @@
 from python_tester import expect
-from python_tester.fixtures import Fixture, FixtureExecutionError, FixtureRegistry
+from python_tester.fixtures import Fixture, FixtureExecutionError, FixtureRegistry, fixture
+
+
+@fixture
+def exception_raising_fixture():
+    def i_raise_an_exception():
+        raise ZeroDivisionError()
+
+    return Fixture(name="fix_a", fn=i_raise_an_exception)
 
 
 def test_fixture_resolve_resolves_tree_correctly():
@@ -30,15 +38,9 @@ def test_fixture_resolve_resolves_tree_correctly():
     assert resolved_parent == 4
 
 
-def test_fixture_resolve_raises_FixtureExecutionError_when_fixture_cant_be_executed():
-    def i_raise_an_exception():
-        # A ZeroDivisionError is thrown by this fixture,
-        # but we expect that this results in a FixtureExecutionError
-        raise ZeroDivisionError()
-
-    fix = Fixture(name="fix_a", fn=i_raise_an_exception)
+def test_fixture_resolve_raises_FixtureExecutionError_when_fixture_cant_be_executed(exception_raising_fixture):
     registry = FixtureRegistry()
-    registry.cache_fixtures([fix])
+    registry.cache_fixtures([exception_raising_fixture])
 
     with expect.raises(FixtureExecutionError):
-        fix.resolve(registry)
+        exception_raising_fixture.resolve(registry)
