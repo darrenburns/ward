@@ -16,7 +16,7 @@ class FixtureExecutionError(Exception):
 
 class Fixture:
     def __init__(self, key: str, fn: Callable):
-        self.name = key
+        self.key = key
         self.fn = fn
         self.resolved_val = None
         self.is_resolved = False
@@ -35,7 +35,7 @@ class Fixture:
             try:
                 self.resolved_val = self.fn()
             except Exception as e:
-                raise FixtureExecutionError(f"Unable to execute fixture '{self.name}'") from e
+                raise FixtureExecutionError(f"Unable to execute fixture '{self.key}'") from e
             fix_registry.cache_fixture(self)
             return self.resolved_val
 
@@ -51,7 +51,7 @@ class Fixture:
         try:
             self.resolved_val = self.fn(*children_resolved)
         except Exception as e:
-            raise FixtureExecutionError(f"Unable to execute fixture '{self.name}'") from e
+            raise FixtureExecutionError(f"Unable to execute fixture '{self.key}'") from e
 
         fix_registry.cache_fixture(self)
         return self.resolved_val
@@ -85,7 +85,7 @@ class FixtureRegistry:
         """Update the fixture in the registry, for example, replace it with its resolved analogue"""
         # TODO: Caching can be used to implement fixture scoping,
         #  but currently resolved cached fixtures aren't used.
-        self._fixtures[fixture.name] = fixture
+        self._fixtures[fixture.key] = fixture
 
     def cache_fixtures(self, fixtures: Iterable[Fixture]):
         for fixture in fixtures:

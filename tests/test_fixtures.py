@@ -42,7 +42,7 @@ def test_fixture_registry_cache_fixture(exception_raising_fixture):
     registry = FixtureRegistry()
     registry.cache_fixture(exception_raising_fixture)
 
-    assert registry[exception_raising_fixture.name] == exception_raising_fixture
+    assert registry[exception_raising_fixture.key] == exception_raising_fixture
 
 
 def test_fixture_resolve_raises_FixtureExecutionError_when_fixture_cant_be_executed(
