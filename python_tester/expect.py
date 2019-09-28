@@ -58,3 +58,15 @@ class expect:
     @record_expect_in_history
     def is_less_than(self, that: Any):
         return self.this < that
+
+    @record_expect_in_history
+    def is_greater_than(self, that: Any):
+        return self.this > that
+
+    @record_expect_in_history
+    def contains(self, that: Any):
+        return that in self.this
+
+    @record_expect_in_history
+    def is_the_same_as(self, that: Any):
+        return self.this is that

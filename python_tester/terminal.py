@@ -31,7 +31,7 @@ def write_test_failure_output(term, test_result):
     elif isinstance(err, ExpectationError):
         write_over_line(f"  Expectations for value {err.history[0].this}:", 0, term)
         for expect in err.history:
-            write_over_line(f"      we expect {expect.this} {expect.op} {expect.that} [{expect.success}]", 0, term)
+            write_over_line(f"      expect {expect.this} {expect.op} {expect.that} [{expect.success}]", 0, term)
     else:
         trc = traceback.format_exception(None, err, err.__traceback__)
         write_over_line("".join(trc), 0, term)
