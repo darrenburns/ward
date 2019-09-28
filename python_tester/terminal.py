@@ -37,10 +37,10 @@ def write_test_failure_output(term, test_result):
         write_over_line(f"  Expectations for value {err.history[0].this}:", 0, term)
         for expect in err.history:
             if expect.success:
-                result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]"
+                result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
             else:
-                result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]"
-            write_over_line(f"    {result_marker} it {expect.op} {expect.that}", 0, term)
+                result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+            write_over_line(f"    {result_marker} it {expect.op} {expect.that}{Style.RESET_ALL}", 0, term)
     else:
         trc = traceback.format_exception(None, err, err.__traceback__)
         write_over_line("".join(trc), 0, term)
