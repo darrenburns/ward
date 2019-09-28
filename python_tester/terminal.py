@@ -16,6 +16,7 @@ HEADER = f"python-tester"
 
 
 def write_test_failure_output(term, test_result):
+    # Header of failure output
     test_name = test_result.test.name
     test_result_heading = f"{term.cyan_bold}{test_name}{term.normal}"
     num_non_separator_chars = 4
@@ -26,6 +27,8 @@ def write_test_failure_output(term, test_result):
         term,
     )
     err = test_result.error
+
+    # Body of failure output, depends on how the test failed
     if isinstance(err, TestSetupError):
         write_over_line(str(err), 0, term)
     elif isinstance(err, ExpectationError):
@@ -80,7 +83,7 @@ class TestResultWriter:
         print("\n")
         write_over_line(
             f"{Fore.CYAN}[{HEADER}] Discovered {self.suite.num_tests} tests and "
-            f"{self.suite.num_fixtures} fixtures.\nRunning tests...",
+            f"{self.suite.num_fixtures} fixtures.\nRunning {self.suite.num_tests} tests...",
             4,
             self.terminal,
         )
