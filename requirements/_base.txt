@@ -1,4 +1,4 @@
-anytree==2.6.0
+anytree==2.7.0
 appnope==0.1.0
 backcall==0.1.0
 blessings==1.7
@@ -18,6 +18,6 @@ Pygments==2.4.2
 simplegeneric==0.8.1
 six==1.12.0
 termcolor==1.1.0
-tqdm==4.35.0
+tqdm==4.36.1
 traitlets==4.3.2
 wcwidth==0.1.7
