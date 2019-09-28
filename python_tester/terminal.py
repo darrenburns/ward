@@ -2,12 +2,12 @@ import sys
 import traceback
 from dataclasses import dataclass
 from itertools import cycle
+from time import sleep
 from typing import Iterable
 
 from blessings import Terminal
 from colorama import Fore, Style
 
-from python_tester.diff import build_split_diff
 from python_tester.expect import ExpectationError
 from python_tester.fixtures import TestSetupError
 from python_tester.suite import Suite
@@ -21,8 +21,8 @@ def write_test_failure_output(term, test_result):
     test_result_heading = f"{term.cyan_bold}{test_name}{term.normal}"
     num_non_separator_chars = 4
     write_over_line(
-        f"-- {test_result_heading}{term.dim} "
-        f"{'-' * (term.width - num_non_separator_chars - len(test_name))}{term.normal}",
+        f"== {test_result_heading}{term.dim} "
+        f"{'=' * (term.width - num_non_separator_chars - len(test_name))}{term.normal}",
         0,
         term,
     )
@@ -30,8 +30,9 @@ def write_test_failure_output(term, test_result):
     if isinstance(err, TestSetupError):
         write_over_line(str(err), 0, term)
     elif isinstance(err, ExpectationError):
-        # TODO: Render expectation chain
-        pass
+        write_over_line(f"  Expectations for value {err.history[0].this}:", 0, term)
+        for expect in err.history:
+            write_over_line(f"      we expect {expect.this} {expect.op} {expect.that} [{expect.success}]", 0, term)
     else:
         trc = traceback.format_exception(None, err, err.__traceback__)
         write_over_line("".join(trc), 0, term)
@@ -75,7 +76,7 @@ class TestResultWriter:
     terminal: Terminal
     test_results: Iterable[TestResult]
 
-    def write_test_results_to_terminal(self, ):
+    def write_test_results_to_terminal(self):
         print(self.terminal.hide_cursor())
         print("\n")
         write_over_line(

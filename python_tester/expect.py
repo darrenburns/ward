@@ -56,5 +56,5 @@ class expect:
         return self.this == that
 
     @record_expect_in_history
-    def less_than(self, that: Any):
+    def is_less_than(self, that: Any):
         return self.this < that
