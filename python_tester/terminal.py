@@ -18,12 +18,11 @@ HEADER = f"python-tester"
 def write_test_failure_output(term, test_result):
     # Header of failure output
     test_name = test_result.test.name
-    error_text = f" (failed due to {type(test_result.error).__name__})"
-    test_result_heading = f"{term.cyan_bold}{test_name}{error_text}"
-    num_non_separator_chars = 4
+    test_module = test_result.test.module.__name__
+    error_text = f"[{type(test_result.error).__name__}]"
+    test_result_heading = f"Test '{test_module}.{test_name}' failed:"
     write_over_line(
-        f"== {test_result_heading} "
-        f"{Style.RESET_ALL}{'=' * (term.width - num_non_separator_chars - len(test_name) - len(error_text))}",
+        f"{Fore.RED}{test_result_heading} ",
         0,
         term,
     )
