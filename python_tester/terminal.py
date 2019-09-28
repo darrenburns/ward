@@ -23,7 +23,7 @@ def write_test_failure_output(term, test_result):
     num_non_separator_chars = 4
     write_over_line(
         f"== {test_result_heading} "
-        f"{'=' * (term.width - num_non_separator_chars - len(test_name) - len(error_text))}{Style.RESET_ALL}",
+        f"{Style.RESET_ALL}{'=' * (term.width - num_non_separator_chars - len(test_name) - len(error_text))}",
         0,
         term,
     )
