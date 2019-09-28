@@ -42,9 +42,7 @@ def suite(example_test, fixture_registry):
 
 
 def test_suite_num_tests(suite):
-    expect(suite.num_tests) \
-        .equals(NUMBER_OF_TESTS) \
-        .is_less_than(1)
+    expect(suite.num_tests).equals(NUMBER_OF_TESTS)
 
 
 def test_suite_num_fixtures(suite, fixtures):

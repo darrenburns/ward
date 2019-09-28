@@ -11,5 +11,6 @@ setup(
     author_email="darrenb900@gmail.com",
     license="MIT",
     packages=["ward"],
+    python_requires=">=3.6",
     zip_safe=False,
 )
