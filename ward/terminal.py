@@ -7,12 +7,12 @@ from typing import Iterable
 from blessings import Terminal
 from colorama import Fore, Style
 
-from python_tester.expect import ExpectationFailed
-from python_tester.fixtures import TestSetupError
-from python_tester.suite import Suite
-from python_tester.test_result import TestResult
+from ward.expect import ExpectationFailed
+from ward.fixtures import TestSetupError
+from ward.suite import Suite
+from ward.test_result import TestResult
 
-HEADER = f"python-tester"
+HEADER = f"ward"
 
 
 def write_test_failure_output(term, test_result):

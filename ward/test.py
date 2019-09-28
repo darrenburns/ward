@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from types import MappingProxyType, ModuleType
 from typing import Any, Callable, Dict
 
-from python_tester.fixtures import FixtureRegistry
+from ward.fixtures import FixtureRegistry
 
 
 @dataclass

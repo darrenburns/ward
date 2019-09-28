@@ -3,10 +3,10 @@ from typing import Any, Dict
 
 from blessings import Terminal
 
-from python_tester.collect import get_info_for_modules, get_tests_in_modules, load_modules
-from python_tester.fixtures import fixture_registry
-from python_tester.suite import Suite
-from python_tester.terminal import TestResultWriter
+from ward.collect import get_info_for_modules, get_tests_in_modules, load_modules
+from ward.fixtures import fixture_registry
+from ward.suite import Suite
+from ward.terminal import TestResultWriter
 
 
 def setup_cmd_line():

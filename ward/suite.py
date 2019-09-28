@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Generator, List
 
-from python_tester.fixtures import FixtureExecutionError, FixtureRegistry
-from python_tester.test import Test
-from python_tester.test_result import TestResult
+from ward.fixtures import FixtureExecutionError, FixtureRegistry
+from ward.test import Test
+from ward.test_result import TestResult
 
 
 @dataclass

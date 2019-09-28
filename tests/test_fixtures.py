@@ -1,5 +1,5 @@
-from python_tester import expect
-from python_tester.fixtures import Fixture, FixtureExecutionError, FixtureRegistry, fixture
+from ward import expect
+from ward.fixtures import Fixture, FixtureExecutionError, FixtureRegistry, fixture
 
 
 @fixture

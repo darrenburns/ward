@@ -3,13 +3,13 @@ from setuptools import setup
 version = "0.1.0a0"
 
 setup(
-    name="python-tester",
+    name="ward",
     version=version,
-    description="Doing your tests",
-    url="http://github.com/darrenburns/python-tester",
+    description="A Python 3 test framework.",
+    url="http://github.com/darrenburns/ward",
     author="Darren Burns",
     author_email="darrenb900@gmail.com",
     license="MIT",
-    packages=["python_tester"],
+    packages=["ward"],
     zip_safe=False,
 )

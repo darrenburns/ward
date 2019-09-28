@@ -1,12 +1,12 @@
 from types import ModuleType
 from unittest import mock
 
-from python_tester import expect
-from python_tester.expect import expect
-from python_tester.fixtures import Fixture, FixtureRegistry, fixture
-from python_tester.suite import Suite
-from python_tester.test import Test
-from python_tester.test_result import TestResult
+from ward import expect
+from ward.expect import expect
+from ward.fixtures import Fixture, FixtureRegistry, fixture
+from ward.suite import Suite
+from ward.test import Test
+from ward.test_result import TestResult
 
 NUMBER_OF_TESTS = 5
 

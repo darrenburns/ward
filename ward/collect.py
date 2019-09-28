@@ -6,7 +6,7 @@ from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from typing import Any, Generator, Iterable
 
-from python_tester.test import Test
+from ward.test import Test
 
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:

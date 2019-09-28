@@ -3,7 +3,7 @@ from typing import Optional
 
 from colorama import Back, Fore, Style, init
 
-from python_tester.test import Test
+from ward.test import Test
 
 init()
 
