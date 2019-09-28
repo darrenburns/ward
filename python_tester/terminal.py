@@ -7,7 +7,7 @@ from typing import Iterable
 from blessings import Terminal
 from colorama import Fore, Style
 
-from python_tester.expect import ExpectationError
+from python_tester.expect import ExpectationFailed
 from python_tester.fixtures import TestSetupError
 from python_tester.suite import Suite
 from python_tester.test_result import TestResult
@@ -18,11 +18,12 @@ HEADER = f"python-tester"
 def write_test_failure_output(term, test_result):
     # Header of failure output
     test_name = test_result.test.name
-    test_result_heading = f"{term.cyan_bold}{test_name}{term.normal}"
+    error_text = f" (failed due to {type(test_result.error).__name__})"
+    test_result_heading = f"{term.cyan_bold}{test_name}{error_text}"
     num_non_separator_chars = 4
     write_over_line(
-        f"== {test_result_heading}{term.dim} "
-        f"{'=' * (term.width - num_non_separator_chars - len(test_name))}{term.normal}",
+        f"== {test_result_heading} "
+        f"{'=' * (term.width - num_non_separator_chars - len(test_name) - len(error_text))}{Style.RESET_ALL}",
         0,
         term,
     )
@@ -31,7 +32,7 @@ def write_test_failure_output(term, test_result):
     # Body of failure output, depends on how the test failed
     if isinstance(err, TestSetupError):
         write_over_line(str(err), 0, term)
-    elif isinstance(err, ExpectationError):
+    elif isinstance(err, ExpectationFailed):
         write_over_line(f"  Expectations for value {err.history[0].this}:", 0, term)
         for expect in err.history:
             write_over_line(f"      expect {expect.this} {expect.op} {expect.that} [{expect.success}]", 0, term)

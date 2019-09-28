@@ -26,7 +26,7 @@ class Expected:
     success: bool = True
 
 
-class ExpectationError(Exception):
+class ExpectationFailed(Exception):
     def __init__(self, message: str, history: List[Expected]):
         self.message = message
         self.history = history
@@ -41,7 +41,7 @@ def record_expect_in_history(func):
             return self
         else:
             self.history.append(Expected(this=self.this, op=func.__name__, that=that, success=False))
-            raise ExpectationError(f"{func.__name__} expectation failed", self.history)
+            raise ExpectationFailed(f"{func.__name__} expectation failed", self.history)
 
     return wrapped_func
 
