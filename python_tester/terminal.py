@@ -33,9 +33,14 @@ def write_test_failure_output(term, test_result):
     if isinstance(err, TestSetupError):
         write_over_line(str(err), 0, term)
     elif isinstance(err, ExpectationFailed):
+        print()
         write_over_line(f"  Expectations for value {err.history[0].this}:", 0, term)
         for expect in err.history:
-            write_over_line(f"      expect {expect.this} {expect.op} {expect.that} [{expect.success}]", 0, term)
+            if expect.success:
+                result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]"
+            else:
+                result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]"
+            write_over_line(f"    {result_marker} it {expect.op} {expect.that}", 0, term)
     else:
         trc = traceback.format_exception(None, err, err.__traceback__)
         write_over_line("".join(trc), 0, term)
