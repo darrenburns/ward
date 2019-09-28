@@ -2,7 +2,6 @@ import sys
 import traceback
 from dataclasses import dataclass
 from itertools import cycle
-from time import sleep
 from typing import Iterable
 
 from blessings import Terminal
