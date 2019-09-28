@@ -1,4 +1,5 @@
 import argparse
+import sys
 from typing import Any, Dict
 
 from blessings import Terminal
@@ -30,11 +31,13 @@ def run():
 
     test_results = suite.generate_test_runs()
 
-    TestResultWriter(
+    exit_code = TestResultWriter(
         suite=suite,
         terminal=term,
         test_results=test_results,
     ).write_test_results_to_terminal()
+
+    sys.exit(exit_code.value)
 
 
 if __name__ == "__main__":

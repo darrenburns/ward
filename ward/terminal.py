@@ -1,6 +1,7 @@
 import sys
 import traceback
 from dataclasses import dataclass
+from enum import Enum
 from itertools import cycle
 from typing import Iterable
 
@@ -77,13 +78,18 @@ def reset_cursor(term: Terminal):
     print(term.move(term.height - 1, 0))
 
 
+class ExitCode(Enum):
+    SUCCESS = 0
+    TEST_FAILED = 1
+
+
 @dataclass
 class TestResultWriter:
     suite: Suite
     terminal: Terminal
     test_results: Iterable[TestResult]
 
-    def write_test_results_to_terminal(self):
+    def write_test_results_to_terminal(self) -> ExitCode:
         print(self.terminal.hide_cursor())
         print("\n")
         write_over_line(
@@ -130,3 +136,6 @@ class TestResultWriter:
         reset_cursor(self.terminal)
         if failing_test_results:
             print(info_bar)
+            return ExitCode.TEST_FAILED
+
+        return ExitCode.SUCCESS
