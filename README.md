@@ -15,13 +15,14 @@ calls the `cities` fixture, and passes the result into the test.
 
 ```python
 from ward.fixtures import fixture
+from ward.expect import expect
 
 @fixture
 def cities():
     return ["Glasgow", "Edinburgh"]
     
 def test_using_cities(cities):
-    assert cities == ["Glasgow", "Edinburgh"]
+    expect(cities).equals(["Glasgow", "Edinburgh"])
 ```
 
 ### The Expect API
