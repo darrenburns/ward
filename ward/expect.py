@@ -78,5 +78,5 @@ class expect:
         return isinstance(self.this, type)
 
     @record_expect_in_history
-    def is_the_same_as(self, that: Any):
+    def is_(self, that: Any):
         return self.this is that
