@@ -4,7 +4,7 @@ from unittest import mock
 from ward.expect import expect
 from ward.fixtures import Fixture, FixtureRegistry, fixture
 from ward.suite import Suite
-from ward.test import Test, skip
+from ward.test import Test, skip, WardMarker
 from ward.test_result import TestResult, TestOutcome
 
 NUMBER_OF_TESTS = 5
@@ -29,6 +29,11 @@ def example_test(module, fixtures):
 
 
 @fixture
+def skipped_test(module):
+    return Test(fn=lambda: expect(1).equals(1), module=module, marker=WardMarker.SKIP)
+
+
+@fixture
 def fixture_registry(fixtures):
     registry = FixtureRegistry()
     registry._fixtures = fixtures
@@ -47,20 +52,22 @@ def test_suite_num_tests(suite):
 
 
 def test_suite_num_fixtures(suite, fixtures):
-    assert suite.num_fixtures == len(fixtures)
+    expect(suite.num_fixtures).equals(len(fixtures))
 
 
 def test_generate_test_runs__correct_number_of_runs_generated(suite):
     runs = suite.generate_test_runs()
-    assert len(list(runs)) == NUMBER_OF_TESTS
+
+    expect(list(runs)).has_length(NUMBER_OF_TESTS)
 
 
 def test_generate_test_runs__yields_correct_test_results_when_exhausted(suite):
     results = list(suite.generate_test_runs())
-    assert results == [
+
+    expect(results).equals([
         TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
         for test in suite.tests
-    ]
+    ])
 
 
 def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
@@ -75,10 +82,26 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
     results = failing_suite.generate_test_runs()
     result = next(results)
 
-    assert result == TestResult(
+    expected_result = TestResult(
         test=test, outcome=TestOutcome.FAIL, error=mock.ANY, message=""
     )
-    assert type(result.error) is AssertionError
+
+    expect(result).equals(expected_result)
+    expect(result.error).is_instance_of(AssertionError)
+
+
+def test_generate_test_runs__yields_skipped_test_result_on_test_with_skip_marker(
+    fixture_registry, module, skipped_test, example_test
+):
+    suite = Suite(tests=[example_test, skipped_test], fixture_registry=fixture_registry)
+
+    test_runs = suite.generate_test_runs()
+
+    (expect(list(test_runs)).equals([
+        TestResult(example_test, TestOutcome.PASS, None, ""),
+        TestResult(skipped_test, TestOutcome.SKIP, None, ""),
+    ]))
+
 
 # region example
 
@@ -100,7 +123,6 @@ def test_capital_cities(cities):
 
     def all_keys_less_than_length_10(cities):
         return all(len(k) < 10 for k in cities)
-
 
     (expect(found_cities)
      .satisfies(lambda c: all(len(k) < 10 for k in c))
