@@ -95,12 +95,12 @@ def test_generate_test_runs__yields_skipped_test_result_on_test_with_skip_marker
 ):
     suite = Suite(tests=[example_test, skipped_test], fixture_registry=fixture_registry)
 
-    test_runs = suite.generate_test_runs()
+    test_runs = list(suite.generate_test_runs())
 
-    (expect(list(test_runs)).equals([
-        TestResult(example_test, TestOutcome.PASS, None, ""),
-        TestResult(skipped_test, TestOutcome.SKIP, None, ""),
-    ]))
+    (expect(test_runs)
+     .has_length(2)
+     .contains(TestResult(example_test, TestOutcome.PASS, None, ""))
+     .contains(TestResult(skipped_test, TestOutcome.SKIP, None, "")))
 
 
 # region example
