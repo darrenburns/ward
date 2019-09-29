@@ -37,7 +37,9 @@ def fixture_registry(fixtures):
 
 @fixture
 def suite(example_test, fixture_registry):
-    return Suite(tests=[example_test] * NUMBER_OF_TESTS, fixture_registry=fixture_registry)
+    return Suite(
+        tests=[example_test] * NUMBER_OF_TESTS, fixture_registry=fixture_registry
+    )
 
 
 def test_suite_num_tests(suite):
@@ -56,7 +58,8 @@ def test_generate_test_runs__correct_number_of_runs_generated(suite):
 def test_generate_test_runs__yields_correct_test_results_when_exhausted(suite):
     results = list(suite.generate_test_runs())
     assert results == [
-        TestResult(test=test, was_success=True, error=None, message="") for test in suite.tests
+        TestResult(test=test, was_success=True, error=None, message="")
+        for test in suite.tests
     ]
 
 
@@ -72,13 +75,15 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
     results = failing_suite.generate_test_runs()
     result = next(results)
 
-    assert result == TestResult(test=test, was_success=False, error=mock.ANY, message="")
+    assert result == TestResult(
+        test=test, was_success=False, error=mock.ANY, message=""
+    )
     assert type(result.error) is AssertionError
 
 
 def test_dicts():
-    expect({"one": "two", "apple": "banana", "pear": "mushroom", "scotland": "europe"}).contains(
-        "one"
-    ).has_length(4).is_instance_of(dict).equals(
+    expect(
+        {"one": "two", "apple": "banana", "pear": "mushroom", "scotland": "europe"}
+    ).contains("one").has_length(4).is_instance_of(dict).equals(
         {"one": "three", "apple": "banana", "pear": "mushroom", "scotland": "europe"}
     )

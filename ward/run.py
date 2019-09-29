@@ -10,7 +10,9 @@ from ward.terminal import TestResultWriter
 
 
 @click.command()
-@click.option("-p", "--path", default=".", type=click.Path(exists=True), help="Path to tests.")
+@click.option(
+    "-p", "--path", default=".", type=click.Path(exists=True), help="Path to tests."
+)
 def run(path):
     term = Terminal()
 

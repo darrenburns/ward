@@ -35,7 +35,9 @@ class Fixture:
             try:
                 self.resolved_val = self.fn()
             except Exception as e:
-                raise FixtureExecutionError(f"Unable to execute fixture '{self.key}'") from e
+                raise FixtureExecutionError(
+                    f"Unable to execute fixture '{self.key}'"
+                ) from e
             fix_registry.cache_fixture(self)
             return self.resolved_val
 
@@ -51,7 +53,9 @@ class Fixture:
         try:
             self.resolved_val = self.fn(*children_resolved)
         except Exception as e:
-            raise FixtureExecutionError(f"Unable to execute fixture '{self.key}'") from e
+            raise FixtureExecutionError(
+                f"Unable to execute fixture '{self.key}'"
+            ) from e
 
         fix_registry.cache_fixture(self)
         return self.resolved_val

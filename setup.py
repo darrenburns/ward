@@ -18,5 +18,10 @@ setup(
     packages=["ward"],
     python_requires=">=3.6",
     entry_points={"console_scripts": ["ward=ward.run:run"]},
-    install_requires=["blessings==1.7", "colorama==0.4.1", "dataclasses==0.6", "click==7.0"],
+    install_requires=[
+        "blessings==1.7",
+        "colorama==0.4.1",
+        "dataclasses==0.6",
+        "click==7.0",
+    ],
 )

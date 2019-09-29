@@ -37,7 +37,9 @@ def record_expect_in_history(func):
     def wrapped_func(self, that: Any, *args, **kwargs) -> "expect":
         rv = func(self, that, *args, **kwargs)
         if rv:
-            self.history.append(Expected(this=self.this, op=func.__name__, that=that, success=True))
+            self.history.append(
+                Expected(this=self.this, op=func.__name__, that=that, success=True)
+            )
             return self
         else:
             self.history.append(

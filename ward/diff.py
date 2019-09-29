@@ -40,3 +40,27 @@ def build_split_diff(lhs, rhs, width=80):
                 rhs_out += f"{Style.RESET_ALL}\n"
 
     return lhs_out, rhs_out
+
+
+def build_unified_diff(lhs, rhs, width=80, margin_left=4):
+    differ = difflib.Differ()
+    lines_lhs = pprint.pformat(lhs, width=width).splitlines()
+    lines_rhs = pprint.pformat(rhs, width=width).splitlines()
+    diff = differ.compare(lines_lhs, lines_rhs)
+
+    output = []
+    for line in diff:
+        # Differ instructs us how to transform left into right, but we want
+        # our colours to indicate how to transform right into left
+        if line.startswith("- "):
+            output.append(f"{Fore.GREEN}{line[2:]}")
+        elif line.startswith("+ "):
+            output.append(f"{Fore.RED}{line[2:]}")
+        elif line.startswith("? "):
+            # We can use this to find the index of change in the
+            # line above if required in the future
+            pass
+        else:
+            output.append(f"{Fore.RESET}{line[2:]}")
+
+    return " " * margin_left + f"\n{' ' * margin_left}".join(output)

@@ -8,7 +8,7 @@ from typing import Iterable
 from blessings import Terminal
 from colorama import Fore, Style
 
-from ward.diff import build_split_diff
+from ward.diff import build_split_diff, build_unified_diff
 from ward.expect import ExpectationFailed
 from ward.fixtures import TestSetupError
 from ward.suite import Suite
@@ -18,15 +18,15 @@ HEADER = f"ward"
 
 
 def truncate(s: str, num_chars: int) -> str:
-    return s[:num_chars] + "..."
+    suffix = "..." if len(s) > num_chars - 3 else ""
+    return s[:num_chars] + suffix
 
 
 def write_test_failure_output(term, test_result):
     # Header of failure output
     test_name = test_result.test.name
     test_module = test_result.test.module.__name__
-    error_text = f"[{type(test_result.error).__name__}]"
-    test_result_heading = f"\n\nTest '{test_module}.{test_name}' failed:"
+    test_result_heading = f"\n\n  Test '{test_module}.{test_name}' failed:"
     write_over_line(f"{Fore.RED}{test_result_heading} ", 0, term)
     err = test_result.error
 
@@ -36,7 +36,7 @@ def write_test_failure_output(term, test_result):
     elif isinstance(err, ExpectationFailed):
         print()
         write_over_line(
-            f"  Expectations for value {truncate(repr(err.history[0].this), num_chars=term.width - 30)}",
+            f"  Actual value {truncate(repr(err.history[0].this), num_chars=term.width - 30)}",
             0,
             term,
         )
@@ -56,8 +56,11 @@ def write_test_failure_output(term, test_result):
         if err.history and err.history[-1].op == "equals":
             expect = err.history[-1]
             print("\n  Showing diff of expected value vs actual value:")
-            that, this = build_split_diff(expect.that, expect.this, width=term.width - 30)
-            print(f"    {this}", "\n", f"   {that}")
+            # that, this = build_split_diff(expect.that, expect.this, width=term.width - 30)
+            # print(f"    {this}", "\n", f"   {that}")
+
+            diff = build_unified_diff(expect.that, expect.this, width=term.width - 30)
+            print(diff)
     else:
         trc = traceback.format_exception(None, err, err.__traceback__)
         write_over_line("".join(trc), 0, term)
@@ -85,7 +88,9 @@ def write_over_line(str_to_write: str, offset_from_bottom: int, term: Terminal):
         37
     )  # chars that are part of escape code, but NOT actually printed. Yeah I know...
     with term.location(None, term.height - offset_from_bottom):
-        right_margin = max(0, term.width - len(str_to_write) + esc_code_rhs_margin) * " "
+        right_margin = (
+            max(0, term.width - len(str_to_write) + esc_code_rhs_margin) * " "
+        )
         sys.stdout.write(f"{str_to_write}{right_margin}")
         sys.stdout.flush()
 
@@ -145,7 +150,9 @@ class TestResultWriter:
             write_over_line(info_bar, 0, self.terminal)
         total = passed + failed
         if total == 0:
-            write_over_line(self.terminal.cyan_bold(f"No tests found."), 1, self.terminal)
+            write_over_line(
+                self.terminal.cyan_bold(f"No tests found."), 1, self.terminal
+            )
         if failing_test_results:
             for test_result in failing_test_results:
                 write_test_failure_output(self.terminal, test_result)
