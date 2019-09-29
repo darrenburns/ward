@@ -42,7 +42,7 @@ from ward.expect import expect
 @fixture
 def cities():
     return {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
-            "masdid": "spain"}
+            "madrid": "spain"}
 
 def test_capital_cities(cities):
     found_cities = get_capitals_from_server()
@@ -65,7 +65,6 @@ from ward.expect import raises
 def test_expecting_an_exception():
     with raises(ZeroDivisionError):
         1/0
-
 ```
 
 

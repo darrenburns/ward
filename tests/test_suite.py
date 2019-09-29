@@ -80,24 +80,27 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
     )
     assert type(result.error) is AssertionError
 
+# region example
 
-def get_capitals_from_server():
-    return {"glasgow": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland",
-            "berlin": "germany",
-            "madrid": "spain"}
+# def get_capitals_from_server():
+#     return {"glasgow": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland",
+#             "berlin": "germany",
+#             "madrid": "spain"}
+#
+#
+# @fixture
+# def cities():
+#     return {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
+#             "masdid": "spain"}
+#
+#
+# def test_capital_cities(cities):
+#     found_cities = get_capitals_from_server()
+#
+#     (expect(found_cities)
+#      .is_instance_of(dict)
+#      .contains("tokyo")
+#      .has_length(6)
+#      .equals(cities))
 
-
-@fixture
-def cities():
-    return {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
-            "masdid": "spain"}
-
-
-def test_capital_cities(cities):
-    found_cities = get_capitals_from_server()
-
-    (expect(found_cities)
-     .is_instance_of(dict)
-     .contains("tokyo")
-     .has_length(6)
-     .equals(cities))
+# endregion example
