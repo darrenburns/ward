@@ -77,6 +77,8 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
 
 
 def test_dicts():
-    expect({"one": "two"}) \
-        .has_length(1) \
-        .equals({"one": "three"}) \
+    expect({"one": "two", "apple": "banana", "pear": "mushroom", "scotland": "europe"}).contains(
+        "one"
+    ).has_length(4).is_instance_of(dict).equals(
+        {"one": "three", "apple": "banana", "pear": "mushroom", "scotland": "europe"}
+    )

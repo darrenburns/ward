@@ -4,9 +4,9 @@ import pprint
 from colorama import Fore, Style
 
 
-def build_split_diff(lhs, rhs):
-    lhs_repr = pprint.pformat(lhs, width=80)
-    rhs_repr = pprint.pformat(rhs, width=80)
+def build_split_diff(lhs, rhs, width=80):
+    lhs_repr = pprint.pformat(lhs, width=width)
+    rhs_repr = pprint.pformat(rhs, width=width)
     lhs_out, rhs_out = "", ""
 
     matcher = difflib.SequenceMatcher(None, lhs_repr, rhs_repr)

@@ -40,7 +40,9 @@ def record_expect_in_history(func):
             self.history.append(Expected(this=self.this, op=func.__name__, that=that, success=True))
             return self
         else:
-            self.history.append(Expected(this=self.this, op=func.__name__, that=that, success=False))
+            self.history.append(
+                Expected(this=self.this, op=func.__name__, that=that, success=False)
+            )
             raise ExpectationFailed(f"{func.__name__} expectation failed", self.history)
 
     return wrapped_func
@@ -70,6 +72,10 @@ class expect:
     @record_expect_in_history
     def has_length(self, length: int):
         return len(self.this) == length
+
+    @record_expect_in_history
+    def is_instance_of(self, type: Type):
+        return isinstance(self.this, type)
 
     @record_expect_in_history
     def is_the_same_as(self, that: Any):

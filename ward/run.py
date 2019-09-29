@@ -10,13 +10,7 @@ from ward.terminal import TestResultWriter
 
 
 @click.command()
-@click.option(
-    "-p",
-    "--path",
-    default=".",
-    type=click.Path(exists=True),
-    help="Path to tests.",
-)
+@click.option("-p", "--path", default=".", type=click.Path(exists=True), help="Path to tests.")
 def run(path):
     term = Terminal()
 
@@ -29,9 +23,7 @@ def run(path):
     test_results = suite.generate_test_runs()
 
     exit_code = TestResultWriter(
-        suite=suite,
-        terminal=term,
-        test_results=test_results,
+        suite=suite, terminal=term, test_results=test_results
     ).write_test_results_to_terminal()
 
     sys.exit(exit_code.value)

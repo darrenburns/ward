@@ -17,17 +17,17 @@ from ward.test_result import TestResult
 HEADER = f"ward"
 
 
+def truncate(s: str, num_chars: int) -> str:
+    return s[:num_chars] + "..."
+
+
 def write_test_failure_output(term, test_result):
     # Header of failure output
     test_name = test_result.test.name
     test_module = test_result.test.module.__name__
     error_text = f"[{type(test_result.error).__name__}]"
     test_result_heading = f"\n\nTest '{test_module}.{test_name}' failed:"
-    write_over_line(
-        f"{Fore.RED}{test_result_heading} ",
-        0,
-        term,
-    )
+    write_over_line(f"{Fore.RED}{test_result_heading} ", 0, term)
     err = test_result.error
 
     # Body of failure output, depends on how the test failed
@@ -35,19 +35,28 @@ def write_test_failure_output(term, test_result):
         write_over_line(str(err), 0, term)
     elif isinstance(err, ExpectationFailed):
         print()
-        write_over_line(f"  Expectations for value {err.history[0].this}:", 0, term)
+        write_over_line(
+            f"  Expectations for value {truncate(repr(err.history[0].this), num_chars=term.width - 30)}",
+            0,
+            term,
+        )
         for expect in err.history:
             if expect.success:
                 result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
             else:
                 result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
-            write_over_line(f"    {result_marker} it {expect.op} {expect.that}{Style.RESET_ALL}", 0, term)
+            write_over_line(
+                f"    {result_marker} it {expect.op} {truncate(repr(expect.that), num_chars=term.width - 30)}{Style.RESET_ALL}",
+                0,
+                term,
+            )
 
         # TODO: Add ability to hook and change the function called below
+        # TODO: Diffs should be shown for more than just op == "equals"
         if err.history and err.history[-1].op == "equals":
             expect = err.history[-1]
             print("\n  Showing diff of expected value vs actual value:")
-            that, this = build_split_diff(expect.that, expect.this)
+            that, this = build_split_diff(expect.that, expect.this, width=term.width - 30)
             print(f"    {this}", "\n", f"   {that}")
     else:
         trc = traceback.format_exception(None, err, err.__traceback__)
