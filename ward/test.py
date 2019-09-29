@@ -1,15 +1,28 @@
 import inspect
 from dataclasses import dataclass
+from enum import Enum, auto
 from types import MappingProxyType, ModuleType
 from typing import Any, Callable, Dict
 
 from ward.fixtures import FixtureRegistry
 
 
+class WardMarker(Enum):
+    NONE = auto()
+    SKIP = auto()
+    FLAKY = auto()
+
+
+def skip(func):
+    func.ward_marker = WardMarker.SKIP
+    return func
+
+
 @dataclass
 class Test:
     fn: Callable
     module: ModuleType
+    marker: WardMarker = WardMarker.NONE
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)

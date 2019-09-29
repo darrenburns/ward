@@ -4,7 +4,7 @@ from unittest import mock
 from ward.expect import expect
 from ward.fixtures import Fixture, FixtureRegistry, fixture
 from ward.suite import Suite
-from ward.test import Test
+from ward.test import Test, skip
 from ward.test_result import TestResult
 
 NUMBER_OF_TESTS = 5
@@ -82,31 +82,32 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
 
 # region example
 
-# def get_capitals_from_server():
-#     return {"glasgow": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland",
-#             "berlin": "germany",
-#             "madrid": "spain"}
-#
-#
-# @fixture
-# def cities():
-#     return {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
-#             "masdid": "spain"}
-#
-#
-# def test_capital_cities(cities):
-#     found_cities = get_capitals_from_server()
-#
-#     def all_keys_less_than_length_10(cities):
-#         return all(len(k) < 10 for k in cities)
-#
-#
-#     (expect(found_cities)
-#      .satisfies(lambda c: all(len(k) < 10 for k in c))
-#      .satisfies(all_keys_less_than_length_10)
-#      .is_instance_of(dict)
-#      .contains("tokyo")
-#      .has_length(6)
-#      .equals(cities))
+def get_capitals_from_server():
+    return {"glasgow": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland",
+            "berlin": "germany",
+            "madrid": "spain"}
+
+
+@fixture
+def cities():
+    return {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
+            "masdid": "spain"}
+
+
+@skip
+def test_capital_cities(cities):
+    found_cities = get_capitals_from_server()
+
+    def all_keys_less_than_length_10(cities):
+        return all(len(k) < 10 for k in cities)
+
+
+    (expect(found_cities)
+     .satisfies(lambda c: all(len(k) < 10 for k in c))
+     .satisfies(all_keys_less_than_length_10)
+     .is_instance_of(dict)
+     .contains("tokyo")
+     .has_length(6)
+     .equals(cities))
 
 # endregion example

@@ -6,7 +6,7 @@ from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from typing import Any, Generator, Iterable
 
-from ward.test import Test
+from ward.test import Test, WardMarker
 
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:
@@ -43,5 +43,10 @@ def get_tests_in_modules(modules: Iterable[Any]) -> Generator[Test, None, None]:
             if item.startswith("test_"):
                 test_name = item
                 test_fn = getattr(mod, test_name)
+                marker = getattr(test_fn, "ward_marker", WardMarker.NONE)
                 if test_fn:
-                    yield Test(test_fn, mod)
+                    yield Test(
+                        fn=test_fn,
+                        module=mod,
+                        marker=marker,
+                    )
