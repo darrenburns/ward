@@ -1,7 +1,7 @@
 import argparse
 import sys
-from typing import Any, Dict
 
+import click
 from blessings import Terminal
 
 from ward.collect import get_info_for_modules, get_tests_in_modules, load_modules
@@ -10,20 +10,12 @@ from ward.suite import Suite
 from ward.terminal import TestResultWriter
 
 
-def setup_cmd_line():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--path", help="path of directory containing tests")
-    return parser
-
-
-def run():
+@click.command()
+@click.option("--path", default=".", help="Path to tests.")
+def run(path):
     term = Terminal()
 
-    cmd_line = setup_cmd_line()
-    args: Dict[str, Any] = vars(cmd_line.parse_args())
-
-    path_to_tests = args.get("path", ".") or "."
-    mod_infos = get_info_for_modules(path_to_tests)
+    mod_infos = get_info_for_modules(path)
     modules = list(load_modules(mod_infos))
     tests = list(get_tests_in_modules(modules))
 
@@ -39,6 +31,3 @@ def run():
 
     sys.exit(exit_code.value)
 
-
-if __name__ == "__main__":
-    run()

@@ -26,5 +26,6 @@ setup(
         "blessings==1.7",
         "colorama==0.4.1",
         "dataclasses==0.6",
+        "click==7.0",
     ]
 )

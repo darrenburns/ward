@@ -32,8 +32,9 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
         file_finder: FileFinder = m.module_finder
         spec: ModuleSpec = file_finder.find_spec(m.name)
         mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        yield mod
+        if mod.__name__.startswith("test_"):
+            spec.loader.exec_module(mod)
+            yield mod
 
 
 def get_tests_in_modules(modules: Iterable[Any]) -> Generator[Test, None, None]:
