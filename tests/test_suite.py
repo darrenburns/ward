@@ -98,7 +98,7 @@ def test_generate_test_runs__yields_skipped_test_result_on_test_with_skip_marker
     test_runs = list(suite.generate_test_runs())
     expected_runs = [
         TestResult(example_test, TestOutcome.PASS, None, ""),
-        TestResult(skipped_test, TestOutcome.SKIP, None, "abc"),
+        TestResult(skipped_test, TestOutcome.SKIP, None, ""),
     ]
 
     expect(test_runs).equals(expected_runs)
