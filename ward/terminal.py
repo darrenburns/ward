@@ -1,20 +1,18 @@
-import inspect
 import sys
 import traceback
 from dataclasses import dataclass
 from enum import Enum
 from itertools import cycle
-from time import sleep
 from typing import Iterable
 
 from blessings import Terminal
 from colorama import Fore, Style, Back
 
-from ward.diff import build_split_diff, build_unified_diff
+from ward.diff import build_unified_diff
 from ward.expect import ExpectationFailed
 from ward.fixtures import TestSetupError
 from ward.suite import Suite
-from ward.test_result import TestResult
+from ward.test_result import TestResult, TestOutcome
 
 HEADER = f"ward"
 
@@ -63,15 +61,20 @@ def write_test_failure_output(term, test_result):
         # TODO: Diffs should be shown for more than just op == "equals"
         if err.history and err.history[-1].op == "equals":
             expect = err.history[-1]
-            print(f"\n  Showing diff of {Fore.GREEN}expected value{Fore.RESET} vs {Fore.RED}actual value{Fore.RESET}:\n")
+            print(
+                f"\n  Showing diff of {Fore.GREEN}expected value{Fore.RESET} vs {Fore.RED}actual value{Fore.RESET}:\n")
             # that, this = build_split_diff(expect.that, expect.this, width=term.width - 30)
             # print(f"    {this}", "\n", f"   {that}")
 
             diff = build_unified_diff(expect.that, expect.this, width=term.width - 30)
             print(diff)
     else:
-        trc = traceback.format_exception(None, err, err.__traceback__)
-        write_over_line("".join(trc), 0, term)
+        trace = getattr(err, "__traceback__", "")
+        if trace:
+            trc = traceback.format_exception(None, err, trace)
+            write_over_line("".join(trc), 0, term)
+        else:
+            write_over_line(str(err), 0, term)
 
 
 def write_test_result(test_result: TestResult, term: Terminal):
@@ -130,15 +133,17 @@ class TestResultWriter:
         )
 
         failing_test_results = []
-        passed, failed = 0, 0
+        passed, failed, skipped = 0, 0, 0
         spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
         info_bar = ""
         for result in self.test_results:
-            if result.was_success:
+            if result.outcome == TestOutcome.PASS:
                 passed += 1
-            else:
+            elif result.outcome == TestOutcome.FAIL:
                 failed += 1
                 failing_test_results.append(result)
+            elif result.outcome == TestOutcome.SKIP:
+                skipped += 1
 
             write_test_result(result, self.terminal)
 

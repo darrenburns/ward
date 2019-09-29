@@ -5,7 +5,7 @@ from ward.expect import expect
 from ward.fixtures import Fixture, FixtureRegistry, fixture
 from ward.suite import Suite
 from ward.test import Test, skip
-from ward.test_result import TestResult
+from ward.test_result import TestResult, TestOutcome
 
 NUMBER_OF_TESTS = 5
 
@@ -58,7 +58,7 @@ def test_generate_test_runs__correct_number_of_runs_generated(suite):
 def test_generate_test_runs__yields_correct_test_results_when_exhausted(suite):
     results = list(suite.generate_test_runs())
     assert results == [
-        TestResult(test=test, was_success=True, error=None, message="")
+        TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
         for test in suite.tests
     ]
 
@@ -76,7 +76,7 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
     result = next(results)
 
     assert result == TestResult(
-        test=test, was_success=False, error=mock.ANY, message=""
+        test=test, outcome=TestOutcome.FAIL, error=mock.ANY, message=""
     )
     assert type(result.error) is AssertionError
 
