@@ -66,4 +66,22 @@ def test_expecting_an_exception():
         1/0
 ```
 
+### Running a subset of tests
+
+You can choose to limit which tests are collected and ran by Ward 
+using the `--filter` option. Test names which contain the argument value 
+as a substring will be run, and everything else will be ignored.
+
+To run a test called `test_the_sky_is_blue`:
+
+```text
+ward --filter test_the_sky_is_blue
+```
+
+The match takes place on the fully qualified name, so you can run a single
+module (e.g. `my_module`) using the following command
+
+```text
+ward --filter my_module.
+```
 

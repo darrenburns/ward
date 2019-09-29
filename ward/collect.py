@@ -37,7 +37,7 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
             yield mod
 
 
-def get_tests_in_modules(modules: Iterable[Any]) -> Generator[Test, None, None]:
+def get_tests_in_modules(modules: Iterable[Any], filter: str = "") -> Generator[Test, None, None]:
     for mod in modules:
         for item in dir(mod):
             if item.startswith("test_"):
@@ -45,8 +45,14 @@ def get_tests_in_modules(modules: Iterable[Any]) -> Generator[Test, None, None]:
                 test_fn = getattr(mod, test_name)
                 marker = getattr(test_fn, "ward_marker", WardMarker.NONE)
                 if test_fn:
-                    yield Test(
+                    test = Test(
                         fn=test_fn,
                         module=mod,
                         marker=marker,
                     )
+
+                    # Yield tests if there's no filter, or if the filter matches
+                    if not filter:
+                        yield test
+                    elif filter in test.qualified_name:
+                        yield test

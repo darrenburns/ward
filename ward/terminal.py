@@ -126,7 +126,7 @@ class TestResultWriter:
         print(self.terminal.hide_cursor())
         print("\n")
         write_over_line(
-            f"{Fore.CYAN}[{HEADER}] Discovered {self.suite.num_tests} tests and "
+            f"{Fore.CYAN}[{HEADER}] Collected {self.suite.num_tests} tests and "
             f"{self.suite.num_fixtures} fixtures.\nRunning {self.suite.num_tests} tests...",
             4,
             self.terminal,
@@ -147,7 +147,7 @@ class TestResultWriter:
 
             write_test_result(result, self.terminal)
 
-            pass_pct = passed / (passed + failed)
+            pass_pct = passed / max(passed + failed, 1)
             fail_pct = 1.0 - pass_pct
 
             write_over_progress_bar(pass_pct, fail_pct, self.terminal)

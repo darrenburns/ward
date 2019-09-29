@@ -31,6 +31,10 @@ class Test:
     def name(self):
         return self.fn.__name__
 
+    @property
+    def qualified_name(self):
+        return f"{self.module.__name__}.{self.name}"
+
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 

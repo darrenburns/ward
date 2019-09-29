@@ -13,12 +13,15 @@ from ward.terminal import TestResultWriter
 @click.option(
     "-p", "--path", default=".", type=click.Path(exists=True), help="Path to tests."
 )
-def run(path):
+@click.option(
+    "-f", "--filter", help="Only run tests whose names contain the filter argument as a substring."
+)
+def run(path, filter):
     term = Terminal()
 
     mod_infos = get_info_for_modules(path)
     modules = list(load_modules(mod_infos))
-    tests = list(get_tests_in_modules(modules))
+    tests = list(get_tests_in_modules(modules, filter=filter))
 
     suite = Suite(tests=tests, fixture_registry=fixture_registry)
 
