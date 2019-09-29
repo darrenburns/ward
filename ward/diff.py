@@ -21,9 +21,9 @@ def build_split_diff(lhs, rhs):
             elif op == "delete":
                 lhs_out += f"{Fore.GREEN}{lhs_substring}"
             elif op == "insert":
-                lhs_out += lhs_substring
+                lhs_out += f"{Fore.RESET}{lhs_substring}"
             elif op == "equal":
-                lhs_out += lhs_substring
+                lhs_out += f"{Fore.RESET}{lhs_substring}"
 
             if i != len(lhs_substring_lines) - 1:
                 lhs_out += f"{Style.RESET_ALL}\n"
@@ -34,7 +34,7 @@ def build_split_diff(lhs, rhs):
             elif op == "insert":
                 rhs_out += f"{Fore.RED}{rhs_substring}"
             elif op == "equal":
-                rhs_out += rhs_substring
+                rhs_out += f"{Fore.RESET}{rhs_substring}"
 
             if j != len(rhs_substring_lines) - 1:
                 rhs_out += f"{Style.RESET_ALL}\n"

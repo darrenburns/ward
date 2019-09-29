@@ -74,3 +74,9 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
 
     assert result == TestResult(test=test, was_success=False, error=mock.ANY, message="")
     assert type(result.error) is AssertionError
+
+
+def test_dicts():
+    expect({"one": "two"}) \
+        .has_length(1) \
+        .equals({"one": "three"}) \
