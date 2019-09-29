@@ -1,3 +1,4 @@
+import inspect
 import sys
 import traceback
 from dataclasses import dataclass
@@ -47,8 +48,13 @@ def write_test_failure_output(term, test_result):
                 result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
             else:
                 result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+
+            if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
+                expect_that = truncate(expect.that.__name__, num_chars=term.width - 30)
+            else:
+                expect_that = truncate(repr(expect.that), num_chars=term.width - 30)
             write_over_line(
-                f"    {result_marker} it {expect.op} {truncate(repr(expect.that), num_chars=term.width - 30)}{Style.RESET_ALL}",
+                f"    {result_marker} it {expect.op} {expect_that}{Style.RESET_ALL}",
                 0,
                 term,
             )

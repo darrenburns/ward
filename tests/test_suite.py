@@ -97,7 +97,13 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
 # def test_capital_cities(cities):
 #     found_cities = get_capitals_from_server()
 #
+#     def all_keys_less_than_length_10(cities):
+#         return all(len(k) < 10 for k in cities)
+#
+#
 #     (expect(found_cities)
+#      .satisfies(lambda c: all(len(k) < 10 for k in c))
+#      .satisfies(all_keys_less_than_length_10)
 #      .is_instance_of(dict)
 #      .contains("tokyo")
 #      .has_length(6)

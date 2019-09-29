@@ -1,6 +1,6 @@
 import functools
 from dataclasses import dataclass
-from typing import Type, Any, List
+from typing import Type, Any, List, Callable
 
 
 class raises:
@@ -78,6 +78,10 @@ class expect:
     @record_expect_in_history
     def is_instance_of(self, type: Type):
         return isinstance(self.this, type)
+
+    @record_expect_in_history
+    def satisfies(self, predicate: Callable[["expect"], bool]):
+        return predicate(self.this)
 
     @record_expect_in_history
     def is_(self, that: Any):
