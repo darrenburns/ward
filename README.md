@@ -41,8 +41,7 @@ from ward.expect import expect
 
 @fixture
 def cities():
-    return {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
-            "madrid": "spain"}
+    return {"edinburgh": "scotland", "tokyo": "japan", "madrid": "spain"}
 
 def test_capital_cities(cities):
     found_cities = get_capitals_from_server()
