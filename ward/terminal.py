@@ -3,10 +3,11 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from itertools import cycle
+from time import sleep
 from typing import Iterable
 
 from blessings import Terminal
-from colorama import Fore, Style
+from colorama import Fore, Style, Back
 
 from ward.diff import build_split_diff, build_unified_diff
 from ward.expect import ExpectationFailed
@@ -26,8 +27,8 @@ def write_test_failure_output(term, test_result):
     # Header of failure output
     test_name = test_result.test.name
     test_module = test_result.test.module.__name__
-    test_result_heading = f"\n\n  Test '{test_module}.{test_name}' failed:"
-    write_over_line(f"{Fore.RED}{test_result_heading} ", 0, term)
+    test_result_heading = f"{Fore.BLACK}{Back.RED}◤ {test_module}.{test_name} failed: "
+    write_over_line(f"{test_result_heading}{Style.RESET_ALL}", 0, term)
     err = test_result.error
 
     # Body of failure output, depends on how the test failed
@@ -36,10 +37,11 @@ def write_test_failure_output(term, test_result):
     elif isinstance(err, ExpectationFailed):
         print()
         write_over_line(
-            f"  Actual value {truncate(repr(err.history[0].this), num_chars=term.width - 30)}",
+            f"  Expect {truncate(repr(err.history[0].this), num_chars=term.width - 30)}",
             0,
             term,
         )
+        print()
         for expect in err.history:
             if expect.success:
                 result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
@@ -55,7 +57,7 @@ def write_test_failure_output(term, test_result):
         # TODO: Diffs should be shown for more than just op == "equals"
         if err.history and err.history[-1].op == "equals":
             expect = err.history[-1]
-            print("\n  Showing diff of expected value vs actual value:")
+            print(f"\n  Showing diff of {Fore.GREEN}expected value{Fore.RESET} vs {Fore.RED}actual value{Fore.RESET}:\n")
             # that, this = build_split_diff(expect.that, expect.this, width=term.width - 30)
             # print(f"    {this}", "\n", f"   {that}")
 
@@ -153,12 +155,12 @@ class TestResultWriter:
             write_over_line(
                 self.terminal.cyan_bold(f"No tests found."), 1, self.terminal
             )
-        if failing_test_results:
-            for test_result in failing_test_results:
-                write_test_failure_output(self.terminal, test_result)
 
         reset_cursor(self.terminal)
         if failing_test_results:
+            for test_result in failing_test_results:
+                write_test_failure_output(self.terminal, test_result)
+            print()
             print(info_bar)
             return ExitCode.TEST_FAILED
 
