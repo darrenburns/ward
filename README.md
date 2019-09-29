@@ -48,9 +48,8 @@ def test_capital_cities(cities):
     found_cities = get_capitals_from_server()
 
     (expect(found_cities)
-     .is_instance_of(dict)
-     .contains("tokyo")
-     .has_length(6)
+     .contains("tokyo")  # it contains the key 'tokyo'
+     .satisfies(lambda x: all(len(k) < 10 for k in x))  # all keys < 10 chars
      .equals(cities))
 ```
 
