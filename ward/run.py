@@ -1,4 +1,3 @@
-import argparse
 import sys
 
 import click
@@ -11,7 +10,13 @@ from ward.terminal import TestResultWriter
 
 
 @click.command()
-@click.option("--path", default=".", help="Path to tests.")
+@click.option(
+    "-p",
+    "--path",
+    default=".",
+    type=click.Path(exists=True),
+    help="Path to tests.",
+)
 def run(path):
     term = Terminal()
 
@@ -30,4 +35,3 @@ def run(path):
     ).write_test_results_to_terminal()
 
     sys.exit(exit_code.value)
-
