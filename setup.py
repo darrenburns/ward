@@ -17,6 +17,11 @@ setup(
     license="MIT",
     packages=["ward"],
     python_requires=">=3.6",
+    entry_points={
+        'console_scripts': [
+            'ward=ward.run:run'
+        ]
+    },
     install_requires = [
         "blessings==1.7",
         "colorama==0.4.1",
