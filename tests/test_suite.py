@@ -1,7 +1,6 @@
 from types import ModuleType
 from unittest import mock
 
-from ward import expect
 from ward.expect import expect
 from ward.fixtures import Fixture, FixtureRegistry, fixture
 from ward.suite import Suite
