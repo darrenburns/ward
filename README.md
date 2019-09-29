@@ -26,7 +26,7 @@ def test_using_cities(cities):
 
 ### The Expect API
 
-In the `test_capital_cities` test, we want to determine whether
+In the (contrived) `test_capital_cities` test, we want to determine whether
 the `get_capitals_from_server` function is behaving as expected, 
 so we grab the output of the function and pass it to `expect`. From
 here, we check that the response is as we expect it to be by chaining
