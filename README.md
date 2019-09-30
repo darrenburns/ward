@@ -14,8 +14,7 @@ Ward sees that the fixture name and parameter names match, so it
 calls the `cities` fixture, and passes the result into the test.
 
 ```python
-from ward.fixtures import fixture
-from ward.expect import expect
+from ward import expect, fixture
 
 @fixture
 def cities():
@@ -37,8 +36,7 @@ the Expect API are named such that they correspond as closely to standard
 Python operators as possible, meaning there's not much to memorise.
 
 ```python
-from ward.fixtures import fixture
-from ward.expect import expect
+from ward import expect, fixture
 
 @fixture
 def cities():
@@ -59,7 +57,7 @@ The test below will pass, because a `ZeroDivisionError` is raised. If a `ZeroDiv
 the test would fail.
 
 ```python
-from ward.expect import raises
+from ward import raises
 
 def test_expecting_an_exception():
     with raises(ZeroDivisionError):
@@ -79,9 +77,22 @@ ward --filter test_the_sky_is_blue
 ```
 
 The match takes place on the fully qualified name, so you can run a single
-module (e.g. `my_module`) using the following command
+module (e.g. `my_module`) using the following command:
 
 ```text
 ward --filter my_module.
+```
+
+
+### Skipping a test
+
+Use the `@skip` annotation to tell Ward not to execute a test.
+
+```python
+from ward import skip
+
+@skip
+def test_to_be_skipped():
+    pass
 ```
 

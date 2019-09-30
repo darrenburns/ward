@@ -1,5 +1,5 @@
-from ward import expect
-from ward.fixtures import Fixture, FixtureExecutionError, FixtureRegistry, fixture
+from ward import expect, fixture, raises
+from ward.fixtures import Fixture, FixtureExecutionError, FixtureRegistry
 
 
 @fixture
@@ -35,14 +35,14 @@ def test_fixture_resolve_resolves_tree_correctly():
 
     # Each of the fixtures add 1, so the final value returned
     # by the tree should be 4, since there are 4 fixtures.
-    assert resolved_parent == 4
+    expect(resolved_parent).equals(4)
 
 
 def test_fixture_registry_cache_fixture(exception_raising_fixture):
     registry = FixtureRegistry()
     registry.cache_fixture(exception_raising_fixture)
 
-    assert registry[exception_raising_fixture.key] == exception_raising_fixture
+    expect(registry[exception_raising_fixture.key]).equals(exception_raising_fixture)
 
 
 def test_fixture_resolve_raises_FixtureExecutionError_when_fixture_cant_be_executed(
@@ -51,5 +51,5 @@ def test_fixture_resolve_raises_FixtureExecutionError_when_fixture_cant_be_execu
     registry = FixtureRegistry()
     registry.cache_fixtures([exception_raising_fixture])
 
-    with expect.raises(FixtureExecutionError):
+    with raises(FixtureExecutionError):
         exception_raising_fixture.resolve(registry)

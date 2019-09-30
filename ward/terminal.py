@@ -36,7 +36,7 @@ def write_test_failure_output(term, test_result):
     elif isinstance(err, ExpectationFailed):
         print()
         write_over_line(
-            f"  Expect {truncate(repr(err.history[0].this), num_chars=term.width - 30)}",
+            f"  Given {truncate(repr(err.history[0].this), num_chars=term.width - 30)}",
             0,
             term,
         )
@@ -127,7 +127,7 @@ class TestResultWriter:
         print("\n")
         write_over_line(
             f"{Fore.CYAN}[{HEADER}] Collected {self.suite.num_tests} tests and "
-            f"{self.suite.num_fixtures} fixtures.\nRunning {self.suite.num_tests} tests...",
+            f"{self.suite.num_fixtures} fixtures.\nRunning tests...",
             4,
             self.terminal,
         )

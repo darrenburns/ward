@@ -1,10 +1,10 @@
 from types import ModuleType
 from unittest import mock
 
-from ward.expect import expect
-from ward.fixtures import Fixture, FixtureRegistry, fixture
+from ward import expect, fixture, skip
+from ward.fixtures import Fixture, FixtureRegistry
 from ward.suite import Suite
-from ward.test import Test, skip, WardMarker
+from ward.test import Test, WardMarker
 from ward.test_result import TestResult, TestOutcome
 
 NUMBER_OF_TESTS = 5
