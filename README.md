@@ -64,7 +64,20 @@ def test_expecting_an_exception():
         1/0
 ```
 
-### Running a subset of tests
+### Running tests in a directory
+
+You can run tests in a specific directory using the `--path` option.
+For example, to run all tests inside a directory called `tests`:
+
+```text
+ward --path tests
+```
+
+To run tests in the current directory, you can just type `ward`, which
+is functionally equivalent to `ward --path .`
+
+
+### Filtering tests by name
 
 You can choose to limit which tests are collected and ran by Ward 
 using the `--filter` option. Test names which contain the argument value 
@@ -82,7 +95,6 @@ module (e.g. `my_module`) using the following command:
 ```text
 ward --filter my_module.
 ```
-
 
 ### Skipping a test
 
