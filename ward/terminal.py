@@ -183,8 +183,7 @@ class TestResultWriterBase:
     def output_all_test_results(self, test_results_gen: Generator[TestResult, None, None]) -> List[TestResult]:
         all_results = []
         failed_test_results = []
-        print(f"{Fore.BLACK}{Back.CYAN} WARD | "
-              f"Collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures. {Style.RESET_ALL}")
+        print(f"Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures. {Style.RESET_ALL}")
         for result in test_results_gen:
             self.output_single_test_result(result)
             sys.stdout.write(Style.RESET_ALL)
