@@ -117,8 +117,6 @@ def cities():
     return {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
             "masdid": "spain"}
 
-
-@skip
 def test_capital_cities(cities):
     found_cities = get_capitals_from_server()
 
@@ -131,6 +129,5 @@ def test_capital_cities(cities):
      .is_instance_of(dict)
      .contains("tokyo")
      .has_length(6)
-     .equals(cities))
-
+     .equals({"edinburgh": "scotland", "tokyo": "japan", "london": "england"}))
 # endregion example
