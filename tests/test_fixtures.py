@@ -38,7 +38,6 @@ def test_fixture_resolve_resolves_tree_correctly():
     expect(resolved_parent).equals(4)
 
 
-@skip
 def test_fixture_registry_cache_fixture(exception_raising_fixture):
     registry = FixtureRegistry()
     registry.cache_fixture(exception_raising_fixture)
