@@ -108,3 +108,13 @@ def test_to_be_skipped():
     pass
 ```
 
+### Testing for approximate equality
+
+Check that a value is close to another value.
+
+```python
+expect(1.0).approx(1.01, epsilon=0.2)  # pass
+expect(1.0).approx(1.01, epsilon=0.001)  # fail
+
+```
+
