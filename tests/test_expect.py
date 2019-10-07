@@ -61,6 +61,30 @@ def test_satisfies_success_history_recorded():
     expect(e.history).equals(hist)
 
 
+def test_satisfies_failure_history_recorded():
+    this = "olleh"
+    predicate = lambda e: False
+
+    e = expect(this)
+    try:
+        e.satisfies(predicate)
+    except ExpectationFailed:
+        pass
+
+    hist = [
+        Expected(
+            this=this,
+            op="satisfies",
+            that=predicate,
+            op_args=(),
+            op_kwargs={},
+            success=False
+        )
+    ]
+
+    expect(e.history).equals(hist)
+
+
 def test_approx_success_history_recorded():
     this, that, eps = 1.0, 1.01, 0.5
 
