@@ -1,6 +1,7 @@
 import functools
+import math
 from dataclasses import dataclass
-from typing import Type, Any, List, Callable
+from typing import Type, Any, List, Callable, Dict, Tuple
 
 
 class raises:
@@ -23,6 +24,8 @@ class Expected:
     this: Any
     op: str
     that: Any
+    op_args: Tuple
+    op_kwargs: Dict
     success: bool = True
 
 
@@ -38,12 +41,12 @@ def record_expect_in_history(func):
         rv = func(self, that, *args, **kwargs)
         if rv:
             self.history.append(
-                Expected(this=self.this, op=func.__name__, that=that, success=True)
+                Expected(this=self.this, op=func.__name__, that=that, success=True, op_args=args, op_kwargs=kwargs)
             )
             return self
         else:
             self.history.append(
-                Expected(this=self.this, op=func.__name__, that=that, success=False)
+                Expected(this=self.this, op=func.__name__, that=that, success=False, op_args=args, op_kwargs=kwargs)
             )
             raise ExpectationFailed(f"{func.__name__} expectation failed", self.history)
 
@@ -86,3 +89,7 @@ class expect:
     @record_expect_in_history
     def is_(self, that: Any):
         return self.this is that
+
+    @record_expect_in_history
+    def approx(self, that: Any, epsilon: float):
+        return math.isclose(self.this, that, abs_tol=epsilon)
