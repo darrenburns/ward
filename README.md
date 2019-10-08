@@ -115,6 +115,13 @@ Check that a value is close to another value.
 ```python
 expect(1.0).approx(1.01, epsilon=0.2)  # pass
 expect(1.0).approx(1.01, epsilon=0.001)  # fail
-
 ```
 
+### Cancelling a run after a specific number of failures
+
+If you wish for ward to cancel a run immediately after a specific number of failing tests,
+you can use the `--fail-limit` option. To have a run end immediately after 5 tests fail:
+
+```text
+ward --fail-limit
+```
