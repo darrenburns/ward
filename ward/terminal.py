@@ -3,7 +3,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from itertools import cycle
-from typing import Generator, List, Tuple
+from typing import Generator, List, Tuple, Optional
 
 from blessings import Terminal
 from colorama import Fore, Style, Back
@@ -180,7 +180,11 @@ class TestResultWriterBase:
         self.terminal = terminal
         self.suite = suite
 
-    def output_all_test_results(self, test_results_gen: Generator[TestResult, None, None]) -> List[TestResult]:
+    def output_all_test_results(
+        self,
+        test_results_gen: Generator[TestResult, None, None],
+        fail_limit: Optional[int] = None,
+    ) -> List[TestResult]:
         all_results = []
         failed_test_results = []
         print(f"Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures. {Style.RESET_ALL}")
@@ -190,6 +194,9 @@ class TestResultWriterBase:
             all_results.append(result)
             if result.outcome == TestOutcome.FAIL:
                 failed_test_results.append(result)
+
+            if len(failed_test_results) == fail_limit:
+                break
 
         self.output_test_run_post_failure_summary(test_results=all_results)
         for failure in failed_test_results:

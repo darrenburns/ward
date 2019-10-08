@@ -17,7 +17,10 @@ from ward.test_result import TestOutcome
 @click.option(
     "-f", "--filter", help="Only run tests whose names contain the filter argument as a substring."
 )
-def run(path, filter):
+@click.option(
+    "--fail-limit", type=int, help="The number of failures to cancel the run after."
+)
+def run(path, filter, fail_limit):
     term = Terminal()
 
     mod_infos = get_info_for_modules(path)
@@ -28,7 +31,12 @@ def run(path, filter):
 
     test_results = suite.generate_test_runs()
 
-    results = SimpleTestResultWrite(terminal=term, suite=suite).output_all_test_results(test_results)
+    writer = SimpleTestResultWrite(terminal=term, suite=suite)
+    results = writer.output_all_test_results(
+        test_results,
+        fail_limit=fail_limit,
+    )
+
     if any(r.outcome == TestOutcome.FAIL for r in results):
         exit_code = ExitCode.TEST_FAILED
     else:
