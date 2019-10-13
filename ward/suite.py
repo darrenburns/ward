@@ -31,7 +31,16 @@ class Suite:
                 yield TestResult(test, TestOutcome.FAIL, e, message="[Error] " + str(e))
                 continue
             try:
+                resolved_vals = {k: fix.resolved_val for (k, fix) in resolved_fixtures.items()}
                 test(**resolved_fixtures)
+
+                # TODO: Iterate through the resolved fixtures here,
+                #  and call them again to run any teardown code if
+                #  it is present.
+                for fixture in resolved_fixtures.values():
+                    if fixture.requires_cleanup:
+                        fixture.cleanup()
+
                 yield TestResult(test, TestOutcome.PASS, None, message="")
             except Exception as e:
                 yield TestResult(test, TestOutcome.FAIL, e, message="")

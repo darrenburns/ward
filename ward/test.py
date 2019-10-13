@@ -4,7 +4,7 @@ from enum import Enum, auto
 from types import MappingProxyType, ModuleType
 from typing import Any, Callable, Dict
 
-from ward.fixtures import FixtureRegistry
+from ward.fixtures import FixtureRegistry, Fixture
 
 
 class WardMarker(Enum):
@@ -41,7 +41,7 @@ class Test:
     def has_deps(self) -> bool:
         return len(self.deps()) > 0
 
-    def resolve_args(self, fixture_registry: FixtureRegistry) -> Dict[str, Any]:
+    def resolve_args(self, fixture_registry: FixtureRegistry) -> Dict[str, Fixture]:
         """Resolve fixture that has been injected into this test"""
         if not self.has_deps():
             return {}

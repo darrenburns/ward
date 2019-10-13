@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Dict, Iterable
+from typing import Callable, Dict, Iterable
 
 
 class TestSetupError(Exception):
@@ -15,50 +15,60 @@ class FixtureExecutionError(Exception):
 
 
 class Fixture:
-    def __init__(self, key: str, fn: Callable):
+    def __init__(self, key: str, fn: Callable, requires_cleanup: bool = False):
         self.key = key
         self.fn = fn
+        self.requires_cleanup = requires_cleanup
         self.resolved_val = None
         self.is_resolved = False
-
-    def fn(self):
-        return self.fn
 
     def deps(self):
         return inspect.signature(self.fn).parameters
 
-    def resolve(self, fix_registry) -> Any:
+    def resolve(self, fix_registry) -> "Fixture":
         """Traverse the fixture tree to resolve the value of this fixture"""
 
         # If this fixture has no children, cache and return the resolved value
         if not self.deps():
             try:
-                self.resolved_val = self.fn()
+                breakpoint()
+                if inspect.isgeneratorfunction(self.fn):
+                    self.resolved_val = next(self.fn())
+                else:
+                    self.resolved_val = self.fn()
             except Exception as e:
                 raise FixtureExecutionError(
                     f"Unable to execute fixture '{self.key}'"
                 ) from e
             fix_registry.cache_fixture(self)
-            return self.resolved_val
+            return self
 
         # Otherwise, we have to find the child fixture vals, and call self
         children = self.deps()
         children_resolved = []
         for child in children:
-            child_fixture = fix_registry[child]
-            child_resolved_val = child_fixture.resolve(fix_registry)
-            children_resolved.append(child_resolved_val)
+            child_fixture = fix_registry[child].resolve(fix_registry)
+            children_resolved.append(child_fixture)
 
         # We've resolved the values of all child fixtures
         try:
-            self.resolved_val = self.fn(*children_resolved)
+            child_resolved_vals = [child.resolved_val for child in children_resolved]
+            if inspect.isgeneratorfunction(self.fn):
+                gen = self.fn(*child_resolved_vals)
+                self.resolved_val = next(gen)
+            else:
+                self.resolved_val = self.fn(*child_resolved_vals)
         except Exception as e:
             raise FixtureExecutionError(
                 f"Unable to execute fixture '{self.key}'"
             ) from e
 
         fix_registry.cache_fixture(self)
-        return self.resolved_val
+        return self
+
+    def cleanup(self):
+        if self.requires_cleanup:
+            next(self.fn)
 
 
 class FixtureRegistry:
@@ -68,7 +78,11 @@ class FixtureRegistry:
         def wrapper(func):
             name = func.__name__
             if name not in self._fixtures:
-                self._fixtures[name] = Fixture(key=name, fn=func)
+                self._fixtures[name] = Fixture(
+                    key=name,
+                    fn=func,
+                    requires_cleanup=inspect.isgeneratorfunction(func),
+                )
             else:
                 raise CollectionError(f"Multiple fixtures named '{func.__name__}'.")
             return func
