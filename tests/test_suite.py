@@ -104,6 +104,43 @@ def test_generate_test_runs__yields_skipped_test_result_on_test_with_skip_marker
     expect(test_runs).equals(expected_runs)
 
 
+def test_fixture_teardown_occurs_and_in_expected_order(module):
+    events = []
+
+    def fix_a():
+        events.append(1)
+        yield "a"
+        events.append(3)
+
+    def fix_b():
+        events.append(2)
+        return "b"
+
+    def my_test(fix_a, fix_b):
+        expect(fix_a).equals("a")
+        expect(fix_b).equals("b")
+
+    reg = FixtureRegistry()
+    reg.cache_fixtures(
+        fixtures=[
+            Fixture(key="fix_a", fn=fix_a, is_generator_fixture=True),
+            Fixture(key="fix_b", fn=fix_b, is_generator_fixture=False),
+        ]
+    )
+
+    suite = Suite(
+        tests=[
+            Test(fn=my_test, module=module)
+        ],
+        fixture_registry=reg,
+    )
+
+    # Exhaust the test runs generator
+    list(suite.generate_test_runs())
+
+    expect(events).equals([1, 2, 3])
+
+
 # region example
 
 def get_capitals_from_server():
@@ -114,8 +151,8 @@ def get_capitals_from_server():
 
 @fixture
 def cities():
-    return {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
-            "masdid": "spain"}
+    yield {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
+           "madrid": "spain"}
 
 
 @skip

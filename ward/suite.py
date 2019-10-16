@@ -31,7 +31,17 @@ class Suite:
                 yield TestResult(test, TestOutcome.FAIL, e, message="[Error] " + str(e))
                 continue
             try:
-                test(**resolved_fixtures)
+                resolved_vals = {k: fix.resolved_val for (k, fix) in resolved_fixtures.items()}
+                test(**resolved_vals)
                 yield TestResult(test, TestOutcome.PASS, None, message="")
             except Exception as e:
                 yield TestResult(test, TestOutcome.FAIL, e, message="")
+            finally:
+                for fixture in resolved_fixtures.values():
+                    if fixture.is_generator_fixture:
+                        try:
+                            fixture.cleanup()
+                        except (RuntimeError, StopIteration):
+                            # In Python 3.7, a RuntimeError is raised if we fall off the end of a generator
+                            # (instead of a StopIteration)
+                            pass
