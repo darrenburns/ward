@@ -1,5 +1,7 @@
 # Ward
 
+![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
+
 An experimental test runner for Python 3.6+ that is heavily inspired by `pytest`. This project is a work in progress, and is not production ready.
 
 ![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
