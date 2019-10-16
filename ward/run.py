@@ -2,9 +2,6 @@ import sys
 
 import click
 from blessings import Terminal
-from colorama import init
-
-init()
 
 from ward.collect import get_info_for_modules, get_tests_in_modules, load_modules
 from ward.fixtures import fixture_registry
