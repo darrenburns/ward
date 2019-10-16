@@ -141,5 +141,5 @@ If you wish for Ward to cancel a run immediately after a specific number of fail
 you can use the `--fail-limit` option. To have a run end immediately after 5 tests fail:
 
 ```text
-ward --fail-limit
+ward --fail-limit=5
 ```
