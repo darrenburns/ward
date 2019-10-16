@@ -6,7 +6,7 @@ An experimental test runner for Python 3.6+ that is heavily inspired by `pytest`
 
 ## Examples
 
-### Dependency Injection
+### Dependency injection with fixtures
 
 In the example below, we define a single fixture named `cities`.
 Our test takes a single parameter, which is also named `cities`.
@@ -22,6 +22,24 @@ def cities():
     
 def test_using_cities(cities):
     expect(cities).equals(["Glasgow", "Edinburgh"])
+```
+
+Fixtures are great for extracting common setup code that you'd otherwise need to repeat at the top of your tests, 
+but they can also execute teardown code:
+
+```python
+@fixture
+def database():
+    db_conn = setup_database()
+    yield db_conn
+    db_conn.close()
+
+
+def test_database_connection(database):
+    # The database connection can be used in this test,
+    # and will be closed after the test has completed.
+    users = get_all_users(database)
+    expect(users).contains("Bob")
 ```
 
 ### The Expect API
