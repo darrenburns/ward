@@ -114,8 +114,8 @@ def get_capitals_from_server():
 
 @fixture
 def cities():
-    return {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
-            "masdid": "spain"}
+    yield {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
+           "madrid": "spain"}
 
 
 @skip

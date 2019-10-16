@@ -28,7 +28,6 @@ def run(path, filter, fail_limit):
     tests = list(get_tests_in_modules(modules, filter=filter))
 
     suite = Suite(tests=tests, fixture_registry=fixture_registry)
-
     test_results = suite.generate_test_runs()
 
     writer = SimpleTestResultWrite(terminal=term, suite=suite)

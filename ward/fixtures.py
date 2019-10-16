@@ -15,10 +15,11 @@ class FixtureExecutionError(Exception):
 
 
 class Fixture:
-    def __init__(self, key: str, fn: Callable, requires_cleanup: bool = False):
+    def __init__(self, key: str, fn: Callable, is_generator_fixture: bool = False):
         self.key = key
         self.fn = fn
-        self.requires_cleanup = requires_cleanup
+        self.is_generator_fixture = is_generator_fixture
+        self.gen = None
         self.resolved_val = None
         self.is_resolved = False
 
@@ -31,9 +32,9 @@ class Fixture:
         # If this fixture has no children, cache and return the resolved value
         if not self.deps():
             try:
-                breakpoint()
                 if inspect.isgeneratorfunction(self.fn):
-                    self.resolved_val = next(self.fn())
+                    self.gen = self.fn()
+                    self.resolved_val = next(self.gen)
                 else:
                     self.resolved_val = self.fn()
             except Exception as e:
@@ -54,8 +55,8 @@ class Fixture:
         try:
             child_resolved_vals = [child.resolved_val for child in children_resolved]
             if inspect.isgeneratorfunction(self.fn):
-                gen = self.fn(*child_resolved_vals)
-                self.resolved_val = next(gen)
+                self.gen = self.fn(*child_resolved_vals)
+                self.resolved_val = next(self.gen)
             else:
                 self.resolved_val = self.fn(*child_resolved_vals)
         except Exception as e:
@@ -67,8 +68,8 @@ class Fixture:
         return self
 
     def cleanup(self):
-        if self.requires_cleanup:
-            next(self.fn)
+        if self.is_generator_fixture:
+            next(self.gen)
 
 
 class FixtureRegistry:
@@ -81,7 +82,7 @@ class FixtureRegistry:
                 self._fixtures[name] = Fixture(
                     key=name,
                     fn=func,
-                    requires_cleanup=inspect.isgeneratorfunction(func),
+                    is_generator_fixture=inspect.isgeneratorfunction(func),
                 )
             else:
                 raise CollectionError(f"Multiple fixtures named '{func.__name__}'.")

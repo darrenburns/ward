@@ -35,7 +35,7 @@ def test_fixture_resolve_resolves_tree_correctly():
 
     # Each of the fixtures add 1, so the final value returned
     # by the tree should be 4, since there are 4 fixtures.
-    expect(resolved_parent).equals(4)
+    expect(resolved_parent.resolved_val).equals(4)
 
 
 def test_fixture_registry_cache_fixture(exception_raising_fixture):
