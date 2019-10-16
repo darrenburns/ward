@@ -295,7 +295,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_test_result_summary(self, test_results: List[TestResult]):
         num_passed, num_failed, num_skipped = self._get_num_passed_failed_skipped(test_results)
-        print(self.generate_chart(num_passed=num_passed, num_failed=num_failed, num_skipped=num_skipped))
+        if self.terminal.is_a_tty:
+            print(self.generate_chart(num_passed=num_passed, num_failed=num_failed, num_skipped=num_skipped))
         print(f"Test run complete [ "
               f"{Fore.RED}{num_failed} failed "
               f"{Fore.YELLOW} {num_skipped} skipped "
@@ -337,7 +338,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
         num_passed, num_failed, num_skipped = self._get_num_passed_failed_skipped(test_results)
         if any(r.outcome == TestOutcome.FAIL for r in test_results):
-            print(self.generate_chart(num_passed, num_failed, num_skipped))
+            if self.terminal.is_a_tty:
+                print(self.generate_chart(num_passed, num_failed, num_skipped))
 
     def _get_num_passed_failed_skipped(self, test_results: List[TestResult]) -> Tuple[int, int, int]:
         num_passed = len([r for r in test_results if r.outcome == TestOutcome.PASS])
