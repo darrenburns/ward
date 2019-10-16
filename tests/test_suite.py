@@ -109,12 +109,12 @@ def test_fixture_teardown_occurs_and_in_expected_order(module):
 
     def fix_a():
         events.append(1)
-        return "a"
+        yield "a"
+        events.append(3)
 
     def fix_b():
         events.append(2)
-        yield "b"
-        events.append(3)
+        return "b"
 
     def my_test(fix_a, fix_b):
         expect(fix_a).equals("a")
@@ -123,8 +123,8 @@ def test_fixture_teardown_occurs_and_in_expected_order(module):
     reg = FixtureRegistry()
     reg.cache_fixtures(
         fixtures=[
-            Fixture(key="fix_a", fn=fix_a, is_generator_fixture=False),
-            Fixture(key="fix_b", fn=fix_b, is_generator_fixture=True),
+            Fixture(key="fix_a", fn=fix_a, is_generator_fixture=True),
+            Fixture(key="fix_b", fn=fix_b, is_generator_fixture=False),
         ]
     )
 
