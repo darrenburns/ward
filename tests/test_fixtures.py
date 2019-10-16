@@ -1,4 +1,4 @@
-from ward import expect, fixture, raises, skip
+from ward import expect, fixture, raises
 from ward.fixtures import Fixture, FixtureExecutionError, FixtureRegistry
 
 

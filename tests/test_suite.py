@@ -104,6 +104,43 @@ def test_generate_test_runs__yields_skipped_test_result_on_test_with_skip_marker
     expect(test_runs).equals(expected_runs)
 
 
+def test_fixture_teardown_occurs_and_in_expected_order(module):
+    events = []
+
+    def fix_a():
+        events.append(1)
+        return "a"
+
+    def fix_b():
+        events.append(2)
+        yield "b"
+        events.append(3)
+
+    def my_test(fix_a, fix_b):
+        expect(fix_a).equals("a")
+        expect(fix_b).equals("b")
+
+    reg = FixtureRegistry()
+    reg.cache_fixtures(
+        fixtures=[
+            Fixture(key="fix_a", fn=fix_a, is_generator_fixture=False),
+            Fixture(key="fix_b", fn=fix_b, is_generator_fixture=True),
+        ]
+    )
+
+    suite = Suite(
+        tests=[
+            Test(fn=my_test, module=module)
+        ],
+        fixture_registry=reg,
+    )
+
+    # Exhaust the test runs generator
+    list(suite.generate_test_runs())
+
+    expect(events).equals([1, 2, 3])
+
+
 # region example
 
 def get_capitals_from_server():
