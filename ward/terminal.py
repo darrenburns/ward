@@ -27,6 +27,10 @@ def write_test_failure_output(term, test_result):
     test_result_heading = f"{Fore.BLACK}{Back.RED}◤ {test_module}.{test_name} failed: "
     write_over_line(f"{test_result_heading}{Style.RESET_ALL}", 0, term)
     err = test_result.error
+    if term.width:
+        width = term.width - 30
+    else:
+        width = 60
 
     # Body of failure output, depends on how the test failed
     if isinstance(err, TestSetupError):
@@ -34,7 +38,7 @@ def write_test_failure_output(term, test_result):
     elif isinstance(err, ExpectationFailed):
         print()
         write_over_line(
-            f"  Given {truncate(repr(err.history[0].this), num_chars=term.width - 30)}",
+            f"  Given {truncate(repr(err.history[0].this), num_chars=width)}",
             0,
             term,
         )
@@ -46,9 +50,9 @@ def write_test_failure_output(term, test_result):
                 result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
 
             if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
-                expect_that = truncate(expect.that.__name__, num_chars=term.width - 30)
+                expect_that = truncate(expect.that.__name__, num_chars=width)
             else:
-                expect_that = truncate(repr(expect.that), num_chars=term.width - 30)
+                expect_that = truncate(repr(expect.that), num_chars=width)
             write_over_line(
                 f"    {result_marker} it {expect.op} {expect_that}{Style.RESET_ALL}",
                 0,
@@ -77,6 +81,9 @@ def write_test_result(test_result: TestResult, term: Terminal):
 
 
 def write_over_progress_bar(green_pct: float, red_pct: float, term: Terminal):
+    if not term.is_a_tty:
+        return
+
     num_green_bars = int(green_pct * term.width)
     num_red_bars = int(red_pct * term.width)
 
@@ -146,7 +153,8 @@ class TestRunnerWriter:
             pass_pct = passed / max(passed + failed, 1)
             fail_pct = 1.0 - pass_pct
 
-            write_over_progress_bar(pass_pct, fail_pct, self.terminal)
+            if self.terminal.is_a_tty:
+                write_over_progress_bar(pass_pct, fail_pct, self.terminal)
 
             info_bar = (
                 f"{Fore.CYAN}{next(spinner)} "
