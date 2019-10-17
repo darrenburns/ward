@@ -279,7 +279,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
             if err.history and err.history[-1].op == "equals":
                 expect = err.history[-1]
                 print(
-                    f"\n  Showing diff of {Fore.GREEN}expected value{Fore.RESET} vs {Fore.RED}actual value{Fore.RESET}:\n")
+                    f"\n  Showing diff of {Fore.GREEN}expected value"
+                    f"{Fore.RESET} vs {Fore.RED}actual value{Fore.RESET}:\n")
 
                 diff = build_auto_diff(expect.that, expect.this, width=truncation_chars)
                 print(diff)

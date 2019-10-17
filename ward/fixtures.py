@@ -76,6 +76,8 @@ class FixtureRegistry:
     def __init__(self):
         self._fixtures: Dict[str, Fixture] = {}
 
+    @property
+    def decorator(self):
         def wrapper(func):
             name = func.__name__
             if name not in self._fixtures:
@@ -88,11 +90,7 @@ class FixtureRegistry:
                 raise CollectionError(f"Multiple fixtures named '{func.__name__}'.")
             return func
 
-        self._wrapper = wrapper
-
-    @property
-    def decorator(self):
-        return self._wrapper
+        return wrapper
 
     def _get_fixture(self, fixture_name: str) -> Fixture:
         try:

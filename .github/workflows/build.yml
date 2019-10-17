@@ -11,7 +11,7 @@ jobs:
     name: Testing on Python ${{ matrix.python_version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 9
+      max-parallel: 4
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest]
@@ -29,7 +29,7 @@ jobs:
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
     - name: Dogfood test with ward
       run: |
         pip install .

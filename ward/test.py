@@ -2,9 +2,9 @@ import inspect
 from dataclasses import dataclass
 from enum import Enum, auto
 from types import MappingProxyType, ModuleType
-from typing import Any, Callable, Dict
+from typing import Callable, Dict
 
-from ward.fixtures import FixtureRegistry, Fixture
+from ward.fixtures import Fixture, FixtureRegistry
 
 
 class WardMarker(Enum):
