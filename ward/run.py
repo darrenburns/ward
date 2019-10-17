@@ -2,7 +2,6 @@ import sys
 from timeit import default_timer
 
 import click
-from blessings import Terminal
 from colorama import init
 
 from ward.collect import get_info_for_modules, get_tests_in_modules, load_modules
@@ -26,7 +25,6 @@ init()
 )
 def run(path, filter, fail_limit):
     start_run = default_timer()
-    term = Terminal()
 
     mod_infos = get_info_for_modules(path)
     modules = list(load_modules(mod_infos))
@@ -36,7 +34,7 @@ def run(path, filter, fail_limit):
     suite = Suite(tests=tests, fixture_registry=fixture_registry)
     test_results = suite.generate_test_runs()
 
-    writer = SimpleTestResultWrite(terminal=term, suite=suite)
+    writer = SimpleTestResultWrite(suite=suite)
     results = writer.output_all_test_results(
         test_results,
         time_to_collect=time_to_collect,

@@ -7,10 +7,10 @@ jobs:
     name: Testing on Python ${{ matrix.python_version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 4
+      max-parallel: 6
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
         python-version: [3.6, 3.7]
 
     steps:
