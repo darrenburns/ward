@@ -6,6 +6,34 @@ An experimental test runner for Python 3.6+ that is heavily inspired by `pytest`
 
 ![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
 
+## Features
+
+This project is a work in progress. Some of the features that are currently available in a basic form are listed below.
+
+* Modular setup/teardown with fixtures and dependency injection
+* Highly readable, colourful diffs intended to be as readable as possible
+* A human readable assertion API
+* Tested on Mac OS, Linux, and Windows
+
+Planned features:
+
+* Smart test execution order designed to surface failures faster (using various heuristics)
+* Multi-process mode to improve performance
+* Highly configurable output modes
+* Code coverage with `--coverage` flag
+* Handling flaky tests with test-specific retries, timeouts
+* Integration with unittest.mock (specifics to be ironed out)
+* Capturing of stderr/stdout
+* Plugin system
+* Highlighting diffs on a per-character basis, similar to [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy) (right now it's just per line)
+
+## Quick Start
+
+
+Installation: `pip install ward`
+
+Look for tests recursively and run them: `ward`
+
 ## Examples
 
 ### Dependency injection with fixtures
