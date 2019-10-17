@@ -1,6 +1,8 @@
 name: Ward release to PyPI
 
-on: [release]
+on:
+  release:
+    types: [published]
 
 jobs:
   publish:
