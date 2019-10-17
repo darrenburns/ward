@@ -123,7 +123,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
               colored(test_result.test.qualified_name, attrs=["bold"]))
 
     def output_why_test_failed(self, test_result: TestResult):
-        truncation_chars = self.terminal_size.width - 16
+        truncation_chars = self.terminal_size.width - 24
         err = test_result.error
         if isinstance(err, ExpectationFailed):
             print(f"\n  Given {truncate(repr(err.history[0].this), num_chars=truncation_chars)}")
