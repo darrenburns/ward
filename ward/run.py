@@ -3,12 +3,15 @@ from timeit import default_timer
 
 import click
 from blessings import Terminal
+from colorama import init
 
 from ward.collect import get_info_for_modules, get_tests_in_modules, load_modules
 from ward.fixtures import fixture_registry
 from ward.suite import Suite
 from ward.terminal import ExitCode, SimpleTestResultWrite
 from ward.test_result import TestOutcome
+
+init()
 
 
 @click.command()

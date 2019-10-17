@@ -5,6 +5,7 @@ from typing import Generator, List, Optional, Tuple
 
 from blessings import Terminal
 from colorama import Back, Fore, Style
+from termcolor import colored
 
 from ward.diff import build_auto_diff
 from ward.expect import ExpectationFailed
@@ -140,11 +141,15 @@ class SimpleTestResultWrite(TestResultWriterBase):
         num_passed, num_failed, num_skipped = self._get_num_passed_failed_skipped(test_results)
         if self.terminal.is_a_tty:
             print(self.generate_chart(num_passed=num_passed, num_failed=num_failed, num_skipped=num_skipped))
-        print(f"Test run complete in {time_taken:.2f} seconds [ "
-              f"{Fore.RED}{num_failed} failed "
-              f"{Fore.YELLOW} {num_skipped} skipped "
-              f"{Fore.GREEN} {num_passed} passed"
-              f"{Style.RESET_ALL} ]")
+
+        if any(r.outcome == TestOutcome.FAIL for r in test_results):
+            result = colored("FAILED", color='red')
+        else:
+            result = colored("PASSED", color='green')
+        print(f"{result} in {time_taken:.2f} seconds [ "
+              f"{colored(str(num_failed) + ' failed', color='red')}  "
+              f"{colored(str(num_skipped) + ' skipped', color='cyan')}  "
+              f"{colored(str(num_passed) + ' passed', color='green')} ]")
 
     def generate_chart(self, num_passed, num_failed, num_skipped):
         pass_pct = num_passed / max(num_passed + num_failed + num_skipped, 1)
