@@ -1,18 +1,16 @@
 import sys
 import traceback
-from dataclasses import dataclass
 from enum import Enum
-from itertools import cycle
-from typing import Generator, List, Tuple, Optional
+from typing import Generator, List, Optional, Tuple
 
 from blessings import Terminal
-from colorama import Fore, Style, Back
+from colorama import Fore, Style
+from termcolor import colored
 
-from ward.diff import build_unified_diff, build_auto_diff
+from ward.diff import build_auto_diff
 from ward.expect import ExpectationFailed
-from ward.fixtures import TestSetupError
 from ward.suite import Suite
-from ward.test_result import TestResult, TestOutcome
+from ward.test_result import TestOutcome, TestResult
 
 
 def truncate(s: str, num_chars: int) -> str:
@@ -20,166 +18,10 @@ def truncate(s: str, num_chars: int) -> str:
     return s[:num_chars] + suffix
 
 
-def write_test_failure_output(term, test_result):
-    # Header of failure output
-    test_name = test_result.test.name
-    test_module = test_result.test.module.__name__
-    test_result_heading = f"{Fore.BLACK}{Back.RED}◤ {test_module}.{test_name} failed: "
-    write_over_line(f"{test_result_heading}{Style.RESET_ALL}", 0, term)
-    err = test_result.error
-    if term.width:
-        width = term.width - 30
-    else:
-        width = 60
-
-    # Body of failure output, depends on how the test failed
-    if isinstance(err, TestSetupError):
-        write_over_line(str(err), 0, term)
-    elif isinstance(err, ExpectationFailed):
-        print()
-        write_over_line(
-            f"  Given {truncate(repr(err.history[0].this), num_chars=width)}",
-            0,
-            term,
-        )
-        print()
-        for expect in err.history:
-            if expect.success:
-                result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
-            else:
-                result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
-
-            if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
-                expect_that = truncate(expect.that.__name__, num_chars=width)
-            else:
-                expect_that = truncate(repr(expect.that), num_chars=width)
-            write_over_line(
-                f"    {result_marker} it {expect.op} {expect_that}{Style.RESET_ALL}",
-                0,
-                term,
-            )
-
-        # TODO: Add ability to hook and change the function called below
-        # TODO: Diffs should be shown for more than just op == "equals"
-        if err.history and err.history[-1].op == "equals":
-            expect = err.history[-1]
-            print(
-                f"\n  Showing diff of {Fore.GREEN}expected value{Fore.RESET} vs {Fore.RED}actual value{Fore.RESET}:\n")
-            diff = build_unified_diff(expect.that, expect.this)
-            print(diff)
-    else:
-        trace = getattr(err, "__traceback__", "")
-        if trace:
-            trc = traceback.format_exception(None, err, trace)
-            write_over_line("".join(trc), 0, term)
-        else:
-            write_over_line(str(err), 0, term)
-
-
-def write_test_result(test_result: TestResult, term: Terminal):
-    write_over_line(str(test_result), 2, term)
-
-
-def write_over_progress_bar(green_pct: float, red_pct: float, term: Terminal):
-    if not term.is_a_tty:
-        return
-
-    num_green_bars = int(green_pct * term.width)
-    num_red_bars = int(red_pct * term.width)
-
-    # Deal with rounding, converting to int could leave us with 1 bar less, so make it green
-    if term.width - num_green_bars - num_red_bars == 1:
-        num_green_bars += 1
-
-    bar = term.red("█" * num_red_bars) + term.green("█" * num_green_bars)
-    write_over_line(bar, 1, term)
-
-
-def write_over_line(str_to_write: str, offset_from_bottom: int, term: Terminal):
-    # TODO: Smarter way of tracking margins based on escape codes used.
-    esc_code_rhs_margin = (
-        37
-    )  # chars that are part of escape code, but NOT actually printed. Yeah I know...
-    with term.location(None, term.height - offset_from_bottom):
-        right_margin = (
-            max(0, term.width - len(str_to_write) + esc_code_rhs_margin) * " "
-        )
-        sys.stdout.write(f"{str_to_write}{right_margin}")
-        sys.stdout.flush()
-
-
-def reset_cursor(term: Terminal):
-    print(term.normal_cursor())
-    print(term.move(term.height - 1, 0))
-
-
 class ExitCode(Enum):
     SUCCESS = 0
     TEST_FAILED = 1
     ERROR = 2
-
-
-@dataclass
-class TestRunnerWriter:
-    suite: Suite
-    terminal: Terminal
-    test_results: Generator[TestResult, None, None]
-
-    def run_and_write_test_results(self) -> ExitCode:
-        print(self.terminal.hide_cursor())
-        print("\n")
-        write_over_line(
-            f"{Fore.CYAN}[ward] Collected {self.suite.num_tests} tests and "
-            f"{self.suite.num_fixtures} fixtures.\nRunning tests...",
-            4,
-            self.terminal,
-        )
-
-        failing_test_results = []
-        passed, failed, skipped = 0, 0, 0
-        spinner = cycle("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈")
-        info_bar = ""
-        for result in self.test_results:
-            if result.outcome == TestOutcome.PASS:
-                passed += 1
-            elif result.outcome == TestOutcome.FAIL:
-                failed += 1
-                failing_test_results.append(result)
-            elif result.outcome == TestOutcome.SKIP:
-                skipped += 1
-
-            write_test_result(result, self.terminal)
-
-            pass_pct = passed / max(passed + failed, 1)
-            fail_pct = 1.0 - pass_pct
-
-            if self.terminal.is_a_tty:
-                write_over_progress_bar(pass_pct, fail_pct, self.terminal)
-
-            info_bar = (
-                f"{Fore.CYAN}{next(spinner)} "
-                f"{passed + failed} tests ran {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
-                f"{failed} tests failed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
-                f"{passed} tests passed {Fore.LIGHTBLACK_EX}|{Fore.CYAN} "
-                f"{pass_pct * 100:.2f}% pass rate{Style.RESET_ALL}"
-            )
-
-            write_over_line(info_bar, 0, self.terminal)
-        total = passed + failed
-        if total == 0:
-            write_over_line(
-                self.terminal.cyan_bold(f"No tests found."), 1, self.terminal
-            )
-
-        reset_cursor(self.terminal)
-        if failing_test_results:
-            for test_result in failing_test_results:
-                write_test_failure_output(self.terminal, test_result)
-            print()
-            print(info_bar)
-            return ExitCode.TEST_FAILED
-
-        return ExitCode.SUCCESS
 
 
 class TestResultWriterBase:
@@ -191,11 +33,13 @@ class TestResultWriterBase:
     def output_all_test_results(
         self,
         test_results_gen: Generator[TestResult, None, None],
+        time_to_collect: float,
         fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
         all_results = []
         failed_test_results = []
-        print(f"Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures. {Style.RESET_ALL}")
+        print(f" Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures "
+              f"in {time_to_collect:.2f} seconds.\n")
         for result in test_results_gen:
             self.output_single_test_result(result)
             sys.stdout.write(Style.RESET_ALL)
@@ -206,12 +50,12 @@ class TestResultWriterBase:
             if len(failed_test_results) == fail_limit:
                 break
 
+        print()
         self.output_test_run_post_failure_summary(test_results=all_results)
         for failure in failed_test_results:
             self.output_why_test_failed_header(failure)
             self.output_why_test_failed(failure)
 
-        self.output_test_result_summary(all_results)
         return all_results
 
     def output_single_test_result(self, test_result: TestResult):
@@ -224,7 +68,7 @@ class TestResultWriterBase:
         """
         raise NotImplementedError()
 
-    def output_test_result_summary(self, test_results: List[TestResult]):
+    def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
         raise NotImplementedError()
 
     def output_why_test_failed(self, test_result: TestResult):
@@ -238,26 +82,31 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
 
+def lightblack(s):
+    return f"{Fore.LIGHTBLACK_EX}{s}{Fore.RESET}"
+
+
 class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_single_test_result(self, test_result: TestResult):
-        outcome_to_bg = {
-            TestOutcome.PASS: Back.GREEN,
-            TestOutcome.SKIP: Back.YELLOW,
-            TestOutcome.FAIL: Back.RED,
+        outcome_to_colour = {
+            TestOutcome.PASS: "green",
+            TestOutcome.SKIP: "blue",
+            TestOutcome.FAIL: "red",
         }
-        bg = outcome_to_bg[test_result.outcome]
-        print(f"{bg}{Fore.BLACK} {test_result.outcome.name} {Style.RESET_ALL} "
-              f"{Fore.LIGHTBLACK_EX}{test_result.test.module.__name__}.{Style.RESET_ALL}{test_result.test.name}")
+        colour = outcome_to_colour[test_result.outcome]
+        bg = f"on_{colour}"
+        padded_outcome = f" {test_result.outcome.name} "
+        print(colored(padded_outcome, color='grey', on_color=bg),
+              lightblack(test_result.test.module.__name__ + "‌‌.") +
+              test_result.test.name)
 
     def output_why_test_failed_header(self, test_result: TestResult):
-        test_name = test_result.test.name
-        test_module = test_result.test.module.__name__
-        test_result_heading = f"{Fore.BLACK}{Back.RED} FAIL | {test_module}.{test_name} {Style.RESET_ALL}"
-        print(f"{test_result_heading}")
+        print(colored(" Failure", color="red", attrs=["bold"]), "in",
+              colored(test_result.test.qualified_name, attrs=["bold"]))
 
     def output_why_test_failed(self, test_result: TestResult):
-        truncation_chars = self.terminal.width - 30
+        truncation_chars = self.terminal.width - 16
         err = test_result.error
         if isinstance(err, ExpectationFailed):
             print(f"\n  Given {truncate(repr(err.history[0].this), num_chars=truncation_chars)}")
@@ -279,8 +128,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
             if err.history and err.history[-1].op == "equals":
                 expect = err.history[-1]
                 print(
-                    f"\n  Showing diff of {Fore.GREEN}expected value"
-                    f"{Fore.RESET} vs {Fore.RED}actual value{Fore.RESET}:\n")
+                    f"\n  Showing diff of {colored('expected value', color='green')}"
+                    f" vs {colored('actual value', color='red')}:\n")
 
                 diff = build_auto_diff(expect.that, expect.this, width=truncation_chars)
                 print(diff)
@@ -294,15 +143,19 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         print(Style.RESET_ALL)
 
-    def output_test_result_summary(self, test_results: List[TestResult]):
+    def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
         num_passed, num_failed, num_skipped = self._get_num_passed_failed_skipped(test_results)
         if self.terminal.is_a_tty:
-            print(self.generate_chart(num_passed=num_passed, num_failed=num_failed, num_skipped=num_skipped))
-        print(f"Test run complete [ "
-              f"{Fore.RED}{num_failed} failed "
-              f"{Fore.YELLOW} {num_skipped} skipped "
-              f"{Fore.GREEN} {num_passed} passed"
-              f"{Style.RESET_ALL} ]")
+            print(self.generate_chart(num_passed=num_passed, num_failed=num_failed, num_skipped=num_skipped), "")
+
+        if any(r.outcome == TestOutcome.FAIL for r in test_results):
+            result = colored("FAILED", color='red', attrs=["bold"])
+        else:
+            result = colored("PASSED", color='green', attrs=["bold"])
+        print(f" {result} in {time_taken:.2f} seconds [ "
+              f"{colored(str(num_failed) + ' failed', color='red')}  "
+              f"{colored(str(num_skipped) + ' skipped', color='blue')}  "
+              f"{colored(str(num_passed) + ' passed', color='green')} ]")
 
     def generate_chart(self, num_passed, num_failed, num_skipped):
         pass_pct = num_passed / max(num_passed + num_failed + num_skipped, 1)
@@ -311,10 +164,10 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         num_green_bars = int(pass_pct * self.terminal.width)
         num_red_bars = int(fail_pct * self.terminal.width)
-        num_yellow_bars = int(skip_pct * self.terminal.width)
+        num_blue_bars = int(skip_pct * self.terminal.width)
 
         # Rounding to integers could leave us a few bars short
-        num_bars_remaining = self.terminal.width - num_green_bars - num_red_bars - num_yellow_bars
+        num_bars_remaining = self.terminal.width - num_green_bars - num_red_bars - num_blue_bars
         if num_bars_remaining and num_green_bars:
             num_green_bars += 1
             num_bars_remaining -= 1
@@ -323,8 +176,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
             num_red_bars += 1
             num_bars_remaining -= 1
 
-        if num_bars_remaining and num_yellow_bars:
-            num_yellow_bars += 1
+        if num_bars_remaining and num_blue_bars:
+            num_blue_bars += 1
             num_bars_remaining -= 1
 
         assert num_bars_remaining == 0
@@ -332,15 +185,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
         if self.terminal.width - num_green_bars - num_red_bars == 1:
             num_green_bars += 1
 
-        return (self.terminal.red("█" * num_red_bars) +
-                self.terminal.yellow("█" * num_yellow_bars) +
-                self.terminal.green("█" * num_green_bars))
+        return (colored("F" * num_red_bars, color="red", on_color="on_red") +
+                colored("s" * num_blue_bars, color="blue", on_color="on_blue") +
+                colored("." * num_green_bars, color="green", on_color="on_green"))
 
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
-        num_passed, num_failed, num_skipped = self._get_num_passed_failed_skipped(test_results)
-        if any(r.outcome == TestOutcome.FAIL for r in test_results):
-            if self.terminal.is_a_tty:
-                print(self.generate_chart(num_passed, num_failed, num_skipped))
+        pass
 
     def _get_num_passed_failed_skipped(self, test_results: List[TestResult]) -> Tuple[int, int, int]:
         num_passed = len([r for r in test_results if r.outcome == TestOutcome.PASS])

@@ -1,11 +1,11 @@
 from types import ModuleType
 from unittest import mock
 
-from ward import expect, fixture, skip
+from ward import expect, fixture
 from ward.fixtures import Fixture, FixtureRegistry
 from ward.suite import Suite
-from ward.test import Test, WardMarker
-from ward.test_result import TestResult, TestOutcome
+from ward.test import Test, WardMarker, skip
+from ward.test_result import TestOutcome, TestResult
 
 NUMBER_OF_TESTS = 5
 
@@ -168,5 +168,5 @@ def test_capital_cities(cities):
      .is_instance_of(dict)
      .contains("tokyo")
      .has_length(6)
-     .equals({"edinburgh": "scotland", "tokyo": "japan", "london": "england"}))
+     .equals({"edinburgh": "scasdnd", "tokyo": "japan", "london": "england"}))
 # endregion example
