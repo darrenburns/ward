@@ -11,7 +11,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build Python distributon
-      run: python "$GITHUB_WORKSPACE/setup.py" sdist bdist_wheel
+      run: |
+        python3 -m pip install --user --upgrade setuptools wheel
+        python3 "$GITHUB_WORKSPACE/setup.py" sdist bdist_wheel
     - name: Publish a Python distribution to PyPI
       if: success()
       uses: pypa/gh-action-pypi-publish@66f4ba74
