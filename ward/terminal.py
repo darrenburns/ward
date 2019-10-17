@@ -116,8 +116,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         padded_outcome = f" {test_result.outcome.name} "
         mod_name = lightblack(f"{test_result.test.module.__name__}.")
         print(colored(padded_outcome, color='grey', on_color=bg),
-              mod_name,
-              test_result.test.name)
+              mod_name + test_result.test.name)
 
     def output_why_test_failed_header(self, test_result: TestResult):
         print(colored(" Failure", color="red", attrs=["bold"]), "in",
