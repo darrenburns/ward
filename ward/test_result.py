@@ -9,6 +9,7 @@ class TestOutcome(Enum):
     PASS = auto()
     FAIL = auto()
     SKIP = auto()
+    XFAIL = auto()
 
 
 @dataclass

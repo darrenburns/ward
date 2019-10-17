@@ -10,11 +10,16 @@ from ward.fixtures import Fixture, FixtureRegistry
 class WardMarker(Enum):
     NONE = auto()
     SKIP = auto()
-    FLAKY = auto()
+    XFAIL = auto()
 
 
 def skip(func):
     func.ward_marker = WardMarker.SKIP
+    return func
+
+
+def xfail(func):
+    func.ward_marker = WardMarker.XFAIL
     return func
 
 
