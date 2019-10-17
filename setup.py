@@ -3,7 +3,7 @@ from setuptools import setup
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-version = "0.6.1a0"
+version = "0.6.2a0"
 
 setup(
     name="ward",
