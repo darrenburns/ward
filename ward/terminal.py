@@ -114,7 +114,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         colour = outcome_to_colour[test_result.outcome]
         bg = f"on_{colour}"
         padded_outcome = f" {test_result.outcome.name} "
-        mod_name = lightblack(test_result.test.module.__name__)
+        mod_name = lightblack(test_result.test.module.__name__ + ".‌‌")
         print(colored(padded_outcome, color='grey', on_color=bg),
               mod_name,
               test_result.test.name)
