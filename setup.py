@@ -19,7 +19,6 @@ setup(
     python_requires=">=3.6",
     entry_points={"console_scripts": ["ward=ward.run:run"]},
     install_requires=[
-        "blessings==1.7",
         "colorama==0.4.1",
         "termcolor==1.1.0",
         "dataclasses==0.6",
