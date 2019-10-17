@@ -21,6 +21,7 @@ setup(
     install_requires=[
         "blessings==1.7",
         "colorama==0.4.1",
+        "termcolor==1.1.0",
         "dataclasses==0.6",
         "click==7.0",
     ],
