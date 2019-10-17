@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   test:
-    name: Testing on Python ${{ matrix.python_version }} and ${{ matrix.os }}
+    name: Testing on Python ${{ matrix.python-version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 6
