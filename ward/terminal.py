@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Generator, List, Optional, Tuple
 
 from blessings import Terminal
-from colorama import Back, Fore, Style
+from colorama import Fore, Style
 from termcolor import colored
 
 from ward.diff import build_auto_diff
@@ -38,8 +38,8 @@ class TestResultWriterBase:
     ) -> List[TestResult]:
         all_results = []
         failed_test_results = []
-        print(f"Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures "
-              f"in {time_to_collect:.2f} seconds.{Style.RESET_ALL}")
+        print(f" Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures "
+              f"in {time_to_collect:.2f} seconds.\n")
         for result in test_results_gen:
             self.output_single_test_result(result)
             sys.stdout.write(Style.RESET_ALL)
@@ -50,6 +50,7 @@ class TestResultWriterBase:
             if len(failed_test_results) == fail_limit:
                 break
 
+        print()
         self.output_test_run_post_failure_summary(test_results=all_results)
         for failure in failed_test_results:
             self.output_why_test_failed_header(failure)
@@ -81,26 +82,31 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
 
+def lightblack(s):
+    return f"{Fore.LIGHTBLACK_EX}{s}{Fore.RESET}"
+
+
 class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_single_test_result(self, test_result: TestResult):
-        outcome_to_bg = {
-            TestOutcome.PASS: Back.GREEN,
-            TestOutcome.SKIP: Back.YELLOW,
-            TestOutcome.FAIL: Back.RED,
+        outcome_to_colour = {
+            TestOutcome.PASS: "green",
+            TestOutcome.SKIP: "blue",
+            TestOutcome.FAIL: "red",
         }
-        bg = outcome_to_bg[test_result.outcome]
-        print(f"{bg}{Fore.BLACK} {test_result.outcome.name} {Style.RESET_ALL} "
-              f"{Fore.LIGHTBLACK_EX}{test_result.test.module.__name__}.{Style.RESET_ALL}{test_result.test.name}")
+        colour = outcome_to_colour[test_result.outcome]
+        bg = f"on_{colour}"
+        padded_outcome = f" {test_result.outcome.name} "
+        print(colored(padded_outcome, color='grey', on_color=bg),
+              lightblack(test_result.test.module.__name__ + "‌‌.") +
+              test_result.test.name)
 
     def output_why_test_failed_header(self, test_result: TestResult):
-        test_name = test_result.test.name
-        test_module = test_result.test.module.__name__
-        test_result_heading = f"{Fore.BLACK}{Back.RED} FAIL | {test_module}.{test_name} {Style.RESET_ALL}"
-        print(f"{test_result_heading}")
+        print(colored(" Failure", color="red", attrs=["bold"]), "in",
+              colored(test_result.test.qualified_name, attrs=["bold"]))
 
     def output_why_test_failed(self, test_result: TestResult):
-        truncation_chars = self.terminal.width - 30
+        truncation_chars = self.terminal.width - 16
         err = test_result.error
         if isinstance(err, ExpectationFailed):
             print(f"\n  Given {truncate(repr(err.history[0].this), num_chars=truncation_chars)}")
@@ -122,8 +128,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
             if err.history and err.history[-1].op == "equals":
                 expect = err.history[-1]
                 print(
-                    f"\n  Showing diff of {Fore.GREEN}expected value"
-                    f"{Fore.RESET} vs {Fore.RED}actual value{Fore.RESET}:\n")
+                    f"\n  Showing diff of {colored('expected value', color='green')}"
+                    f" vs {colored('actual value', color='red')}:\n")
 
                 diff = build_auto_diff(expect.that, expect.this, width=truncation_chars)
                 print(diff)
@@ -140,15 +146,15 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
         num_passed, num_failed, num_skipped = self._get_num_passed_failed_skipped(test_results)
         if self.terminal.is_a_tty:
-            print(self.generate_chart(num_passed=num_passed, num_failed=num_failed, num_skipped=num_skipped))
+            print(self.generate_chart(num_passed=num_passed, num_failed=num_failed, num_skipped=num_skipped), "")
 
         if any(r.outcome == TestOutcome.FAIL for r in test_results):
-            result = colored("FAILED", color='red')
+            result = colored("FAILED", color='red', attrs=["bold"])
         else:
-            result = colored("PASSED", color='green')
-        print(f"{result} in {time_taken:.2f} seconds [ "
+            result = colored("PASSED", color='green', attrs=["bold"])
+        print(f" {result} in {time_taken:.2f} seconds [ "
               f"{colored(str(num_failed) + ' failed', color='red')}  "
-              f"{colored(str(num_skipped) + ' skipped', color='cyan')}  "
+              f"{colored(str(num_skipped) + ' skipped', color='blue')}  "
               f"{colored(str(num_passed) + ' passed', color='green')} ]")
 
     def generate_chart(self, num_passed, num_failed, num_skipped):
@@ -158,10 +164,10 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         num_green_bars = int(pass_pct * self.terminal.width)
         num_red_bars = int(fail_pct * self.terminal.width)
-        num_yellow_bars = int(skip_pct * self.terminal.width)
+        num_blue_bars = int(skip_pct * self.terminal.width)
 
         # Rounding to integers could leave us a few bars short
-        num_bars_remaining = self.terminal.width - num_green_bars - num_red_bars - num_yellow_bars
+        num_bars_remaining = self.terminal.width - num_green_bars - num_red_bars - num_blue_bars
         if num_bars_remaining and num_green_bars:
             num_green_bars += 1
             num_bars_remaining -= 1
@@ -170,8 +176,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
             num_red_bars += 1
             num_bars_remaining -= 1
 
-        if num_bars_remaining and num_yellow_bars:
-            num_yellow_bars += 1
+        if num_bars_remaining and num_blue_bars:
+            num_blue_bars += 1
             num_bars_remaining -= 1
 
         assert num_bars_remaining == 0
@@ -179,15 +185,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
         if self.terminal.width - num_green_bars - num_red_bars == 1:
             num_green_bars += 1
 
-        return (self.terminal.red("█" * num_red_bars) +
-                self.terminal.yellow("█" * num_yellow_bars) +
-                self.terminal.green("█" * num_green_bars))
+        return (colored("F" * num_red_bars, color="red", on_color="on_red") +
+                colored("s" * num_blue_bars, color="blue", on_color="on_blue") +
+                colored("." * num_green_bars, color="green", on_color="on_green"))
 
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
-        num_passed, num_failed, num_skipped = self._get_num_passed_failed_skipped(test_results)
-        if any(r.outcome == TestOutcome.FAIL for r in test_results):
-            if self.terminal.is_a_tty:
-                print(self.generate_chart(num_passed, num_failed, num_skipped))
+        pass
 
     def _get_num_passed_failed_skipped(self, test_results: List[TestResult]) -> Tuple[int, int, int]:
         num_passed = len([r for r in test_results if r.outcome == TestOutcome.PASS])

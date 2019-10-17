@@ -1,7 +1,7 @@
 import difflib
 import pprint
 
-from colorama import Fore, Style
+from termcolor import colored
 
 
 def build_auto_diff(lhs, rhs, width=60) -> str:
@@ -29,27 +29,27 @@ def build_split_diff(lhs_repr, rhs_repr) -> str:
 
         for i, lhs_substring in enumerate(lhs_substring_lines):
             if op == "replace":
-                lhs_out += f"{Fore.GREEN}{lhs_substring}"
+                lhs_out += colored(lhs_substring, color="green")
             elif op == "delete":
-                lhs_out += f"{Fore.GREEN}{lhs_substring}"
+                lhs_out += colored(lhs_substring, color="green")
             elif op == "insert":
-                lhs_out += f"{Fore.RESET}{lhs_substring}"
+                lhs_out += lhs_substring
             elif op == "equal":
-                lhs_out += f"{Fore.RESET}{lhs_substring}"
+                lhs_out += lhs_substring
 
             if i != len(lhs_substring_lines) - 1:
-                lhs_out += f"{Style.RESET_ALL}\n"
+                lhs_out += f"\n"
 
         for j, rhs_substring in enumerate(rhs_substring_lines):
             if op == "replace":
-                rhs_out += f"{Fore.RED}{rhs_substring}"
+                rhs_out += colored(rhs_substring, color="red")
             elif op == "insert":
-                rhs_out += f"{Fore.RED}{rhs_substring}"
+                rhs_out += colored(rhs_substring, color="red")
             elif op == "equal":
-                rhs_out += f"{Fore.RESET}{rhs_substring}"
+                rhs_out += rhs_substring
 
             if j != len(rhs_substring_lines) - 1:
-                rhs_out += f"{Style.RESET_ALL}\n"
+                rhs_out += f"\n"
 
     # TODO: Clean up the line below
     return f"LHS: {lhs_out}\nRHS: {rhs_out}"
@@ -64,14 +64,14 @@ def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
     output = []
     for line in diff:
         if line.startswith("- "):
-            output.append(f"{Fore.GREEN}{line[2:]}")
+            output.append(colored(line[2:], color="green"))
         elif line.startswith("+ "):
-            output.append(f"{Fore.RED}{line[2:]}")
+            output.append(colored(line[2:], color="red"))
         elif line.startswith("? "):
             # We can use this to find the index of change in
             # the line above if required in the future
             pass
         else:
-            output.append(f"{Fore.RESET}{line[2:]}")
+            output.append(line[2:])
 
     return " " * margin_left + f"\n{' ' * margin_left}".join(output)
