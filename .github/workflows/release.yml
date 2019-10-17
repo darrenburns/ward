@@ -1,0 +1,19 @@
+name: Ward release to PyPI
+
+on: [release]
+
+jobs:
+  publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+    steps:
+    - name: Build Python distributon
+      if: startsWith(github.event.ref, 'refs/tags')
+      run: |
+        python3 setup.py sdist bdist_wheel
+    - name: Publish a Python distribution to PyPI
+      if: success() && startsWith(github.event.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@66f4ba74
+      with:
+        user: __token__
+        password: ${{ secrets.pypi_api_token }}
