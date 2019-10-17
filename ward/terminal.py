@@ -84,7 +84,7 @@ class TestResultWriterBase:
 
 
 def lightblack(s: str) -> str:
-    return f"{Fore.LIGHTBLACK_EX}{s}{Fore.RESET}"
+    return f"{Fore.WHITE}{s}{Fore.RESET}"
 
 
 @dataclass
