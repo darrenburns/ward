@@ -2,7 +2,6 @@ import os
 import sys
 import traceback
 from dataclasses import dataclass
-from enum import Enum
 from typing import Generator, List, Optional, Dict
 
 from colorama import Fore, Style
@@ -12,17 +11,12 @@ from ward.diff import build_auto_diff
 from ward.expect import ExpectationFailed
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
+from ward.util import get_exit_code, ExitCode
 
 
 def truncate(s: str, num_chars: int) -> str:
     suffix = "..." if len(s) > num_chars - 3 else ""
     return s[:num_chars] + suffix
-
-
-class ExitCode(Enum):
-    SUCCESS = 0
-    TEST_FAILED = 1
-    ERROR = 2
 
 
 class TestResultWriterBase:
@@ -173,10 +167,11 @@ class SimpleTestResultWrite(TestResultWriterBase):
         )
         print(chart, "")
 
-        if any(r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in test_results):
-            result = colored("FAILED", color='red', attrs=["bold"])
+        exit_code = get_exit_code(test_results)
+        if exit_code == ExitCode.FAILED:
+            result = colored(exit_code.name, color='red', attrs=["bold"])
         else:
-            result = colored("PASSED", color='green', attrs=["bold"])
+            result = colored(exit_code.name, color='green', attrs=["bold"])
         print(f"{result} in {time_taken:.2f} seconds [ "
               f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
               f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "

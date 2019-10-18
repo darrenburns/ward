@@ -9,8 +9,8 @@ from colorama import init
 from ward.collect import get_info_for_modules, get_tests_in_modules, load_modules
 from ward.fixtures import fixture_registry
 from ward.suite import Suite
-from ward.terminal import ExitCode, SimpleTestResultWrite
-from ward.test_result import TestOutcome
+from ward.terminal import SimpleTestResultWrite
+from ward.util import get_exit_code
 
 init()
 
@@ -48,9 +48,6 @@ def run(path, filter, fail_limit):
     time_taken = default_timer() - start_run
     writer.output_test_result_summary(results, time_taken)
 
-    if any(r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results):
-        exit_code = ExitCode.TEST_FAILED
-    else:
-        exit_code = ExitCode.SUCCESS
+    exit_code = get_exit_code(results)
 
     sys.exit(exit_code.value)

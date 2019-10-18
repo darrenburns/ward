@@ -17,5 +17,5 @@ class TestOutcome(Enum):
 class TestResult:
     test: Test
     outcome: TestOutcome
-    error: Optional[Exception]
+    error: Optional[Exception] = None
     message: str = ""
