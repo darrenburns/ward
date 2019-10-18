@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Generator, List, Optional, Dict
 
 from colorama import Fore, Style
-from termcolor import colored, cprint
+from termcolor import colored
 
 from ward.diff import build_auto_diff
 from ward.expect import ExpectationFailed
