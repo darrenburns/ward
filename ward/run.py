@@ -48,7 +48,7 @@ def run(path, filter, fail_limit):
     time_taken = default_timer() - start_run
     writer.output_test_result_summary(results, time_taken)
 
-    if any(r.outcome == TestOutcome.FAIL for r in results):
+    if any(r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results):
         exit_code = ExitCode.TEST_FAILED
     else:
         exit_code = ExitCode.SUCCESS

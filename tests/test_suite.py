@@ -168,5 +168,5 @@ def test_capital_cities(cities):
      .is_instance_of(dict)
      .contains("tokyo")
      .has_length(6)
-     .equals({"edinburgh": "scasdnd", "tokyo": "japan", "london": "england"}))
+     .equals(cities))
 # endregion example
