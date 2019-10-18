@@ -4,7 +4,7 @@ import os
 import pkgutil
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
-from typing import Any, Generator, Iterable
+from typing import Any, Generator, Iterable, List
 
 from ward.test import Test, WardMarker
 
@@ -13,18 +13,22 @@ def is_test_module(module: pkgutil.ModuleInfo) -> bool:
     return module.name.startswith("test_")
 
 
-def get_info_for_modules(path: str) -> Generator[pkgutil.ModuleInfo, None, None]:
-    # Check for modules at the root of the specified path
-    for module in pkgutil.iter_modules([path]):
+def get_info_for_modules(path: List[str]) -> Generator[pkgutil.ModuleInfo, None, None]:
+    # If multiple paths are specified, remove duplicates
+    paths = list(set(path))
+    
+    # Check for modules at the root of the specified path (or paths)
+    for module in pkgutil.iter_modules(paths):
         yield module
 
     # Now check for modules in every subdirectory
-    for root, dirs, _ in os.walk(path):
-        for dir_name in dirs:
-            dir_path = os.path.join(root, dir_name)
-            for module in pkgutil.iter_modules([dir_path]):
-                if is_test_module(module):
-                    yield module
+    for p in paths:
+        for root, dirs, _ in os.walk(p):
+            for dir_name in dirs:
+                dir_path = os.path.join(root, dir_name)
+                for module in pkgutil.iter_modules([dir_path]):
+                    if is_test_module(module):
+                        yield module
 
 
 def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, None]:
