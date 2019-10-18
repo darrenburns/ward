@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Generator, List, Optional, Dict
 
 from colorama import Fore, Style
-from termcolor import colored
+from termcolor import colored, cprint
 
 from ward.diff import build_auto_diff
 from ward.expect import ExpectationFailed
@@ -51,6 +51,8 @@ class TestResultWriterBase:
         for failure in failed_test_results:
             self.output_why_test_failed_header(failure)
             self.output_why_test_failed(failure)
+            self.output_captured_stderr(failure)
+            self.output_captured_stdout(failure)
 
         return all_results
 
@@ -75,6 +77,12 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
+        raise NotImplementedError()
+
+    def output_captured_stderr(self, test_result: TestResult):
+        raise NotImplementedError()
+
+    def output_captured_stdout(self, test_result: TestResult):
         raise NotImplementedError()
 
 
@@ -124,7 +132,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         truncation_chars = self.terminal_size.width - 24
         err = test_result.error
         if isinstance(err, ExpectationFailed):
-            print(f"\n  Given {truncate(repr(err.history[0].this), num_chars=truncation_chars)}")
+            print(f"\n   Given {truncate(repr(err.history[0].this), num_chars=truncation_chars)}\n")
 
             for expect in err.history:
                 if expect.success:
@@ -141,7 +149,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             if err.history and err.history[-1].op == "equals":
                 expect = err.history[-1]
                 print(
-                    f"\n  Showing diff of {colored('expected value', color='green')}"
+                    f"\n   Showing diff of {colored('expected value', color='green')}"
                     f" vs {colored('actual value', color='red')}:\n"
                 )
 
@@ -181,6 +189,22 @@ class SimpleTestResultWrite(TestResultWriterBase):
             f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
             f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')} ]"
         )
+
+    def output_captured_stderr(self, test_result: TestResult):
+        if test_result.captured_stderr:
+            stderr = colored("standard error", color="red")
+            captured_stderr_lines = test_result.captured_stderr.split("\n")
+            print(f"   Captured {stderr} during test run:\n")
+            for line in captured_stderr_lines:
+                print("    " + line)
+
+    def output_captured_stdout(self, test_result: TestResult):
+        if test_result.captured_stdout:
+            stdout = colored("standard output", color="blue")
+            captured_stdout_lines = test_result.captured_stdout.split("\n")
+            print(f"\n   Captured {stdout} during test run:\n")
+            for line in captured_stdout_lines:
+                print("    " + line)
 
     def generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp):
         num_tests = num_passed + num_failed + num_skipped + num_xfail + num_unexp
