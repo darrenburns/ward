@@ -15,19 +15,13 @@ from ward.util import get_exit_code
 init()
 
 if platform.system() == "Windows":
-    os.system('color')
+    os.system("color")
 
 
 @click.command()
-@click.option(
-    "-p", "--path", default=".", type=click.Path(exists=True), help="Path to tests."
-)
-@click.option(
-    "-f", "--filter", help="Only run tests whose names contain the filter argument as a substring."
-)
-@click.option(
-    "--fail-limit", type=int, help="The number of failures to cancel the run after."
-)
+@click.option("-p", "--path", default=".", type=click.Path(exists=True), help="Path to tests.")
+@click.option("-f", "--filter", help="Only run tests whose names contain the filter argument as a substring.")
+@click.option("--fail-limit", type=int, help="The number of failures to cancel the run after.")
 def run(path, filter, fail_limit):
     start_run = default_timer()
 
@@ -40,11 +34,7 @@ def run(path, filter, fail_limit):
     test_results = suite.generate_test_runs()
 
     writer = SimpleTestResultWrite(suite=suite)
-    results = writer.output_all_test_results(
-        test_results,
-        time_to_collect=time_to_collect,
-        fail_limit=fail_limit,
-    )
+    results = writer.output_all_test_results(test_results, time_to_collect=time_to_collect, fail_limit=fail_limit)
     time_taken = default_timer() - start_run
     writer.output_test_result_summary(results, time_taken)
 

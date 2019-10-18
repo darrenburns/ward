@@ -45,11 +45,7 @@ def get_tests_in_modules(modules: Iterable[Any], filter: str = "") -> Generator[
                 test_fn = getattr(mod, test_name)
                 marker = getattr(test_fn, "ward_marker", WardMarker.NONE)
                 if test_fn:
-                    test = Test(
-                        fn=test_fn,
-                        module=mod,
-                        marker=marker,
-                    )
+                    test = Test(fn=test_fn, module=mod, marker=marker)
 
                     # Yield tests if there's no filter, or if the filter matches
                     if not filter:

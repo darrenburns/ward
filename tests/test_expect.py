@@ -7,16 +7,7 @@ def test_equals_success_history_recorded():
 
     e = expect(this).equals(that)
 
-    hist = [
-        Expected(
-            this=this,
-            op="equals",
-            that=that,
-            op_args=(),
-            op_kwargs={},
-            success=True,
-        )
-    ]
+    hist = [Expected(this=this, op="equals", that=that, op_args=(), op_kwargs={}, success=True)]
     expect(e.history).equals(hist)
 
 
@@ -29,16 +20,7 @@ def test_equals_failure_history_recorded():
     except ExpectationFailed:
         pass
 
-    hist = [
-        Expected(
-            this=this,
-            op="equals",
-            that=that,
-            op_args=(),
-            op_kwargs={},
-            success=False,
-        )
-    ]
+    hist = [Expected(this=this, op="equals", that=that, op_args=(), op_kwargs={}, success=False)]
     expect(e.history).equals(hist)
 
 
@@ -47,16 +29,7 @@ def test_satisfies_success_history_recorded():
     predicate = lambda e: this[::-1] == "hello"
     e = expect(this).satisfies(predicate)
 
-    hist = [
-        Expected(
-            this=this,
-            op="satisfies",
-            that=predicate,
-            op_args=(),
-            op_kwargs={},
-            success=True,
-        )
-    ]
+    hist = [Expected(this=this, op="satisfies", that=predicate, op_args=(), op_kwargs={}, success=True)]
 
     expect(e.history).equals(hist)
 
@@ -71,16 +44,7 @@ def test_satisfies_failure_history_recorded():
     except ExpectationFailed:
         pass
 
-    hist = [
-        Expected(
-            this=this,
-            op="satisfies",
-            that=predicate,
-            op_args=(),
-            op_kwargs={},
-            success=False
-        )
-    ]
+    hist = [Expected(this=this, op="satisfies", that=predicate, op_args=(), op_kwargs={}, success=False)]
 
     expect(e.history).equals(hist)
 
@@ -90,16 +54,7 @@ def test_approx_success_history_recorded():
 
     e = expect(this).approx(that, epsilon=eps)
 
-    hist = [
-        Expected(
-            this=this,
-            op="approx",
-            that=that,
-            op_args=(),
-            op_kwargs={"epsilon": eps},
-            success=True,
-        )
-    ]
+    hist = [Expected(this=this, op="approx", that=that, op_args=(), op_kwargs={"epsilon": eps}, success=True)]
     expect(e.history).equals(hist)
 
 
@@ -113,15 +68,6 @@ def test_approx_failure_history_recorded():
     except ExpectationFailed:
         pass
 
-    hist = [
-        Expected(
-            this=this,
-            op="approx",
-            that=that,
-            op_args=(eps,),
-            op_kwargs={},
-            success=False,
-        )
-    ]
+    hist = [Expected(this=this, op="approx", that=that, op_args=(eps,), op_kwargs={}, success=False)]
 
     expect(e.history).equals(hist)

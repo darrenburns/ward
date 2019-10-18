@@ -45,9 +45,7 @@ def test_fixture_registry_cache_fixture(exception_raising_fixture):
     expect(registry[exception_raising_fixture.key]).equals(exception_raising_fixture)
 
 
-def test_fixture_resolve_raises_FixtureExecutionError_when_fixture_cant_be_executed(
-    exception_raising_fixture
-):
+def test_fixture_resolve_raises_FixtureExecutionError_when_fixture_cant_be_executed(exception_raising_fixture):
     registry = FixtureRegistry()
     registry.cache_fixtures([exception_raising_fixture])
 

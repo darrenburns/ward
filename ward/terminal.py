@@ -20,7 +20,6 @@ def truncate(s: str, num_chars: int) -> str:
 
 
 class TestResultWriterBase:
-
     def __init__(self, suite: Suite):
         self.suite = suite
         self.terminal_size = get_terminal_size()
@@ -33,8 +32,10 @@ class TestResultWriterBase:
     ) -> List[TestResult]:
         all_results = []
         failed_test_results = []
-        print(f"Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures "
-              f"in {time_to_collect:.2f} seconds.\n")
+        print(
+            f"Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures "
+            f"in {time_to_collect:.2f} seconds.\n"
+        )
         for result in test_results_gen:
             self.output_single_test_result(result)
             sys.stdout.write(Style.RESET_ALL)
@@ -98,7 +99,6 @@ def get_terminal_size() -> TerminalSize:
 
 
 class SimpleTestResultWrite(TestResultWriterBase):
-
     def output_single_test_result(self, test_result: TestResult):
         outcome_to_colour = {
             TestOutcome.PASS: "green",
@@ -111,12 +111,14 @@ class SimpleTestResultWrite(TestResultWriterBase):
         bg = f"on_{colour}"
         padded_outcome = f" {test_result.outcome.name[:4]} "
         mod_name = lightblack(f"{test_result.test.module.__name__}.")
-        print(colored(padded_outcome, color='grey', on_color=bg),
-              mod_name + test_result.test.name)
+        print(colored(padded_outcome, color="grey", on_color=bg), mod_name + test_result.test.name)
 
     def output_why_test_failed_header(self, test_result: TestResult):
-        print(colored(" Failure", color="red", attrs=["bold"]), "in",
-              colored(test_result.test.qualified_name, attrs=["bold"]))
+        print(
+            colored(" Failure", color="red", attrs=["bold"]),
+            "in",
+            colored(test_result.test.qualified_name, attrs=["bold"]),
+        )
 
     def output_why_test_failed(self, test_result: TestResult):
         truncation_chars = self.terminal_size.width - 24
@@ -134,15 +136,14 @@ class SimpleTestResultWrite(TestResultWriterBase):
                     expect_that = truncate(expect.that.__name__, num_chars=truncation_chars)
                 else:
                     expect_that = truncate(repr(expect.that), num_chars=truncation_chars)
-                print(
-                    f"    {result_marker} it {expect.op} {expect_that}{Style.RESET_ALL}",
-                )
+                print(f"    {result_marker} it {expect.op} {expect_that}{Style.RESET_ALL}")
 
             if err.history and err.history[-1].op == "equals":
                 expect = err.history[-1]
                 print(
                     f"\n  Showing diff of {colored('expected value', color='green')}"
-                    f" vs {colored('actual value', color='red')}:\n")
+                    f" vs {colored('actual value', color='red')}:\n"
+                )
 
                 diff = build_auto_diff(expect.that, expect.this, width=truncation_chars)
                 print(diff)
@@ -169,15 +170,17 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         exit_code = get_exit_code(test_results)
         if exit_code == ExitCode.FAILED:
-            result = colored(exit_code.name, color='red', attrs=["bold"])
+            result = colored(exit_code.name, color="red", attrs=["bold"])
         else:
-            result = colored(exit_code.name, color='green', attrs=["bold"])
-        print(f"{result} in {time_taken:.2f} seconds [ "
-              f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
-              f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
-              f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
-              f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
-              f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')} ]")
+            result = colored(exit_code.name, color="green", attrs=["bold"])
+        print(
+            f"{result} in {time_taken:.2f} seconds [ "
+            f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
+            f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
+            f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
+            f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
+            f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')} ]"
+        )
 
     def generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp):
         num_tests = num_passed + num_failed + num_skipped + num_xfail + num_unexp
@@ -194,7 +197,14 @@ class SimpleTestResultWrite(TestResultWriterBase):
         num_magenta_bars = int(xfail_pct * self.terminal_size.width)
 
         # Rounding to integers could leave us a few bars short
-        num_bars_remaining = self.terminal_size.width - num_green_bars - num_red_bars - num_blue_bars - num_yellow_bars - num_magenta_bars
+        num_bars_remaining = (
+            self.terminal_size.width
+            - num_green_bars
+            - num_red_bars
+            - num_blue_bars
+            - num_yellow_bars
+            - num_magenta_bars
+        )
         if num_bars_remaining and num_green_bars:
             num_green_bars += 1
             num_bars_remaining -= 1
@@ -215,11 +225,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
             num_magenta_bars += 1
             num_bars_remaining -= 1
 
-        return (colored("F" * num_red_bars, color="red", on_color="on_red") +
-                colored("U" * num_yellow_bars, color="yellow", on_color="on_yellow") +
-                colored("x" * num_magenta_bars, color="magenta", on_color="on_magenta") +
-                colored("s" * num_blue_bars, color="blue", on_color="on_blue") +
-                colored("." * num_green_bars, color="green", on_color="on_green"))
+        return (
+            colored("F" * num_red_bars, color="red", on_color="on_red")
+            + colored("U" * num_yellow_bars, color="yellow", on_color="on_yellow")
+            + colored("x" * num_magenta_bars, color="magenta", on_color="on_magenta")
+            + colored("s" * num_blue_bars, color="blue", on_color="on_blue")
+            + colored("." * num_green_bars, color="green", on_color="on_green")
+        )
 
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
         pass

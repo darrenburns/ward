@@ -42,9 +42,7 @@ def fixture_registry(fixtures):
 
 @fixture
 def suite(example_test, fixture_registry):
-    return Suite(
-        tests=[example_test] * NUMBER_OF_TESTS, fixture_registry=fixture_registry
-    )
+    return Suite(tests=[example_test] * NUMBER_OF_TESTS, fixture_registry=fixture_registry)
 
 
 def test_suite_num_tests(suite):
@@ -64,15 +62,12 @@ def test_generate_test_runs__correct_number_of_runs_generated(suite):
 def test_generate_test_runs__yields_correct_test_results_when_exhausted(suite):
     results = list(suite.generate_test_runs())
 
-    expect(results).equals([
-        TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
-        for test in suite.tests
-    ])
+    expect(results).equals(
+        [TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="") for test in suite.tests]
+    )
 
 
-def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
-    fixture_registry, module
-):
+def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(fixture_registry, module):
     def test_i_fail():
         assert False
 
@@ -82,9 +77,7 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(
     results = failing_suite.generate_test_runs()
     result = next(results)
 
-    expected_result = TestResult(
-        test=test, outcome=TestOutcome.FAIL, error=mock.ANY, message=""
-    )
+    expected_result = TestResult(test=test, outcome=TestOutcome.FAIL, error=mock.ANY, message="")
 
     expect(result).equals(expected_result)
     expect(result.error).is_instance_of(AssertionError)
@@ -128,12 +121,7 @@ def test_fixture_teardown_occurs_and_in_expected_order(module):
         ]
     )
 
-    suite = Suite(
-        tests=[
-            Test(fn=my_test, module=module)
-        ],
-        fixture_registry=reg,
-    )
+    suite = Suite(tests=[Test(fn=my_test, module=module)], fixture_registry=reg)
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
@@ -143,16 +131,28 @@ def test_fixture_teardown_occurs_and_in_expected_order(module):
 
 # region example
 
+
 def get_capitals_from_server():
-    return {"glasgow": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland",
-            "berlin": "germany",
-            "madrid": "spain"}
+    return {
+        "glasgow": "scotland",
+        "tokyo": "japan",
+        "london": "england",
+        "warsaw": "poland",
+        "berlin": "germany",
+        "madrid": "spain",
+    }
 
 
 @fixture
 def cities():
-    yield {"edinburgh": "scotland", "tokyo": "japan", "london": "england", "warsaw": "poland", "berlin": "germany",
-           "madrid": "spain"}
+    yield {
+        "edinburgh": "scotland",
+        "tokyo": "japan",
+        "london": "england",
+        "warsaw": "poland",
+        "berlin": "germany",
+        "madrid": "spain",
+    }
 
 
 @skip
@@ -162,11 +162,15 @@ def test_capital_cities(cities):
     def all_keys_less_than_length_10(cities):
         return all(len(k) < 10 for k in cities)
 
-    (expect(found_cities)
-     .satisfies(lambda c: all(len(k) < 10 for k in c))
-     .satisfies(all_keys_less_than_length_10)
-     .is_instance_of(dict)
-     .contains("tokyo")
-     .has_length(6)
-     .equals(cities))
+    (
+        expect(found_cities)
+        .satisfies(lambda c: all(len(k) < 10 for k in c))
+        .satisfies(all_keys_less_than_length_10)
+        .is_instance_of(dict)
+        .contains("tokyo")
+        .has_length(6)
+        .equals(cities)
+    )
+
+
 # endregion example

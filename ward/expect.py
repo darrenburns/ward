@@ -13,9 +13,7 @@ class raises:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not self.expected_ex_type:
-            raise AssertionError(
-                f"Expected exception {self.expected_ex_type}, but {exc_type} was raised instead."
-            )
+            raise AssertionError(f"Expected exception {self.expected_ex_type}, but {exc_type} was raised instead.")
         return True
 
 
