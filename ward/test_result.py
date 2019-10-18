@@ -9,12 +9,13 @@ class TestOutcome(Enum):
     PASS = auto()
     FAIL = auto()
     SKIP = auto()
-    XFAIL = auto()
+    XFAIL = auto()  # expected fail
+    XPASS = auto()  # unexpected pass
 
 
 @dataclass
 class TestResult:
     test: Test
     outcome: TestOutcome
-    error: Optional[Exception]
-    message: str
+    error: Optional[Exception] = None
+    message: str = ""

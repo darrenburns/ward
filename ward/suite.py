@@ -28,14 +28,25 @@ class Suite:
             try:
                 resolved_fixtures = test.resolve_args(self.fixture_registry)
             except FixtureExecutionError as e:
-                yield TestResult(test, TestOutcome.FAIL, e, message="[Error] " + str(e))
+                yield TestResult(test, TestOutcome.FAIL, e)
                 continue
             try:
                 resolved_vals = {k: fix.resolved_val for (k, fix) in resolved_fixtures.items()}
+
+                # Run the test
                 test(**resolved_vals)
-                yield TestResult(test, TestOutcome.PASS, None, message="")
+
+                # The test has completed without exception and therefore passed
+                if test.marker == WardMarker.XFAIL:
+                    yield TestResult(test, TestOutcome.XPASS, None)
+                else:
+                    yield TestResult(test, TestOutcome.PASS, None)
+
             except Exception as e:
-                yield TestResult(test, TestOutcome.FAIL, e, message="")
+                if test.marker == WardMarker.XFAIL:
+                    yield TestResult(test, TestOutcome.XFAIL, e)
+                else:
+                    yield TestResult(test, TestOutcome.FAIL, e)
             finally:
                 for fixture in resolved_fixtures.values():
                     if fixture.is_generator_fixture:

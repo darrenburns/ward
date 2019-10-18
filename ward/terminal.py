@@ -2,8 +2,7 @@ import os
 import sys
 import traceback
 from dataclasses import dataclass
-from enum import Enum
-from typing import Generator, List, Optional, Tuple
+from typing import Generator, List, Optional, Dict
 
 from colorama import Fore, Style
 from termcolor import colored
@@ -12,17 +11,12 @@ from ward.diff import build_auto_diff
 from ward.expect import ExpectationFailed
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
+from ward.util import get_exit_code, ExitCode
 
 
 def truncate(s: str, num_chars: int) -> str:
     suffix = "..." if len(s) > num_chars - 3 else ""
     return s[:num_chars] + suffix
-
-
-class ExitCode(Enum):
-    SUCCESS = 0
-    TEST_FAILED = 1
-    ERROR = 2
 
 
 class TestResultWriterBase:
@@ -110,10 +104,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
             TestOutcome.PASS: "green",
             TestOutcome.SKIP: "blue",
             TestOutcome.FAIL: "red",
+            TestOutcome.XFAIL: "magenta",
+            TestOutcome.XPASS: "yellow",
         }
         colour = outcome_to_colour[test_result.outcome]
         bg = f"on_{colour}"
-        padded_outcome = f" {test_result.outcome.name} "
+        padded_outcome = f" {test_result.outcome.name[:4]} "
         mod_name = lightblack(f"{test_result.test.module.__name__}.")
         print(colored(padded_outcome, color='grey', on_color=bg),
               mod_name + test_result.test.name)
@@ -161,29 +157,44 @@ class SimpleTestResultWrite(TestResultWriterBase):
         print(Style.RESET_ALL)
 
     def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
-        num_passed, num_failed, num_skipped = self._get_num_passed_failed_skipped(test_results)
-        print(self.generate_chart(num_passed=num_passed, num_failed=num_failed, num_skipped=num_skipped), "")
+        outcome_counts = self._get_outcome_counts(test_results)
+        chart = self.generate_chart(
+            num_passed=outcome_counts[TestOutcome.PASS],
+            num_failed=outcome_counts[TestOutcome.FAIL],
+            num_skipped=outcome_counts[TestOutcome.SKIP],
+            num_xfail=outcome_counts[TestOutcome.XFAIL],
+            num_unexp=outcome_counts[TestOutcome.XPASS],
+        )
+        print(chart, "")
 
-        if any(r.outcome == TestOutcome.FAIL for r in test_results):
-            result = colored("FAILED", color='red', attrs=["bold"])
+        exit_code = get_exit_code(test_results)
+        if exit_code == ExitCode.FAILED:
+            result = colored(exit_code.name, color='red', attrs=["bold"])
         else:
-            result = colored("PASSED", color='green', attrs=["bold"])
+            result = colored(exit_code.name, color='green', attrs=["bold"])
         print(f"{result} in {time_taken:.2f} seconds [ "
-              f"{colored(str(num_failed) + ' failed', color='red')}  "
-              f"{colored(str(num_skipped) + ' skipped', color='blue')}  "
-              f"{colored(str(num_passed) + ' passed', color='green')} ]")
+              f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
+              f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
+              f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
+              f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
+              f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')} ]")
 
-    def generate_chart(self, num_passed, num_failed, num_skipped):
-        pass_pct = num_passed / max(num_passed + num_failed + num_skipped, 1)
-        fail_pct = num_failed / max(num_passed + num_failed + num_skipped, 1)
-        skip_pct = 1.0 - pass_pct - fail_pct
+    def generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp):
+        num_tests = num_passed + num_failed + num_skipped + num_xfail + num_unexp
+        pass_pct = num_passed / max(num_tests, 1)
+        fail_pct = num_failed / max(num_tests, 1)
+        xfail_pct = num_xfail / max(num_tests, 1)
+        unexp_pct = num_unexp / max(num_tests, 1)
+        skip_pct = 1.0 - pass_pct - fail_pct - xfail_pct - unexp_pct
 
         num_green_bars = int(pass_pct * self.terminal_size.width)
         num_red_bars = int(fail_pct * self.terminal_size.width)
         num_blue_bars = int(skip_pct * self.terminal_size.width)
+        num_yellow_bars = int(unexp_pct * self.terminal_size.width)
+        num_magenta_bars = int(xfail_pct * self.terminal_size.width)
 
         # Rounding to integers could leave us a few bars short
-        num_bars_remaining = self.terminal_size.width - num_green_bars - num_red_bars - num_blue_bars
+        num_bars_remaining = self.terminal_size.width - num_green_bars - num_red_bars - num_blue_bars - num_yellow_bars - num_magenta_bars
         if num_bars_remaining and num_green_bars:
             num_green_bars += 1
             num_bars_remaining -= 1
@@ -196,21 +207,28 @@ class SimpleTestResultWrite(TestResultWriterBase):
             num_blue_bars += 1
             num_bars_remaining -= 1
 
-        assert num_bars_remaining == 0
+        if num_bars_remaining and num_yellow_bars:
+            num_yellow_bars += 1
+            num_bars_remaining -= 1
 
-        if self.terminal_size.width - num_green_bars - num_red_bars == 1:
-            num_green_bars += 1
+        if num_bars_remaining and num_magenta_bars:
+            num_magenta_bars += 1
+            num_bars_remaining -= 1
 
         return (colored("F" * num_red_bars, color="red", on_color="on_red") +
+                colored("U" * num_yellow_bars, color="yellow", on_color="on_yellow") +
+                colored("x" * num_magenta_bars, color="magenta", on_color="on_magenta") +
                 colored("s" * num_blue_bars, color="blue", on_color="on_blue") +
                 colored("." * num_green_bars, color="green", on_color="on_green"))
 
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
         pass
 
-    def _get_num_passed_failed_skipped(self, test_results: List[TestResult]) -> Tuple[int, int, int]:
-        num_passed = len([r for r in test_results if r.outcome == TestOutcome.PASS])
-        num_failed = len([r for r in test_results if r.outcome == TestOutcome.FAIL])
-        num_skipped = len([r for r in test_results if r.outcome == TestOutcome.SKIP])
-
-        return num_passed, num_failed, num_skipped
+    def _get_outcome_counts(self, test_results: List[TestResult]) -> Dict[TestOutcome, int]:
+        return {
+            TestOutcome.PASS: len([r for r in test_results if r.outcome == TestOutcome.PASS]),
+            TestOutcome.FAIL: len([r for r in test_results if r.outcome == TestOutcome.FAIL]),
+            TestOutcome.SKIP: len([r for r in test_results if r.outcome == TestOutcome.SKIP]),
+            TestOutcome.XFAIL: len([r for r in test_results if r.outcome == TestOutcome.XFAIL]),
+            TestOutcome.XPASS: len([r for r in test_results if r.outcome == TestOutcome.XPASS]),
+        }
