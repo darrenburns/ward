@@ -26,13 +26,28 @@ Planned features:
 * Integration with unittest.mock (specifics to be ironed out)
 * Plugin system
 
-## Quick Start
+## Getting Started
 
-Installation: `pip install ward`
+Install Ward with `pip install ward`.
 
-Look for tests recursively and run them: `ward`
+Write your first test in `test_sum.py` (module name must start with `"test"`):
 
-## Examples
+```python
+from ward import expect
+
+def test_one_plus_two_equals_three():  # name must start with "test"
+    expect(1 + 2).equals(3)
+```
+
+Now run your test with `ward` (no arguments needed). Ward will output the following:
+
+```
+ PASS  test_sum.test_one_plus_two_equals_three
+```
+
+*You've just wrote your first test with Ward!*
+
+## More Examples
 
 ### Dependency injection with fixtures
 
