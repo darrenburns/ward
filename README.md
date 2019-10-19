@@ -2,7 +2,7 @@
 
 ![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
 
-An experimental test runner for Python 3.6+ that is heavily inspired by `pytest`. This project is a work in progress, and is not production ready.
+A modern Python test framework designed to help you find and fix flaws faster.
 
 ![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
 
@@ -10,11 +10,11 @@ An experimental test runner for Python 3.6+ that is heavily inspired by `pytest`
 
 This project is a work in progress. Some of the features that are currently available in a basic form are listed below.
 
-* Modular setup/teardown with fixtures and dependency injection
-* Colourful, human readable diffs allowing you to quickly pinpoint issues
-* A human readable assertion API
-* Tested on Mac OS, Linux, and Windows
-* stderr/stdout captured during test and fixture execution
+* **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
+* **Modular test dependencies:** manage test setup/teardown code using modular pytest-style fixtures.
+* **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
+* **Cross platform:** Tested on Mac OS, Linux, and Windows.
+* **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
 
 Planned features:
 
@@ -27,7 +27,6 @@ Planned features:
 * Plugin system
 
 ## Quick Start
-
 
 Installation: `pip install ward`
 
