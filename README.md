@@ -187,8 +187,8 @@ considered a failure.
 Check that a value is close to another value.
 
 ```python
-expect(1.0).approx(1.01, epsilon=0.2)  # pass
-expect(1.0).approx(1.01, epsilon=0.001)  # fail
+expect(1.0).approx(1.01, abs_tol=0.2)  # pass
+expect(1.0).approx(1.01, abs_tol=0.001)  # fail
 ```
 
 ### Cancelling a run after a specific number of failures

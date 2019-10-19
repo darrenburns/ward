@@ -52,9 +52,9 @@ def test_satisfies_failure_history_recorded():
 def test_approx_success_history_recorded():
     this, that, eps = 1.0, 1.01, 0.5
 
-    e = expect(this).approx(that, epsilon=eps)
+    e = expect(this).approx(that, abs_tol=eps)
 
-    hist = [Expected(this=this, op="approx", that=that, op_args=(), op_kwargs={"epsilon": eps}, success=True)]
+    hist = [Expected(this=this, op="approx", that=that, op_args=(), op_kwargs={"abs_tol": eps}, success=True)]
     expect(e.history).equals(hist)
 
 

@@ -60,34 +60,104 @@ class expect:
     def equals(self, that: Any):
         return self.this == that
 
-    @record_and_handle_outcome
-    def is_less_than(self, that: Any):
-        return self.this < that
+    def not_equals(self, that: Any):
+        return not self.equals(that)
 
     @record_and_handle_outcome
-    def is_greater_than(self, that: Any):
+    def less_than(self, that: Any):
+        return self.this < that
+
+    def not_less_than(self, that: Any):
+        return not self.less_than(that)
+
+    @record_and_handle_outcome
+    def less_than_or_equals(self, that: Any):
+        return self.this <= that
+
+    def not_less_than_or_equals(self, that: Any):
+        return self.less_than_or_equals(that)
+
+    @record_and_handle_outcome
+    def greater_than(self, that: Any):
         return self.this > that
+
+    def not_greater_than(self, that: Any):
+        return not self.greater_than(that)
+
+    @record_and_handle_outcome
+    def greater_than_or_equals(self, that: Any):
+        return self.this >= that
+
+    def not_greater_than_or_equals(self, that: Any):
+        return not self.greater_than_or_equals(that)
 
     @record_and_handle_outcome
     def contains(self, that: Any):
         return that in self.this
 
+    def not_contains(self, that: Any):
+        return not self.contains(that)
+
     @record_and_handle_outcome
     def has_length(self, length: int):
         return len(self.this) == length
 
+    def not_has_length(self, length: int):
+        return not self.has_length(length)
+
     @record_and_handle_outcome
-    def is_instance_of(self, type: Type):
+    def instance_of(self, type: Type):
         return isinstance(self.this, type)
+
+    def not_instance_of(self, type: Type):
+        return not self.instance_of(type)
 
     @record_and_handle_outcome
     def satisfies(self, predicate: Callable[["expect"], bool]):
         return predicate(self.this)
 
-    @record_and_handle_outcome
-    def is_(self, that: Any):
-        return self.this is that
+    def not_satisfies(self, predicate: Callable[["expect"], bool]):
+        return not self.satisfies(predicate)
 
     @record_and_handle_outcome
-    def approx(self, that: Any, epsilon: float):
-        return math.isclose(self.this, that, abs_tol=epsilon)
+    def identical_to(self, that: Any):
+        return self.this is that
+
+    def not_identical_to(self, that: Any):
+        return not self.identical_to(that)
+
+    @record_and_handle_outcome
+    def approx(self, that: Any, abs_tol: float, rel_tol: float = 0.0):
+        return math.isclose(self.this, that, abs_tol=abs_tol, rel_tol=rel_tol)
+
+    def not_approx(self, that: Any, abs_tol: float, rel_tol: float = 0.0):
+        return not self.approx(that, abs_tol, rel_tol)
+
+    @record_and_handle_outcome
+    def called(self):
+        return self.this.called
+
+    def not_called(self):
+        return not self.called
+
+    @record_and_handle_outcome
+    def called_once_with(self, *args, **kwargs):
+        try:
+            self.this.assert_called_once_with(*args, **kwargs)
+        except AssertionError:
+            return False
+        return True
+
+    def not_called_once_with(self, *args, **kwargs):
+        return not self.called_once_with(*args, **kwargs)
+
+    @record_and_handle_outcome
+    def called_with(self, *args, **kwargs):
+        try:
+            self.this.assert_called_with(*args, **kwargs)
+        except AssertionError:
+            return False
+        return True
+
+    def not_called_with(self, *args, **kwargs):
+        return not self.called_with(*args, **kwargs)
