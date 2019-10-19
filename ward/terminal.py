@@ -7,7 +7,7 @@ from typing import Generator, List, Optional, Dict
 from colorama import Fore, Style
 from termcolor import colored
 
-from ward.diff import build_auto_diff
+from ward.diff import make_diff
 from ward.expect import ExpectationFailed
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
@@ -149,7 +149,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
                     f" vs {colored('actual value', color='red')}:\n"
                 )
 
-                diff = build_auto_diff(expect.that, expect.this, width=truncation_chars)
+                diff = make_diff(expect.that, expect.this, width=truncation_chars)
                 print(diff)
         else:
             trace = getattr(err, "__traceback__", "")

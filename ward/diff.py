@@ -5,8 +5,8 @@ from colorama import Style, Fore
 from termcolor import colored
 
 
-def build_auto_diff(lhs, rhs, width=60) -> str:
-    """Determines the best type of diff to use based on the output"""
+def make_diff(lhs, rhs, width=60) -> str:
+    """Transform input into best format for diffing, then return output diff."""
     if isinstance(lhs, str):
         lhs_repr = lhs
     else:
@@ -18,43 +18,6 @@ def build_auto_diff(lhs, rhs, width=60) -> str:
         rhs_repr = pprint.pformat(rhs, width=width)
 
     return build_unified_diff(lhs_repr, rhs_repr)
-
-
-def build_split_diff(lhs_repr, rhs_repr) -> str:
-    lhs_out, rhs_out = "", ""
-
-    matcher = difflib.SequenceMatcher(None, lhs_repr, rhs_repr)
-    for op, i1, i2, j1, j2 in matcher.get_opcodes():
-
-        lhs_substring_lines = lhs_repr[i1:i2].splitlines()
-        rhs_substring_lines = rhs_repr[j1:j2].splitlines()
-
-        for i, lhs_substring in enumerate(lhs_substring_lines):
-            if op == "replace":
-                lhs_out += colored(lhs_substring, color="green")
-            elif op == "delete":
-                lhs_out += colored(lhs_substring, color="green")
-            elif op == "insert":
-                lhs_out += lhs_substring
-            elif op == "equal":
-                lhs_out += lhs_substring
-
-            if i != len(lhs_substring_lines) - 1:
-                lhs_out += f"\n"
-
-        for j, rhs_substring in enumerate(rhs_substring_lines):
-            if op == "replace":
-                rhs_out += colored(rhs_substring, color="red")
-            elif op == "insert":
-                rhs_out += colored(rhs_substring, color="red")
-            elif op == "equal":
-                rhs_out += rhs_substring
-
-            if j != len(rhs_substring_lines) - 1:
-                rhs_out += f"\n"
-
-    # TODO: Clean up the line below
-    return f"LHS: {lhs_out}\nRHS: {rhs_out}"
 
 
 def bright_red(s: str) -> str:
