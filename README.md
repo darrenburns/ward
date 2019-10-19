@@ -2,7 +2,7 @@
 
 ![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
 
-An experimental test runner for Python 3.6+ that is heavily inspired by `pytest`. This project is a work in progress, and is not production ready.
+A modern Python test framework designed to help you find and fix flaws faster.
 
 ![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
 
@@ -10,11 +10,11 @@ An experimental test runner for Python 3.6+ that is heavily inspired by `pytest`
 
 This project is a work in progress. Some of the features that are currently available in a basic form are listed below.
 
-* Modular setup/teardown with fixtures and dependency injection
-* Colourful, human readable diffs allowing you to quickly pinpoint issues
-* A human readable assertion API
-* Tested on Mac OS, Linux, and Windows
-* stderr/stdout captured during test and fixture execution
+* **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
+* **Modular test dependencies:** manage test setup/teardown code using modular pytest-style fixtures.
+* **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
+* **Cross platform:** Tested on Mac OS, Linux, and Windows.
+* **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
 
 Planned features:
 
@@ -26,14 +26,35 @@ Planned features:
 * Integration with unittest.mock (specifics to be ironed out)
 * Plugin system
 
-## Quick Start
+## Getting Started
 
+Install Ward with `pip install ward`.
 
-Installation: `pip install ward`
+Write your first test in `test_sum.py` (module name must start with `"test"`):
 
-Look for tests recursively and run them: `ward`
+```python
+from ward import expect
 
-## Examples
+def test_one_plus_two_equals_three():  # name must start with "test"
+    expect(1 + 2).equals(3)
+```
+
+Now run your test with `ward` (no arguments needed). Ward will output the following:
+
+```
+ PASS  test_sum.test_one_plus_two_equals_three
+```
+
+*You've just wrote your first test with Ward, congrats!* Look [here](#more-examples) for more examples of
+how to test things with Ward.
+
+## How to Contribute
+
+Contributions are very welcome and encouraged!
+
+See the [contributing guide](.github/CONTRIBUTING.md) for information on how you can take part in the development of Ward.
+
+## More Examples
 
 ### Dependency injection with fixtures
 
@@ -155,6 +176,12 @@ def test_to_be_skipped():
     pass
 ```
 
+### Expecting a test to fail
+
+You can mark a test that you expect to fail with the `@xfail` decorator. If a test
+marked with this decorator passes unexpectedly, the overall run will be
+considered a failure.
+
 ### Testing for approximate equality
 
 Check that a value is close to another value.
@@ -170,5 +197,5 @@ If you wish for Ward to cancel a run immediately after a specific number of fail
 you can use the `--fail-limit` option. To have a run end immediately after 5 tests fail:
 
 ```text
-ward --fail-limit=5
+ward --fail-limit 5
 ```
