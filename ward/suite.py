@@ -1,3 +1,5 @@
+import io
+from contextlib import suppress, redirect_stdout, redirect_stderr
 from dataclasses import dataclass
 from typing import Generator, List
 
@@ -22,37 +24,47 @@ class Suite:
     def generate_test_runs(self) -> Generator[TestResult, None, None]:
         for test in self.tests:
             if test.marker == WardMarker.SKIP:
-                yield TestResult(test, TestOutcome.SKIP, None, "")
+                yield TestResult(test, TestOutcome.SKIP)
                 continue
 
+            sout, serr = io.StringIO(), io.StringIO()
             try:
-                resolved_fixtures = test.resolve_args(self.fixture_registry)
+                with redirect_stdout(sout), redirect_stderr(serr):
+                    resolved_fixtures = test.resolve_args(self.fixture_registry)
             except FixtureExecutionError as e:
-                yield TestResult(test, TestOutcome.FAIL, e)
+                yield TestResult(
+                    test, TestOutcome.FAIL, e, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
+                )
+                sout.close()
+                serr.close()
                 continue
             try:
                 resolved_vals = {k: fix.resolved_val for (k, fix) in resolved_fixtures.items()}
 
-                # Run the test
-                test(**resolved_vals)
+                # Run the test, while capturing output.
+                with redirect_stdout(sout), redirect_stderr(serr):
+                    test(**resolved_vals)
 
                 # The test has completed without exception and therefore passed
                 if test.marker == WardMarker.XFAIL:
-                    yield TestResult(test, TestOutcome.XPASS, None)
+                    yield TestResult(
+                        test, TestOutcome.XPASS, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
+                    )
                 else:
-                    yield TestResult(test, TestOutcome.PASS, None)
+                    yield TestResult(test, TestOutcome.PASS)
 
             except Exception as e:
                 if test.marker == WardMarker.XFAIL:
                     yield TestResult(test, TestOutcome.XFAIL, e)
                 else:
-                    yield TestResult(test, TestOutcome.FAIL, e)
+                    yield TestResult(
+                        test, TestOutcome.FAIL, e, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
+                    )
             finally:
                 for fixture in resolved_fixtures.values():
                     if fixture.is_generator_fixture:
-                        try:
+                        with suppress(RuntimeError, StopIteration):
                             fixture.cleanup()
-                        except (RuntimeError, StopIteration):
-                            # In Python 3.7, a RuntimeError is raised if we fall off the end of a generator
-                            # (instead of a StopIteration)
-                            pass
+
+                sout.close()
+                serr.close()

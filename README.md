@@ -14,6 +14,7 @@ This project is a work in progress. Some of the features that are currently avai
 * Colourful, human readable diffs allowing you to quickly pinpoint issues
 * A human readable assertion API
 * Tested on Mac OS, Linux, and Windows
+* stderr/stdout captured during test and fixture execution
 
 Planned features:
 
@@ -23,7 +24,6 @@ Planned features:
 * Code coverage with `--coverage` flag
 * Handling flaky tests with test-specific retries, timeouts
 * Integration with unittest.mock (specifics to be ironed out)
-* Capturing of stderr/stdout
 * Plugin system
 
 ## Quick Start

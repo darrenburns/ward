@@ -19,3 +19,5 @@ class TestResult:
     outcome: TestOutcome
     error: Optional[Exception] = None
     message: str = ""
+    captured_stdout: str = ""
+    captured_stderr: str = ""
