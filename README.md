@@ -10,11 +10,11 @@ A modern Python test framework designed to help you find and fix flaws faster.
 
 This project is a work in progress. Some of the features that are currently available in a basic form are listed below.
 
-* **🎨 Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
-* **📦 Modular test dependencies:** manage test setup/teardown code using modular pytest-style fixtures.
-* **🧪 Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
-* **🌍 Cross platform:** Tested on Mac OS, Linux, and Windows.
-* **🧙‍♂️ Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
+* **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
+* **Modular test dependencies:** manage test setup/teardown code using modular pytest-style fixtures.
+* **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
+* **Cross platform:** Tested on Mac OS, Linux, and Windows.
+* **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
 
 Planned features:
 
