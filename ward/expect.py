@@ -33,7 +33,7 @@ class ExpectationFailed(Exception):
         self.history = history
 
 
-def record_expect_in_history(func):
+def record_and_handle_outcome(func):
     @functools.wraps(func)
     def wrapped_func(self, that: Any, *args, **kwargs) -> "expect":
         rv = func(self, that, *args, **kwargs)
@@ -56,38 +56,38 @@ class expect:
         self.this = this
         self.history: List[Expected] = []
 
-    @record_expect_in_history
+    @record_and_handle_outcome
     def equals(self, that: Any):
         return self.this == that
 
-    @record_expect_in_history
+    @record_and_handle_outcome
     def is_less_than(self, that: Any):
         return self.this < that
 
-    @record_expect_in_history
+    @record_and_handle_outcome
     def is_greater_than(self, that: Any):
         return self.this > that
 
-    @record_expect_in_history
+    @record_and_handle_outcome
     def contains(self, that: Any):
         return that in self.this
 
-    @record_expect_in_history
+    @record_and_handle_outcome
     def has_length(self, length: int):
         return len(self.this) == length
 
-    @record_expect_in_history
+    @record_and_handle_outcome
     def is_instance_of(self, type: Type):
         return isinstance(self.this, type)
 
-    @record_expect_in_history
+    @record_and_handle_outcome
     def satisfies(self, predicate: Callable[["expect"], bool]):
         return predicate(self.this)
 
-    @record_expect_in_history
+    @record_and_handle_outcome
     def is_(self, that: Any):
         return self.this is that
 
-    @record_expect_in_history
+    @record_and_handle_outcome
     def approx(self, that: Any, epsilon: float):
         return math.isclose(self.this, that, abs_tol=epsilon)
