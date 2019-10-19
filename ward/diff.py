@@ -117,11 +117,3 @@ def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
         prev_marker = line[0]
 
     return " " * margin_left + f"\n{' ' * margin_left}".join(output_lines)
-
-
-"""
--4. Complex is better than complicated.
-?         ^                     ---- ^
-+4. Complicated is better than complex.
-?        ++++ ^                      ^
-"""
