@@ -122,11 +122,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         print(colored(padded_outcome, color="grey", on_color=bg), mod_name + test_result.test.name)
 
     def output_why_test_failed_header(self, test_result: TestResult):
-        print(
-            colored(" Failure", color="red"),
-            "in",
-            colored(test_result.test.qualified_name, attrs=["bold"]),
-        )
+        print(colored(" Failure", color="red"), "in", colored(test_result.test.qualified_name, attrs=["bold"]))
 
     def output_why_test_failed(self, test_result: TestResult):
         truncation_chars = self.terminal_size.width - 24

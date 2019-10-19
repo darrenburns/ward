@@ -98,10 +98,12 @@ def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
                             output_lines[last_output_idx] += colored(current_span, color="green")
                         elif prev_char in "+^" and prev_marker == "+":
                             output_lines[last_output_idx] += bright_red(
-                                colored(current_span, on_color="on_red", attrs=["bold"]))
+                                colored(current_span, on_color="on_red", attrs=["bold"])
+                            )
                         elif prev_char in "-^" and prev_marker == "-":
                             output_lines[last_output_idx] += bright_green(
-                                colored(current_span, on_color="on_green", attrs=["bold"]))
+                                colored(current_span, on_color="on_green", attrs=["bold"])
+                            )
                         current_span = ""
                     current_span += line_to_rewrite[index - 2]  # Subtract 2 to account for code at start of line
                 prev_char = char
@@ -114,7 +116,6 @@ def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
                 output_lines[last_output_idx] += colored(line_to_rewrite[remaining_index:], color="red")
             elif prev_marker == "-":
                 output_lines[last_output_idx] += colored(line_to_rewrite[remaining_index:], color="green")
-
 
         else:
             output_lines.append(line[2:])
