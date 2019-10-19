@@ -115,7 +115,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_why_test_failed_header(self, test_result: TestResult):
         print(
-            colored(" Failure", color="red", attrs=["bold"]),
+            colored(" Failure", color="red"),
             "in",
             colored(test_result.test.qualified_name, attrs=["bold"]),
         )
@@ -170,9 +170,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         exit_code = get_exit_code(test_results)
         if exit_code == ExitCode.FAILED:
-            result = colored(exit_code.name, color="red", attrs=["bold"])
+            result = colored(exit_code.name, color="red")
         else:
-            result = colored(exit_code.name, color="green", attrs=["bold"])
+            result = colored(exit_code.name, color="green")
         print(
             f"{result} in {time_taken:.2f} seconds [ "
             f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
