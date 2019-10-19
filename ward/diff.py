@@ -1,7 +1,7 @@
 import difflib
 import pprint
 
-from colorama import Style
+from colorama import Style, Fore
 from termcolor import colored
 
 
@@ -57,8 +57,12 @@ def build_split_diff(lhs_repr, rhs_repr) -> str:
     return f"LHS: {lhs_out}\nRHS: {rhs_out}"
 
 
-def bright(s: str) -> str:
-    return f"{Style.BRIGHT}{s}{Style.RESET_ALL}"
+def bright_red(s: str) -> str:
+    return f"{Fore.LIGHTRED_EX}{s}{Style.RESET_ALL}"
+
+
+def bright_green(s: str) -> str:
+    return f"{Fore.LIGHTGREEN_EX}{s}{Style.RESET_ALL}"
 
 
 def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
@@ -93,11 +97,11 @@ def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
                         elif prev_char == " " and prev_marker == "-":
                             output_lines[last_output_idx] += colored(current_span, color="green")
                         elif prev_char in "+^" and prev_marker == "+":
-                            output_lines[last_output_idx] += bright(
-                                colored(current_span, color="red", on_color="on_red"))
+                            output_lines[last_output_idx] += bright_red(
+                                colored(current_span, on_color="on_red", attrs=["bold"]))
                         elif prev_char in "-^" and prev_marker == "-":
-                            output_lines[last_output_idx] += bright(
-                                colored(current_span, color="green", on_color="on_green"))
+                            output_lines[last_output_idx] += bright_green(
+                                colored(current_span, on_color="on_green", attrs=["bold"]))
                         current_span = ""
                     current_span += line_to_rewrite[index - 2]  # Subtract 2 to account for code at start of line
                 prev_char = char
