@@ -45,7 +45,14 @@ Now run your test with `ward` (no arguments needed). Ward will output the follow
  PASS  test_sum.test_one_plus_two_equals_three
 ```
 
-*You've just wrote your first test with Ward!*
+*You've just wrote your first test with Ward, congrats!* Look [here](#more-examples) for more examples of
+how to test things with Ward.
+
+## How to Contribute
+
+Contributions are very welcome and encouraged!
+
+See the [contributing guide](.github/CONTRIBUTING.md) for information on how you can take part in the development of Ward.
 
 ## More Examples
 
