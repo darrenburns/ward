@@ -127,11 +127,11 @@ class expect:
         return not self.identical_to(that)
 
     @record_and_handle_outcome
-    def approx(self, that: Any, abs_tol: float, rel_tol: float = 0.0):
+    def approx(self, that: Any, rel_tol: float = 1e-9, abs_tol: float = 0.0):
         return math.isclose(self.this, that, abs_tol=abs_tol, rel_tol=rel_tol)
 
-    def not_approx(self, that: Any, abs_tol: float, rel_tol: float = 0.0):
-        return not self.approx(that, abs_tol, rel_tol)
+    def not_approx(self, that: Any, rel_tol: float = 1e-9, abs_tol: float = 0.0):
+        return not self.approx(that, rel_tol=rel_tol, abs_tol=abs_tol)
 
     @record_and_handle_outcome
     def called(self):
