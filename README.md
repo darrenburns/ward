@@ -10,11 +10,11 @@ A modern Python test framework designed to help you find and fix flaws faster.
 
 This project is a work in progress. Some of the features that are currently available in a basic form are listed below.
 
-* **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
-* **Modular test dependencies:** manage test setup/teardown code using modular pytest-style fixtures.
-* **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
-* **Cross platform:** Tested on Mac OS, Linux, and Windows.
-* **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
+* **🎨 Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
+* **📦 Modular test dependencies:** manage test setup/teardown code using modular pytest-style fixtures.
+* **🧪 Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
+* **🌍 Cross platform:** Tested on Mac OS, Linux, and Windows.
+* **🧙‍♂️ Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
 
 Planned features:
 
@@ -176,6 +176,12 @@ def test_to_be_skipped():
     pass
 ```
 
+### Expecting a test to fail
+
+You can mark a test that you expect to fail with the `@xfail` decorator. If a test
+marked with this decorator passes unexpectedly, the overall run will be
+considered a failure.
+
 ### Testing for approximate equality
 
 Check that a value is close to another value.
@@ -191,5 +197,5 @@ If you wish for Ward to cancel a run immediately after a specific number of fail
 you can use the `--fail-limit` option. To have a run end immediately after 5 tests fail:
 
 ```text
-ward --fail-limit=5
+ward --fail-limit 5
 ```
