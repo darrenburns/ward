@@ -136,10 +136,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 else:
                     result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
 
+                # TODO: Break out how formatting is applied for individual operations
                 if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
                     expect_that = truncate(expect.that.__name__, num_chars=truncation_chars)
                 else:
-                    expect_that = truncate(repr(expect.that), num_chars=truncation_chars)
+                    that = repr(expect.that) if expect.that else ""
+                    expect_that = truncate(that, num_chars=truncation_chars)
                 print(f"    {result_marker} it {expect.op} {expect_that}{Style.RESET_ALL}")
 
             if err.history and err.history[-1].op == "equals":
