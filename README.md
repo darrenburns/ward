@@ -25,7 +25,7 @@ Planned features:
 * Handling flaky tests with test-specific retries, timeouts
 * Integration with unittest.mock (specifics to be ironed out)
 * Plugin system
-
+re
 ## Getting Started
 
 Install Ward with `pip install ward`.
@@ -92,16 +92,10 @@ def test_database_connection(database):
     expect(users).contains("Bob")
 ```
 
-### The Expect API
+### The `expect` API
 
-In the (contrived) `test_capital_cities` test, we want to determine whether
-the `get_capitals_from_server` function is behaving as expected, 
-so we grab the output of the function and pass it to `expect`. From
-here, we check that the response is as we expect it to be by chaining
-methods. If any of the checks fail, the expect chain short-circuits,
-and the remaining checks won't be executed for that test. Methods in
-the Expect API are named such that they correspond as closely to standard
-Python operators as possible, meaning there's not much to memorise.
+Use `expect` to perform tests on objects by chaining together methods. Using `expect` allows Ward
+to provide detailed, highly readable output when your tests fail. 
 
 ```python
 from ward import expect, fixture
@@ -117,6 +111,24 @@ def test_capital_cities(cities):
      .contains("tokyo")                                 # it contains the key 'tokyo'
      .satisfies(lambda x: all(len(k) < 10 for k in x))  # all keys < 10 chars
      .equals(cities))
+```
+
+Most methods on `expect` have inverted equivalents, e.g. `not_equals`, `not_satisfies`, etc.
+
+### Working with mocks
+
+`expect` works well with `unittest.mock`, by providing methods such as `expect.called`, `expect.called_once_with`, 
+and more. If a test fails due to the mock not being used as expected, Ward will print specialised output to aid
+debugging the problem.
+
+```python
+from ward import expect
+from unittest.mock import Mock
+
+def test_mock_was_called():
+    mock = Mock()
+    mock(1, 2, x=3)
+    expect(mock).called_once_with(1, 2, x=3)
 ```
 
 ### Checking for exceptions
