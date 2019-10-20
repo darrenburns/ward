@@ -146,7 +146,6 @@ class expect:
             passed = True
         except AssertionError:
             passed = False
-        print(args, kwargs)
         return self._handle_expect(passed, *args, **kwargs)
 
     def called_with(self, *args, **kwargs):
