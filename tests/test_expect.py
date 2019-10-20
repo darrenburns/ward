@@ -71,8 +71,11 @@ def test_approx_success_history_recorded():
 
     e = expect(this).approx(that, abs_tol=eps)
 
-    hist = [Expected(this=this, op="approx", that=that, op_args=(), op_kwargs={"rel_tol": 1e-09, "abs_tol": 0.5},
-                     success=True)]
+    hist = [
+        Expected(
+            this=this, op="approx", that=that, op_args=(), op_kwargs={"rel_tol": 1e-09, "abs_tol": 0.5}, success=True
+        )
+    ]
     expect(e.history).equals(hist)
 
 
@@ -83,8 +86,11 @@ def test_approx_failure_history_recorded():
     with raises(ExpectationFailed):
         e.approx(that, eps)
 
-    hist = [Expected(this=this, op="approx", that=that, op_args=(), op_kwargs={"rel_tol": 0.001, "abs_tol": 0.0},
-                     success=False)]
+    hist = [
+        Expected(
+            this=this, op="approx", that=that, op_args=(), op_kwargs={"rel_tol": 0.001, "abs_tol": 0.0}, success=False
+        )
+    ]
 
     expect(e.history).equals(hist)
 
