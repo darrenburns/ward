@@ -116,7 +116,7 @@ class expect:
         return self._handle_expect(self.this is that, that=that)
 
     def not_identical_to(self, that: Any):
-        return self._handle_expect(not self.identical_to(that), that=that)
+        return self._handle_expect(self.this is not that, that=that)
 
     def approx(self, that: Any, rel_tol: float = 1e-9, abs_tol: float = 0.0):
         return self._handle_expect(

@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, call
 
 from ward import expect, fixture, raises
 from ward.expect import Expected, ExpectationFailed, math
@@ -252,3 +252,41 @@ def test_called_with_fails_when_expected_call_is_made_but_not_last(mock):
     with raises(ExpectationFailed):
         e.called_with(2)
     expect(e.history[0].success).equals(False)
+
+
+def test_has_calls_succeeds_when_all_calls_were_made(mock):
+    mock(1, 2)
+    mock(key="value")
+
+    e = expect(mock).has_calls([call(1, 2), call(key="value")])
+    expect(e.history[0].success).equals(True)
+
+
+def test_has_calls_fails_when_not_all_calls_were_made(mock):
+    mock(1, 2)
+
+    e = expect(mock)
+    with raises(ExpectationFailed):
+        e.has_calls([call(1, 2), call(key="value")])
+    expect(e.history[0].success).equals(False)
+
+
+def test_has_calls_fails_when_calls_were_made_in_wrong_order(mock):
+    mock(1, 2)
+    mock(key="value")
+
+    e = expect(mock)
+    with raises(ExpectationFailed):
+        e.has_calls([call(key="value"), call(1, 2)])
+
+
+def test_has_calls_succeeds_when_all_calls_were_made_any_order(mock):
+    mock(1, 2)
+    mock(key="value")
+
+    e = expect(mock).has_calls(
+        [call(key="value"), call(1, 2)],
+        any_order=True,
+    )
+
+    expect(e.history[0].success).equals(True)
