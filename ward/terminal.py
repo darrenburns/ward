@@ -132,26 +132,30 @@ class SimpleTestResultWrite(TestResultWriterBase):
             for expect in err.history:
                 self.print_expect_chain_item(expect)
 
-            # The last check is the one that failed
-            last_check = err.history[-1].op
+            last_check = err.history[-1].op  # the check that failed
             if last_check == "equals":
-                expect = err.history[-1]
-                print(
-                    f"\n   Showing diff of {colored('expected value', color='green')}"
-                    f" vs {colored('actual value', color='red')}:\n"
-                )
-
-                diff = make_diff(expect.that, expect.this, width=self.terminal_size.width - 24)
-                print(diff)
+                self.print_failure_equals(err)
         else:
-            trace = getattr(err, "__traceback__", "")
-            if trace:
-                trc = traceback.format_exception(None, err, trace)
-                print("".join(trc))
-            else:
-                print(str(err))
+            self.print_traceback(err)
 
         print(Style.RESET_ALL)
+
+    def print_failure_equals(self, err):
+        expect = err.history[-1]
+        print(
+            f"\n   Showing diff of {colored('expected value', color='green')}"
+            f" vs {colored('actual value', color='red')}:\n"
+        )
+        diff = make_diff(expect.that, expect.this, width=self.terminal_size.width - 24)
+        print(diff)
+
+    def print_traceback(self, err):
+        trace = getattr(err, "__traceback__", "")
+        if trace:
+            trc = traceback.format_exception(None, err, trace)
+            print("".join(trc))
+        else:
+            print(str(err))
 
     def print_expect_chain_item(self, expect: Expected):
         checkbox = self.result_checkbox(expect)
