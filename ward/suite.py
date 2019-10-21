@@ -33,7 +33,7 @@ class Suite:
                     resolved_fixtures = test.resolve_args(self.fixture_registry)
             except FixtureExecutionError as e:
                 yield TestResult(
-                    test, TestOutcome.FAIL, e, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
+                    test, TestOutcome.FAIL, e, captucared_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
                 )
                 sout.close()
                 serr.close()

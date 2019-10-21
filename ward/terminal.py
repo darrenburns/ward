@@ -153,16 +153,18 @@ class SimpleTestResultWrite(TestResultWriterBase):
         trace = getattr(err, "__traceback__", "")
         if trace:
             trc = traceback.format_exception(None, err, trace)
+
             for line in trc:
                 sublines = line.split("\n")
                 for subline in sublines:
                     content = " " * 4 + subline
                     if subline.lstrip().startswith("File \""):
                         cprint(content, color="yellow")
-                    elif line.lstrip().startswith("Traceback"):
-                        cprint(content, color="cyan", attrs=["bold"])
-                    elif line.lstrip().startswith(err.__class__.__name__):
-                        cprint(content, color="cyan", attrs=["bold"])
+                    elif subline.lstrip().startswith("Traceback"):
+                        cprint(content, color="blue")
+                    elif (subline.lstrip().startswith(err.__class__.__name__) or
+                          subline.lstrip().startswith(err.__cause__.__class__.__name__)):
+                        cprint(content, color="blue")
                     else:
                         print(content)
         else:
@@ -217,12 +219,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
             print(f"   Captured {stderr} during test run:\n")
             for line in captured_stderr_lines:
                 print("    " + line)
+            print()
 
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
             stdout = colored("standard output", color="blue")
             captured_stdout_lines = test_result.captured_stdout.split("\n")
-            print(f"\n   Captured {stdout} during test run:\n")
+            print(f"   Captured {stdout} during test run:\n")
             for line in captured_stdout_lines:
                 print("    " + line)
 
