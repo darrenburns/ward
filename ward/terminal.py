@@ -2,16 +2,16 @@ import os
 import sys
 import traceback
 from dataclasses import dataclass
-from typing import Generator, List, Optional, Dict
+from typing import Dict, Generator, List, Optional
 
 from colorama import Fore, Style
 from termcolor import colored
 
 from ward.diff import make_diff
-from ward.expect import ExpectationFailed
+from ward.expect import ExpectationFailed, Expected
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
-from ward.util import get_exit_code, ExitCode
+from ward.util import ExitCode, get_exit_code
 
 
 def truncate(s: str, num_chars: int) -> str:
@@ -125,33 +125,23 @@ class SimpleTestResultWrite(TestResultWriterBase):
         print(colored(" Failure", color="red"), "in", colored(test_result.test.qualified_name, attrs=["bold"]))
 
     def output_why_test_failed(self, test_result: TestResult):
-        truncation_chars = self.terminal_size.width - 24
         err = test_result.error
         if isinstance(err, ExpectationFailed):
-            print(f"\n   Given {truncate(repr(err.history[0].this), num_chars=truncation_chars)}\n")
+            print(f"\n   Given {truncate(repr(err.history[0].this), num_chars=self.terminal_size.width - 24)}\n")
 
             for expect in err.history:
-                if expect.success:
-                    result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
-                else:
-                    result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+                self.print_expect_chain_item(expect)
 
-                # TODO: Break out how formatting is applied for individual operations
-                if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
-                    expect_that = truncate(expect.that.__name__, num_chars=truncation_chars)
-                else:
-                    that = repr(expect.that) if expect.that else ""
-                    expect_that = truncate(that, num_chars=truncation_chars)
-                print(f"    {result_marker} it {expect.op} {expect_that}{Style.RESET_ALL}")
-
-            if err.history and err.history[-1].op == "equals":
+            # The last check is the one that failed
+            last_check = err.history[-1].op
+            if last_check == "equals":
                 expect = err.history[-1]
                 print(
                     f"\n   Showing diff of {colored('expected value', color='green')}"
                     f" vs {colored('actual value', color='red')}:\n"
                 )
 
-                diff = make_diff(expect.that, expect.this, width=truncation_chars)
+                diff = make_diff(expect.that, expect.this, width=self.terminal_size.width - 24)
                 print(diff)
         else:
             trace = getattr(err, "__traceback__", "")
@@ -162,6 +152,23 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 print(str(err))
 
         print(Style.RESET_ALL)
+
+    def print_expect_chain_item(self, expect: Expected):
+        checkbox = self.result_checkbox(expect)
+        that_width = self.terminal_size.width - 32
+        if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
+            expect_that = truncate(expect.that.__name__, num_chars=that_width)
+        else:
+            that = repr(expect.that) if expect.that else ""
+            expect_that = truncate(that, num_chars=that_width)
+        print(f"    {checkbox} it {expect.op} {expect_that}{Style.RESET_ALL}")
+
+    def result_checkbox(self, expect):
+        if expect.success:
+            result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
+        else:
+            result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+        return result_marker
 
     def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
         outcome_counts = self._get_outcome_counts(test_results)
