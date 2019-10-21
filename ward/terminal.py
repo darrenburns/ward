@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Dict, Generator, List, Optional
 
 from colorama import Fore, Style
-from termcolor import colored
+from termcolor import colored, cprint
 
 from ward.diff import make_diff
 from ward.expect import ExpectationFailed, Expected
@@ -122,12 +122,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
         print(colored(padded_outcome, color="grey", on_color=bg), mod_name + test_result.test.name)
 
     def output_why_test_failed_header(self, test_result: TestResult):
-        print(colored(" Failure", color="red"), "in", colored(test_result.test.qualified_name, attrs=["bold"]))
+        print(colored(" Failure", color="red"), "in", colored(test_result.test.qualified_name, attrs=["bold"]), "\n")
 
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
         if isinstance(err, ExpectationFailed):
-            print(f"\n   Given {truncate(repr(err.history[0].this), num_chars=self.terminal_size.width - 24)}\n")
+            print(f"   Given {truncate(repr(err.history[0].this), num_chars=self.terminal_size.width - 24)}\n")
 
             for expect in err.history:
                 self.print_expect_chain_item(expect)
@@ -153,7 +153,18 @@ class SimpleTestResultWrite(TestResultWriterBase):
         trace = getattr(err, "__traceback__", "")
         if trace:
             trc = traceback.format_exception(None, err, trace)
-            print("".join(trc))
+            for line in trc:
+                sublines = line.split("\n")
+                for subline in sublines:
+                    content = " " * 4 + subline
+                    if subline.lstrip().startswith("File \""):
+                        cprint(content, color="yellow")
+                    elif line.lstrip().startswith("Traceback"):
+                        cprint(content, color="cyan", attrs=["bold"])
+                    elif line.lstrip().startswith(err.__class__.__name__):
+                        cprint(content, color="cyan", attrs=["bold"])
+                    else:
+                        print(content)
         else:
             print(str(err))
 
