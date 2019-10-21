@@ -122,7 +122,18 @@ class SimpleTestResultWrite(TestResultWriterBase):
         print(colored(padded_outcome, color="grey", on_color=bg), mod_name + test_result.test.name)
 
     def output_why_test_failed_header(self, test_result: TestResult):
-        print(colored(" Failure", color="red"), "in", colored(test_result.test.qualified_name, attrs=["bold"]), "\n")
+        params_list = ", ".join(lightblack(str(v)) for v in test_result.test.deps().keys())
+        if test_result.test.has_deps():
+            test_name_suffix = f"({params_list})"
+        else:
+            test_name_suffix = ""
+        print(
+            colored(" Failure", color="red"),
+            "in",
+            colored(test_result.test.qualified_name, attrs=["bold"]),
+            test_name_suffix,
+            "\n",
+        )
 
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
