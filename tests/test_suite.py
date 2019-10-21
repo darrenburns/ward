@@ -126,7 +126,5 @@ def test_fixture_teardown_occurs_and_in_expected_order(module):
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
 
-    expect(events).equals([1, 2,])
-
-    raise Exception("first exception") from Exception("i am the cause")
+    expect(events).equals([1, 2, 3])
 
