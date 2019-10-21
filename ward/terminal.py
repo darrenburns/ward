@@ -153,7 +153,10 @@ class SimpleTestResultWrite(TestResultWriterBase):
         trace = getattr(err, "__traceback__", "")
         if trace:
             trc = traceback.format_exception(None, err, trace)
-
+            if err.__cause__:
+                cause = err.__cause__.__class__.__name__
+            else:
+                cause = None
             for line in trc:
                 sublines = line.split("\n")
                 for subline in sublines:
@@ -163,7 +166,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
                     elif subline.lstrip().startswith("Traceback"):
                         cprint(content, color="blue")
                     elif (subline.lstrip().startswith(err.__class__.__name__) or
-                          subline.lstrip().startswith(err.__cause__.__class__.__name__)):
+                          (cause and subline.lstrip().startswith(cause))):
                         cprint(content, color="blue")
                     else:
                         print(content)
