@@ -119,7 +119,11 @@ class SimpleTestResultWrite(TestResultWriterBase):
         bg = f"on_{colour}"
         padded_outcome = f" {test_result.outcome.name[:4]} "
         mod_name = lightblack(f"{test_result.test.module.__name__}.")
-        print(colored(padded_outcome, color="grey", on_color=bg), mod_name + test_result.test.name)
+        if test_result.outcome == TestOutcome.SKIP:
+            reason = test_result.test.marker.reason or ""
+        else:
+            reason = ""
+        print(colored(padded_outcome, color="grey", on_color=bg), mod_name + test_result.test.name, reason)
 
     def output_why_test_failed_header(self, test_result: TestResult):
         print(colored(" Failure", color="red"), "in", colored(test_result.test.qualified_name, attrs=["bold"]))

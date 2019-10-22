@@ -29,10 +29,14 @@ class WardMeta:
     marker: Optional[Marker] = None
 
 
-def skip(func=None, *, reason: str = None):
-    if func is None:
+def skip(func_or_reason=None, *, reason: str = None):
+    if func_or_reason is None:
         return functools.partial(skip, reason=reason)
 
+    if isinstance(func_or_reason, str):
+        return functools.partial(skip, reason=func_or_reason)
+
+    func = func_or_reason
     func.ward_meta = WardMeta(marker=SkipMarker(reason=reason))
 
     @functools.wraps(func)
@@ -46,7 +50,7 @@ def xfail(func=None, *, reason: str = None):
     if func is None:
         return functools.partial(xfail, reason=reason)
 
-    func.ward_meta = WardMeta(marker=SkipMarker(reason=reason))
+    func.ward_meta = WardMeta(marker=XfailMarker(reason=reason))
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
