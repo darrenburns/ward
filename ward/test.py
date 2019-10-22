@@ -1,33 +1,65 @@
+import functools
 import inspect
 from dataclasses import dataclass
-from enum import Enum, auto
 from types import MappingProxyType, ModuleType
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 from ward.fixtures import Fixture, FixtureRegistry
 
 
-class WardMarker(Enum):
-    NONE = auto()
-    SKIP = auto()
-    XFAIL = auto()
+@dataclass
+class Marker:
+    name: str
 
 
-def skip(func):
-    func.ward_marker = WardMarker.SKIP
-    return func
+@dataclass
+class SkipMarker(Marker):
+    name: str = "SKIP"
+    reason: Optional[str] = None
 
 
-def xfail(func):
-    func.ward_marker = WardMarker.XFAIL
-    return func
+@dataclass
+class XfailMarker(Marker):
+    name: str = "XFAIL"
+    reason: Optional[str] = None
+
+
+@dataclass
+class WardMeta:
+    marker: Optional[Marker] = None
+
+
+def skip(func=None, *, reason: str = None):
+    if func is None:
+        return functools.partial(skip, reason=reason)
+
+    func.ward_meta = WardMeta(marker=SkipMarker(reason=reason))
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def xfail(func=None, *, reason: str = None):
+    if func is None:
+        return functools.partial(xfail, reason=reason)
+
+    func.ward_meta = WardMeta(marker=SkipMarker(reason=reason))
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 @dataclass
 class Test:
     fn: Callable
     module: ModuleType
-    marker: WardMarker = WardMarker.NONE
+    marker: Optional[Marker] = None
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)

@@ -4,7 +4,7 @@ from unittest import mock
 from ward import expect, fixture
 from ward.fixtures import Fixture, FixtureRegistry
 from ward.suite import Suite
-from ward.test import Test, WardMarker
+from ward.test import SkipMarker, Test, skip
 from ward.test_result import TestOutcome, TestResult
 
 NUMBER_OF_TESTS = 5
@@ -30,7 +30,7 @@ def example_test(module, fixtures):
 
 @fixture
 def skipped_test(module):
-    return Test(fn=lambda: expect(1).equals(1), module=module, marker=WardMarker.SKIP)
+    return Test(fn=lambda: expect(1).equals(1), module=module, marker=SkipMarker())
 
 
 @fixture

@@ -1,11 +1,11 @@
 import io
-from contextlib import suppress, redirect_stdout, redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import dataclass
 from typing import Generator, List
 
 from ward.fixtures import FixtureExecutionError, FixtureRegistry
-from ward.test import Test, WardMarker
-from ward.test_result import TestResult, TestOutcome
+from ward.test import Test
+from ward.test_result import TestOutcome, TestResult
 
 
 @dataclass
@@ -23,7 +23,8 @@ class Suite:
 
     def generate_test_runs(self) -> Generator[TestResult, None, None]:
         for test in self.tests:
-            if test.marker == WardMarker.SKIP:
+            marker = test.marker.name if test.marker else None
+            if marker == "SKIP":
                 yield TestResult(test, TestOutcome.SKIP)
                 continue
 
@@ -46,7 +47,7 @@ class Suite:
                     test(**resolved_vals)
 
                 # The test has completed without exception and therefore passed
-                if test.marker == WardMarker.XFAIL:
+                if marker == "XFAIL":
                     yield TestResult(
                         test, TestOutcome.XPASS, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
                     )
@@ -54,7 +55,7 @@ class Suite:
                     yield TestResult(test, TestOutcome.PASS)
 
             except Exception as e:
-                if test.marker == WardMarker.XFAIL:
+                if marker == "XFAIL":
                     yield TestResult(test, TestOutcome.XFAIL, e)
                 else:
                     yield TestResult(
