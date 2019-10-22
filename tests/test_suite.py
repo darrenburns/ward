@@ -80,7 +80,7 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(fixt
     expected_result = TestResult(test=test, outcome=TestOutcome.FAIL, error=mock.ANY, message="")
 
     expect(result).equals(expected_result)
-    expect(result.error).is_instance_of(AssertionError)
+    expect(result.error).instance_of(AssertionError)
 
 
 def test_generate_test_runs__yields_skipped_test_result_on_test_with_skip_marker(
@@ -128,3 +128,4 @@ def test_fixture_teardown_occurs_and_in_expected_order(module):
     list(suite.generate_test_runs())
 
     expect(events).equals([1, 2, 3])
+

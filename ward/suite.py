@@ -34,7 +34,7 @@ class Suite:
                     resolved_fixtures = test.resolve_args(self.fixture_registry)
             except FixtureExecutionError as e:
                 yield TestResult(
-                    test, TestOutcome.FAIL, e, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
+                    test, TestOutcome.FAIL, e, captucared_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
                 )
                 sout.close()
                 serr.close()
@@ -62,6 +62,8 @@ class Suite:
                         test, TestOutcome.FAIL, e, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
                     )
             finally:
+                # TODO: Don't just cleanup top-level dependencies, since there may
+                #  be generator fixtures elsewhere in the tree requiring cleanup
                 for fixture in resolved_fixtures.values():
                     if fixture.is_generator_fixture:
                         with suppress(RuntimeError, StopIteration):
