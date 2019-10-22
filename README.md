@@ -25,7 +25,7 @@ Planned features:
 * Handling flaky tests with test-specific retries, timeouts
 * Integration with unittest.mock (specifics to be ironed out)
 * Plugin system
-re
+
 ## Getting Started
 
 Install Ward with `pip install ward`.
