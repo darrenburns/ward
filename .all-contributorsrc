@@ -10,16 +10,7 @@
   "commit": true,
   "commitConvention": "atom",
   "contributors": [
-    {
-      "login": "khusrokarim",
-      "name": "khusrokarim",
-      "avatar_url": "https://avatars0.githubusercontent.com/u/1615476?v=4",
-      "profile": "https://github.com/khusrokarim",
-      "contributions": [
-        "ideas"
-      ]
-    },
-    {
+      {
       "login": "darrenburns",
       "name": "Darren Burns",
       "avatar_url": "https://avatars0.githubusercontent.com/u/5740731?v=4",
@@ -31,6 +22,15 @@
         "review",
         "bug",
         "example"
+      ]
+    },
+    {
+      "login": "khusrokarim",
+      "name": "khusrokarim",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1615476?v=4",
+      "profile": "https://github.com/khusrokarim",
+      "contributions": [
+        "ideas"
       ]
     }
   ],
