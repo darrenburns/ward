@@ -18,6 +18,20 @@
       "contributions": [
         "ideas"
       ]
+    },
+    {
+      "login": "darrenburns",
+      "name": "Darren Burns",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/5740731?v=4",
+      "profile": "https://darrenburns.net",
+      "contributions": [
+        "code",
+        "doc",
+        "ideas",
+        "review",
+        "bug",
+        "example"
+      ]
     }
   ],
   "contributorsPerLine": 7
