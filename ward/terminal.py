@@ -2,16 +2,16 @@ import os
 import sys
 import traceback
 from dataclasses import dataclass
-from typing import Generator, List, Optional, Dict
+from typing import Dict, Generator, List, Optional
 
 from colorama import Fore, Style
-from termcolor import colored
+from termcolor import colored, cprint
 
 from ward.diff import make_diff
-from ward.expect import ExpectationFailed
+from ward.expect import ExpectationFailed, Expected
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
-from ward.util import get_exit_code, ExitCode
+from ward.util import ExitCode, get_exit_code
 
 
 def truncate(s: str, num_chars: int) -> str:
@@ -122,44 +122,84 @@ class SimpleTestResultWrite(TestResultWriterBase):
         print(colored(padded_outcome, color="grey", on_color=bg), mod_name + test_result.test.name)
 
     def output_why_test_failed_header(self, test_result: TestResult):
-        print(colored(" Failure", color="red"), "in", colored(test_result.test.qualified_name, attrs=["bold"]))
+        params_list = ", ".join(lightblack(str(v)) for v in test_result.test.deps().keys())
+        if test_result.test.has_deps():
+            test_name_suffix = f"({params_list})"
+        else:
+            test_name_suffix = ""
+        print(
+            colored(" Failure", color="red"),
+            "in",
+            colored(test_result.test.qualified_name, attrs=["bold"]),
+            test_name_suffix,
+            "\n",
+        )
 
     def output_why_test_failed(self, test_result: TestResult):
-        truncation_chars = self.terminal_size.width - 24
         err = test_result.error
         if isinstance(err, ExpectationFailed):
-            print(f"\n   Given {truncate(repr(err.history[0].this), num_chars=truncation_chars)}\n")
+            print(f"   Given {truncate(repr(err.history[0].this), num_chars=self.terminal_size.width - 24)}\n")
 
             for expect in err.history:
-                if expect.success:
-                    result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
-                else:
-                    result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+                self.print_expect_chain_item(expect)
 
-                if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
-                    expect_that = truncate(expect.that.__name__, num_chars=truncation_chars)
-                else:
-                    expect_that = truncate(repr(expect.that), num_chars=truncation_chars)
-                print(f"    {result_marker} it {expect.op} {expect_that}{Style.RESET_ALL}")
-
-            if err.history and err.history[-1].op == "equals":
-                expect = err.history[-1]
-                print(
-                    f"\n   Showing diff of {colored('expected value', color='green')}"
-                    f" vs {colored('actual value', color='red')}:\n"
-                )
-
-                diff = make_diff(expect.that, expect.this, width=truncation_chars)
-                print(diff)
+            last_check = err.history[-1].op  # the check that failed
+            if last_check == "equals":
+                self.print_failure_equals(err)
         else:
-            trace = getattr(err, "__traceback__", "")
-            if trace:
-                trc = traceback.format_exception(None, err, trace)
-                print("".join(trc))
-            else:
-                print(str(err))
+            self.print_traceback(err)
 
         print(Style.RESET_ALL)
+
+    def print_failure_equals(self, err):
+        expect = err.history[-1]
+        print(
+            f"\n   Showing diff of {colored('expected value', color='green')}"
+            f" vs {colored('actual value', color='red')}:\n"
+        )
+        diff = make_diff(expect.that, expect.this, width=self.terminal_size.width - 24)
+        print(diff)
+
+    def print_traceback(self, err):
+        trace = getattr(err, "__traceback__", "")
+        if trace:
+            trc = traceback.format_exception(None, err, trace)
+            if err.__cause__:
+                cause = err.__cause__.__class__.__name__
+            else:
+                cause = None
+            for line in trc:
+                sublines = line.split("\n")
+                for subline in sublines:
+                    content = " " * 4 + subline
+                    if subline.lstrip().startswith("File \""):
+                        cprint(content, color="yellow")
+                    elif subline.lstrip().startswith("Traceback"):
+                        cprint(content, color="blue")
+                    elif (subline.lstrip().startswith(err.__class__.__name__) or
+                          (cause and subline.lstrip().startswith(cause))):
+                        cprint(content, color="blue")
+                    else:
+                        print(content)
+        else:
+            print(str(err))
+
+    def print_expect_chain_item(self, expect: Expected):
+        checkbox = self.result_checkbox(expect)
+        that_width = self.terminal_size.width - 32
+        if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
+            expect_that = truncate(expect.that.__name__, num_chars=that_width)
+        else:
+            that = repr(expect.that) if expect.that else ""
+            expect_that = truncate(that, num_chars=that_width)
+        print(f"    {checkbox} it {expect.op} {expect_that}{Style.RESET_ALL}")
+
+    def result_checkbox(self, expect):
+        if expect.success:
+            result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
+        else:
+            result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+        return result_marker
 
     def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
         outcome_counts = self._get_outcome_counts(test_results)
@@ -193,12 +233,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
             print(f"   Captured {stderr} during test run:\n")
             for line in captured_stderr_lines:
                 print("    " + line)
+            print()
 
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
             stdout = colored("standard output", color="blue")
             captured_stdout_lines = test_result.captured_stdout.split("\n")
-            print(f"\n   Captured {stdout} during test run:\n")
+            print(f"   Captured {stdout} during test run:\n")
             for line in captured_stdout_lines:
                 print("    " + line)
 
