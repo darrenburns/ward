@@ -10,7 +10,7 @@
   "commit": true,
   "commitConvention": "atom",
   "contributors": [
-      {
+    {
       "login": "darrenburns",
       "name": "Darren Burns",
       "avatar_url": "https://avatars0.githubusercontent.com/u/5740731?v=4",
@@ -31,6 +31,15 @@
       "profile": "https://github.com/khusrokarim",
       "contributions": [
         "ideas"
+      ]
+    },
+    {
+      "login": "AlecJ",
+      "name": "Alec Jordan",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/5054790?v=4",
+      "profile": "https://github.com/AlecJ",
+      "contributions": [
+        "code"
       ]
     }
   ],
