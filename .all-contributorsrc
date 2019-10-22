@@ -1,0 +1,24 @@
+{
+  "projectName": "ward",
+  "projectOwner": "darrenburns",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "atom",
+  "contributors": [
+    {
+      "login": "khusrokarim",
+      "name": "khusrokarim",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1615476?v=4",
+      "profile": "https://github.com/khusrokarim",
+      "contributions": [
+        "ideas"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}
