@@ -19,8 +19,7 @@ if platform.system() == "Windows":
 
 
 @click.command()
-@click.option("-p", "--path", nargs=0, default=".", type=click.Path(exists=True), help="Path to tests.")
-@click.argument('path', nargs=-1)
+@click.option("-p", "--path", default=".", type=click.Path(exists=True), help="Path to tests.", multiple=True)
 @click.option("-f", "--filter", help="Only run tests whose names contain the filter argument as a substring.")
 @click.option("--fail-limit", type=int, help="The number of failures to cancel the run after.")
 def run(path, filter, fail_limit):
