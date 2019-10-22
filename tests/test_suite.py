@@ -97,7 +97,6 @@ def test_generate_test_runs__yields_skipped_test_result_on_test_with_skip_marker
     expect(test_runs).equals(expected_runs)
 
 
-@skip
 def test_fixture_teardown_occurs_and_in_expected_order(module):
     events = []
 
