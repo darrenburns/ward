@@ -194,11 +194,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
                     content = " " * 4 + subline
                     if subline.lstrip().startswith("File \""):
                         cprint(content, color="yellow")
-                    elif subline.lstrip().startswith("Traceback"):
-                        cprint(content, color="blue")
-                    elif (subline.lstrip().startswith(err.__class__.__name__) or
-                          (cause and subline.lstrip().startswith(cause))):
-                        cprint(content, color="blue")
                     else:
                         print(content)
         else:
