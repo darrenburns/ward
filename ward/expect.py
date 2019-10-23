@@ -1,4 +1,3 @@
-import functools
 import inspect
 import math
 from dataclasses import dataclass
@@ -33,24 +32,6 @@ class ExpectationFailed(Exception):
     def __init__(self, message: str, history: List[Expected]):
         self.message = message
         self.history = history
-
-
-def record_and_handle_outcome(func):
-    @functools.wraps(func)
-    def wrapped_func(self, that: Any, *args, **kwargs) -> "expect":
-        rv = func(self, that, *args, **kwargs)
-        if rv:
-            self.history.append(
-                Expected(this=self.this, op=func.__name__, that=that, success=True, op_args=args, op_kwargs=kwargs)
-            )
-            return self
-        else:
-            self.history.append(
-                Expected(this=self.this, op=func.__name__, that=that, success=False, op_args=args, op_kwargs=kwargs)
-            )
-            raise ExpectationFailed(f"{func.__name__} expectation failed", self.history)
-
-    return wrapped_func
 
 
 class expect:
