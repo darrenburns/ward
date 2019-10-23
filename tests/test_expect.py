@@ -4,7 +4,7 @@ from ward import expect, fixture, raises, test
 from ward.expect import Expected, ExpectationFailed, math
 
 
-@test("equals should record history on pass")
+@test("equals should record history when args are equal")
 def _():
     this, that = "hello", "hello"
 
@@ -14,7 +14,7 @@ def _():
     expect(e.history).equals(hist)
 
 
-@test("equals should record history on fail")
+@test("equals should record history when args aren't equal")
 def _():
     this, that = "hello", "goodbye"
 
@@ -26,12 +26,14 @@ def _():
     expect(e.history).equals(hist)
 
 
-def test_equals_failure_ExpectationFailed_raised():
+@test("equals should raise an ExpectationFailed when args aren't equal")
+def _():
     with raises(ExpectationFailed):
         expect(1).equals(2)
 
 
-def test_satisfies_success_history_recorded():
+@test("satisfies should record history when arg satisfies predicate")
+def _():
     this = "olleh"
     predicate = lambda e: this[::-1] == "hello"
     e = expect(this).satisfies(predicate)
@@ -41,7 +43,8 @@ def test_satisfies_success_history_recorded():
     expect(e.history).equals(hist)
 
 
-def test_satisfies_failure_history_recorded():
+@test("satisfies should record history when arg doesn't satisfy predicate")
+def _():
     this = "olleh"
     predicate = lambda e: False
 
@@ -54,21 +57,25 @@ def test_satisfies_failure_history_recorded():
     expect(e.history).equals(hist)
 
 
-def test_satisfies_failure_ExpectationFailed_raised():
+@test("satisfies should raise an ExpectationFailed when arg doesn't satisfy predicate")
+def _():
     with raises(ExpectationFailed):
         expect(1).satisfies(lambda x: False)
 
 
-def test_identical_to_succeeds_when_things_are_identical():
+@test("identical_to passes when args are identical")
+def _():
     expect(ZeroDivisionError).identical_to(ZeroDivisionError)
 
 
-def test_identical_to_fails_when_things_are_not_identical():
+@test("identical_to fails when args are not identical")
+def _():
     with raises(ExpectationFailed):
         expect(ZeroDivisionError).identical_to(AttributeError)
 
 
-def test_approx_success_history_recorded():
+@test("approx records history when args are within abs_tol of each other")
+def _():
     this, that, eps = 1.0, 1.01, 0.5
 
     e = expect(this).approx(that, abs_tol=eps)
@@ -81,7 +88,8 @@ def test_approx_success_history_recorded():
     expect(e.history).equals(hist)
 
 
-def test_approx_failure_history_recorded():
+@test("approx records history and raises when args aren't within abs_tol")
+def _():
     this, that, eps = 1.0, 1.01, 0.001
 
     e = expect(this)
@@ -103,7 +111,8 @@ def isclose():
         yield m
 
 
-def test_approx_delegates_to_math_isclose_correctly(isclose):
+@test("approx calls `math.isclose` with the expected args")
+def _(isclose):
     this, that = 1.0, 1.1
     abs_tol, rel_tol = 0.1, 0.2
 
@@ -112,7 +121,8 @@ def test_approx_delegates_to_math_isclose_correctly(isclose):
     expect(isclose).called_once_with(this, that, abs_tol=abs_tol, rel_tol=rel_tol)
 
 
-def test_not_approx_delegeates_to_isclose_correctly(isclose):
+@test("not_approx calls `math.isclose` with the expected args")
+def _(isclose):
     this, that = 1.0, 1.2
     abs_tol = 0.01
 
@@ -122,7 +132,8 @@ def test_not_approx_delegeates_to_isclose_correctly(isclose):
     expect(isclose).called_once_with(this, that, abs_tol=abs_tol, rel_tol=1e-9)
 
 
-def test_not_equals_success_history_recorded():
+@test("not_equals records history args items aren't equal")
+def _():
     this, that = 1, 2
 
     e = expect(this).not_equals(that)
@@ -131,7 +142,8 @@ def test_not_equals_success_history_recorded():
     expect(e.history).equals(hist)
 
 
-def test_not_equals_failure_history_recorded():
+@test("not_equals records history and raises ExpectationFailed when args are equal")
+def _():
     this, that = 1, 1
 
     e = expect(this)
@@ -147,7 +159,8 @@ def mock():
     return Mock()
 
 
-def test_mock_called_when_mock_was_called(mock):
+@test("expect.called records history when the mock was called")
+def _(mock):
     mock()
     e = expect(mock).called()
 
@@ -155,7 +168,8 @@ def test_mock_called_when_mock_was_called(mock):
     expect(e.history).equals(hist)
 
 
-def test_mock_called_when_mock_wasnt_called(mock):
+@test("expect.called records history and raises ExpectationFailed when mock was not called")
+def _(mock):
     e = expect(mock)
     with raises(ExpectationFailed):
         e.called()
@@ -164,14 +178,16 @@ def test_mock_called_when_mock_wasnt_called(mock):
     expect(e.history).equals(hist)
 
 
-def test_mock_not_called_success(mock):
+@test("expect.not_called records history, even when the mock wasn't called")
+def _(mock):
     e = expect(mock).not_called()
 
     hist = [Expected(mock, op="not_called", that=None, op_args=(), op_kwargs={}, success=True)]
     expect(e.history).equals(hist)
 
 
-def test_mock_called_once_with_success(mock):
+@test("called_once_with records history when the mock was called as expected exactly once")
+def _(mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
     mock(*args, **kwargs)
@@ -182,7 +198,8 @@ def test_mock_called_once_with_success(mock):
     expect(e.history).equals(hist)
 
 
-def test_mock_called_once_with_failure_missing_arg(mock):
+@test("called_once_with records history and raises when positional arg missing")
+def _(mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
     mock(1, 2, **kwargs)  # 3 is missing intentionally
@@ -195,7 +212,8 @@ def test_mock_called_once_with_failure_missing_arg(mock):
     expect(e.history).equals(hist)
 
 
-def test_mock_called_once_with_failure_missing_kwarg(mock):
+@test("called_once_with records history and raises when kwarg missing")
+def _(mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
     mock(*args, wrong="thing")
@@ -208,7 +226,8 @@ def test_mock_called_once_with_failure_missing_kwarg(mock):
     expect(e.history).equals(hist)
 
 
-def test_mock_called_once_with_fails_when_multiple_correct_calls(mock):
+@test("called_once_with records history and raises when the expected call is made more than once")
+def _(mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
 
@@ -223,7 +242,8 @@ def test_mock_called_once_with_fails_when_multiple_correct_calls(mock):
     expect(e.history).equals(hist)
 
 
-def test_mock_called_once_with_fails_when_multiple_calls_but_one_correct(mock):
+@test("called_once_with records history and raises when multiple calls made")
+def _(mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
 
@@ -239,7 +259,8 @@ def test_mock_called_once_with_fails_when_multiple_calls_but_one_correct(mock):
     expect(e.history).equals(hist)
 
 
-def test_called_with_succeeds_when_expected_call_is_last(mock):
+@test("called_with records history when the expected call is the most recent one")
+def _(mock):
     mock(1)
     mock(2)
 
@@ -247,7 +268,8 @@ def test_called_with_succeeds_when_expected_call_is_last(mock):
     expect(e.history[0].success).equals(True)
 
 
-def test_called_with_fails_when_expected_call_is_made_but_not_last(mock):
+@test("called_with records history and raises when expected call was made before other calls")
+def _(mock):
     mock(2)
     mock(1)
     e = expect(mock)
@@ -256,7 +278,8 @@ def test_called_with_fails_when_expected_call_is_made_but_not_last(mock):
     expect(e.history[0].success).equals(False)
 
 
-def test_has_calls_succeeds_when_all_calls_were_made(mock):
+@test("has_calls records history when all expected calls were made")
+def _(mock):
     mock(1, 2)
     mock(key="value")
 
@@ -264,7 +287,8 @@ def test_has_calls_succeeds_when_all_calls_were_made(mock):
     expect(e.history[0].success).equals(True)
 
 
-def test_has_calls_fails_when_not_all_calls_were_made(mock):
+@test("has_calls records history and raises when not all expected calls were made")
+def _(mock):
     mock(1, 2)
 
     e = expect(mock)
@@ -273,7 +297,8 @@ def test_has_calls_fails_when_not_all_calls_were_made(mock):
     expect(e.history[0].success).equals(False)
 
 
-def test_has_calls_fails_when_calls_were_made_in_wrong_order(mock):
+@test("has_calls raises when the expected calls were made in the wrong order")
+def _(mock):
     mock(1, 2)
     mock(key="value")
 
@@ -282,7 +307,8 @@ def test_has_calls_fails_when_calls_were_made_in_wrong_order(mock):
         e.has_calls([call(key="value"), call(1, 2)])
 
 
-def test_has_calls_succeeds_when_all_calls_were_made_any_order(mock):
+@test("has_calls(any_order=True) records history when the calls were made in the wrong order")
+def _(mock):
     mock(1, 2)
     mock(key="value")
 
