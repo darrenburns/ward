@@ -39,8 +39,9 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
 
 def get_tests_in_modules(modules: Iterable, filter: str = "") -> Generator[Test, None, None]:
     for mod in modules:
+        mod_name = mod.__name__
         # Collect anonymous tests from the module
-        anon_tests: List[Test] = anonymous_tests[mod.__name__]
+        anon_tests: List[Test] = anonymous_tests[mod_name]
         if anon_tests:
             print(anon_tests)
             for test in anon_tests:
@@ -53,7 +54,7 @@ def get_tests_in_modules(modules: Iterable, filter: str = "") -> Generator[Test,
                 test_fn = getattr(mod, test_name)
                 marker: Marker = getattr(test_fn, "ward_meta", WardMeta()).marker
                 if test_fn:
-                    test = Test(fn=test_fn, module_name=mod.__name__, marker=marker)
+                    test = Test(fn=test_fn, module_name=mod_name, marker=marker)
                     # Yield tests if there's no filter, or if the filter matches
                     if not filter:
                         yield test
