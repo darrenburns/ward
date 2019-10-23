@@ -1,10 +1,9 @@
-from types import ModuleType
 from unittest import mock
 
 from ward import expect, fixture
 from ward.fixtures import Fixture, FixtureRegistry
 from ward.suite import Suite
-from ward.test import SkipMarker, Test, skip
+from ward.test import SkipMarker, Test
 from ward.test_result import TestOutcome, TestResult
 
 NUMBER_OF_TESTS = 5
@@ -12,7 +11,7 @@ NUMBER_OF_TESTS = 5
 
 @fixture
 def module():
-    return ModuleType("test_module")
+    return "test_module"
 
 
 @fixture
@@ -25,12 +24,12 @@ def fixtures():
 
 @fixture
 def example_test(module, fixtures):
-    return Test(fn=lambda fixture_a: fixture_a, module=module)
+    return Test(fn=lambda fixture_a: fixture_a, module_name=module)
 
 
 @fixture
 def skipped_test(module):
-    return Test(fn=lambda: expect(1).equals(1), module=module, marker=SkipMarker())
+    return Test(fn=lambda: expect(1).equals(1), module_name=module, marker=SkipMarker())
 
 
 @fixture
@@ -71,7 +70,7 @@ def test_generate_test_runs__yields_failing_test_result_on_failed_assertion(fixt
     def test_i_fail():
         assert False
 
-    test = Test(fn=test_i_fail, module=module)
+    test = Test(fn=test_i_fail, module_name=module)
     failing_suite = Suite(tests=[test], fixture_registry=fixture_registry)
 
     results = failing_suite.generate_test_runs()
@@ -121,10 +120,9 @@ def test_fixture_teardown_occurs_and_in_expected_order(module):
         ]
     )
 
-    suite = Suite(tests=[Test(fn=my_test, module=module)], fixture_registry=reg)
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_registry=reg)
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
 
     expect(events).equals([1, 2, 3])
-

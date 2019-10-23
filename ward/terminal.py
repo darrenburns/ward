@@ -119,12 +119,14 @@ class SimpleTestResultWrite(TestResultWriterBase):
         bg = f"on_{colour}"
         padded_outcome = f" {test_result.outcome.name[:4]} "
         if test_result.test.description:
-            sep = ": "
+            sep = ":"
         else:
             sep = "."
         mod_name = lightblack(f"{test_result.test.module_name}{sep}")
-        if test_result.outcome == TestOutcome.SKIP:
+        if test_result.outcome == TestOutcome.SKIP or test_result.outcome == TestOutcome.XFAIL:
             reason = test_result.test.marker.reason or ""
+            if reason:
+                reason = lightblack(f"[{reason}]")
         else:
             reason = ""
 

@@ -2,7 +2,7 @@ import functools
 import inspect
 from collections import defaultdict
 from dataclasses import dataclass
-from types import MappingProxyType, ModuleType
+from types import MappingProxyType
 from typing import Callable, Dict, List, Optional
 
 from ward.fixtures import Fixture, FixtureRegistry
