@@ -15,10 +15,9 @@ class FixtureExecutionError(Exception):
 
 
 class Fixture:
-    def __init__(self, key: str, fn: Callable, is_generator_fixture: bool = False):
+    def __init__(self, key: str, fn: Callable):
         self.key = key
         self.fn = fn
-        self.is_generator_fixture = is_generator_fixture
         self.gen = None
         self.resolved_val = None
         self.is_resolved = False
@@ -26,13 +25,17 @@ class Fixture:
     def deps(self):
         return inspect.signature(self.fn).parameters
 
+    @property
+    def is_generator_fixture(self):
+        return inspect.isgeneratorfunction(self.fn)
+
     def resolve(self, fix_registry) -> "Fixture":
         """Traverse the fixture tree to resolve the value of this fixture"""
 
         # If this fixture has no children, cache and return the resolved value
         if not self.deps():
             try:
-                if inspect.isgeneratorfunction(self.fn):
+                if self.is_generator_fixture:
                     self.gen = self.fn()
                     self.resolved_val = next(self.gen)
                 else:
@@ -52,7 +55,7 @@ class Fixture:
         # We've resolved the values of all child fixtures
         try:
             child_resolved_vals = [child.resolved_val for child in children_resolved]
-            if inspect.isgeneratorfunction(self.fn):
+            if self.is_generator_fixture:
                 self.gen = self.fn(*child_resolved_vals)
                 self.resolved_val = next(self.gen)
             else:
@@ -78,7 +81,7 @@ class FixtureRegistry:
             name = func.__name__
             if name not in self._fixtures:
                 self._fixtures[name] = Fixture(
-                    key=name, fn=func, is_generator_fixture=inspect.isgeneratorfunction(func)
+                    key=name, fn=func,
                 )
             else:
                 raise CollectionError(f"Multiple fixtures named '{func.__name__}'.")

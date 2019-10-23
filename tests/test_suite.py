@@ -122,8 +122,8 @@ def _(module):
     reg = FixtureRegistry()
     reg.cache_fixtures(
         fixtures=[
-            Fixture(key="fix_a", fn=fix_a, is_generator_fixture=True),
-            Fixture(key="fix_b", fn=fix_b, is_generator_fixture=False),
+            Fixture(key="fix_a", fn=fix_a),
+            Fixture(key="fix_b", fn=fix_b),
         ]
     )
 
@@ -136,7 +136,7 @@ def _(module):
 
 
 @test("Suite.generate_test_runs tears down deep fixtures")
-@xfail("Not all fixtures torn down")
+@xfail("Bug: not all fixtures torn down")
 def _(module):
     events = []
 
@@ -160,9 +160,9 @@ def _(module):
     reg = FixtureRegistry()
     reg.cache_fixtures(
         fixtures=[
-            Fixture(key="fix_a", fn=fix_a, is_generator_fixture=True),
-            Fixture(key="fix_b", fn=fix_b, is_generator_fixture=False),
-            Fixture(key="fix_c", fn=fix_c, is_generator_fixture=True),
+            Fixture(key="fix_a", fn=fix_a),
+            Fixture(key="fix_b", fn=fix_b),
+            Fixture(key="fix_c", fn=fix_c),
         ]
     )
 
