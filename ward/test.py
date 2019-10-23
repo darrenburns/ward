@@ -1,8 +1,9 @@
 import functools
 import inspect
+from collections import defaultdict
 from dataclasses import dataclass
 from types import MappingProxyType, ModuleType
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 from ward.fixtures import Fixture, FixtureRegistry
 
@@ -59,37 +60,10 @@ def xfail(func=None, *, reason: str = None):
     return wrapper
 
 
-# Tests declared with the name _, and with the @test decorator
-# have to be stored in here, so that they can later be retrieved.
-# They cannot be retrieved directly from the module due to name
-# clashes. When we're later looking for tests inside the module,
-# we can retrieve any anonymous tests from this dict.
-anonymous_tests = {}
-
-
-def test(description: str):
-    def decorator_test(func):
-        if func.__name__ == "_":
-            anonymous_tests[func.__module__] = Test(
-                fn=func,
-                module=func.__module__,
-                description=description,
-                marker=getattr(func, "ward_meta", WardMeta()).marker,
-            )
-
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator_test
-
-
 @dataclass
 class Test:
     fn: Callable
-    module: ModuleType
+    module_name: str
     marker: Optional[Marker] = None
     description: Optional[str] = None
 
@@ -102,7 +76,7 @@ class Test:
 
     @property
     def qualified_name(self):
-        return f"{self.module.__name__}.{self.name}"
+        return f"{self.module_name}.{self.name}"
 
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
@@ -123,3 +97,31 @@ class Test:
             resolved_args[fixture_name] = resolved_arg
 
         return resolved_args
+
+
+# Tests declared with the name _, and with the @test decorator
+# have to be stored in here, so that they can later be retrieved.
+# They cannot be retrieved directly from the module due to name
+# clashes. When we're later looking for tests inside the module,
+# we can retrieve any anonymous tests from this dict.
+anonymous_tests: Dict[str, List[Test]] = defaultdict(list)
+
+
+def test(description: str):
+    def decorator_test(func):
+        if func.__name__ == "_":
+            mod_name = func.__module__
+            anonymous_tests[mod_name].append(Test(
+                fn=func,
+                module_name=mod_name,
+                description=description,
+                marker=getattr(func, "ward_meta", WardMeta()).marker,
+            ))
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator_test

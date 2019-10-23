@@ -118,23 +118,39 @@ class SimpleTestResultWrite(TestResultWriterBase):
         colour = outcome_to_colour[test_result.outcome]
         bg = f"on_{colour}"
         padded_outcome = f" {test_result.outcome.name[:4]} "
-        mod_name = lightblack(f"{test_result.test.module.__name__}.")
+        if test_result.test.description:
+            sep = ": "
+        else:
+            sep = "."
+        mod_name = lightblack(f"{test_result.test.module_name}{sep}")
         if test_result.outcome == TestOutcome.SKIP:
             reason = test_result.test.marker.reason or ""
         else:
             reason = ""
-        print(colored(padded_outcome, color="grey", on_color=bg), mod_name + test_result.test.name, reason)
+
+        if test_result.test.description:
+            name_or_desc = test_result.test.description
+        else:
+            name_or_desc = test_result.test.name
+        print(colored(padded_outcome, color="grey", on_color=bg), mod_name + name_or_desc, reason)
 
     def output_why_test_failed_header(self, test_result: TestResult):
-        params_list = ", ".join(lightblack(str(v)) for v in test_result.test.deps().keys())
-        if test_result.test.has_deps():
+        test = test_result.test
+        params_list = ", ".join(lightblack(str(v)) for v in test.deps().keys())
+        if test.has_deps():
             test_name_suffix = f"({params_list})"
         else:
             test_name_suffix = ""
+
+        if test.description:
+            name_or_desc = f"{test.module_name}: {test.description}"
+        else:
+            name_or_desc = test.qualified_name
+
         print(
             colored(" Failure", color="red"),
             "in",
-            colored(test_result.test.qualified_name, attrs=["bold"]),
+            colored(name_or_desc, attrs=["bold"]),
             test_name_suffix,
             "\n",
         )

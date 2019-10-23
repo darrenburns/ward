@@ -4,9 +4,9 @@ import os
 import pkgutil
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
-from typing import Any, Generator, Iterable
+from typing import Any, Generator, Iterable, List
 
-from ward.test import Test, WardMeta
+from ward.test import Marker, Test, WardMeta, anonymous_tests
 
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:
@@ -37,15 +37,23 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
             yield mod
 
 
-def get_tests_in_modules(modules: Iterable[Any], filter: str = "") -> Generator[Test, None, None]:
+def get_tests_in_modules(modules: Iterable, filter: str = "") -> Generator[Test, None, None]:
     for mod in modules:
+        # Collect anonymous tests from the module
+        anon_tests: List[Test] = anonymous_tests[mod.__name__]
+        if anon_tests:
+            print(anon_tests)
+            for test in anon_tests:
+                yield test
+
+        # Collect named tests from the module
         for item in dir(mod):
-            if item.startswith("test_"):
+            if item.startswith("test_") and not item == "_":
                 test_name = item
                 test_fn = getattr(mod, test_name)
-                meta: WardMeta = getattr(test_fn, "ward_meta", WardMeta())
+                marker: Marker = getattr(test_fn, "ward_meta", WardMeta()).marker
                 if test_fn:
-                    test = Test(fn=test_fn, module=mod, marker=meta.marker)
+                    test = Test(fn=test_fn, module_name=mod.__name__, marker=marker)
                     # Yield tests if there's no filter, or if the filter matches
                     if not filter:
                         yield test
