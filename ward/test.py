@@ -69,12 +69,13 @@ anonymous_tests = {}
 
 def test(description: str):
     def decorator_test(func):
-        anonymous_tests[func.__module__] = Test(
-            fn=func,
-            module=func.__module__,
-            description=description,
-            marker=getattr(func, "ward_meta", WardMeta()).marker,
-        )
+        if func.__name__ == "_":
+            anonymous_tests[func.__module__] = Test(
+                fn=func,
+                module=func.__module__,
+                description=description,
+                marker=getattr(func, "ward_meta", WardMeta()).marker,
+            )
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
