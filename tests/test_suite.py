@@ -3,7 +3,7 @@ from unittest import mock
 from ward import expect, fixture
 from ward.fixtures import Fixture, FixtureRegistry
 from ward.suite import Suite
-from ward.test import SkipMarker, Test
+from ward.testing import SkipMarker, Test
 from ward.test_result import TestOutcome, TestResult
 
 NUMBER_OF_TESTS = 5

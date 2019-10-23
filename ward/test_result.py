@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional
 
-from ward.test import Test
+from ward.testing import Test
 
 
 class TestOutcome(Enum):

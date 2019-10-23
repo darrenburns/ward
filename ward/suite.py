@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Generator, List
 
 from ward.fixtures import FixtureExecutionError, FixtureRegistry
-from ward.test import Test
+from ward.testing import Test
 from ward.test_result import TestOutcome, TestResult
 
 

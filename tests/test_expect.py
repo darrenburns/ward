@@ -1,10 +1,11 @@
 from unittest.mock import Mock, patch, call
 
-from ward import expect, fixture, raises
+from ward import expect, fixture, raises, test
 from ward.expect import Expected, ExpectationFailed, math
 
 
-def test_equals_success_history_recorded():
+@test("equals should record history on pass")
+def _():
     this, that = "hello", "hello"
 
     e = expect(this).equals(that)
@@ -13,7 +14,8 @@ def test_equals_success_history_recorded():
     expect(e.history).equals(hist)
 
 
-def test_equals_failure_history_recorded():
+@test("equals should record history on fail")
+def _():
     this, that = "hello", "goodbye"
 
     e = expect(this)
