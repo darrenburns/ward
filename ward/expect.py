@@ -1,7 +1,7 @@
 import inspect
 import math
 from dataclasses import dataclass
-from typing import Type, Any, List, Callable, Dict, Tuple, Optional
+from typing import Type, Any, List, Callable, Dict, Tuple, Optional, Iterable
 from unittest.mock import _Call
 
 
@@ -74,6 +74,12 @@ class expect:
 
     def not_contains(self, that: Any):
         return self._handle_expect(that not in self.this, that=that)
+
+    def contained_in(self, that: Iterable[Any]):
+        return self._handle_expect(self.this in that, that=that)
+
+    def not_contained_in(self, that: Iterable[Any]):
+        return self._handle_expect(self.this not in that, that=that)
 
     def has_length(self, length: int):
         return self._handle_expect(len(self.this) == length, that=length)

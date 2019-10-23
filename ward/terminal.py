@@ -119,7 +119,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         bg = f"on_{colour}"
         padded_outcome = f" {test_result.outcome.name[:4]} "
         if test_result.test.description:
-            sep = ":"
+            sep = ": "
         else:
             sep = "."
         mod_name = lightblack(f"{test_result.test.module_name}{sep}")
