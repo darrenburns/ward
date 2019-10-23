@@ -59,11 +59,38 @@ def xfail(func=None, *, reason: str = None):
     return wrapper
 
 
+# Tests declared with the name _, and with the @test decorator
+# have to be stored in here, so that they can later be retrieved.
+# They cannot be retrieved directly from the module due to name
+# clashes. When we're later looking for tests inside the module,
+# we can retrieve any anonymous tests from this dict.
+anonymous_tests = {}
+
+
+def test(description: str):
+    def decorator_test(func):
+        anonymous_tests[func.__module__] = Test(
+            fn=func,
+            module=func.__module__,
+            description=description,
+            marker=getattr(func, "ward_meta", WardMeta()).marker,
+        )
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator_test
+
+
 @dataclass
 class Test:
     fn: Callable
     module: ModuleType
     marker: Optional[Marker] = None
+    description: Optional[str] = None
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)
