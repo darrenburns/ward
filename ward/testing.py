@@ -47,10 +47,14 @@ def skip(func_or_reason=None, *, reason: str = None):
     return wrapper
 
 
-def xfail(func=None, *, reason: str = None):
-    if func is None:
+def xfail(func_or_reason=None, *, reason: str = None):
+    if func_or_reason is None:
         return functools.partial(xfail, reason=reason)
 
+    if isinstance(func_or_reason, str):
+        return functools.partial(xfail, reason=func_or_reason)
+
+    func = func_or_reason
     func.ward_meta = WardMeta(marker=XfailMarker(reason=reason))
 
     @functools.wraps(func)
