@@ -126,7 +126,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         if test_result.outcome == TestOutcome.SKIP or test_result.outcome == TestOutcome.XFAIL:
             reason = test_result.test.marker.reason or ""
             if reason:
-                reason = lightblack(f"[{reason}]")
+                reason = lightblack(f" [{reason}]")
         else:
             reason = ""
 
