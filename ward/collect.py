@@ -38,9 +38,7 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
             yield mod
 
 
-def get_tests_in_modules(
-    modules: Iterable,
-) -> Generator[Test, None, None]:
+def get_tests_in_modules(modules: Iterable,) -> Generator[Test, None, None]:
     for mod in modules:
         mod_name = mod.__name__
         # Collect anonymous tests from the module
@@ -65,14 +63,18 @@ def get_tests_in_modules(
                     yield Test(fn=test_fn, module_name=mod_name, marker=marker)
 
 
-def filter_generally(tests: Iterable[Test], filter: str = "") -> Generator[Test, None, None]:
+def filter_generally(
+    tests: Iterable[Test], filter: str = ""
+) -> Generator[Test, None, None]:
     if not filter:
         yield from tests
 
     for test in tests:
         description = test.description or ""
-        if (filter in description
+        if (
+            filter in description
             or filter in f"{test.module_name}."
             or filter in inspect.getsource(test.fn)
-            or filter in test.qualified_name):
+            or filter in test.qualified_name
+        ):
             yield test

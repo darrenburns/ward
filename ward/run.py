@@ -6,7 +6,12 @@ from timeit import default_timer
 import click
 from colorama import init
 
-from ward.collect import get_info_for_modules, get_tests_in_modules, load_modules, filter_generally
+from ward.collect import (
+    get_info_for_modules,
+    get_tests_in_modules,
+    load_modules,
+    filter_generally,
+)
 from ward.fixtures import fixture_registry
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite
