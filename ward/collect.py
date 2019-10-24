@@ -57,7 +57,9 @@ def get_tests_in_modules(
                 )
                 if not filter:
                     yield test
-                elif filter in description or filter in f"{mod_name}." or filter in inspect.getsource(test_fn):
+                elif (filter in description
+                      or filter in f"{mod_name}."
+                      or filter in inspect.getsource(test_fn)):
                     yield test
 
         # Collect named tests from the module
@@ -71,5 +73,7 @@ def get_tests_in_modules(
                     # Yield tests if there's no filter, or if the filter matches
                     if not filter:
                         yield test
-                    elif filter in test.qualified_name:
+                    elif (filter in test.qualified_name
+                          or filter in f"{mod_name}"
+                          or filter in inspect.getsource(test_fn)):
                         yield test
