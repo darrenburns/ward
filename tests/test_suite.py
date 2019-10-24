@@ -103,7 +103,7 @@ def _(fixture_registry, module):
 @test(
     "Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator "
 )
-def _(fixture_registry, module, skipped_test, example_test):
+def _(fixture_registry, skipped_test, example_test):
     suite = Suite(tests=[example_test, skipped_test], fixture_registry=fixture_registry)
 
     test_runs = list(suite.generate_test_runs())

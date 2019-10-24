@@ -1,5 +1,6 @@
 import importlib
 import importlib.util
+import inspect
 import os
 import pkgutil
 from importlib._bootstrap import ModuleSpec
@@ -56,7 +57,7 @@ def get_tests_in_modules(
                 )
                 if not filter:
                     yield test
-                elif filter in description or filter in f"{mod_name}.":
+                elif filter in description or filter in f"{mod_name}." or filter in inspect.getsource(test_fn):
                     yield test
 
         # Collect named tests from the module
