@@ -135,8 +135,8 @@ def _(module):
     expect(events).equals([1, 2, 3])
 
 
-@test("Suite.generate_test_runs tears down deep fixtures")
 @xfail("Bug: not all fixtures torn down")
+@test("Suite.generate_test_runs tears down deep fixtures")
 def _(module):
     events = []
 

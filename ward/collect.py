@@ -4,7 +4,7 @@ import os
 import pkgutil
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
-from typing import Any, Generator, Iterable, List
+from typing import Any, Callable, Generator, Iterable, List
 
 from ward.testing import Marker, Test, WardMeta, anonymous_tests
 
@@ -41,13 +41,20 @@ def get_tests_in_modules(modules: Iterable, filter: str = "") -> Generator[Test,
     for mod in modules:
         mod_name = mod.__name__
         # Collect anonymous tests from the module
-        anon_tests: List[Test] = anonymous_tests[mod_name]
+        anon_tests: List[Callable] = anonymous_tests[mod_name]
         if anon_tests:
-            for test in anon_tests:
-                description = test.description or ""
+            for test_fn in anon_tests:
+                meta: WardMeta = getattr(test_fn, "ward_meta")
+                description = meta.description or ""
+                test = Test(
+                    fn=test_fn,
+                    module_name=mod_name,
+                    marker=meta.marker,
+                    description=description,
+                )
                 if not filter:
                     yield test
-                elif filter in description or filter in f"{test.module_name}.":
+                elif filter in description or filter in f"{mod_name}.":
                     yield test
 
         # Collect named tests from the module

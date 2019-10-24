@@ -28,6 +28,7 @@ class XfailMarker(Marker):
 @dataclass
 class WardMeta:
     marker: Optional[Marker] = None
+    description: Optional[str] = None
 
 
 def skip(func_or_reason=None, *, reason: str = None):
@@ -38,7 +39,11 @@ def skip(func_or_reason=None, *, reason: str = None):
         return functools.partial(skip, reason=func_or_reason)
 
     func = func_or_reason
-    func.ward_meta = WardMeta(marker=SkipMarker(reason=reason))
+    marker = SkipMarker(reason=reason)
+    if hasattr(func, "ward_meta"):
+        func.ward_meta.marker = marker
+    else:
+        func.ward_meta = WardMeta(marker=marker)
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -55,7 +60,11 @@ def xfail(func_or_reason=None, *, reason: str = None):
         return functools.partial(xfail, reason=func_or_reason)
 
     func = func_or_reason
-    func.ward_meta = WardMeta(marker=XfailMarker(reason=reason))
+    marker = XfailMarker(reason=reason)
+    if hasattr(func, "ward_meta"):
+        func.ward_meta.marker = marker
+    else:
+        func.ward_meta = WardMeta(marker=marker)
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -108,19 +117,20 @@ class Test:
 # They cannot be retrieved directly from the module due to name
 # clashes. When we're later looking for tests inside the module,
 # we can retrieve any anonymous tests from this dict.
-anonymous_tests: Dict[str, List[Test]] = defaultdict(list)
+anonymous_tests: Dict[str, List[Callable]] = defaultdict(list)
 
 
 def test(description: str):
     def decorator_test(func):
         if func.__name__ == "_":
             mod_name = func.__module__
-            anonymous_tests[mod_name].append(Test(
-                fn=func,
-                module_name=mod_name,
-                description=description,
-                marker=getattr(func, "ward_meta", WardMeta()).marker,
-            ))
+            if hasattr(func, "ward_meta"):
+                func.ward_meta.description = description
+            else:
+                func.ward_meta = WardMeta(
+                    description=description,
+                )
+            anonymous_tests[mod_name].append(func)
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
