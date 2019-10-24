@@ -89,7 +89,8 @@ class Test:
 
     @property
     def qualified_name(self):
-        return f"{self.module_name}.{self.name}"
+        name = self.name or ""
+        return f"{self.module_name}.{name}"
 
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters

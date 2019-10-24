@@ -39,7 +39,7 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
 
 
 def get_tests_in_modules(
-    modules: Iterable, filter: str = ""
+    modules: Iterable,
 ) -> Generator[Test, None, None]:
     for mod in modules:
         mod_name = mod.__name__
@@ -48,19 +48,12 @@ def get_tests_in_modules(
         if anon_tests:
             for test_fn in anon_tests:
                 meta: WardMeta = getattr(test_fn, "ward_meta")
-                description = meta.description or ""
-                test = Test(
+                yield Test(
                     fn=test_fn,
                     module_name=mod_name,
                     marker=meta.marker,
-                    description=description,
+                    description=meta.description or "",
                 )
-                if not filter:
-                    yield test
-                elif (filter in description
-                      or filter in f"{mod_name}."
-                      or filter in inspect.getsource(test_fn)):
-                    yield test
 
         # Collect named tests from the module
         for item in dir(mod):
@@ -69,11 +62,17 @@ def get_tests_in_modules(
                 test_fn = getattr(mod, test_name)
                 marker: Marker = getattr(test_fn, "ward_meta", WardMeta()).marker
                 if test_fn:
-                    test = Test(fn=test_fn, module_name=mod_name, marker=marker)
-                    # Yield tests if there's no filter, or if the filter matches
-                    if not filter:
-                        yield test
-                    elif (filter in test.qualified_name
-                          or filter in f"{mod_name}"
-                          or filter in inspect.getsource(test_fn)):
-                        yield test
+                    yield Test(fn=test_fn, module_name=mod_name, marker=marker)
+
+
+def filter_generally(tests: Iterable[Test], filter: str = "") -> Generator[Test, None, None]:
+    if not filter:
+        yield from tests
+
+    for test in tests:
+        description = test.description or ""
+        if (filter in description
+            or filter in f"{test.module_name}."
+            or filter in inspect.getsource(test.fn)
+            or filter in test.qualified_name):
+            yield test
