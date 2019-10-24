@@ -1,6 +1,7 @@
 # Ward
 
 ![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
+[![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
 
 A modern Python test framework designed to help you find and fix flaws faster.
 
