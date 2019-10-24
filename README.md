@@ -86,7 +86,7 @@ During the test run, Ward will print the descriptive test name to the console:
 
 ```
 FAIL  test_things: my_sum(1, 2) is equal to 3
-PASS  test_things: get_first_character('Win Butler') returns 'W'
+PASS  test_things: first_char('Win Butler') returns 'W'
 ```
 
 If you'd still prefer to name your tests using function names, you can do so
