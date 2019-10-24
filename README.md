@@ -244,8 +244,8 @@ You can pass a `reason` to the `skip` decorator, and it will be printed
 next to the test name/description during the run.
 
 ```python
-@test("everything is okay")
 @skip("not implemented yet")
+@test("everything is okay")
 def _():
     # ...
 ```
