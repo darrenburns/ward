@@ -3,7 +3,9 @@ from ward.test_result import TestResult, TestOutcome
 from ward.util import get_exit_code, ExitCode
 
 
-@test("get_exit_code returns ExitCode.SUCCESS when PASS, SKIP and XFAIL in test results")
+@test(
+    "get_exit_code returns ExitCode.SUCCESS when PASS, SKIP and XFAIL in test results"
+)
 def _(example_test):
     test_results = [
         TestResult(test=example_test, outcome=TestOutcome.PASS),

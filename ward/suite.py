@@ -34,13 +34,19 @@ class Suite:
                     resolved_fixtures = test.resolve_args(self.fixture_registry)
             except FixtureExecutionError as e:
                 yield TestResult(
-                    test, TestOutcome.FAIL, e, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
+                    test,
+                    TestOutcome.FAIL,
+                    e,
+                    captured_stdout=sout.getvalue(),
+                    captured_stderr=serr.getvalue(),
                 )
                 sout.close()
                 serr.close()
                 continue
             try:
-                resolved_vals = {k: fix.resolved_val for (k, fix) in resolved_fixtures.items()}
+                resolved_vals = {
+                    k: fix.resolved_val for (k, fix) in resolved_fixtures.items()
+                }
 
                 # Run the test, while capturing output.
                 with redirect_stdout(sout), redirect_stderr(serr):
@@ -49,7 +55,10 @@ class Suite:
                 # The test has completed without exception and therefore passed
                 if marker == "XFAIL":
                     yield TestResult(
-                        test, TestOutcome.XPASS, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
+                        test,
+                        TestOutcome.XPASS,
+                        captured_stdout=sout.getvalue(),
+                        captured_stderr=serr.getvalue(),
                     )
                 else:
                     yield TestResult(test, TestOutcome.PASS)
@@ -59,7 +68,11 @@ class Suite:
                     yield TestResult(test, TestOutcome.XFAIL, e)
                 else:
                     yield TestResult(
-                        test, TestOutcome.FAIL, e, captured_stdout=sout.getvalue(), captured_stderr=serr.getvalue()
+                        test,
+                        TestOutcome.FAIL,
+                        e,
+                        captured_stdout=sout.getvalue(),
+                        captured_stderr=serr.getvalue(),
                     )
             finally:
                 # TODO: Don't just cleanup top-level dependencies, since there may

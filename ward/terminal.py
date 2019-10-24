@@ -66,7 +66,9 @@ class TestResultWriterBase:
         """
         raise NotImplementedError()
 
-    def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
+    def output_test_result_summary(
+        self, test_results: List[TestResult], time_taken: float
+    ):
         raise NotImplementedError()
 
     def output_why_test_failed(self, test_result: TestResult):
@@ -123,7 +125,10 @@ class SimpleTestResultWrite(TestResultWriterBase):
         else:
             sep = "."
         mod_name = lightblack(f"{test_result.test.module_name}{sep}")
-        if test_result.outcome == TestOutcome.SKIP or test_result.outcome == TestOutcome.XFAIL:
+        if (
+            test_result.outcome == TestOutcome.SKIP
+            or test_result.outcome == TestOutcome.XFAIL
+        ):
             reason = test_result.test.marker.reason or ""
             if reason:
                 reason = lightblack(f" [{reason}]")
@@ -134,7 +139,11 @@ class SimpleTestResultWrite(TestResultWriterBase):
             name_or_desc = test_result.test.description
         else:
             name_or_desc = test_result.test.name
-        print(colored(padded_outcome, color="grey", on_color=bg), mod_name + name_or_desc, reason)
+        print(
+            colored(padded_outcome, color="grey", on_color=bg),
+            mod_name + name_or_desc,
+            reason,
+        )
 
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
@@ -160,7 +169,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
         if isinstance(err, ExpectationFailed):
-            print(f"   Given {truncate(repr(err.history[0].this), num_chars=self.terminal_size.width - 24)}\n")
+            print(
+                f"   Given {truncate(repr(err.history[0].this), num_chars=self.terminal_size.width - 24)}\n"
+            )
 
             for expect in err.history:
                 self.print_expect_chain_item(expect)
@@ -194,7 +205,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 sublines = line.split("\n")
                 for subline in sublines:
                     content = " " * 4 + subline
-                    if subline.lstrip().startswith("File \""):
+                    if subline.lstrip().startswith('File "'):
                         cprint(content, color="yellow")
                     else:
                         print(content)
@@ -218,7 +229,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
             result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
         return result_marker
 
-    def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
+    def output_test_result_summary(
+        self, test_results: List[TestResult], time_taken: float
+    ):
         outcome_counts = self._get_outcome_counts(test_results)
         chart = self.generate_chart(
             num_passed=outcome_counts[TestOutcome.PASS],
@@ -314,11 +327,23 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
         pass
 
-    def _get_outcome_counts(self, test_results: List[TestResult]) -> Dict[TestOutcome, int]:
+    def _get_outcome_counts(
+        self, test_results: List[TestResult]
+    ) -> Dict[TestOutcome, int]:
         return {
-            TestOutcome.PASS: len([r for r in test_results if r.outcome == TestOutcome.PASS]),
-            TestOutcome.FAIL: len([r for r in test_results if r.outcome == TestOutcome.FAIL]),
-            TestOutcome.SKIP: len([r for r in test_results if r.outcome == TestOutcome.SKIP]),
-            TestOutcome.XFAIL: len([r for r in test_results if r.outcome == TestOutcome.XFAIL]),
-            TestOutcome.XPASS: len([r for r in test_results if r.outcome == TestOutcome.XPASS]),
+            TestOutcome.PASS: len(
+                [r for r in test_results if r.outcome == TestOutcome.PASS]
+            ),
+            TestOutcome.FAIL: len(
+                [r for r in test_results if r.outcome == TestOutcome.FAIL]
+            ),
+            TestOutcome.SKIP: len(
+                [r for r in test_results if r.outcome == TestOutcome.SKIP]
+            ),
+            TestOutcome.XFAIL: len(
+                [r for r in test_results if r.outcome == TestOutcome.XFAIL]
+            ),
+            TestOutcome.XPASS: len(
+                [r for r in test_results if r.outcome == TestOutcome.XPASS]
+            ),
         }

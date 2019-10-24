@@ -14,7 +14,9 @@ class raises:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not self.expected_ex_type:
-            raise AssertionError(f"Expected exception {self.expected_ex_type}, but {exc_type} was raised instead.")
+            raise AssertionError(
+                f"Expected exception {self.expected_ex_type}, but {exc_type} was raised instead."
+            )
         return True
 
 
@@ -107,7 +109,10 @@ class expect:
 
     def approx(self, that: Any, rel_tol: float = 1e-9, abs_tol: float = 0.0):
         return self._handle_expect(
-            math.isclose(self.this, that, abs_tol=abs_tol, rel_tol=rel_tol), that=that, rel_tol=rel_tol, abs_tol=abs_tol
+            math.isclose(self.this, that, abs_tol=abs_tol, rel_tol=rel_tol),
+            that=that,
+            rel_tol=rel_tol,
+            abs_tol=abs_tol,
         )
 
     def not_approx(self, that: Any, rel_tol: float = 1e-9, abs_tol: float = 0.0):
@@ -149,7 +154,11 @@ class expect:
         return self._handle_expect(passed, calls=calls, any_order=any_order)
 
     def _store_in_history(
-        self, result: bool, called_with_args: Tuple[Any], called_with_kwargs: Dict[str, Any], that=None
+        self,
+        result: bool,
+        called_with_args: Tuple[Any],
+        called_with_kwargs: Dict[str, Any],
+        that=None,
     ) -> bool:
         self.history.append(
             Expected(
@@ -168,7 +177,11 @@ class expect:
             return True
         raise ExpectationFailed("expectation failed", self.history)
 
-    def _handle_expect(self, result: bool, *args, that: Any = None, **kwargs) -> "expect":
-        self._store_in_history(result, that=that, called_with_args=args, called_with_kwargs=kwargs)
+    def _handle_expect(
+        self, result: bool, *args, that: Any = None, **kwargs
+    ) -> "expect":
+        self._store_in_history(
+            result, that=that, called_with_args=args, called_with_kwargs=kwargs
+        )
         self._fail_if_false(result)
         return self

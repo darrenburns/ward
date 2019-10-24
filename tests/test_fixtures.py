@@ -47,7 +47,9 @@ def _(exception_raising_fixture):
     expect(registry[exception_raising_fixture.key]).equals(exception_raising_fixture)
 
 
-@test("FixtureRegistry.resolve raises FixtureExecutionError when fixture raises an exception")
+@test(
+    "FixtureRegistry.resolve raises FixtureExecutionError when fixture raises an exception"
+)
 def _(exception_raising_fixture):
     registry = FixtureRegistry()
     registry.cache_fixtures([exception_raising_fixture])

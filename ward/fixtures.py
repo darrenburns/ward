@@ -41,7 +41,9 @@ class Fixture:
                 else:
                     self.resolved_val = self.fn()
             except Exception as e:
-                raise FixtureExecutionError(f"Unable to execute fixture '{self.key}'") from e
+                raise FixtureExecutionError(
+                    f"Unable to execute fixture '{self.key}'"
+                ) from e
             fix_registry.cache_fixture(self)
             return self
 
@@ -61,7 +63,9 @@ class Fixture:
             else:
                 self.resolved_val = self.fn(*child_resolved_vals)
         except Exception as e:
-            raise FixtureExecutionError(f"Unable to execute fixture '{self.key}'") from e
+            raise FixtureExecutionError(
+                f"Unable to execute fixture '{self.key}'"
+            ) from e
 
         fix_registry.cache_fixture(self)
         return self
@@ -80,9 +84,7 @@ class FixtureRegistry:
         def wrapper(func):
             name = func.__name__
             if name not in self._fixtures:
-                self._fixtures[name] = Fixture(
-                    key=name, fn=func,
-                )
+                self._fixtures[name] = Fixture(key=name, fn=func)
             else:
                 raise CollectionError(f"Multiple fixtures named '{func.__name__}'.")
             return func

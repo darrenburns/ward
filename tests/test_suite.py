@@ -41,20 +41,28 @@ def fixture_registry(fixtures):
 
 @fixture
 def suite(example_test, fixture_registry):
-    return Suite(tests=[example_test] * NUMBER_OF_TESTS, fixture_registry=fixture_registry)
+    return Suite(
+        tests=[example_test] * NUMBER_OF_TESTS, fixture_registry=fixture_registry
+    )
 
 
-@test(f"Suite.num_tests returns {NUMBER_OF_TESTS}, when the suite has {NUMBER_OF_TESTS} tests")
+@test(
+    f"Suite.num_tests returns {NUMBER_OF_TESTS}, when the suite has {NUMBER_OF_TESTS} tests"
+)
 def _(suite):
     expect(suite.num_tests).equals(NUMBER_OF_TESTS)
 
 
-@test(f"Suite.num_fixtures returns {len(fixtures())}, when the suite has {len(fixtures())} fixtures")
+@test(
+    f"Suite.num_fixtures returns {len(fixtures())}, when the suite has {len(fixtures())} fixtures"
+)
 def _(suite, fixtures):
     expect(suite.num_fixtures).equals(len(fixtures))
 
 
-@test(f"Suite.generate_test_runs generates {NUMBER_OF_TESTS} when suite has {NUMBER_OF_TESTS} tests")
+@test(
+    f"Suite.generate_test_runs generates {NUMBER_OF_TESTS} when suite has {NUMBER_OF_TESTS} tests"
+)
 def _(suite):
     runs = suite.generate_test_runs()
 
@@ -66,7 +74,10 @@ def _(suite):
     results = list(suite.generate_test_runs())
 
     expect(results).equals(
-        [TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="") for test in suite.tests]
+        [
+            TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
+            for test in suite.tests
+        ]
     )
 
 
@@ -81,16 +92,18 @@ def _(fixture_registry, module):
     results = failing_suite.generate_test_runs()
     result = next(results)
 
-    expected_result = TestResult(test=test, outcome=TestOutcome.FAIL, error=mock.ANY, message="")
+    expected_result = TestResult(
+        test=test, outcome=TestOutcome.FAIL, error=mock.ANY, message=""
+    )
 
     expect(result).equals(expected_result)
     expect(result.error).instance_of(AssertionError)
 
 
-@test("Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator ")
-def _(
-    fixture_registry, module, skipped_test, example_test
-):
+@test(
+    "Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator "
+)
+def _(fixture_registry, module, skipped_test, example_test):
     suite = Suite(tests=[example_test, skipped_test], fixture_registry=fixture_registry)
 
     test_runs = list(suite.generate_test_runs())
@@ -102,7 +115,9 @@ def _(
     expect(test_runs).equals(expected_runs)
 
 
-@test("Suite.generate_test_runs runs fixture teardown code is ran in the expected order")
+@test(
+    "Suite.generate_test_runs runs fixture teardown code is ran in the expected order"
+)
 def _(module):
     events = []
 
@@ -121,10 +136,7 @@ def _(module):
 
     reg = FixtureRegistry()
     reg.cache_fixtures(
-        fixtures=[
-            Fixture(key="fix_a", fn=fix_a),
-            Fixture(key="fix_b", fn=fix_b),
-        ]
+        fixtures=[Fixture(key="fix_a", fn=fix_a), Fixture(key="fix_b", fn=fix_b)]
     )
 
     suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_registry=reg)

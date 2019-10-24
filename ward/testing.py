@@ -127,9 +127,7 @@ def test(description: str):
             if hasattr(func, "ward_meta"):
                 func.ward_meta.description = description
             else:
-                func.ward_meta = WardMeta(
-                    description=description,
-                )
+                func.ward_meta = WardMeta(description=description)
             anonymous_tests[mod_name].append(func)
 
         @functools.wraps(func)

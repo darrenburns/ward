@@ -10,7 +10,11 @@ def _():
 
     e = expect(this).equals(that)
 
-    hist = [Expected(this=this, op="equals", that=that, op_args=(), op_kwargs={}, success=True)]
+    hist = [
+        Expected(
+            this=this, op="equals", that=that, op_args=(), op_kwargs={}, success=True
+        )
+    ]
     expect(e.history).equals(hist)
 
 
@@ -22,7 +26,11 @@ def _():
     with raises(ExpectationFailed):
         e.equals(that)
 
-    hist = [Expected(this=this, op="equals", that=that, op_args=(), op_kwargs={}, success=False)]
+    hist = [
+        Expected(
+            this=this, op="equals", that=that, op_args=(), op_kwargs={}, success=False
+        )
+    ]
     expect(e.history).equals(hist)
 
 
@@ -38,7 +46,16 @@ def _():
     predicate = lambda e: this[::-1] == "hello"
     e = expect(this).satisfies(predicate)
 
-    hist = [Expected(this=this, op="satisfies", that=predicate, op_args=(), op_kwargs={}, success=True)]
+    hist = [
+        Expected(
+            this=this,
+            op="satisfies",
+            that=predicate,
+            op_args=(),
+            op_kwargs={},
+            success=True,
+        )
+    ]
 
     expect(e.history).equals(hist)
 
@@ -52,7 +69,16 @@ def _():
     with raises(ExpectationFailed):
         e.satisfies(predicate)
 
-    hist = [Expected(this=this, op="satisfies", that=predicate, op_args=(), op_kwargs={}, success=False)]
+    hist = [
+        Expected(
+            this=this,
+            op="satisfies",
+            that=predicate,
+            op_args=(),
+            op_kwargs={},
+            success=False,
+        )
+    ]
 
     expect(e.history).equals(hist)
 
@@ -82,7 +108,12 @@ def _():
 
     hist = [
         Expected(
-            this=this, op="approx", that=that, op_args=(), op_kwargs={"rel_tol": 1e-09, "abs_tol": 0.5}, success=True
+            this=this,
+            op="approx",
+            that=that,
+            op_args=(),
+            op_kwargs={"rel_tol": 1e-09, "abs_tol": 0.5},
+            success=True,
         )
     ]
     expect(e.history).equals(hist)
@@ -98,7 +129,12 @@ def _():
 
     hist = [
         Expected(
-            this=this, op="approx", that=that, op_args=(), op_kwargs={"rel_tol": 0.001, "abs_tol": 0.0}, success=False
+            this=this,
+            op="approx",
+            that=that,
+            op_args=(),
+            op_kwargs={"rel_tol": 0.001, "abs_tol": 0.0},
+            success=False,
         )
     ]
 
@@ -138,7 +174,11 @@ def _():
 
     e = expect(this).not_equals(that)
 
-    hist = [Expected(this, op="not_equals", that=that, op_args=(), op_kwargs={}, success=True)]
+    hist = [
+        Expected(
+            this, op="not_equals", that=that, op_args=(), op_kwargs={}, success=True
+        )
+    ]
     expect(e.history).equals(hist)
 
 
@@ -150,7 +190,11 @@ def _():
     with raises(ExpectationFailed):
         e.not_equals(that)
 
-    hist = [Expected(this, op="not_equals", that=that, op_args=(), op_kwargs={}, success=False)]
+    hist = [
+        Expected(
+            this, op="not_equals", that=that, op_args=(), op_kwargs={}, success=False
+        )
+    ]
     expect(e.history).equals(hist)
 
 
@@ -164,17 +208,23 @@ def _(mock):
     mock()
     e = expect(mock).called()
 
-    hist = [Expected(mock, op="called", that=None, op_args=(), op_kwargs={}, success=True)]
+    hist = [
+        Expected(mock, op="called", that=None, op_args=(), op_kwargs={}, success=True)
+    ]
     expect(e.history).equals(hist)
 
 
-@test("expect.called records history and raises ExpectationFailed when mock was not called")
+@test(
+    "expect.called records history and raises ExpectationFailed when mock was not called"
+)
 def _(mock):
     e = expect(mock)
     with raises(ExpectationFailed):
         e.called()
 
-    hist = [Expected(mock, op="called", that=None, op_args=(), op_kwargs={}, success=False)]
+    hist = [
+        Expected(mock, op="called", that=None, op_args=(), op_kwargs={}, success=False)
+    ]
     expect(e.history).equals(hist)
 
 
@@ -182,11 +232,17 @@ def _(mock):
 def _(mock):
     e = expect(mock).not_called()
 
-    hist = [Expected(mock, op="not_called", that=None, op_args=(), op_kwargs={}, success=True)]
+    hist = [
+        Expected(
+            mock, op="not_called", that=None, op_args=(), op_kwargs={}, success=True
+        )
+    ]
     expect(e.history).equals(hist)
 
 
-@test("called_once_with records history when the mock was called as expected exactly once")
+@test(
+    "called_once_with records history when the mock was called as expected exactly once"
+)
 def _(mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
@@ -194,7 +250,16 @@ def _(mock):
 
     e = expect(mock).called_once_with(*args, **kwargs)
 
-    hist = [Expected(mock, op="called_once_with", that=None, op_args=args, op_kwargs=kwargs, success=True)]
+    hist = [
+        Expected(
+            mock,
+            op="called_once_with",
+            that=None,
+            op_args=args,
+            op_kwargs=kwargs,
+            success=True,
+        )
+    ]
     expect(e.history).equals(hist)
 
 
@@ -208,7 +273,16 @@ def _(mock):
     with raises(ExpectationFailed):
         e.called_once_with(*args, **kwargs)
 
-    hist = [Expected(mock, op="called_once_with", that=None, op_args=args, op_kwargs=kwargs, success=False)]
+    hist = [
+        Expected(
+            mock,
+            op="called_once_with",
+            that=None,
+            op_args=args,
+            op_kwargs=kwargs,
+            success=False,
+        )
+    ]
     expect(e.history).equals(hist)
 
 
@@ -222,11 +296,22 @@ def _(mock):
     with raises(ExpectationFailed):
         e.called_once_with(*args, **kwargs)
 
-    hist = [Expected(mock, op="called_once_with", that=None, op_args=args, op_kwargs=kwargs, success=False)]
+    hist = [
+        Expected(
+            mock,
+            op="called_once_with",
+            that=None,
+            op_args=args,
+            op_kwargs=kwargs,
+            success=False,
+        )
+    ]
     expect(e.history).equals(hist)
 
 
-@test("called_once_with records history and raises when the expected call is made more than once")
+@test(
+    "called_once_with records history and raises when the expected call is made more than once"
+)
 def _(mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
@@ -238,7 +323,16 @@ def _(mock):
     with raises(ExpectationFailed):
         e.called_once_with(*args, **kwargs)
 
-    hist = [Expected(mock, op="called_once_with", that=None, op_args=args, op_kwargs=kwargs, success=False)]
+    hist = [
+        Expected(
+            mock,
+            op="called_once_with",
+            that=None,
+            op_args=args,
+            op_kwargs=kwargs,
+            success=False,
+        )
+    ]
     expect(e.history).equals(hist)
 
 
@@ -255,7 +349,16 @@ def _(mock):
     with raises(ExpectationFailed):
         e.called_once_with(*args, **kwargs)
 
-    hist = [Expected(mock, op="called_once_with", that=None, op_args=args, op_kwargs=kwargs, success=False)]
+    hist = [
+        Expected(
+            mock,
+            op="called_once_with",
+            that=None,
+            op_args=args,
+            op_kwargs=kwargs,
+            success=False,
+        )
+    ]
     expect(e.history).equals(hist)
 
 
@@ -268,7 +371,9 @@ def _(mock):
     expect(e.history[0].success).equals(True)
 
 
-@test("called_with records history and raises when expected call was made before other calls")
+@test(
+    "called_with records history and raises when expected call was made before other calls"
+)
 def _(mock):
     mock(2)
     mock(1)
@@ -307,14 +412,13 @@ def _(mock):
         e.has_calls([call(key="value"), call(1, 2)])
 
 
-@test("has_calls(any_order=True) records history when the calls were made in the wrong order")
+@test(
+    "has_calls(any_order=True) records history when the calls were made in the wrong order"
+)
 def _(mock):
     mock(1, 2)
     mock(key="value")
 
-    e = expect(mock).has_calls(
-        [call(key="value"), call(1, 2)],
-        any_order=True,
-    )
+    e = expect(mock).has_calls([call(key="value"), call(1, 2)], any_order=True)
 
     expect(e.history[0].success).equals(True)
