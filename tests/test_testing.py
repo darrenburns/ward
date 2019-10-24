@@ -29,15 +29,6 @@ def dependent_test():
     return Test(fn=_, module_name=mod)
 
 
-@fixture
-def descriptive_test():
-    @test("i have a description")
-    def _():
-        expect(1).equals(1)
-
-    return Test(_, mod)
-
-
 @test("Test.name should return the name of the function it wraps")
 def _(anonymous_test):
     expect(anonymous_test.name).equals("_")
