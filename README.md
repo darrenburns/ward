@@ -10,7 +10,9 @@ A modern Python test framework designed to help you find and fix flaws faster.
 
 This project is a work in progress. Some of the features that are currently available in a basic form are listed below.
 
-* **Descriptive test names:** describe what your tests do using strings, not function names
+* **Descriptive test names:** describe what your tests do using strings, not function names.
+* **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
+contained in the body of the test.
 * **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
 * **Modular test dependencies:** manage test setup/teardown code using modular pytest-style fixtures.
 * **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).

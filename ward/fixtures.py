@@ -20,7 +20,6 @@ class Fixture:
         self.fn = fn
         self.gen = None
         self.resolved_val = None
-        self.is_resolved = False
 
     def deps(self):
         return inspect.signature(self.fn).parameters
