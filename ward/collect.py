@@ -44,7 +44,11 @@ def get_tests_in_modules(modules: Iterable, filter: str = "") -> Generator[Test,
         anon_tests: List[Test] = anonymous_tests[mod_name]
         if anon_tests:
             for test in anon_tests:
-                yield test
+                description = test.description or ""
+                if not filter:
+                    yield test
+                elif filter in description or filter in f"{test.module_name}.":
+                    yield test
 
         # Collect named tests from the module
         for item in dir(mod):
