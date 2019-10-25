@@ -154,7 +154,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
             test_name_suffix = ""
 
         if test.description:
-            name_or_desc = f"{test.module_name}, line {test.line_number}: {test.description}"
+            name_or_desc = (
+                f"{test.module_name}, line {test.line_number}: {test.description}"
+            )
         else:
             name_or_desc = test.qualified_name
 
