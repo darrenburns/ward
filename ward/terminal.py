@@ -121,7 +121,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         bg = f"on_{colour}"
         padded_outcome = f" {test_result.outcome.name[:4]} "
         if test_result.test.description:
-            sep = ": "
+            sep = f":{test_result.test.line_number}: "
         else:
             sep = "."
         mod_name = lightblack(f"{test_result.test.module_name}{sep}")
@@ -154,7 +154,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             test_name_suffix = ""
 
         if test.description:
-            name_or_desc = f"{test.module_name}: {test.description}"
+            name_or_desc = f"{test.module_name}, line {test.line_number}: {test.description}"
         else:
             name_or_desc = test.qualified_name
 

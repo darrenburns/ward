@@ -92,6 +92,10 @@ class Test:
         name = self.name or ""
         return f"{self.module_name}.{name}"
 
+    @property
+    def line_number(self):
+        return inspect.getsourcelines(self.fn)[1]
+
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
