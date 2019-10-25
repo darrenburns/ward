@@ -63,18 +63,18 @@ def get_tests_in_modules(modules: Iterable,) -> Generator[Test, None, None]:
                     yield Test(fn=test_fn, module_name=mod_name, marker=marker)
 
 
-def filter_generally(
-    tests: Iterable[Test], filter: str = ""
+def search_generally(
+    tests: Iterable[Test], query: str = ""
 ) -> Generator[Test, None, None]:
-    if not filter:
+    if not query:
         yield from tests
 
     for test in tests:
         description = test.description or ""
         if (
-            filter in description
-            or filter in f"{test.module_name}."
-            or filter in inspect.getsource(test.fn)
-            or filter in test.qualified_name
+            query in description
+            or query in f"{test.module_name}."
+            or query in inspect.getsource(test.fn)
+            or query in test.qualified_name
         ):
             yield test

@@ -100,6 +100,60 @@ def test_my_sum_returns_the_sum_of_the_input_numbers():
     expect(total).equals(3)
 ```
 
+### Test selection 
+
+#### Search and run matching tests with `--search`
+
+You can choose to limit which tests are collected and ran by Ward 
+using the `--search STRING` option. Test names, descriptions *and test function bodies*
+will be searched, and those which contain `STRING` will be ran. Here are
+some examples:
+
+**Run all tests that call the `fetch_users` function:**
+```
+ward --search "fetch_users("
+```
+
+**Run all tests that check if a `ZeroDivisionError` is raised:**
+```
+ward --search "raises(ZeroDivisionError)"
+```
+
+**Run all tests decorated with the `@xfail` decorator:**
+```
+ward --search "@xfail"
+```
+
+**To run a test called `test_the_sky_is_blue`:**
+
+```text
+ward --search test_the_sky_is_blue
+```
+
+**Running tests inside a module:**
+
+The search takes place on the fully qualified name, so you can run a single
+module (e.g. `my_module`) using the following command:
+
+```text
+ward --search my_module.
+```
+
+Of course, if a test name or body contains the string `"my_module."`, that test
+will also be selected and ran. 
+
+This approach is useful for quickly querying tests and running those which match a
+simple query, making it useful for development.
+
+Of course, sometimes you want to be very specific when declaring which tests to run.
+
+#### Specific test selection
+
+Ward will provide an option to query tests on name and description using substring
+or regular expression matching.
+
+(TODO)
+
 ### Dependency injection with fixtures
 
 In the example below, we define a single fixture named `cities`.
@@ -209,26 +263,6 @@ ward --path tests
 
 To run tests in the current directory, you can just type `ward`, which
 is functionally equivalent to `ward --path .`
-
-
-### Filtering tests by name
-
-You can choose to limit which tests are collected and ran by Ward 
-using the `--filter` option. Test names which contain the argument value 
-as a substring will be run, and everything else will be ignored.
-
-To run a test called `test_the_sky_is_blue`:
-
-```text
-ward --filter test_the_sky_is_blue
-```
-
-The match takes place on the fully qualified name, so you can run a single
-module (e.g. `my_module`) using the following command:
-
-```text
-ward --filter my_module.
-```
 
 ### Skipping a test
 
