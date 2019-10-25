@@ -1,5 +1,3 @@
-import os
-import platform
 import sys
 from timeit import default_timer
 
@@ -18,9 +16,6 @@ from ward.terminal import SimpleTestResultWrite
 from ward.util import get_exit_code
 
 init()
-
-if platform.system() == "Windows":
-    os.system("color")
 
 
 @click.command()
