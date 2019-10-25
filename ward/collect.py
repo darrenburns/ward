@@ -38,7 +38,7 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
             yield mod
 
 
-def get_tests_in_modules(modules: Iterable,) -> Generator[Test, None, None]:
+def get_tests_in_modules(modules: Iterable) -> Generator[Test, None, None]:
     for mod in modules:
         mod_name = mod.__name__
         # Collect anonymous tests from the module
