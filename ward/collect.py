@@ -5,7 +5,8 @@ import os
 import pkgutil
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
-from typing import Any, Callable, Generator, Iterable, List
+from pathlib import Path
+from typing import Any, Callable, Generator, Iterable, List, Set
 
 from ward.testing import Marker, Test, WardMeta, anonymous_tests
 
@@ -14,26 +15,26 @@ def is_test_module(module: pkgutil.ModuleInfo) -> bool:
     return module.name.startswith("test_")
 
 
-def get_info_for_modules(paths: List[str]) -> Generator[pkgutil.ModuleInfo, None, None]:
+def get_info_for_modules(paths: List[Path]) -> Generator[pkgutil.ModuleInfo, None, None]:
     # If multiple paths are specified, remove duplicates
     paths = list(set(paths))
 
-    # Check for modules at the root of the specified path (or paths)
-    for module in pkgutil.iter_modules(paths):
-        yield module
+    checked_dirs: Set[Path] = set(p for p in paths)
 
-    # make sure we are not rechecking directories
-    checked_dirs = paths.copy()
+    # Check for modules at the root of the specified path (or paths)
+    for module in pkgutil.iter_modules([str(p) for p in paths]):
+        if is_test_module(module):
+            yield module
 
     # Now check for modules in every subdirectory
     for p in paths:
-        for root, dirs, _ in os.walk(p):
+        for root, dirs, _ in os.walk(str(p)):
             for dir_name in dirs:
-                dir_path = os.path.join(root, dir_name)
+                dir_path = Path(root, dir_name)
                 # if we have seen this directory before, skip it
                 if dir_path not in checked_dirs:
-                    checked_dirs.append(dir_path)
-                    for module in pkgutil.iter_modules([dir_path]):
+                    checked_dirs.add(dir_path)
+                    for module in pkgutil.iter_modules([str(dir_path)]):
                         if is_test_module(module):
                             yield module
 

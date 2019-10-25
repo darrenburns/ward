@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 from timeit import default_timer
 
 import click
@@ -34,7 +35,8 @@ init()
 def run(path, search, fail_limit):
     start_run = default_timer()
 
-    mod_infos = get_info_for_modules(path)
+    paths = [Path(p) for p in path]
+    mod_infos = get_info_for_modules(paths)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules)
     tests = search_generally(unfiltered_tests, query=search)
