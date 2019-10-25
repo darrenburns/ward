@@ -1,4 +1,4 @@
-from ward import expect, fixture, raises
+from ward import expect, fixture, raises, test
 from ward.fixtures import Fixture, FixtureExecutionError, FixtureRegistry
 
 
@@ -10,7 +10,8 @@ def exception_raising_fixture():
     return Fixture(key="fix_a", fn=i_raise_an_exception)
 
 
-def test_fixture_resolve_resolves_tree_correctly():
+@test("Fixture.resolve correctly recurses fixture tree, collecting dependencies")
+def _():
     def grandchild_a():
         return 1
 
@@ -38,14 +39,18 @@ def test_fixture_resolve_resolves_tree_correctly():
     expect(resolved_parent.resolved_val).equals(4)
 
 
-def test_fixture_registry_cache_fixture(exception_raising_fixture):
+@test("FixtureRegistry.cache_fixture can store and retrieve a single fixture")
+def _(exception_raising_fixture):
     registry = FixtureRegistry()
     registry.cache_fixture(exception_raising_fixture)
 
     expect(registry[exception_raising_fixture.key]).equals(exception_raising_fixture)
 
 
-def test_fixture_resolve_raises_FixtureExecutionError_when_fixture_cant_be_executed(exception_raising_fixture):
+@test(
+    "FixtureRegistry.resolve raises FixtureExecutionError when fixture raises an exception"
+)
+def _(exception_raising_fixture):
     registry = FixtureRegistry()
     registry.cache_fixtures([exception_raising_fixture])
 
