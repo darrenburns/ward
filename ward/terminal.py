@@ -2,16 +2,16 @@ import os
 import sys
 import traceback
 from dataclasses import dataclass
-from typing import Generator, List, Optional, Dict
+from typing import Dict, Generator, List, Optional
 
 from colorama import Fore, Style
-from termcolor import colored
+from termcolor import colored, cprint
 
-from ward.diff import build_auto_diff
-from ward.expect import ExpectationFailed
+from ward.diff import make_diff
+from ward.expect import ExpectationFailed, Expected
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
-from ward.util import get_exit_code, ExitCode
+from ward.util import ExitCode, get_exit_code
 
 
 def truncate(s: str, num_chars: int) -> str:
@@ -51,6 +51,8 @@ class TestResultWriterBase:
         for failure in failed_test_results:
             self.output_why_test_failed_header(failure)
             self.output_why_test_failed(failure)
+            self.output_captured_stderr(failure)
+            self.output_captured_stdout(failure)
 
         return all_results
 
@@ -64,7 +66,9 @@ class TestResultWriterBase:
         """
         raise NotImplementedError()
 
-    def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
+    def output_test_result_summary(
+        self, test_results: List[TestResult], time_taken: float
+    ):
         raise NotImplementedError()
 
     def output_why_test_failed(self, test_result: TestResult):
@@ -75,6 +79,12 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
+        raise NotImplementedError()
+
+    def output_captured_stderr(self, test_result: TestResult):
+        raise NotImplementedError()
+
+    def output_captured_stdout(self, test_result: TestResult):
         raise NotImplementedError()
 
 
@@ -110,54 +120,120 @@ class SimpleTestResultWrite(TestResultWriterBase):
         colour = outcome_to_colour[test_result.outcome]
         bg = f"on_{colour}"
         padded_outcome = f" {test_result.outcome.name[:4]} "
-        mod_name = lightblack(f"{test_result.test.module.__name__}.")
-        print(colored(padded_outcome, color="grey", on_color=bg), mod_name + test_result.test.name)
+        if test_result.test.description:
+            sep = f":{test_result.test.line_number}: "
+        else:
+            sep = "."
+        mod_name = lightblack(f"{test_result.test.module_name}{sep}")
+        if (
+            test_result.outcome == TestOutcome.SKIP
+            or test_result.outcome == TestOutcome.XFAIL
+        ):
+            reason = test_result.test.marker.reason or ""
+            if reason:
+                reason = lightblack(f" [{reason}]")
+        else:
+            reason = ""
+
+        if test_result.test.description:
+            name_or_desc = test_result.test.description
+        else:
+            name_or_desc = test_result.test.name
+        print(
+            colored(padded_outcome, color="grey", on_color=bg),
+            mod_name + name_or_desc,
+            reason,
+        )
 
     def output_why_test_failed_header(self, test_result: TestResult):
+        test = test_result.test
+        params_list = ", ".join(lightblack(str(v)) for v in test.deps().keys())
+        if test.has_deps():
+            test_name_suffix = f"({params_list})"
+        else:
+            test_name_suffix = ""
+
+        if test.description:
+            name_or_desc = (
+                f"{test.module_name}, line {test.line_number}: {test.description}"
+            )
+        else:
+            name_or_desc = test.qualified_name
+
         print(
-            colored(" Failure", color="red", attrs=["bold"]),
+            colored(" Failure", color="red"),
             "in",
-            colored(test_result.test.qualified_name, attrs=["bold"]),
+            colored(name_or_desc, attrs=["bold"]),
+            test_name_suffix,
+            "\n",
         )
 
     def output_why_test_failed(self, test_result: TestResult):
-        truncation_chars = self.terminal_size.width - 24
         err = test_result.error
         if isinstance(err, ExpectationFailed):
-            print(f"\n  Given {truncate(repr(err.history[0].this), num_chars=truncation_chars)}")
+            print(
+                f"   Given {truncate(repr(err.history[0].this), num_chars=self.terminal_size.width - 24)}\n"
+            )
 
             for expect in err.history:
-                if expect.success:
-                    result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
-                else:
-                    result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+                self.print_expect_chain_item(expect)
 
-                if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
-                    expect_that = truncate(expect.that.__name__, num_chars=truncation_chars)
-                else:
-                    expect_that = truncate(repr(expect.that), num_chars=truncation_chars)
-                print(f"    {result_marker} it {expect.op} {expect_that}{Style.RESET_ALL}")
-
-            if err.history and err.history[-1].op == "equals":
-                expect = err.history[-1]
-                print(
-                    f"\n  Showing diff of {colored('expected value', color='green')}"
-                    f" vs {colored('actual value', color='red')}:\n"
-                )
-
-                diff = build_auto_diff(expect.that, expect.this, width=truncation_chars)
-                print(diff)
+            last_check = err.history[-1].op  # the check that failed
+            if last_check == "equals":
+                self.print_failure_equals(err)
         else:
-            trace = getattr(err, "__traceback__", "")
-            if trace:
-                trc = traceback.format_exception(None, err, trace)
-                print("".join(trc))
-            else:
-                print(str(err))
+            self.print_traceback(err)
 
         print(Style.RESET_ALL)
 
-    def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
+    def print_failure_equals(self, err):
+        expect = err.history[-1]
+        print(
+            f"\n   Showing diff of {colored('expected value', color='green')}"
+            f" vs {colored('actual value', color='red')}:\n"
+        )
+        diff = make_diff(expect.that, expect.this, width=self.terminal_size.width - 24)
+        print(diff)
+
+    def print_traceback(self, err):
+        trace = getattr(err, "__traceback__", "")
+        if trace:
+            trc = traceback.format_exception(None, err, trace)
+            if err.__cause__:
+                cause = err.__cause__.__class__.__name__
+            else:
+                cause = None
+            for line in trc:
+                sublines = line.split("\n")
+                for subline in sublines:
+                    content = " " * 4 + subline
+                    if subline.lstrip().startswith('File "'):
+                        cprint(content, color="yellow")
+                    else:
+                        print(content)
+        else:
+            print(str(err))
+
+    def print_expect_chain_item(self, expect: Expected):
+        checkbox = self.result_checkbox(expect)
+        that_width = self.terminal_size.width - 32
+        if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
+            expect_that = truncate(expect.that.__name__, num_chars=that_width)
+        else:
+            that = repr(expect.that) if expect.that else ""
+            expect_that = truncate(that, num_chars=that_width)
+        print(f"    {checkbox} it {expect.op} {expect_that}{Style.RESET_ALL}")
+
+    def result_checkbox(self, expect):
+        if expect.success:
+            result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
+        else:
+            result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+        return result_marker
+
+    def output_test_result_summary(
+        self, test_results: List[TestResult], time_taken: float
+    ):
         outcome_counts = self._get_outcome_counts(test_results)
         chart = self.generate_chart(
             num_passed=outcome_counts[TestOutcome.PASS],
@@ -170,9 +246,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         exit_code = get_exit_code(test_results)
         if exit_code == ExitCode.FAILED:
-            result = colored(exit_code.name, color="red", attrs=["bold"])
+            result = colored(exit_code.name, color="red")
         else:
-            result = colored(exit_code.name, color="green", attrs=["bold"])
+            result = colored(exit_code.name, color="green")
         print(
             f"{result} in {time_taken:.2f} seconds [ "
             f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
@@ -181,6 +257,23 @@ class SimpleTestResultWrite(TestResultWriterBase):
             f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
             f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')} ]"
         )
+
+    def output_captured_stderr(self, test_result: TestResult):
+        if test_result.captured_stderr:
+            stderr = colored("standard error", color="red")
+            captured_stderr_lines = test_result.captured_stderr.split("\n")
+            print(f"   Captured {stderr} during test run:\n")
+            for line in captured_stderr_lines:
+                print("    " + line)
+            print()
+
+    def output_captured_stdout(self, test_result: TestResult):
+        if test_result.captured_stdout:
+            stdout = colored("standard output", color="blue")
+            captured_stdout_lines = test_result.captured_stdout.split("\n")
+            print(f"   Captured {stdout} during test run:\n")
+            for line in captured_stdout_lines:
+                print("    " + line)
 
     def generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp):
         num_tests = num_passed + num_failed + num_skipped + num_xfail + num_unexp
@@ -236,11 +329,23 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
         pass
 
-    def _get_outcome_counts(self, test_results: List[TestResult]) -> Dict[TestOutcome, int]:
+    def _get_outcome_counts(
+        self, test_results: List[TestResult]
+    ) -> Dict[TestOutcome, int]:
         return {
-            TestOutcome.PASS: len([r for r in test_results if r.outcome == TestOutcome.PASS]),
-            TestOutcome.FAIL: len([r for r in test_results if r.outcome == TestOutcome.FAIL]),
-            TestOutcome.SKIP: len([r for r in test_results if r.outcome == TestOutcome.SKIP]),
-            TestOutcome.XFAIL: len([r for r in test_results if r.outcome == TestOutcome.XFAIL]),
-            TestOutcome.XPASS: len([r for r in test_results if r.outcome == TestOutcome.XPASS]),
+            TestOutcome.PASS: len(
+                [r for r in test_results if r.outcome == TestOutcome.PASS]
+            ),
+            TestOutcome.FAIL: len(
+                [r for r in test_results if r.outcome == TestOutcome.FAIL]
+            ),
+            TestOutcome.SKIP: len(
+                [r for r in test_results if r.outcome == TestOutcome.SKIP]
+            ),
+            TestOutcome.XFAIL: len(
+                [r for r in test_results if r.outcome == TestOutcome.XFAIL]
+            ),
+            TestOutcome.XPASS: len(
+                [r for r in test_results if r.outcome == TestOutcome.XPASS]
+            ),
         }

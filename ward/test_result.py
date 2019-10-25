@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional
 
-from ward.test import Test
+from ward.testing import Test
 
 
 class TestOutcome(Enum):
@@ -19,3 +19,5 @@ class TestResult:
     outcome: TestOutcome
     error: Optional[Exception] = None
     message: str = ""
+    captured_stdout: str = ""
+    captured_stderr: str = ""

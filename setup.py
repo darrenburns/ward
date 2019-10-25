@@ -3,12 +3,12 @@ from setuptools import setup
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-version = "0.7.0a0"
+version = "0.11.1a0"
 
 setup(
     name="ward",
     version=version,
-    description="A Python 3 test framework.",
+    description="A Python 3 test framework for finding flaws faster.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="http://github.com/darrenburns/ward",
@@ -18,5 +18,10 @@ setup(
     packages=["ward"],
     python_requires=">=3.6",
     entry_points={"console_scripts": ["ward=ward.run:run"]},
-    install_requires=["colorama==0.4.1", "termcolor==1.1.0", "dataclasses==0.6", "click==7.0"],
+    install_requires=[
+        "colorama==0.4.1",
+        "termcolor==1.1.0",
+        "dataclasses==0.6",
+        "click==7.0",
+    ],
 )
