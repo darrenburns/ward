@@ -4,7 +4,7 @@
 
 A modern Python test framework designed to help you find and fix flaws faster.
 
-![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
+![screenshot](screenshot.png)
 
 ## Features
 
