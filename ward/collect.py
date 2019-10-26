@@ -7,7 +7,8 @@ from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from typing import Any, Callable, Generator, Iterable, List
 
-from ward.testing import Marker, Test, WardMeta, anonymous_tests
+from ward.testing import Test, anonymous_tests
+from ward.models import Marker, WardMeta
 
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:

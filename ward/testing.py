@@ -6,29 +6,7 @@ from types import MappingProxyType
 from typing import Callable, Dict, List, Optional
 
 from ward.fixtures import Fixture, FixtureRegistry
-
-
-@dataclass
-class Marker:
-    name: str
-
-
-@dataclass
-class SkipMarker(Marker):
-    name: str = "SKIP"
-    reason: Optional[str] = None
-
-
-@dataclass
-class XfailMarker(Marker):
-    name: str = "XFAIL"
-    reason: Optional[str] = None
-
-
-@dataclass
-class WardMeta:
-    marker: Optional[Marker] = None
-    description: Optional[str] = None
+from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
 
 
 def skip(func_or_reason=None, *, reason: str = None):

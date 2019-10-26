@@ -1,5 +1,8 @@
 import inspect
+from functools import partial, wraps
 from typing import Callable, Dict, Iterable
+
+from ward.models import WardMeta
 
 
 class TestSetupError(Exception):
@@ -78,18 +81,6 @@ class FixtureRegistry:
     def __init__(self):
         self._fixtures: Dict[str, Fixture] = {}
 
-    @property
-    def decorator(self):
-        def wrapper(func):
-            name = func.__name__
-            if name not in self._fixtures:
-                self._fixtures[name] = Fixture(key=name, fn=func)
-            else:
-                raise CollectionError(f"Multiple fixtures named '{func.__name__}'.")
-            return func
-
-        return wrapper
-
     def _get_fixture(self, fixture_name: str) -> Fixture:
         try:
             return self._fixtures[fixture_name]
@@ -114,4 +105,20 @@ class FixtureRegistry:
 
 
 fixture_registry = FixtureRegistry()
-fixture = fixture_registry.decorator
+
+
+def fixture(func=None, *, description=None):
+    if func is None:
+        return partial(fixture, description=description)
+
+    if hasattr(func, "ward_meta"):
+        empty_bound_args = inspect.signature(func).bind_partial()
+        func.ward_meta.bound_args = empty_bound_args
+    else:
+        func.ward_meta = WardMeta()
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper

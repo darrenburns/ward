@@ -1,3 +1,4 @@
+import inspect
 import io
 from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import dataclass
@@ -23,6 +24,17 @@ class Suite:
 
     def generate_test_runs(self) -> Generator[TestResult, None, None]:
         for test in self.tests:
+
+            try:
+                test()
+            except Exception:
+                pass
+            print(vars(test))
+            sig = inspect.signature(test.fn)
+            print(sig)
+            bound_args = sig.bind_partial()
+            bound_args.apply_defaults()
+            print(bound_args)
             marker = test.marker.name if test.marker else None
             if marker == "SKIP":
                 yield TestResult(test, TestOutcome.SKIP)
