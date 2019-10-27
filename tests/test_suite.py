@@ -1,7 +1,7 @@
 from unittest import mock
 
 from ward import expect, fixture
-from ward.fixtures import Fixture, FixtureRegistry
+from ward.fixtures import Fixture, FixtureCache
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
 from ward.testing import Test, test, xfail
@@ -34,16 +34,16 @@ def skipped_test(module):
 
 
 @fixture
-def fixture_registry(fixtures):
-    registry = FixtureRegistry()
-    registry._fixtures = fixtures
-    return registry
+def fixture_cache(fixtures):
+    cache = FixtureCache()
+    cache._fixtures = fixtures
+    return cache
 
 
 @fixture
-def suite(example_test, fixture_registry):
+def suite(example_test, fixture_cache):
     return Suite(
-        tests=[example_test] * NUMBER_OF_TESTS, fixture_registry=fixture_registry
+        tests=[example_test] * NUMBER_OF_TESTS, fixture_cache=fixture_cache
     )
 
 
@@ -83,12 +83,12 @@ def _(suite):
 
 
 @test("Suite.generate_test_runs yields a FAIL TestResult on `assert False`")
-def _(fixture_registry, module):
+def _(fixture_cache, module):
     def test_i_fail():
         assert False
 
     test = Test(fn=test_i_fail, module_name=module)
-    failing_suite = Suite(tests=[test], fixture_registry=fixture_registry)
+    failing_suite = Suite(tests=[test], fixture_cache=fixture_cache)
 
     results = failing_suite.generate_test_runs()
     result = next(results)
@@ -104,8 +104,8 @@ def _(fixture_registry, module):
 @test(
     "Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator "
 )
-def _(fixture_registry, skipped_test, example_test):
-    suite = Suite(tests=[example_test, skipped_test], fixture_registry=fixture_registry)
+def _(fixture_cache, skipped_test, example_test):
+    suite = Suite(tests=[example_test, skipped_test], fixture_cache=fixture_cache)
 
     test_runs = list(suite.generate_test_runs())
     expected_runs = [
@@ -135,12 +135,12 @@ def _(module):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
 
-    reg = FixtureRegistry()
+    reg = FixtureCache()
     reg.cache_fixtures(
         fixtures=[Fixture(key="fix_a", fn=fix_a), Fixture(key="fix_b", fn=fix_b)]
     )
 
-    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_registry=reg)
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=reg)
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
@@ -170,7 +170,7 @@ def _(module):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
 
-    reg = FixtureRegistry()
+    reg = FixtureCache()
     reg.cache_fixtures(
         fixtures=[
             Fixture(key="fix_a", fn=fix_a),
@@ -179,7 +179,7 @@ def _(module):
         ]
     )
 
-    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_registry=reg)
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=reg)
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())

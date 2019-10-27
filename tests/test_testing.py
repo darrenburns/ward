@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 from ward import test, expect, fixture
-from ward.fixtures import FixtureRegistry, Fixture
+from ward.fixtures import FixtureCache, Fixture
 from ward.testing import Test
 
 
@@ -67,12 +67,12 @@ def _(anonymous_test):
 
 @test("Test.resolve_args should return {} when test doesn't use fixtures")
 def _(anonymous_test):
-    expect(anonymous_test.resolve_args(FixtureRegistry())).equals({})
+    expect(anonymous_test.resolve_args(FixtureCache())).equals({})
 
 
 @test("Test.resolve_args should return a map of param names to resolved Fixture")
 def _():
-    reg = FixtureRegistry()
+    reg = FixtureCache()
     val = 1
     fixture = Fixture("my_fixture", lambda: val)
     reg.cache_fixture(fixture)

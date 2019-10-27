@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from inspect import BoundArguments
 from typing import Optional
 
 
@@ -24,4 +23,4 @@ class XfailMarker(Marker):
 class WardMeta:
     marker: Optional[Marker] = None
     description: Optional[str] = None
-    bound_args: Optional[BoundArguments] = None
+    is_fixture: bool = False

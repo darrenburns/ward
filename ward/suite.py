@@ -4,7 +4,7 @@ from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import dataclass
 from typing import Generator, List
 
-from ward.fixtures import FixtureExecutionError, FixtureRegistry
+from ward.fixtures import FixtureExecutionError, FixtureCache
 from ward.test_result import TestOutcome, TestResult
 from ward.testing import Test
 
@@ -12,7 +12,7 @@ from ward.testing import Test
 @dataclass
 class Suite:
     tests: List[Test]
-    fixture_registry: FixtureRegistry
+    fixture_cache: FixtureCache
 
     @property
     def num_tests(self):
@@ -20,21 +20,10 @@ class Suite:
 
     @property
     def num_fixtures(self):
-        return len(self.fixture_registry)
+        return len(self.fixture_cache)
 
     def generate_test_runs(self) -> Generator[TestResult, None, None]:
         for test in self.tests:
-
-            try:
-                test()
-            except Exception:
-                pass
-            print(vars(test))
-            sig = inspect.signature(test.fn)
-            print(sig)
-            bound_args = sig.bind_partial()
-            bound_args.apply_defaults()
-            print(bound_args)
             marker = test.marker.name if test.marker else None
             if marker == "SKIP":
                 yield TestResult(test, TestOutcome.SKIP)
@@ -42,8 +31,11 @@ class Suite:
 
             sout, serr = io.StringIO(), io.StringIO()
             try:
+                # TODO: Move resolution back into capture
+                resolved_fixtures = test.resolve_fixtures()
                 with redirect_stdout(sout), redirect_stderr(serr):
-                    resolved_fixtures = test.resolve_args(self.fixture_registry)
+                    pass
+                    # resolved_fixtures = test.resolve_args(self.fixture_cache)
             except FixtureExecutionError as e:
                 yield TestResult(
                     test,
@@ -57,8 +49,10 @@ class Suite:
                 continue
             try:
                 resolved_vals = {
-                    k: fix.resolved_val for (k, fix) in resolved_fixtures.items()
+                    k: fix.resolved_val for (k, fix) in resolved_fixtures.arguments.items()
                 }
+
+                print("resolved_vals", resolved_vals)
 
                 # Run the test, while capturing output.
                 with redirect_stdout(sout), redirect_stderr(serr):
@@ -89,7 +83,7 @@ class Suite:
             finally:
                 # TODO: Don't just cleanup top-level dependencies, since there may
                 #  be generator fixtures elsewhere in the tree requiring cleanup
-                for fixture in resolved_fixtures.values():
+                for fixture in resolved_fixtures.arguments.values():
                     if fixture.is_generator_fixture:
                         with suppress(RuntimeError, StopIteration):
                             fixture.cleanup()

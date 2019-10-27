@@ -31,7 +31,7 @@ class Fixture:
     def is_generator_fixture(self):
         return inspect.isgeneratorfunction(self.fn)
 
-    def resolve(self, fix_registry) -> "Fixture":
+    def resolve(self, fix_cache) -> "Fixture":
         """Traverse the fixture tree to resolve the value of this fixture"""
 
         # If this fixture has no children, cache and return the resolved value
@@ -46,14 +46,14 @@ class Fixture:
                 raise FixtureExecutionError(
                     f"Unable to execute fixture '{self.key}'"
                 ) from e
-            fix_registry.cache_fixture(self)
+            fix_cache.cache_fixture(self)
             return self
 
         # Otherwise, we have to find the child fixture vals, and call self
         children = self.deps()
         children_resolved = []
         for child in children:
-            child_fixture = fix_registry[child].resolve(fix_registry)
+            child_fixture = fix_cache[child].resolve(fix_cache)
             children_resolved.append(child_fixture)
 
         # We've resolved the values of all child fixtures
@@ -69,7 +69,7 @@ class Fixture:
                 f"Unable to execute fixture '{self.key}'"
             ) from e
 
-        fix_registry.cache_fixture(self)
+        fix_cache.cache_fixture(self)
         return self
 
     def cleanup(self):
@@ -77,7 +77,7 @@ class Fixture:
             next(self.gen)
 
 
-class FixtureRegistry:
+class FixtureCache:
     def __init__(self):
         self._fixtures: Dict[str, Fixture] = {}
 
@@ -88,7 +88,7 @@ class FixtureRegistry:
             raise CollectionError(f"Couldn't find fixture '{fixture_name}'.")
 
     def cache_fixture(self, fixture: Fixture):
-        """Update the fixture in the registry, for example, replace it with its resolved analogue"""
+        """Update the fixture in the cache, for example, replace it with its resolved analogue"""
         # TODO: Caching can be used to implement fixture scoping,
         #  but currently resolved cached fixtures aren't used.
         self._fixtures[fixture.key] = fixture
@@ -104,7 +104,7 @@ class FixtureRegistry:
         return len(self._fixtures)
 
 
-fixture_registry = FixtureRegistry()
+fixture_cache = FixtureCache()
 
 
 def fixture(func=None, *, description=None):
@@ -112,10 +112,9 @@ def fixture(func=None, *, description=None):
         return partial(fixture, description=description)
 
     if hasattr(func, "ward_meta"):
-        empty_bound_args = inspect.signature(func).bind_partial()
-        func.ward_meta.bound_args = empty_bound_args
+        func.ward_meta.is_fixture = True
     else:
-        func.ward_meta = WardMeta()
+        func.ward_meta = WardMeta(is_fixture=True)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
