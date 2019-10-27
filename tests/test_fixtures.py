@@ -40,19 +40,19 @@ def _():
 
 
 @test("FixtureRegistry.cache_fixture can store and retrieve a single fixture")
-def _(exception_raising_fixture):
+def _(f=exception_raising_fixture):
     cache = FixtureCache()
-    cache.cache_fixture(exception_raising_fixture)
+    cache.cache_fixture(f)
 
-    expect(cache[exception_raising_fixture.key]).equals(exception_raising_fixture)
+    expect(cache[f.key]).equals(f)
 
 
 @test(
     "FixtureRegistry.resolve raises FixtureExecutionError when fixture raises an exception"
 )
-def _(exception_raising_fixture):
+def _(f=exception_raising_fixture):
     cache = FixtureCache()
-    cache.cache_fixtures([exception_raising_fixture])
+    cache.cache_fixtures([f])
 
     with raises(FixtureExecutionError):
-        exception_raising_fixture.resolve(cache)
+        f.resolve(cache)

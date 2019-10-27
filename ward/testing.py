@@ -111,7 +111,7 @@ class Test:
         #  always pull it further up in scope if necessary.
         fixture_cache = FixtureCache()
 
-        resolved_args = {}
+        resolved_args: Dict[str, Fixture] = {}
         for name, arg in default_binding.arguments.items():
             if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
                 resolved = self._resolve_single_fixture(arg, fixture_cache)
@@ -121,7 +121,7 @@ class Test:
 
         return signature.bind_partial(**resolved_args)
 
-    def _resolve_single_fixture(self, fixture: Callable, cache: FixtureCache) -> Any:
+    def _resolve_single_fixture(self, fixture: Callable, cache: FixtureCache) -> Fixture:
         deps = inspect.signature(fixture)
         has_deps = len(deps.parameters) > 0
         key = self._get_cache_key(fixture)

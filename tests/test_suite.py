@@ -119,7 +119,7 @@ def _(fixture_cache, skipped_test, example_test):
 @test(
     "Suite.generate_test_runs runs fixture teardown code is ran in the expected order"
 )
-def _(module):
+def _(module=module):
     events = []
 
     def fix_a():
@@ -131,7 +131,7 @@ def _(module):
         events.append(2)
         return "b"
 
-    def my_test(fix_a, fix_b):
+    def my_test(fix_a=fix_a, fix_b=fix_b):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
 
