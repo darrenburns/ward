@@ -1,8 +1,9 @@
 import functools
 import inspect
+from collections import defaultdict
 from dataclasses import dataclass
-from types import MappingProxyType, ModuleType
-from typing import Callable, Dict, Optional
+from types import MappingProxyType
+from typing import Callable, Dict, List, Optional
 
 from ward.fixtures import Fixture, FixtureRegistry
 
@@ -27,6 +28,7 @@ class XfailMarker(Marker):
 @dataclass
 class WardMeta:
     marker: Optional[Marker] = None
+    description: Optional[str] = None
 
 
 def skip(func_or_reason=None, *, reason: str = None):
@@ -37,7 +39,11 @@ def skip(func_or_reason=None, *, reason: str = None):
         return functools.partial(skip, reason=func_or_reason)
 
     func = func_or_reason
-    func.ward_meta = WardMeta(marker=SkipMarker(reason=reason))
+    marker = SkipMarker(reason=reason)
+    if hasattr(func, "ward_meta"):
+        func.ward_meta.marker = marker
+    else:
+        func.ward_meta = WardMeta(marker=marker)
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -46,11 +52,19 @@ def skip(func_or_reason=None, *, reason: str = None):
     return wrapper
 
 
-def xfail(func=None, *, reason: str = None):
-    if func is None:
+def xfail(func_or_reason=None, *, reason: str = None):
+    if func_or_reason is None:
         return functools.partial(xfail, reason=reason)
 
-    func.ward_meta = WardMeta(marker=XfailMarker(reason=reason))
+    if isinstance(func_or_reason, str):
+        return functools.partial(xfail, reason=func_or_reason)
+
+    func = func_or_reason
+    marker = XfailMarker(reason=reason)
+    if hasattr(func, "ward_meta"):
+        func.ward_meta.marker = marker
+    else:
+        func.ward_meta = WardMeta(marker=marker)
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -62,8 +76,9 @@ def xfail(func=None, *, reason: str = None):
 @dataclass
 class Test:
     fn: Callable
-    module: ModuleType
+    module_name: str
     marker: Optional[Marker] = None
+    description: Optional[str] = None
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)
@@ -74,7 +89,12 @@ class Test:
 
     @property
     def qualified_name(self):
-        return f"{self.module.__name__}.{self.name}"
+        name = self.name or ""
+        return f"{self.module_name}.{name}"
+
+    @property
+    def line_number(self):
+        return inspect.getsourcelines(self.fn)[1]
 
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
@@ -95,3 +115,30 @@ class Test:
             resolved_args[fixture_name] = resolved_arg
 
         return resolved_args
+
+
+# Tests declared with the name _, and with the @test decorator
+# have to be stored in here, so that they can later be retrieved.
+# They cannot be retrieved directly from the module due to name
+# clashes. When we're later looking for tests inside the module,
+# we can retrieve any anonymous tests from this dict.
+anonymous_tests: Dict[str, List[Callable]] = defaultdict(list)
+
+
+def test(description: str):
+    def decorator_test(func):
+        if func.__name__ == "_":
+            mod_name = func.__module__
+            if hasattr(func, "ward_meta"):
+                func.ward_meta.description = description
+            else:
+                func.ward_meta = WardMeta(description=description)
+            anonymous_tests[mod_name].append(func)
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator_test
