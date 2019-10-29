@@ -192,10 +192,37 @@ def _(module=module):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
 
-
     suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=Mock())
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
 
     expect(events).equals([1, 2, 3, 4])
+
+
+@test("Suite.generate_test_runs cached fixture isn't executed again")
+@xfail("Bug: cache isn't used yet")
+def _(module=module):
+    events = []
+
+    @fixture
+    def a():
+        events.append(1)
+
+    # Both of the tests below depend on 'a', but 'a' should only be executed once.
+    @fixture
+    def b(a=a):
+        events.append(2)
+
+    @fixture
+    def c(a=a):
+        events.append(3)
+
+    def test(b=b, c=c):
+        pass
+
+    suite = Suite(tests=[Test(fn=test, module_name=module)], fixture_cache=Mock())
+
+    list(suite.generate_test_runs())
+
+    expect(events).equals([1, 2, 3])
