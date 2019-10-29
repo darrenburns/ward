@@ -1,3 +1,4 @@
+import traceback
 from unittest import mock
 
 from ward import expect, fixture
@@ -40,8 +41,12 @@ def fixtures(a=fixture_a, b=fixture_b):
 
 
 @fixture
-def example_test(module=module, fixtures=fixtures, a=fixture_a):
-    def t(fix_a=a):
+def example_test(module=module, fixtures=fixtures):
+    @fixture
+    def f():
+        return 123
+
+    def t(fix_a=f):
         return fix_a
 
     return Test(fn=t, module_name=module)
@@ -92,13 +97,11 @@ def _(suite=suite):
 @test("Suite.generate_test_runs generates yields the expected test results")
 def _(suite=suite):
     results = list(suite.generate_test_runs())
-
-    expect(results).equals(
-        [
-            TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
-            for test in suite.tests
-        ]
-    )
+    expected = [
+        TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
+        for test in suite.tests
+    ]
+    expect(results).equals(expected)
 
 
 @test("Suite.generate_test_runs yields a FAIL TestResult on `assert False`")
@@ -141,11 +144,13 @@ def _(fixture_cache=fixture_cache, skipped=skipped_test, example=example_test):
 def _(module=module):
     events = []
 
+    @fixture
     def fix_a():
         events.append(1)
         yield "a"
         events.append(3)
 
+    @fixture
     def fix_b():
         events.append(2)
         return "b"
@@ -154,12 +159,12 @@ def _(module=module):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
 
-    reg = FixtureCache()
-    reg.cache_fixtures(
+    cache = FixtureCache()
+    cache.cache_fixtures(
         fixtures=[Fixture(key="fix_a", fn=fix_a), Fixture(key="fix_b", fn=fix_b)]
     )
 
-    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=reg)
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=cache)
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
@@ -172,15 +177,18 @@ def _(module=module):
 def _(module=module):
     events = []
 
+    @fixture
     def fix_a():
         events.append(1)
         yield "a"
         events.append(3)
 
+    @fixture
     def fix_b():
         events.append(2)
         return "b"
 
+    @fixture
     def fix_c(fix_a=fix_a):
         yield "c"
         events.append(4)

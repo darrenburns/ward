@@ -12,16 +12,20 @@ def exception_raising_fixture():
 
 @test("Fixture.resolve correctly recurses fixture tree, collecting dependencies")
 def _():
+    @fixture
     def grandchild_a():
         return 1
 
+    @fixture
     def child_b():
         return 1
 
-    def child_a(grandchild_a):
+    @fixture
+    def child_a(grandchild_a=grandchild_a):
         return grandchild_a + 1
 
-    def parent(child_a, child_b):
+    @fixture
+    def parent(child_a=child_a, child_b=child_b):
         return child_a + child_b + 1
 
     grandchild_a_fix = Fixture(key="grandchild_a", fn=grandchild_a)

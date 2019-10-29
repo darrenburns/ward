@@ -31,8 +31,9 @@ class Suite:
 
             sout, serr = io.StringIO(), io.StringIO()
             try:
+                resolved_fixtures = test.resolve_fixtures()
                 with redirect_stdout(sout), redirect_stderr(serr):
-                    resolved_fixtures = test.resolve_fixtures()
+                    pass
             except FixtureExecutionError as e:
                 yield TestResult(
                     test,
@@ -46,7 +47,7 @@ class Suite:
                 continue
             try:
                 resolved_vals = {
-                    k: fix.resolved_val for (k, fix) in resolved_fixtures.arguments.items()
+                    k: fix.resolved_val for (k, fix) in resolved_fixtures.items()
                 }
 
                 # Run the test, while capturing output.
@@ -78,8 +79,7 @@ class Suite:
             finally:
                 # TODO: Don't just cleanup top-level dependencies, since there may
                 #  be generator fixtures elsewhere in the tree requiring cleanup
-
-                for fixture in resolved_fixtures.arguments.values():
+                for fixture in resolved_fixtures.values():
                     if inspect.isgeneratorfunction(fixture):
                         print(fixture)
                         with suppress(RuntimeError, StopIteration):

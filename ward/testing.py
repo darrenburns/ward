@@ -94,7 +94,7 @@ class Test:
 
         return resolved_args
 
-    def resolve_fixtures(self) -> inspect.BoundArguments:
+    def resolve_fixtures(self) -> Dict[str, Fixture]:
         """
         Resolve fixtures and return the resultant BoundArguments
         formed by partially binding resolved fixture values.
@@ -102,7 +102,7 @@ class Test:
         signature = inspect.signature(self.fn)
         default_binding = signature.bind_partial()
         if not self.has_deps():
-            return default_binding
+            return {}
 
         default_binding.apply_defaults()
 
@@ -118,8 +118,7 @@ class Test:
             else:
                 resolved = arg
             resolved_args[name] = resolved
-
-        return signature.bind_partial(**resolved_args)
+        return resolved_args
 
     def _resolve_single_fixture(self, fixture: Callable, cache: FixtureCache) -> Fixture:
         deps = inspect.signature(fixture)
