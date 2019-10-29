@@ -1,9 +1,9 @@
 import io
-from contextlib import redirect_stderr, redirect_stdout, suppress
+from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from typing import Generator, List
 
-from ward.fixtures import FixtureExecutionError, FixtureRegistry
+from ward.fixtures import FixtureExecutionError
 from ward.test_result import TestOutcome, TestResult
 from ward.testing import Test
 
@@ -11,15 +11,10 @@ from ward.testing import Test
 @dataclass
 class Suite:
     tests: List[Test]
-    fixture_registry: FixtureRegistry
 
     @property
     def num_tests(self):
         return len(self.tests)
-
-    @property
-    def num_fixtures(self):
-        return len(self.fixture_registry)
 
     def generate_test_runs(self) -> Generator[TestResult, None, None]:
         for test in self.tests:
@@ -31,7 +26,7 @@ class Suite:
             sout, serr = io.StringIO(), io.StringIO()
             try:
                 with redirect_stdout(sout), redirect_stderr(serr):
-                    resolved_fixtures = test.resolve_args(self.fixture_registry)
+                    resolved_fixtures = test.resolve_fixtures()
             except FixtureExecutionError as e:
                 yield TestResult(
                     test,
@@ -75,12 +70,7 @@ class Suite:
                         captured_stderr=serr.getvalue(),
                     )
             finally:
-                # TODO: Don't just cleanup top-level dependencies, since there may
-                #  be generator fixtures elsewhere in the tree requiring cleanup
-                for fixture in resolved_fixtures.values():
-                    if fixture.is_generator_fixture:
-                        with suppress(RuntimeError, StopIteration):
-                            fixture.cleanup()
+                test.fixture_cache.teardown_all()
 
                 sout.close()
                 serr.close()

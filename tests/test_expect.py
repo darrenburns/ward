@@ -148,7 +148,7 @@ def isclose():
 
 
 @test("approx calls `math.isclose` with the expected args")
-def _(isclose):
+def _(isclose=isclose):
     this, that = 1.0, 1.1
     abs_tol, rel_tol = 0.1, 0.2
 
@@ -158,7 +158,7 @@ def _(isclose):
 
 
 @test("not_approx calls `math.isclose` with the expected args")
-def _(isclose):
+def _(isclose=isclose):
     this, that = 1.0, 1.2
     abs_tol = 0.01
 
@@ -204,7 +204,7 @@ def mock():
 
 
 @test("expect.called records history when the mock was called")
-def _(mock):
+def _(mock=mock):
     mock()
     e = expect(mock).called()
 
@@ -217,7 +217,7 @@ def _(mock):
 @test(
     "expect.called records history and raises ExpectationFailed when mock was not called"
 )
-def _(mock):
+def _(mock=mock):
     e = expect(mock)
     with raises(ExpectationFailed):
         e.called()
@@ -229,13 +229,11 @@ def _(mock):
 
 
 @test("expect.not_called records history, even when the mock wasn't called")
-def _(mock):
-    e = expect(mock).not_called()
+def _(m=mock):
+    e = expect(m).not_called()
 
     hist = [
-        Expected(
-            mock, op="not_called", that=None, op_args=(), op_kwargs={}, success=True
-        )
+        Expected(m, op="not_called", that=None, op_args=(), op_kwargs={}, success=True)
     ]
     expect(e.history).equals(hist)
 
@@ -243,16 +241,16 @@ def _(mock):
 @test(
     "called_once_with records history when the mock was called as expected exactly once"
 )
-def _(mock):
+def _(m=mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
-    mock(*args, **kwargs)
+    m(*args, **kwargs)
 
-    e = expect(mock).called_once_with(*args, **kwargs)
+    e = expect(m).called_once_with(*args, **kwargs)
 
     hist = [
         Expected(
-            mock,
+            m,
             op="called_once_with",
             that=None,
             op_args=args,
@@ -264,18 +262,18 @@ def _(mock):
 
 
 @test("called_once_with records history and raises when positional arg missing")
-def _(mock):
+def _(m=mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
-    mock(1, 2, **kwargs)  # 3 is missing intentionally
+    m(1, 2, **kwargs)  # 3 is missing intentionally
 
-    e = expect(mock)
+    e = expect(m)
     with raises(ExpectationFailed):
         e.called_once_with(*args, **kwargs)
 
     hist = [
         Expected(
-            mock,
+            m,
             op="called_once_with",
             that=None,
             op_args=args,
@@ -287,18 +285,18 @@ def _(mock):
 
 
 @test("called_once_with records history and raises when kwarg missing")
-def _(mock):
+def _(m: Mock = mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
-    mock(*args, wrong="thing")
+    m(*args, wrong="thing")
 
-    e = expect(mock)
+    e = expect(m)
     with raises(ExpectationFailed):
         e.called_once_with(*args, **kwargs)
 
     hist = [
         Expected(
-            mock,
+            m,
             op="called_once_with",
             that=None,
             op_args=args,
@@ -312,7 +310,7 @@ def _(mock):
 @test(
     "called_once_with records history and raises when the expected call is made more than once"
 )
-def _(mock):
+def _(mock=mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
 
@@ -337,7 +335,7 @@ def _(mock):
 
 
 @test("called_once_with records history and raises when multiple calls made")
-def _(mock):
+def _(mock=mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
 
@@ -363,7 +361,7 @@ def _(mock):
 
 
 @test("called_with records history when the expected call is the most recent one")
-def _(mock):
+def _(mock=mock):
     mock(1)
     mock(2)
 
@@ -374,7 +372,7 @@ def _(mock):
 @test(
     "called_with records history and raises when expected call was made before other calls"
 )
-def _(mock):
+def _(mock=mock):
     mock(2)
     mock(1)
     e = expect(mock)
@@ -384,7 +382,7 @@ def _(mock):
 
 
 @test("has_calls records history when all expected calls were made")
-def _(mock):
+def _(mock=mock):
     mock(1, 2)
     mock(key="value")
 
@@ -393,7 +391,8 @@ def _(mock):
 
 
 @test("has_calls records history and raises when not all expected calls were made")
-def _(mock):
+def _(mock=mock):
+    print(mock.call_args_list)
     mock(1, 2)
 
     e = expect(mock)
@@ -403,7 +402,8 @@ def _(mock):
 
 
 @test("has_calls raises when the expected calls were made in the wrong order")
-def _(mock):
+def _(mock=mock):
+    print(mock.call_args_list)
     mock(1, 2)
     mock(key="value")
 
@@ -415,7 +415,7 @@ def _(mock):
 @test(
     "has_calls(any_order=True) records history when the calls were made in the wrong order"
 )
-def _(mock):
+def _(mock=mock):
     mock(1, 2)
     mock(key="value")
 

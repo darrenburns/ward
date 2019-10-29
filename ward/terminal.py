@@ -33,7 +33,7 @@ class TestResultWriterBase:
         all_results = []
         failed_test_results = []
         print(
-            f"Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures "
+            f"Ward collected {self.suite.num_tests} tests "
             f"in {time_to_collect:.2f} seconds.\n"
         )
         for result in test_results_gen:
