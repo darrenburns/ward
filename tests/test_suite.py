@@ -1,8 +1,7 @@
 from unittest import mock
-from unittest.mock import Mock
 
 from ward import expect, fixture
-from ward.fixtures import Fixture, FixtureCache
+from ward.fixtures import Fixture
 from ward.models import SkipMarker
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
@@ -58,16 +57,9 @@ def skipped_test(module=module):
 
 
 @fixture
-def fixture_cache(fixtures=fixtures):
-    cache = FixtureCache()
-    cache._fixtures = fixtures
-    return cache
-
-
-@fixture
-def suite(example_test=example_test, fixture_cache=fixture_cache):
+def suite(example_test=example_test):
     return Suite(
-        tests=[example_test] * NUMBER_OF_TESTS, fixture_cache=fixture_cache
+        tests=[example_test] * NUMBER_OF_TESTS,
     )
 
 
@@ -76,13 +68,6 @@ def suite(example_test=example_test, fixture_cache=fixture_cache):
 )
 def _(suite=suite):
     expect(suite.num_tests).equals(NUMBER_OF_TESTS)
-
-
-@test(
-    f"Suite.num_fixtures returns {len(fixtures())}, when the suite has {len(fixtures())} fixtures"
-)
-def _(suite=suite, fixtures=fixtures):
-    expect(suite.num_fixtures).equals(len(fixtures))
 
 
 @test(
@@ -105,12 +90,12 @@ def _(suite=suite):
 
 
 @test("Suite.generate_test_runs yields a FAIL TestResult on `assert False`")
-def _(fixture_cache=fixture_cache, module=module):
+def _(module=module):
     def test_i_fail():
         assert False
 
     test = Test(fn=test_i_fail, module_name=module)
-    failing_suite = Suite(tests=[test], fixture_cache=fixture_cache)
+    failing_suite = Suite(tests=[test])
 
     results = failing_suite.generate_test_runs()
     result = next(results)
@@ -126,8 +111,8 @@ def _(fixture_cache=fixture_cache, module=module):
 @test(
     "Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator "
 )
-def _(fixture_cache=fixture_cache, skipped=skipped_test, example=example_test):
-    suite = Suite(tests=[example, skipped], fixture_cache=fixture_cache)
+def _(skipped=skipped_test, example=example_test):
+    suite = Suite(tests=[example, skipped])
 
     test_runs = list(suite.generate_test_runs())
     expected_runs = [
@@ -159,7 +144,7 @@ def _(module=module):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
 
-    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=Mock())
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
@@ -192,7 +177,7 @@ def _(module=module):
         expect(fix_a).equals("a")
         expect(fix_c).equals("c")
 
-    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=Mock())
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
@@ -220,7 +205,7 @@ def _(module=module):
     def test(b=b, c=c):
         pass
 
-    suite = Suite(tests=[Test(fn=test, module_name=module)], fixture_cache=Mock())
+    suite = Suite(tests=[Test(fn=test, module_name=module)])
 
     list(suite.generate_test_runs())
 

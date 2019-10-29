@@ -3,7 +3,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from typing import Generator, List
 
-from ward.fixtures import FixtureExecutionError, FixtureCache
+from ward.fixtures import FixtureExecutionError
 from ward.test_result import TestOutcome, TestResult
 from ward.testing import Test
 
@@ -11,15 +11,10 @@ from ward.testing import Test
 @dataclass
 class Suite:
     tests: List[Test]
-    fixture_cache: FixtureCache
 
     @property
     def num_tests(self):
         return len(self.tests)
-
-    @property
-    def num_fixtures(self):
-        return len(self.fixture_cache)
 
     def generate_test_runs(self) -> Generator[TestResult, None, None]:
         for test in self.tests:

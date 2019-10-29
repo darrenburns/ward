@@ -42,7 +42,7 @@ def run(path, search, fail_limit):
     tests = search_generally(unfiltered_tests, query=search)
     time_to_collect = default_timer() - start_run
 
-    suite = Suite(tests=list(tests), fixture_cache=fixture_cache)
+    suite = Suite(tests=list(tests))
     test_results = suite.generate_test_runs()
 
     writer = SimpleTestResultWrite(suite=suite)
