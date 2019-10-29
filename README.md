@@ -1,8 +1,7 @@
 # Ward
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
-
 ![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
-[![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
+[![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A modern Python test framework designed to help you find and fix flaws faster.
 
