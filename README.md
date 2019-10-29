@@ -1,4 +1,5 @@
 # Ward
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
@@ -60,6 +61,52 @@ Contributions are very welcome and encouraged!
 See the [contributing guide](.github/CONTRIBUTING.md) for information on how you can take part in the development of Ward.
 
 ## More Examples
+
+### Dependency injection with fixtures
+
+In the example below, we define a single fixture named `city_list`.
+We can supply this fixture as a default argument to a test, and Ward will resolve
+it and inject the value into the test. Unlike pytest, Ward doesn't rely
+on the parameter name matching the name of the fixture, and instead lets you make
+use of Python's import machinery to specify which fixture you want to
+inject.
+
+```python
+from ward import test, expect, fixture
+
+@fixture
+def city_list():
+    return ["Glasgow", "Edinburgh"]
+    
+@test("'Glasgow' should be contained in the list of cities")
+def _(cities=city_list):
+    expect("Glasgow").contained_in(cities)
+```
+
+The fixture will be executed each time it gets injected into a test.
+
+Fixtures are great for extracting common setup code that you'd otherwise need to repeat at the top of your tests, 
+but they can also execute teardown code:
+
+```python
+from ward import test, expect, fixture
+
+@fixture
+def database():
+    db_conn = setup_database()
+    yield db_conn
+    db_conn.close()
+
+
+@test(f"Bob is one of the users contained in the database")
+def _(db=database):
+    # The database connection can be used in this test,
+    # and will be closed after the test has completed.
+    users = get_all_users(db)
+    expect(users).contains("Bob")
+```
+
+The code below the `yield` statement in a fixture will be executed after the test runs. 
 
 ### Descriptive testing
 
@@ -156,51 +203,6 @@ or regular expression matching.
 
 (TODO)
 
-### Dependency injection with fixtures
-
-In the example below, we define a single fixture named `city_list`.
-We can supply this fixture as a default argument to a test, and Ward will resolve
-it and inject the value into the test. Unlike pytest, Ward doesn't rely
-on the parameter name matching the name of the fixture, and instead lets you make
-use of Python's import machinery to specify which fixture you want to
-inject.
-
-```python
-from ward import test, expect, fixture
-
-@fixture
-def city_list():
-    return ["Glasgow", "Edinburgh"]
-    
-@test("'Glasgow' should be contained in the list of cities")
-def _(cities=city_list):
-    expect("Glasgow").contained_in(cities)
-```
-
-The fixture will be executed each time it gets injected into a test.
-
-Fixtures are great for extracting common setup code that you'd otherwise need to repeat at the top of your tests, 
-but they can also execute teardown code:
-
-```python
-from ward import test, expect, fixture
-
-@fixture
-def database():
-    db_conn = setup_database()
-    yield db_conn
-    db_conn.close()
-
-
-@test(f"Bob is one of the users contained in the database")
-def _(db=database):
-    # The database connection can be used in this test,
-    # and will be closed after the test has completed.
-    users = get_all_users(db)
-    expect(users).contains("Bob")
-```
-
-The code below the `yield` statement in a fixture will be executed after the test runs. 
 
 ### The `expect` API
 
@@ -319,3 +321,23 @@ you can use the `--fail-limit` option. To have a run end immediately after 5 tes
 ```text
 ward --fail-limit 5
 ```
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://darrenburns.net"><img src="https://avatars0.githubusercontent.com/u/5740731?v=4" width="60px;" alt="Darren Burns"/><br /><sub><b>Darren Burns</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=darrenburns" title="Code">💻</a> <a href="https://github.com/darrenburns/ward/commits?author=darrenburns" title="Documentation">📖</a> <a href="#ideas-darrenburns" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-darrenburns" title="Reviewed Pull Requests">👀</a> <a href="https://github.com/darrenburns/ward/issues?q=author%3Adarrenburns" title="Bug reports">🐛</a> <a href="#example-darrenburns" title="Examples">💡</a></td>
+    <td align="center"><a href="https://github.com/khusrokarim"><img src="https://avatars0.githubusercontent.com/u/1615476?v=4" width="60px;" alt="khusrokarim"/><br /><sub><b>khusrokarim</b></sub></a><br /><a href="#ideas-khusrokarim" title="Ideas, Planning, & Feedback">🤔</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-enable -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
