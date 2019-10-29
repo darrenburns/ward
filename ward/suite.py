@@ -1,4 +1,3 @@
-import inspect
 import io
 from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import dataclass
