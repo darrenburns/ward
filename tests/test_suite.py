@@ -201,7 +201,6 @@ def _(module=module):
 
 
 @test("Suite.generate_test_runs cached fixture isn't executed again")
-@xfail("Bug: cache isn't used yet")
 def _(module=module):
     events = []
 

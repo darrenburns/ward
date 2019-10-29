@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Callable, Dict, List, Optional, Any
 
-from ward.fixtures import Fixture, FixtureCache, FixtureExecutionError
+from ward.fixtures import Fixture, FixtureCache, FixtureExecutionError, get_cache_key_for_func
 from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
 
 
@@ -121,9 +121,12 @@ class Test:
         return resolved_args
 
     def _resolve_single_fixture(self, fixture: Callable, cache: FixtureCache) -> Fixture:
+        key = get_cache_key_for_func(fixture)
+        if key in cache:
+            return cache[key]
+
         deps = inspect.signature(fixture)
         has_deps = len(deps.parameters) > 0
-        key = self._get_cache_key(fixture)
         f = Fixture(key, fixture)
         is_generator = inspect.isgeneratorfunction(inspect.unwrap(fixture))
         if not has_deps:
@@ -148,7 +151,7 @@ class Test:
             child_resolved = self._resolve_single_fixture(child_fixture, cache)
             children_resolved[name] = child_resolved
         try:
-            if inspect.isgeneratorfunction(fixture):
+            if is_generator:
                 f.gen = fixture(**self._resolve_fixture_values(children_resolved))
                 f.resolved_val = next(f.gen)
             else:
@@ -158,12 +161,8 @@ class Test:
                 f"Unable to execute fixture '{f.key}'"
             ) from e
 
+        cache.cache_fixture(f)
         return f
-
-    def _get_cache_key(self, fixture: Callable):
-        path = inspect.getfile(fixture)
-        name = fixture.__name__
-        return f"{path}::{name}"
 
     def _resolve_fixture_values(self, fixture_dict: Dict[str, Fixture]) -> Dict[str, Any]:
         return {

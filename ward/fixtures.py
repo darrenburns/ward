@@ -97,6 +97,9 @@ class FixtureCache:
         for fixture in fixtures:
             self.cache_fixture(fixture)
 
+    def __contains__(self, key: str):
+        return key in self._fixtures
+
     def __getitem__(self, item):
         return self._fixtures[item]
 
@@ -124,3 +127,9 @@ def fixture(func=None, *, description=None):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def get_cache_key_for_func(fixture: Callable):
+    path = inspect.getfile(fixture)
+    name = fixture.__name__
+    return f"{path}::{name}"
