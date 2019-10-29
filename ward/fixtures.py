@@ -29,7 +29,7 @@ class Fixture:
 
     @property
     def is_generator_fixture(self):
-        return inspect.isgeneratorfunction(self.fn)
+        return inspect.isgeneratorfunction(inspect.unwrap(self.fn))
 
     def resolve(self, fix_cache) -> "Fixture":
         """Traverse the fixture tree to resolve the value of this fixture"""

@@ -80,7 +80,7 @@ class Suite:
                 # TODO: Don't just cleanup top-level dependencies, since there may
                 #  be generator fixtures elsewhere in the tree requiring cleanup
                 for fixture in resolved_fixtures.values():
-                    if inspect.isgeneratorfunction(fixture):
+                    if fixture.is_generator_fixture:
                         print(fixture)
                         with suppress(RuntimeError, StopIteration):
                             fixture.cleanup()
