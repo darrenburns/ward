@@ -233,9 +233,7 @@ def _(m=mock):
     e = expect(m).not_called()
 
     hist = [
-        Expected(
-            m, op="not_called", that=None, op_args=(), op_kwargs={}, success=True
-        )
+        Expected(m, op="not_called", that=None, op_args=(), op_kwargs={}, success=True)
     ]
     expect(e.history).equals(hist)
 

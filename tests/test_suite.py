@@ -58,9 +58,7 @@ def skipped_test(module=module):
 
 @fixture
 def suite(example_test=example_test):
-    return Suite(
-        tests=[example_test] * NUMBER_OF_TESTS,
-    )
+    return Suite(tests=[example_test] * NUMBER_OF_TESTS)
 
 
 @test(
@@ -123,9 +121,7 @@ def _(skipped=skipped_test, example=example_test):
     expect(test_runs).equals(expected_runs)
 
 
-@test(
-    "Suite.generate_test_runs fixture teardown code is ran in the expected order"
-)
+@test("Suite.generate_test_runs fixture teardown code is ran in the expected order")
 def _(module=module):
     events = []
 

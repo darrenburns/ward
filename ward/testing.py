@@ -5,7 +5,12 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Callable, Dict, List, Optional, Any
 
-from ward.fixtures import Fixture, FixtureCache, FixtureExecutionError, get_cache_key_for_func
+from ward.fixtures import (
+    Fixture,
+    FixtureCache,
+    FixtureExecutionError,
+    get_cache_key_for_func,
+)
 from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
 
 
@@ -58,7 +63,6 @@ class Test:
     fixture_cache: FixtureCache = field(default_factory=FixtureCache)
     marker: Optional[Marker] = None
     description: Optional[str] = None
-
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)
@@ -154,18 +158,18 @@ class Test:
                 f.gen = fixture(**self._resolve_fixture_values(children_resolved))
                 f.resolved_val = next(f.gen)
             else:
-                f.resolved_val = fixture(**self._resolve_fixture_values(children_resolved))
+                f.resolved_val = fixture(
+                    **self._resolve_fixture_values(children_resolved)
+                )
         except Exception as e:
-            raise FixtureExecutionError(
-                f"Unable to execute fixture '{f.key}'"
-            ) from e
+            raise FixtureExecutionError(f"Unable to execute fixture '{f.key}'") from e
         self.fixture_cache.cache_fixture(f)
         return f
 
-    def _resolve_fixture_values(self, fixture_dict: Dict[str, Fixture]) -> Dict[str, Any]:
-        return {
-            key: f.resolved_val for key, f in fixture_dict.items()
-        }
+    def _resolve_fixture_values(
+        self, fixture_dict: Dict[str, Fixture]
+    ) -> Dict[str, Any]:
+        return {key: f.resolved_val for key, f in fixture_dict.items()}
 
     def teardown_fixtures_in_cache(self):
         self.fixture_cache.teardown_all()
