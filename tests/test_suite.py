@@ -192,16 +192,8 @@ def _(module=module):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
 
-    reg = FixtureCache()
-    reg.cache_fixtures(
-        fixtures=[
-            Fixture(key="fix_a", fn=fix_a),
-            Fixture(key="fix_b", fn=fix_b),
-            Fixture(key="fix_c", fn=fix_c),
-        ]
-    )
 
-    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=reg)
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=Mock())
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
