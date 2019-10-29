@@ -1,5 +1,5 @@
-import traceback
 from unittest import mock
+from unittest.mock import Mock
 
 from ward import expect, fixture
 from ward.fixtures import Fixture, FixtureCache
@@ -159,12 +159,7 @@ def _(module=module):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
 
-    cache = FixtureCache()
-    cache.cache_fixtures(
-        fixtures=[Fixture(key="fix_a", fn=fix_a), Fixture(key="fix_b", fn=fix_b)]
-    )
-
-    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=cache)
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=Mock())
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
