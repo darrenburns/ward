@@ -12,10 +12,11 @@ A modern Python test framework designed to help you find and fix flaws faster.
 This project is a work in progress. Some of the features that are currently available in a basic form are listed below.
 
 * **Descriptive test names:** describe what your tests do using strings, not function names.
+* **Modular test dependencies:** manage test setup/teardown code using fixtures that rely on Python's import system, not
+name matching.
 * **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
 * **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
-* **Modular test dependencies:** manage test setup/teardown code using modular pytest-style fixtures.
 * **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
 * **Cross platform:** Tested on Mac OS, Linux, and Windows.
 * **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
@@ -157,20 +158,22 @@ or regular expression matching.
 
 ### Dependency injection with fixtures
 
-In the example below, we define a single fixture named `cities`.
-Our test takes a single parameter, which is also named `cities`.
-Ward sees that the fixture name and parameter names match, so it
-calls the `cities` fixture, and passes the result into the test.
+In the example below, we define a single fixture named `city_list`.
+We can supply this fixture as a default argument to a test, and Ward will resolve
+it and inject the value into the test. Unlike pytest, Ward doesn't rely
+on the parameter name matching the name of the fixture, and instead lets you make
+use of Python's import machinery to specify which signature you want to
+inject.
 
 ```python
 from ward import test, expect, fixture
 
 @fixture
-def cities():
+def city_list():
     return ["Glasgow", "Edinburgh"]
     
 @test("'Glasgow' should be contained in the list of cities")
-def _(cities):
+def _(cities=city_list):
     expect("Glasgow").contained_in(cities)
 ```
 
@@ -190,10 +193,10 @@ def database():
 
 
 @test(f"Bob is one of the users contained in the database")
-def _(database):
+def _(db=database):
     # The database connection can be used in this test,
     # and will be closed after the test has completed.
-    users = get_all_users(database)
+    users = get_all_users(db)
     expect(users).contains("Bob")
 ```
 
@@ -211,7 +214,7 @@ from ward import expect, fixture
 def cities():
     return {"edinburgh": "scotland", "tokyo": "japan", "madrid": "spain"}
 
-def test_capital_cities(cities):
+def test_capital_cities(cities=cities):
     found_cities = get_capitals_from_server()
 
     (expect(found_cities)

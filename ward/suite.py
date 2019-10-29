@@ -80,7 +80,6 @@ class Suite:
                 #  be generator fixtures elsewhere in the tree requiring cleanup
                 for fixture in resolved_fixtures.values():
                     if fixture.is_generator_fixture:
-                        print(fixture)
                         with suppress(RuntimeError, StopIteration):
                             fixture.cleanup()
 
