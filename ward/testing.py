@@ -125,9 +125,10 @@ class Test:
         has_deps = len(deps.parameters) > 0
         key = self._get_cache_key(fixture)
         f = Fixture(key, fixture)
+        is_generator = inspect.isgeneratorfunction(inspect.unwrap(fixture))
         if not has_deps:
             try:
-                if inspect.isgeneratorfunction(fixture):
+                if is_generator:
                     f.gen = fixture()
                     f.resolved_val = next(f.gen)
                 else:
