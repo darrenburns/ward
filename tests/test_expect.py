@@ -394,6 +394,7 @@ def _(mock=mock):
 
 @test("has_calls records history and raises when not all expected calls were made")
 def _(mock=mock):
+    print(mock.call_args_list)
     mock(1, 2)
 
     e = expect(mock)
@@ -404,6 +405,7 @@ def _(mock=mock):
 
 @test("has_calls raises when the expected calls were made in the wrong order")
 def _(mock=mock):
+    print(mock.call_args_list)
     mock(1, 2)
     mock(key="value")
 

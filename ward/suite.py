@@ -30,10 +30,8 @@ class Suite:
 
             sout, serr = io.StringIO(), io.StringIO()
             try:
-                resolved_fixtures = test.resolve_fixtures()
                 with redirect_stdout(sout), redirect_stderr(serr):
-                    pass
-
+                    resolved_fixtures = test.resolve_fixtures()
             except FixtureExecutionError as e:
                 yield TestResult(
                     test,

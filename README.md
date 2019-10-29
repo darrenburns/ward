@@ -251,7 +251,7 @@ the test would fail.
 from ward import raises, test
 
 @test("a ZeroDivision error is raised when we divide by 0")
-def test_expecting_an_exception():
+def _():
     with raises(ZeroDivisionError):
         1/0
 ```

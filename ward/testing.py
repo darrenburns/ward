@@ -1,7 +1,7 @@
 import functools
 import inspect
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Callable, Dict, List, Optional, Any
 
@@ -55,8 +55,10 @@ def xfail(func_or_reason=None, *, reason: str = None):
 class Test:
     fn: Callable
     module_name: str
+    fixture_cache: FixtureCache = field(default_factory=FixtureCache)
     marker: Optional[Marker] = None
     description: Optional[str] = None
+
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)
@@ -98,6 +100,8 @@ class Test:
         """
         Resolve fixtures and return the resultant BoundArguments
         formed by partially binding resolved fixture values.
+        Resolved values will be stored in fixture_cache, accessible
+        using the fixture cache key (See `fixtures.get_cache_key_for_func`).
         """
         signature = inspect.signature(self.fn)
         default_binding = signature.bind_partial()
@@ -106,24 +110,25 @@ class Test:
 
         default_binding.apply_defaults()
 
-        # TODO: Right now, we'll keep the cache on a per-test
-        #  basis since we don't do fixture scoping, but we can
-        #  always pull it further up in scope if necessary.
-        fixture_cache = FixtureCache()
-
         resolved_args: Dict[str, Fixture] = {}
         for name, arg in default_binding.arguments.items():
             if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
-                resolved = self._resolve_single_fixture(arg, fixture_cache)
+                resolved = self._resolve_single_fixture(arg)
             else:
                 resolved = arg
             resolved_args[name] = resolved
+            print(f"caching {resolved} in {self.fixture_cache}")
+            self.fixture_cache.cache_fixture(resolved)
         return resolved_args
 
-    def _resolve_single_fixture(self, fixture: Callable, cache: FixtureCache) -> Fixture:
+    def _resolve_single_fixture(self, fixture: Callable) -> Fixture:
         key = get_cache_key_for_func(fixture)
-        if key in cache:
-            return cache[key]
+        try:
+            print(vars(self.fixture_cache[get_cache_key_for_func(fixture)]))
+        except:
+            pass
+        if key in self.fixture_cache:
+            return self.fixture_cache[key]
 
         deps = inspect.signature(fixture)
         has_deps = len(deps.parameters) > 0
@@ -140,7 +145,6 @@ class Test:
                 raise FixtureExecutionError(
                     f"Unable to execute fixture '{f.key}'"
                 ) from e
-            cache.cache_fixture(f)
             return f
 
         signature = inspect.signature(fixture)
@@ -161,7 +165,6 @@ class Test:
                 f"Unable to execute fixture '{f.key}'"
             ) from e
 
-        cache.cache_fixture(f)
         return f
 
     def _resolve_fixture_values(self, fixture_dict: Dict[str, Fixture]) -> Dict[str, Any]:

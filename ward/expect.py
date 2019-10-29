@@ -184,4 +184,5 @@ class expect:
             result, that=that, called_with_args=args, called_with_kwargs=kwargs
         )
         self._fail_if_false(result)
+        print(self)
         return self
