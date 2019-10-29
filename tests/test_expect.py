@@ -312,12 +312,12 @@ def _(m: Mock = mock):
 @test(
     "called_once_with records history and raises when the expected call is made more than once"
 )
-def _(m: Mock = mock):
+def _(mock=mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
 
-    m(*args, **kwargs)
-    m(*args, **kwargs)
+    mock(*args, **kwargs)
+    mock(*args, **kwargs)
 
     e = expect(mock)
     with raises(ExpectationFailed):
@@ -337,21 +337,21 @@ def _(m: Mock = mock):
 
 
 @test("called_once_with records history and raises when multiple calls made")
-def _(m=mock):
+def _(mock=mock):
     args = (1, 2, 3)
     kwargs = {"hello": "world"}
 
-    m(1)
-    m(*args, **kwargs)
-    m(2)
+    mock(1)
+    mock(*args, **kwargs)
+    mock(2)
 
-    e = expect(m)
+    e = expect(mock)
     with raises(ExpectationFailed):
         e.called_once_with(*args, **kwargs)
 
     hist = [
         Expected(
-            m,
+            mock,
             op="called_once_with",
             that=None,
             op_args=args,

@@ -2,10 +2,10 @@ from unittest import mock
 
 from ward import expect, fixture
 from ward.fixtures import Fixture, FixtureCache
+from ward.models import SkipMarker
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
 from ward.testing import Test, test, xfail
-from ward.models import SkipMarker
 
 NUMBER_OF_TESTS = 5
 
@@ -16,32 +16,51 @@ def module():
 
 
 @fixture
-def fixtures():
+def fixture_b():
+    def b():
+        return 2
+
+    return b
+
+
+@fixture
+def fixture_a(b=fixture_b):
+    def a(b=b):
+        return b * 2
+
+    return a
+
+
+@fixture
+def fixtures(a=fixture_a, b=fixture_b):
     return {
-        "fixture_a": Fixture(key="fixture_a", fn=lambda fixture_b: fixture_b * 2),
-        "fixture_b": Fixture(key="fixture_b", fn=lambda: 2),
+        "fixture_a": Fixture(key="fixture_a", fn=a),
+        "fixture_b": Fixture(key="fixture_b", fn=b),
     }
 
 
 @fixture
-def example_test(module, fixtures):
-    return Test(fn=lambda fixture_a: fixture_a, module_name=module)
+def example_test(module=module, fixtures=fixtures, a=fixture_a):
+    def t(fix_a=a):
+        return fix_a
+
+    return Test(fn=t, module_name=module)
 
 
 @fixture
-def skipped_test(module):
+def skipped_test(module=module):
     return Test(fn=lambda: expect(1).equals(1), module_name=module, marker=SkipMarker())
 
 
 @fixture
-def fixture_cache(fixtures):
+def fixture_cache(fixtures=fixtures):
     cache = FixtureCache()
     cache._fixtures = fixtures
     return cache
 
 
 @fixture
-def suite(example_test, fixture_cache):
+def suite(example_test=example_test, fixture_cache=fixture_cache):
     return Suite(
         tests=[example_test] * NUMBER_OF_TESTS, fixture_cache=fixture_cache
     )
@@ -50,28 +69,28 @@ def suite(example_test, fixture_cache):
 @test(
     f"Suite.num_tests returns {NUMBER_OF_TESTS}, when the suite has {NUMBER_OF_TESTS} tests"
 )
-def _(suite):
+def _(suite=suite):
     expect(suite.num_tests).equals(NUMBER_OF_TESTS)
 
 
 @test(
     f"Suite.num_fixtures returns {len(fixtures())}, when the suite has {len(fixtures())} fixtures"
 )
-def _(suite, fixtures):
+def _(suite=suite, fixtures=fixtures):
     expect(suite.num_fixtures).equals(len(fixtures))
 
 
 @test(
     f"Suite.generate_test_runs generates {NUMBER_OF_TESTS} when suite has {NUMBER_OF_TESTS} tests"
 )
-def _(suite):
+def _(suite=suite):
     runs = suite.generate_test_runs()
 
     expect(list(runs)).has_length(NUMBER_OF_TESTS)
 
 
 @test("Suite.generate_test_runs generates yields the expected test results")
-def _(suite):
+def _(suite=suite):
     results = list(suite.generate_test_runs())
 
     expect(results).equals(
@@ -83,7 +102,7 @@ def _(suite):
 
 
 @test("Suite.generate_test_runs yields a FAIL TestResult on `assert False`")
-def _(fixture_cache, module):
+def _(fixture_cache=fixture_cache, module=module):
     def test_i_fail():
         assert False
 
@@ -104,20 +123,20 @@ def _(fixture_cache, module):
 @test(
     "Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator "
 )
-def _(fixture_cache, skipped_test, example_test):
-    suite = Suite(tests=[example_test, skipped_test], fixture_cache=fixture_cache)
+def _(fixture_cache=fixture_cache, skipped=skipped_test, example=example_test):
+    suite = Suite(tests=[example, skipped], fixture_cache=fixture_cache)
 
     test_runs = list(suite.generate_test_runs())
     expected_runs = [
-        TestResult(example_test, TestOutcome.PASS, None, ""),
-        TestResult(skipped_test, TestOutcome.SKIP, None, ""),
+        TestResult(example, TestOutcome.PASS, None, ""),
+        TestResult(skipped, TestOutcome.SKIP, None, ""),
     ]
 
     expect(test_runs).equals(expected_runs)
 
 
 @test(
-    "Suite.generate_test_runs runs fixture teardown code is ran in the expected order"
+    "Suite.generate_test_runs fixture teardown code is ran in the expected order"
 )
 def _(module=module):
     events = []
@@ -150,7 +169,7 @@ def _(module=module):
 
 @xfail("Bug: not all fixtures torn down")
 @test("Suite.generate_test_runs tears down deep fixtures")
-def _(module):
+def _(module=module):
     events = []
 
     def fix_a():
@@ -162,7 +181,7 @@ def _(module):
         events.append(2)
         return "b"
 
-    def fix_c(fix_a):
+    def fix_c(fix_a=fix_a):
         yield "c"
         events.append(4)
 
