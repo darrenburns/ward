@@ -117,16 +117,10 @@ class Test:
             else:
                 resolved = arg
             resolved_args[name] = resolved
-            print(f"caching {resolved} in {self.fixture_cache}")
-            self.fixture_cache.cache_fixture(resolved)
         return resolved_args
 
     def _resolve_single_fixture(self, fixture: Callable) -> Fixture:
         key = get_cache_key_for_func(fixture)
-        try:
-            print(vars(self.fixture_cache[get_cache_key_for_func(fixture)]))
-        except:
-            pass
         if key in self.fixture_cache:
             return self.fixture_cache[key]
 
@@ -145,6 +139,7 @@ class Test:
                 raise FixtureExecutionError(
                     f"Unable to execute fixture '{f.key}'"
                 ) from e
+            self.fixture_cache.cache_fixture(f)
             return f
 
         signature = inspect.signature(fixture)
@@ -152,7 +147,7 @@ class Test:
         children_defaults.apply_defaults()
         children_resolved = {}
         for name, child_fixture in children_defaults.arguments.items():
-            child_resolved = self._resolve_single_fixture(child_fixture, cache)
+            child_resolved = self._resolve_single_fixture(child_fixture)
             children_resolved[name] = child_resolved
         try:
             if is_generator:
@@ -164,7 +159,7 @@ class Test:
             raise FixtureExecutionError(
                 f"Unable to execute fixture '{f.key}'"
             ) from e
-
+        self.fixture_cache.cache_fixture(f)
         return f
 
     def _resolve_fixture_values(self, fixture_dict: Dict[str, Fixture]) -> Dict[str, Any]:
