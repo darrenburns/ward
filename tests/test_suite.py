@@ -209,7 +209,7 @@ def _(module=module):
     def a():
         events.append(1)
 
-    # Both of the tests below depend on 'a', but 'a' should only be executed once.
+    # Both of the fixtures below depend on 'a', but 'a' should only be executed once.
     @fixture
     def b(a=a):
         events.append(2)
