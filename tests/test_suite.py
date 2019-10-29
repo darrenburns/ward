@@ -6,7 +6,7 @@ from ward.fixtures import Fixture, FixtureCache
 from ward.models import SkipMarker
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
-from ward.testing import Test, test, xfail
+from ward.testing import Test, test
 
 NUMBER_OF_TESTS = 5
 
@@ -167,7 +167,6 @@ def _(module=module):
     expect(events).equals([1, 2, 3])
 
 
-@xfail("Bug: not all fixtures torn down")
 @test("Suite.generate_test_runs tears down deep fixtures")
 def _(module=module):
     events = []
@@ -176,7 +175,7 @@ def _(module=module):
     def fix_a():
         events.append(1)
         yield "a"
-        events.append(3)
+        events.append(4)
 
     @fixture
     def fix_b():
@@ -184,20 +183,21 @@ def _(module=module):
         return "b"
 
     @fixture
-    def fix_c(fix_a=fix_a):
+    def fix_c(fix_b=fix_b):
+        events.append(3)
         yield "c"
-        events.append(4)
+        events.append(5)
 
-    def my_test(fix_a, fix_b):
+    def my_test(fix_a=fix_a, fix_c=fix_c):
         expect(fix_a).equals("a")
-        expect(fix_b).equals("b")
+        expect(fix_c).equals("c")
 
     suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_cache=Mock())
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
 
-    expect(events).equals([1, 2, 3, 4])
+    expect(events).equals([1, 2, 3, 4, 5])
 
 
 @test("Suite.generate_test_runs cached fixture isn't executed again")

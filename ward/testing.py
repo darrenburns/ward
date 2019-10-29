@@ -167,6 +167,9 @@ class Test:
             key: f.resolved_val for key, f in fixture_dict.items()
         }
 
+    def teardown_fixtures_in_cache(self):
+        self.fixture_cache.teardown_all()
+
 
 # Tests declared with the name _, and with the @test decorator
 # have to be stored in here, so that they can later be retrieved.

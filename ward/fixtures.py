@@ -1,4 +1,5 @@
 import inspect
+from contextlib import suppress
 from functools import partial, wraps
 from typing import Callable, Dict, Iterable
 
@@ -72,7 +73,7 @@ class Fixture:
         fix_cache.cache_fixture(self)
         return self
 
-    def cleanup(self):
+    def teardown(self):
         if self.is_generator_fixture:
             next(self.gen)
 
@@ -96,6 +97,12 @@ class FixtureCache:
     def cache_fixtures(self, fixtures: Iterable[Fixture]):
         for fixture in fixtures:
             self.cache_fixture(fixture)
+
+    def teardown_all(self):
+        """Run the teardown code for all generator fixtures in the cache"""
+        for fixture in self._fixtures.values():
+            with suppress(RuntimeError, StopIteration):
+                fixture.teardown()
 
     def __contains__(self, key: str):
         return key in self._fixtures
