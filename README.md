@@ -162,7 +162,7 @@ In the example below, we define a single fixture named `city_list`.
 We can supply this fixture as a default argument to a test, and Ward will resolve
 it and inject the value into the test. Unlike pytest, Ward doesn't rely
 on the parameter name matching the name of the fixture, and instead lets you make
-use of Python's import machinery to specify which signature you want to
+use of Python's import machinery to specify which fixture you want to
 inject.
 
 ```python
