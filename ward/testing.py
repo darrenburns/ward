@@ -171,45 +171,6 @@ class Test:
         }
 
 
-# TODO: Remove this comment
-# if not self.deps():
-#     try:
-#         if self.is_generator_fixture:
-#             self.gen = self.fn()
-#             self.resolved_val = next(self.gen)
-#         else:
-#             self.resolved_val = self.fn()
-#     except Exception as e:
-#         raise FixtureExecutionError(
-#             f"Unable to execute fixture '{self.key}'"
-#         ) from e
-#     fix_cache.cache_fixture(self)
-#     return self
-#
-# # Otherwise, we have to find the child fixture vals, and call self
-# children = self.deps()
-# children_resolved = []
-# for child in children:
-#     child_fixture = fix_cache[child].resolve(fix_cache)
-#     children_resolved.append(child_fixture)
-#
-# # We've resolved the values of all child fixtures
-# try:
-#     child_resolved_vals = [child.resolved_val for child in children_resolved]
-#     if self.is_generator_fixture:
-#         self.gen = self.fn(*child_resolved_vals)
-#         self.resolved_val = next(self.gen)
-#     else:
-#         self.resolved_val = self.fn(*child_resolved_vals)
-# except Exception as e:
-#     raise FixtureExecutionError(
-#         f"Unable to execute fixture '{self.key}'"
-#     ) from e
-#
-# fix_cache.cache_fixture(self)
-# return self
-
-
 # Tests declared with the name _, and with the @test decorator
 # have to be stored in here, so that they can later be retrieved.
 # They cannot be retrieved directly from the module due to name

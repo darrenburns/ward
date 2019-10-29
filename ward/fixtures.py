@@ -111,6 +111,9 @@ def fixture(func=None, *, description=None):
     if func is None:
         return partial(fixture, description=description)
 
+    # By setting is_fixture = True, the framework will know
+    # that if this fixture is provided as a default arg, it
+    # is responsible for resolving the value.
     if hasattr(func, "ward_meta"):
         func.ward_meta.is_fixture = True
     else:
