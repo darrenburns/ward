@@ -9,7 +9,6 @@ from ward.fixtures import (
     Fixture,
     FixtureCache,
     FixtureExecutionError,
-    get_cache_key_for_func,
 )
 from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
 
@@ -105,7 +104,7 @@ class Test:
         Resolve fixtures and return the resultant BoundArguments
         formed by partially binding resolved fixture values.
         Resolved values will be stored in fixture_cache, accessible
-        using the fixture cache key (See `fixtures.get_cache_key_for_func`).
+        using the fixture cache key (See `Fixture.key`).
         """
         signature = inspect.signature(self.fn)
         default_binding = signature.bind_partial()
@@ -123,30 +122,29 @@ class Test:
             resolved_args[name] = resolved
         return resolved_args
 
-    def _resolve_single_fixture(self, fixture: Callable) -> Fixture:
-        key = get_cache_key_for_func(fixture)
-        if key in self.fixture_cache:
-            return self.fixture_cache[key]
+    def _resolve_single_fixture(self, fixture_fn: Callable) -> Fixture:
+        fixture = Fixture(fixture_fn)
+        if fixture.key in self.fixture_cache:
+            return self.fixture_cache[fixture.key]
 
-        deps = inspect.signature(fixture)
+        deps = inspect.signature(fixture_fn)
         has_deps = len(deps.parameters) > 0
-        f = Fixture(key, fixture)
-        is_generator = inspect.isgeneratorfunction(inspect.unwrap(fixture))
+        is_generator = inspect.isgeneratorfunction(inspect.unwrap(fixture_fn))
         if not has_deps:
             try:
                 if is_generator:
-                    f.gen = fixture()
-                    f.resolved_val = next(f.gen)
+                    fixture.gen = fixture_fn()
+                    fixture.resolved_val = next(fixture.gen)
                 else:
-                    f.resolved_val = fixture()
+                    fixture.resolved_val = fixture_fn()
             except Exception as e:
                 raise FixtureExecutionError(
-                    f"Unable to execute fixture '{f.key}'"
+                    f"Unable to execute fixture '{fixture.name}'"
                 ) from e
-            self.fixture_cache.cache_fixture(f)
-            return f
+            self.fixture_cache.cache_fixture(fixture)
+            return fixture
 
-        signature = inspect.signature(fixture)
+        signature = inspect.signature(fixture_fn)
         children_defaults = signature.bind_partial()
         children_defaults.apply_defaults()
         children_resolved = {}
@@ -155,16 +153,16 @@ class Test:
             children_resolved[name] = child_resolved
         try:
             if is_generator:
-                f.gen = fixture(**self._resolve_fixture_values(children_resolved))
-                f.resolved_val = next(f.gen)
+                fixture.gen = fixture_fn(**self._resolve_fixture_values(children_resolved))
+                fixture.resolved_val = next(fixture.gen)
             else:
-                f.resolved_val = fixture(
+                fixture.resolved_val = fixture_fn(
                     **self._resolve_fixture_values(children_resolved)
                 )
         except Exception as e:
-            raise FixtureExecutionError(f"Unable to execute fixture '{f.key}'") from e
-        self.fixture_cache.cache_fixture(f)
-        return f
+            raise FixtureExecutionError(f"Unable to execute fixture '{fixture.name}'") from e
+        self.fixture_cache.cache_fixture(fixture)
+        return fixture
 
     def _resolve_fixture_values(
         self, fixture_dict: Dict[str, Fixture]

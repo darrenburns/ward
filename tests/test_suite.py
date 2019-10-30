@@ -34,8 +34,8 @@ def fixture_a(b=fixture_b):
 @fixture
 def fixtures(a=fixture_a, b=fixture_b):
     return {
-        "fixture_a": Fixture(key="fixture_a", fn=a),
-        "fixture_b": Fixture(key="fixture_b", fn=b),
+        "fixture_a": Fixture(fn=a),
+        "fixture_b": Fixture(fn=b),
     }
 
 
