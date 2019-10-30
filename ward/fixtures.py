@@ -81,9 +81,6 @@ class FixtureCache:
         return len(self._fixtures)
 
 
-fixture_cache = FixtureCache()
-
-
 def fixture(func=None, *, description=None):
     if func is None:
         return partial(fixture, description=description)
