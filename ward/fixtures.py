@@ -1,8 +1,8 @@
 import inspect
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial, wraps
-from typing import Callable, Dict, Iterable
+from typing import Callable, Dict
 
 from ward.models import WardMeta
 
@@ -48,22 +48,12 @@ class Fixture:
             next(self.gen)
 
 
+@dataclass
 class FixtureCache:
-    def __init__(self):
-        self._fixtures: Dict[str, Fixture] = {}
-
-    def _get_fixture(self, fixture_name: str) -> Fixture:
-        try:
-            return self._fixtures[fixture_name]
-        except KeyError:
-            raise CollectionError(f"Couldn't find fixture '{fixture_name}'.")
+    _fixtures: Dict[str, Fixture] = field(default_factory=dict)
 
     def cache_fixture(self, fixture: Fixture):
         self._fixtures[fixture.key] = fixture
-
-    def cache_fixtures(self, fixtures: Iterable[Fixture]):
-        for fixture in fixtures:
-            self.cache_fixture(fixture)
 
     def teardown_all(self):
         """Run the teardown code for all generator fixtures in the cache"""
@@ -76,9 +66,6 @@ class FixtureCache:
 
     def __getitem__(self, item):
         return self._fixtures[item]
-
-    def __len__(self):
-        return len(self._fixtures)
 
 
 def fixture(func=None, *, description=None):
