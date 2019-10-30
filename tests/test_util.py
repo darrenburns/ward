@@ -1,16 +1,17 @@
+from tests.test_suite import example_test
 from ward import expect, test
-from ward.test_result import TestResult, TestOutcome
-from ward.util import get_exit_code, ExitCode
+from ward.test_result import TestOutcome, TestResult
+from ward.util import ExitCode, get_exit_code
 
 
 @test(
     "get_exit_code returns ExitCode.SUCCESS when PASS, SKIP and XFAIL in test results"
 )
-def _(example_test):
+def _(example=example_test):
     test_results = [
-        TestResult(test=example_test, outcome=TestOutcome.PASS),
-        TestResult(test=example_test, outcome=TestOutcome.SKIP),
-        TestResult(test=example_test, outcome=TestOutcome.XFAIL),
+        TestResult(test=example, outcome=TestOutcome.PASS),
+        TestResult(test=example, outcome=TestOutcome.SKIP),
+        TestResult(test=example, outcome=TestOutcome.XFAIL),
     ]
     exit_code = get_exit_code(test_results)
 
@@ -25,10 +26,10 @@ def _():
 
 
 @test("get_exit_code returns ExitCode.FAILED when XPASS in test results")
-def _(example_test):
+def _(example=example_test):
     test_results = [
-        TestResult(test=example_test, outcome=TestOutcome.XPASS),
-        TestResult(test=example_test, outcome=TestOutcome.PASS),
+        TestResult(test=example, outcome=TestOutcome.XPASS),
+        TestResult(test=example, outcome=TestOutcome.PASS),
     ]
     exit_code = get_exit_code(test_results)
 

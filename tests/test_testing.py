@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
-from ward import test, expect, fixture
-from ward.fixtures import FixtureRegistry, Fixture
+from ward import expect, fixture, test
+from ward.fixtures import Fixture, FixtureCache
 from ward.testing import Test
 
 
@@ -23,14 +23,17 @@ def anonymous_test():
 
 @fixture
 def dependent_test():
-    def _(a):
+    def x():
+        return 1
+
+    def _(a=x):
         expect(1).equals(1)
 
     return Test(fn=_, module_name=mod)
 
 
 @test("Test.name should return the name of the function it wraps")
-def _(anonymous_test):
+def _(anonymous_test=anonymous_test):
     expect(anonymous_test.name).equals("_")
 
 
@@ -40,39 +43,39 @@ def _():
 
 
 @test("Test.qualified_name should return `module_name._` when test name is _")
-def _(anonymous_test):
+def _(anonymous_test=anonymous_test):
     expect(anonymous_test.qualified_name).equals(f"{mod}._")
 
 
 @test("Test.deps should return {} when test uses no fixtures")
-def _(anonymous_test):
+def _(anonymous_test=anonymous_test):
     expect(anonymous_test.deps()).equals({})
 
 
 @test("Test.deps should return correct params when test uses fixtures")
-def _(dependent_test):
+def _(dependent_test=dependent_test):
     deps = dependent_test.deps()
     expect(deps).contains("a")
 
 
 @test("Test.has_deps should return True when test uses fixtures")
-def _(dependent_test):
+def _(dependent_test=dependent_test):
     expect(dependent_test.has_deps()).equals(True)
 
 
 @test("Test.has_deps should return False when test doesn't use fixtures")
-def _(anonymous_test):
+def _(anonymous_test=anonymous_test):
     expect(anonymous_test.has_deps()).equals(False)
 
 
 @test("Test.resolve_args should return {} when test doesn't use fixtures")
-def _(anonymous_test):
-    expect(anonymous_test.resolve_args(FixtureRegistry())).equals({})
+def _(anonymous_test=anonymous_test):
+    expect(anonymous_test.resolve_args(FixtureCache())).equals({})
 
 
 @test("Test.resolve_args should return a map of param names to resolved Fixture")
 def _():
-    reg = FixtureRegistry()
+    reg = FixtureCache()
     val = 1
     fixture = Fixture("my_fixture", lambda: val)
     reg.cache_fixture(fixture)

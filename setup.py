@@ -1,14 +1,19 @@
+import platform
+
 from setuptools import setup
 
+version = "0.12.0a0"
+description = "A modern Python 3 test framework for finding and fixing flaws faster."
 with open("README.md", "r") as fh:
-    long_description = fh.read()
-
-version = "0.11.1a0"
+    if platform.system() != "Windows":
+        long_description = fh.read()
+    else:
+        long_description = description
 
 setup(
     name="ward",
     version=version,
-    description="A Python 3 test framework for finding flaws faster.",
+    description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="http://github.com/darrenburns/ward",

@@ -1,0 +1,38 @@
+{
+  "projectName": "ward",
+  "projectOwner": "darrenburns",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 60,
+  "commit": false,
+  "commitConvention": "none",
+  "contributors": [
+    {
+      "login": "darrenburns",
+      "name": "Darren Burns",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/5740731?v=4",
+      "profile": "https://darrenburns.net",
+      "contributions": [
+        "code",
+        "doc",
+        "ideas",
+        "review",
+        "bug",
+        "example"
+      ]
+    },
+    {
+      "login": "khusrokarim",
+      "name": "khusrokarim",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1615476?v=4",
+      "profile": "https://github.com/khusrokarim",
+      "contributions": [
+        "ideas"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}

@@ -10,12 +10,14 @@ from ward.collect import (
     load_modules,
     search_generally,
 )
-from ward.fixtures import fixture_registry
+from ward.fixtures import fixture_cache
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite
 from ward.util import get_exit_code
 
 init()
+
+sys.path.append(".")
 
 
 @click.command()
@@ -40,7 +42,7 @@ def run(path, search, fail_limit):
     tests = search_generally(unfiltered_tests, query=search)
     time_to_collect = default_timer() - start_run
 
-    suite = Suite(tests=list(tests), fixture_registry=fixture_registry)
+    suite = Suite(tests=list(tests))
     test_results = suite.generate_test_runs()
 
     writer = SimpleTestResultWrite(suite=suite)

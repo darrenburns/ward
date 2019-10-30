@@ -1,34 +1,17 @@
 import functools
 import inspect
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Any
 
-from ward.fixtures import Fixture, FixtureRegistry
-
-
-@dataclass
-class Marker:
-    name: str
-
-
-@dataclass
-class SkipMarker(Marker):
-    name: str = "SKIP"
-    reason: Optional[str] = None
-
-
-@dataclass
-class XfailMarker(Marker):
-    name: str = "XFAIL"
-    reason: Optional[str] = None
-
-
-@dataclass
-class WardMeta:
-    marker: Optional[Marker] = None
-    description: Optional[str] = None
+from ward.fixtures import (
+    Fixture,
+    FixtureCache,
+    FixtureExecutionError,
+    get_cache_key_for_func,
+)
+from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
 
 
 def skip(func_or_reason=None, *, reason: str = None):
@@ -77,6 +60,7 @@ def xfail(func_or_reason=None, *, reason: str = None):
 class Test:
     fn: Callable
     module_name: str
+    fixture_cache: FixtureCache = field(default_factory=FixtureCache)
     marker: Optional[Marker] = None
     description: Optional[str] = None
 
@@ -102,7 +86,7 @@ class Test:
     def has_deps(self) -> bool:
         return len(self.deps()) > 0
 
-    def resolve_args(self, fixture_registry: FixtureRegistry) -> Dict[str, Fixture]:
+    def resolve_args(self, fixture_cache: FixtureCache) -> Dict[str, Fixture]:
         """Resolve fixture that has been injected into this test"""
         if not self.has_deps():
             return {}
@@ -110,11 +94,85 @@ class Test:
         # Construct a dict of kwargs to pass into the test when it's called
         resolved_args = {}
         for fixture_name in self.deps():
-            fixture = fixture_registry[fixture_name]
-            resolved_arg = fixture.resolve(fixture_registry)
+            fixture = fixture_cache[fixture_name]
+            resolved_arg = fixture.resolve(fixture_cache)
             resolved_args[fixture_name] = resolved_arg
 
         return resolved_args
+
+    def resolve_fixtures(self) -> Dict[str, Fixture]:
+        """
+        Resolve fixtures and return the resultant BoundArguments
+        formed by partially binding resolved fixture values.
+        Resolved values will be stored in fixture_cache, accessible
+        using the fixture cache key (See `fixtures.get_cache_key_for_func`).
+        """
+        signature = inspect.signature(self.fn)
+        default_binding = signature.bind_partial()
+        if not self.has_deps():
+            return {}
+
+        default_binding.apply_defaults()
+
+        resolved_args: Dict[str, Fixture] = {}
+        for name, arg in default_binding.arguments.items():
+            if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
+                resolved = self._resolve_single_fixture(arg)
+            else:
+                resolved = arg
+            resolved_args[name] = resolved
+        return resolved_args
+
+    def _resolve_single_fixture(self, fixture: Callable) -> Fixture:
+        key = get_cache_key_for_func(fixture)
+        if key in self.fixture_cache:
+            return self.fixture_cache[key]
+
+        deps = inspect.signature(fixture)
+        has_deps = len(deps.parameters) > 0
+        f = Fixture(key, fixture)
+        is_generator = inspect.isgeneratorfunction(inspect.unwrap(fixture))
+        if not has_deps:
+            try:
+                if is_generator:
+                    f.gen = fixture()
+                    f.resolved_val = next(f.gen)
+                else:
+                    f.resolved_val = fixture()
+            except Exception as e:
+                raise FixtureExecutionError(
+                    f"Unable to execute fixture '{f.key}'"
+                ) from e
+            self.fixture_cache.cache_fixture(f)
+            return f
+
+        signature = inspect.signature(fixture)
+        children_defaults = signature.bind_partial()
+        children_defaults.apply_defaults()
+        children_resolved = {}
+        for name, child_fixture in children_defaults.arguments.items():
+            child_resolved = self._resolve_single_fixture(child_fixture)
+            children_resolved[name] = child_resolved
+        try:
+            if is_generator:
+                f.gen = fixture(**self._resolve_fixture_values(children_resolved))
+                f.resolved_val = next(f.gen)
+            else:
+                f.resolved_val = fixture(
+                    **self._resolve_fixture_values(children_resolved)
+                )
+        except Exception as e:
+            raise FixtureExecutionError(f"Unable to execute fixture '{f.key}'") from e
+        self.fixture_cache.cache_fixture(f)
+        return f
+
+    def _resolve_fixture_values(
+        self, fixture_dict: Dict[str, Fixture]
+    ) -> Dict[str, Any]:
+        return {key: f.resolved_val for key, f in fixture_dict.items()}
+
+    def teardown_fixtures_in_cache(self):
+        self.fixture_cache.teardown_all()
 
 
 # Tests declared with the name _, and with the @test decorator

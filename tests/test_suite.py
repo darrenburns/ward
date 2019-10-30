@@ -1,10 +1,11 @@
 from unittest import mock
 
 from ward import expect, fixture
-from ward.fixtures import Fixture, FixtureRegistry
+from ward.fixtures import Fixture
+from ward.models import SkipMarker
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
-from ward.testing import SkipMarker, Test, test, xfail
+from ward.testing import Test, test
 
 NUMBER_OF_TESTS = 5
 
@@ -15,79 +16,84 @@ def module():
 
 
 @fixture
-def fixtures():
+def fixture_b():
+    def b():
+        return 2
+
+    return b
+
+
+@fixture
+def fixture_a(b=fixture_b):
+    def a(b=b):
+        return b * 2
+
+    return a
+
+
+@fixture
+def fixtures(a=fixture_a, b=fixture_b):
     return {
-        "fixture_a": Fixture(key="fixture_a", fn=lambda fixture_b: fixture_b * 2),
-        "fixture_b": Fixture(key="fixture_b", fn=lambda: 2),
+        "fixture_a": Fixture(key="fixture_a", fn=a),
+        "fixture_b": Fixture(key="fixture_b", fn=b),
     }
 
 
 @fixture
-def example_test(module, fixtures):
-    return Test(fn=lambda fixture_a: fixture_a, module_name=module)
+def example_test(module=module, fixtures=fixtures):
+    @fixture
+    def f():
+        return 123
+
+    def t(fix_a=f):
+        return fix_a
+
+    return Test(fn=t, module_name=module)
 
 
 @fixture
-def skipped_test(module):
+def skipped_test(module=module):
     return Test(fn=lambda: expect(1).equals(1), module_name=module, marker=SkipMarker())
 
 
 @fixture
-def fixture_registry(fixtures):
-    registry = FixtureRegistry()
-    registry._fixtures = fixtures
-    return registry
-
-
-@fixture
-def suite(example_test, fixture_registry):
-    return Suite(
-        tests=[example_test] * NUMBER_OF_TESTS, fixture_registry=fixture_registry
-    )
+def suite(example_test=example_test):
+    return Suite(tests=[example_test] * NUMBER_OF_TESTS)
 
 
 @test(
     f"Suite.num_tests returns {NUMBER_OF_TESTS}, when the suite has {NUMBER_OF_TESTS} tests"
 )
-def _(suite):
+def _(suite=suite):
     expect(suite.num_tests).equals(NUMBER_OF_TESTS)
-
-
-@test(
-    f"Suite.num_fixtures returns {len(fixtures())}, when the suite has {len(fixtures())} fixtures"
-)
-def _(suite, fixtures):
-    expect(suite.num_fixtures).equals(len(fixtures))
 
 
 @test(
     f"Suite.generate_test_runs generates {NUMBER_OF_TESTS} when suite has {NUMBER_OF_TESTS} tests"
 )
-def _(suite):
+def _(suite=suite):
     runs = suite.generate_test_runs()
 
     expect(list(runs)).has_length(NUMBER_OF_TESTS)
 
 
 @test("Suite.generate_test_runs generates yields the expected test results")
-def _(suite):
+def _(suite=suite):
     results = list(suite.generate_test_runs())
-
-    expect(results).equals(
-        [
-            TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
-            for test in suite.tests
-        ]
-    )
+    expected = [
+        TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
+        for test in suite.tests
+    ]
+    expect(results).equals(expected)
 
 
 @test("Suite.generate_test_runs yields a FAIL TestResult on `assert False`")
-def _(fixture_registry, module):
+def _(module=module):
     def test_i_fail():
         assert False
 
     test = Test(fn=test_i_fail, module_name=module)
-    failing_suite = Suite(tests=[test], fixture_registry=fixture_registry)
+    failing_suite = Suite(tests=[test])
 
     results = failing_suite.generate_test_runs()
     result = next(results)
@@ -103,43 +109,38 @@ def _(fixture_registry, module):
 @test(
     "Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator "
 )
-def _(fixture_registry, skipped_test, example_test):
-    suite = Suite(tests=[example_test, skipped_test], fixture_registry=fixture_registry)
+def _(skipped=skipped_test, example=example_test):
+    suite = Suite(tests=[example, skipped])
 
     test_runs = list(suite.generate_test_runs())
     expected_runs = [
-        TestResult(example_test, TestOutcome.PASS, None, ""),
-        TestResult(skipped_test, TestOutcome.SKIP, None, ""),
+        TestResult(example, TestOutcome.PASS, None, ""),
+        TestResult(skipped, TestOutcome.SKIP, None, ""),
     ]
 
     expect(test_runs).equals(expected_runs)
 
 
-@test(
-    "Suite.generate_test_runs runs fixture teardown code is ran in the expected order"
-)
-def _(module):
+@test("Suite.generate_test_runs fixture teardown code is ran in the expected order")
+def _(module=module):
     events = []
 
+    @fixture
     def fix_a():
         events.append(1)
         yield "a"
         events.append(3)
 
+    @fixture
     def fix_b():
         events.append(2)
         return "b"
 
-    def my_test(fix_a, fix_b):
+    def my_test(fix_a=fix_a, fix_b=fix_b):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
 
-    reg = FixtureRegistry()
-    reg.cache_fixtures(
-        fixtures=[Fixture(key="fix_a", fn=fix_a), Fixture(key="fix_b", fn=fix_b)]
-    )
-
-    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_registry=reg)
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
@@ -147,40 +148,61 @@ def _(module):
     expect(events).equals([1, 2, 3])
 
 
-@xfail("Bug: not all fixtures torn down")
 @test("Suite.generate_test_runs tears down deep fixtures")
-def _(module):
+def _(module=module):
     events = []
 
+    @fixture
     def fix_a():
         events.append(1)
         yield "a"
-        events.append(3)
+        events.append(4)
 
+    @fixture
     def fix_b():
         events.append(2)
         return "b"
 
-    def fix_c(fix_a):
+    @fixture
+    def fix_c(fix_b=fix_b):
+        events.append(3)
         yield "c"
-        events.append(4)
+        events.append(5)
 
-    def my_test(fix_a, fix_b):
+    def my_test(fix_a=fix_a, fix_c=fix_c):
         expect(fix_a).equals("a")
-        expect(fix_b).equals("b")
+        expect(fix_c).equals("c")
 
-    reg = FixtureRegistry()
-    reg.cache_fixtures(
-        fixtures=[
-            Fixture(key="fix_a", fn=fix_a),
-            Fixture(key="fix_b", fn=fix_b),
-            Fixture(key="fix_c", fn=fix_c),
-        ]
-    )
-
-    suite = Suite(tests=[Test(fn=my_test, module_name=module)], fixture_registry=reg)
+    suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
 
-    expect(events).equals([1, 2, 3, 4])
+    expect(events).equals([1, 2, 3, 4, 5])
+
+
+@test("Suite.generate_test_runs cached fixture isn't executed again")
+def _(module=module):
+    events = []
+
+    @fixture
+    def a():
+        events.append(1)
+
+    # Both of the fixtures below depend on 'a', but 'a' should only be executed once.
+    @fixture
+    def b(a=a):
+        events.append(2)
+
+    @fixture
+    def c(a=a):
+        events.append(3)
+
+    def test(b=b, c=c):
+        pass
+
+    suite = Suite(tests=[Test(fn=test, module_name=module)])
+
+    list(suite.generate_test_runs())
+
+    expect(events).equals([1, 2, 3])
