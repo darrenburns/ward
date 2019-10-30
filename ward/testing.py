@@ -87,8 +87,7 @@ class Test:
 
     def resolve_fixtures(self) -> Dict[str, Fixture]:
         """
-        Resolve fixtures and return the resultant BoundArguments
-        formed by partially binding resolved fixture values.
+        Resolve fixtures and return the resultant name -> Fixture dict.
         Resolved values will be stored in fixture_cache, accessible
         using the fixture cache key (See `Fixture.key`).
         """
