@@ -10,7 +10,6 @@ from ward.collect import (
     load_modules,
     search_generally,
 )
-from ward.fixtures import fixture_cache
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite
 from ward.util import get_exit_code

@@ -147,11 +147,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
-        params_list = ", ".join(lightblack(str(v)) for v in test.deps().keys())
-        if test.has_deps():
-            test_name_suffix = f"({params_list})"
-        else:
-            test_name_suffix = ""
 
         if test.description:
             name_or_desc = (
@@ -164,7 +159,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
             colored(" Failure", color="red"),
             "in",
             colored(name_or_desc, attrs=["bold"]),
-            test_name_suffix,
             "\n",
         )
 

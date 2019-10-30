@@ -1,8 +1,8 @@
 from unittest.mock import Mock
 
-from ward import expect, fixture, test
-from ward.fixtures import Fixture, FixtureCache
-from ward.testing import Test
+from ward import expect
+from ward.fixtures import fixture
+from ward.testing import Test, test
 
 
 def f():
@@ -66,23 +66,6 @@ def _(dependent_test=dependent_test):
 @test("Test.has_deps should return False when test doesn't use fixtures")
 def _(anonymous_test=anonymous_test):
     expect(anonymous_test.has_deps()).equals(False)
-
-
-@test("Test.resolve_args should return {} when test doesn't use fixtures")
-def _(anonymous_test=anonymous_test):
-    expect(anonymous_test.resolve_args(FixtureCache())).equals({})
-
-
-@test("Test.resolve_args should return a map of param names to resolved Fixture")
-def _():
-    reg = FixtureCache()
-    val = 1
-    fixture = Fixture("my_fixture", lambda: val)
-    reg.cache_fixture(fixture)
-    test = Test(lambda my_fixture: 1, "module_name")
-
-    expect(test.resolve_args(reg)).equals({"my_fixture": fixture})
-    expect(fixture.resolved_val).equals(val)
 
 
 @test("Test.__call__ should delegate to the function it wraps")
