@@ -178,10 +178,16 @@ ward --search "raises(ZeroDivisionError)"
 ward --search "@xfail"
 ```
 
-**To run a test called `test_the_sky_is_blue`:**
+**Run a test called `test_the_sky_is_blue`:**
 
 ```text
 ward --search test_the_sky_is_blue
+```
+
+**Run a test described as `"my_function should return False"`:**
+
+```text
+ward --search "my_function should return False"
 ```
 
 **Running tests inside a module:**
@@ -199,9 +205,9 @@ will also be selected and ran.
 This approach is useful for quickly querying tests and running those which match a
 simple query, making it useful for development.
 
-Of course, sometimes you want to be very specific when declaring which tests to run.
-
 #### Specific test selection
+
+Sometimes you want to be very specific when declaring which tests to run.
 
 Ward will provide an option to query tests on name and description using substring
 or regular expression matching.
