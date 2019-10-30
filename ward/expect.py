@@ -158,7 +158,7 @@ class expect:
         result: bool,
         called_with_args: Tuple[Any],
         called_with_kwargs: Dict[str, Any],
-        that=None,
+        that: Any = None,
     ) -> bool:
         self.history.append(
             Expected(
