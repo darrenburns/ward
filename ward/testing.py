@@ -85,20 +85,6 @@ class Test:
     def has_deps(self) -> bool:
         return len(self.deps()) > 0
 
-    def resolve_args(self, fixture_cache: FixtureCache) -> Dict[str, Fixture]:
-        """Resolve fixture that has been injected into this test"""
-        if not self.has_deps():
-            return {}
-
-        # Construct a dict of kwargs to pass into the test when it's called
-        resolved_args = {}
-        for fixture_name in self.deps():
-            fixture = fixture_cache[fixture_name]
-            resolved_arg = fixture.resolve(fixture_cache)
-            resolved_args[fixture_name] = resolved_arg
-
-        return resolved_args
-
     def resolve_fixtures(self) -> Dict[str, Fixture]:
         """
         Resolve fixtures and return the resultant BoundArguments
