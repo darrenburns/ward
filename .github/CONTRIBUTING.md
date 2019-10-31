@@ -16,7 +16,7 @@ Please also take time to review the [Code of Conduct](https://github.com/darrenb
 
 When creating a PR:
 
-* Code is formatted using `black -l 120 .` (`Makefile` coming soon)
+* Code is formatted using `black .` (`Makefile` coming soon)
 * Ensure `README.md` is updated if necessary.
 * Tests written cover new code, and running `ward` results in a pass.
 
