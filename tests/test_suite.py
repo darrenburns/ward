@@ -208,7 +208,7 @@ def _(module=module):
     expect(events).equals([1, 2, 3])
 
 
-@test("Suite.generate_tests_runs runs module scoped fixtures once per module")
+@test("Suite.generate_test_runs runs module scoped fixtures once per module")
 def _():
     events = []
 
@@ -237,3 +237,45 @@ def _():
 
     num_unique_modules = 2
     expect(len(events)).equals(num_unique_modules)
+
+
+@test("Suite.generate_test_runs correctly tears down module scoped fixtures")
+def _():
+    events = []
+
+    @fixture(scope=Scope.Module)
+    def a():
+        events.append("resolve")
+        yield "a"
+        events.append("teardown")
+
+    def test1(a=a):
+        events.append("test1")
+
+    def test2(a=a):
+        events.append("test2")
+
+    def test3(a=a):
+        events.append("test3")
+
+    suite = Suite(
+        tests=[
+            Test(fn=test1, module_name="module1"),
+            Test(fn=test2, module_name="module2"),
+            Test(fn=test3, module_name="module2"),
+        ]
+    )
+
+    list(suite.generate_test_runs())
+
+    expect(events).equals(
+        [
+            "resolve",  # Resolve at start of module1
+            "test1",
+            "teardown",  # Teardown at end of module1
+            "resolve",  # Resolve at start of module2
+            "test2",
+            "test3",
+            "teardown",  # Teardown at end of module2
+        ]
+    )
