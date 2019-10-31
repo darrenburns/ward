@@ -279,3 +279,43 @@ def _():
             "teardown",  # Teardown at end of module2
         ]
     )
+
+
+@test("Suite.generate_test_runs resolves and tears down global fixtures once only")
+def _():
+    events = []
+
+    @fixture(scope=Scope.Global)
+    def a():
+        events.append("resolve")
+        yield "a"
+        events.append("teardown")
+
+    def test1(a=a):
+        events.append("test1")
+
+    def test2(a=a):
+        events.append("test2")
+
+    def test3(a=a):
+        events.append("test3")
+
+    suite = Suite(
+        tests=[
+            Test(fn=test1, module_name="module1"),
+            Test(fn=test2, module_name="module2"),
+            Test(fn=test3, module_name="module2"),
+        ]
+    )
+
+    list(suite.generate_test_runs())
+
+    expect(events).equals(
+        [
+            "resolve",
+            "test1",
+            "test2",
+            "test3",
+            "teardown",
+        ]
+    )
