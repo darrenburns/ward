@@ -5,7 +5,7 @@ from ward.fixtures import Fixture
 from ward.models import Scope, SkipMarker
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
-from ward.testing import Test, test
+from ward.testing import Test, skip, test
 
 NUMBER_OF_TESTS = 5
 
@@ -354,3 +354,9 @@ def _():
         ]
     )
     expect(len(suite.cache)).equals(0)
+
+
+@skip("WIP")
+@test("Suite.generate_test_runs dependent fixtures of differing scopes behave correctly")
+def _():
+    pass
