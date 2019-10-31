@@ -26,9 +26,7 @@ class Suite:
                 # We've moved into a different module, so clear out all of
                 # the module scoped fixtures from the previous module.
                 to_teardown = self.cache.get(
-                    scope=Scope.Module,
-                    module_name=previous_test_module,
-                    test_id=None,
+                    scope=Scope.Module, module_name=previous_test_module, test_id=None
                 )
                 self.cache.teardown_fixtures(to_teardown)
 
@@ -104,8 +102,6 @@ class Suite:
         tear them down from the cache, and return the result.
         """
         to_teardown = self.cache.get(
-            scope=Scope.Test,
-            test_id=test.id,
-            module_name=test.module_name,
+            scope=Scope.Test, test_id=test.id, module_name=test.module_name
         )
         self.cache.teardown_fixtures(to_teardown)

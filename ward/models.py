@@ -15,9 +15,7 @@ class Scope(Enum):
         try:
             return cls[scope_str.title()]
         except (AttributeError, KeyError) as err:
-            raise FixtureError(
-                f"Invalid fixture scope: '{scope_str}'"
-            ) from err
+            raise FixtureError(f"Invalid fixture scope: '{scope_str}'") from err
 
 
 @dataclass

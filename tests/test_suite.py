@@ -33,10 +33,7 @@ def fixture_a(b=fixture_b):
 
 @fixture
 def fixtures(a=fixture_a, b=fixture_b):
-    return {
-        "fixture_a": Fixture(fn=a),
-        "fixture_b": Fixture(fn=b),
-    }
+    return {"fixture_a": Fixture(fn=a), "fixture_b": Fixture(fn=b)}
 
 
 @fixture
@@ -357,6 +354,8 @@ def _():
 
 
 @skip("WIP")
-@test("Suite.generate_test_runs dependent fixtures of differing scopes behave correctly")
+@test(
+    "Suite.generate_test_runs dependent fixtures of differing scopes behave correctly"
+)
 def _():
     pass

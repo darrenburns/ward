@@ -65,10 +65,14 @@ class FixtureCache:
                 fixture.teardown()
                 del self[fixture.key]
 
-    def get(self, scope: Optional[Scope], module_name: Optional[str], test_id: Optional[str]) -> List[Fixture]:
-        filtered_by_mod = [f for f in self._fixtures.values()
-                           if f.scope == scope
-                           and f.last_resolved_module_name == module_name]
+    def get(
+        self, scope: Optional[Scope], module_name: Optional[str], test_id: Optional[str]
+    ) -> List[Fixture]:
+        filtered_by_mod = [
+            f
+            for f in self._fixtures.values()
+            if f.scope == scope and f.last_resolved_module_name == module_name
+        ]
 
         if test_id:
             return [f for f in filtered_by_mod if f.last_resolved_test_id == test_id]
@@ -108,10 +112,7 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
     if hasattr(func, "ward_meta"):
         func.ward_meta.is_fixture = True
     else:
-        func.ward_meta = WardMeta(
-            is_fixture=True,
-            scope=scope,
-        )
+        func.ward_meta = WardMeta(is_fixture=True, scope=scope)
 
     @wraps(func)
     def wrapper(*args, **kwargs):

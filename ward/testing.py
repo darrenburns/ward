@@ -7,10 +7,7 @@ from types import MappingProxyType
 from typing import Callable, Dict, List, Optional, Any
 
 from ward.errors import FixtureError
-from ward.fixtures import (
-    Fixture,
-    FixtureCache,
-    Scope)
+from ward.fixtures import Fixture, FixtureCache, Scope
 from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
 
 
@@ -112,7 +109,9 @@ class Test:
             resolved_args[name] = resolved
         return resolved_args
 
-    def _resolve_single_fixture(self, fixture_fn: Callable, cache: FixtureCache) -> Fixture:
+    def _resolve_single_fixture(
+        self, fixture_fn: Callable, cache: FixtureCache
+    ) -> Fixture:
         fixture = Fixture(fixture_fn)
 
         if fixture.key in cache:
@@ -140,9 +139,7 @@ class Test:
                 else:
                     fixture.resolved_val = fixture_fn()
             except Exception as e:
-                raise FixtureError(
-                    f"Unable to resolve fixture '{fixture.name}'"
-                ) from e
+                raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
             cache.cache_fixture(fixture)
             return fixture
 
@@ -155,7 +152,9 @@ class Test:
             children_resolved[name] = child_resolved
         try:
             if is_generator:
-                fixture.gen = fixture_fn(**self._resolve_fixture_values(children_resolved))
+                fixture.gen = fixture_fn(
+                    **self._resolve_fixture_values(children_resolved)
+                )
                 fixture.resolved_val = next(fixture.gen)
             else:
                 fixture.resolved_val = fixture_fn(
