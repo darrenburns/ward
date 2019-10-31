@@ -59,7 +59,8 @@ class FixtureCache:
 
     def teardown_all(self):
         """Run the teardown code for all generator fixtures in the cache"""
-        for fixture in self._fixtures.values():
+        vals = [f for f in self._fixtures.values()]
+        for fixture in vals:
             with suppress(RuntimeError, StopIteration):
                 fixture.teardown()
                 del self[fixture.key]

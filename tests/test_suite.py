@@ -2,7 +2,7 @@ from unittest import mock
 
 from ward import expect, fixture
 from ward.fixtures import Fixture
-from ward.models import SkipMarker
+from ward.models import SkipMarker, Scope
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
 from ward.testing import Test, test

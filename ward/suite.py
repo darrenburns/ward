@@ -40,8 +40,9 @@ class Suite:
 
             sout, serr = io.StringIO(), io.StringIO()
             try:
+                resolved_fixtures = test.resolve_fixtures(self.cache)
                 with redirect_stdout(sout), redirect_stderr(serr):
-                    resolved_fixtures = test.resolve_fixtures(self.cache)
+                    pass
             except FixtureError as e:
                 # We can't run teardown code here because we can't know how much
                 # of the fixture has been executed.
