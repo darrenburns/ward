@@ -208,37 +208,6 @@ def _(module=module):
     expect(events).equals([1, 2, 3])
 
 
-@test("Suite.generate_test_runs runs module scoped fixtures once per module")
-def _():
-    events = []
-
-    @fixture(scope=Scope.Module)
-    def a():
-        events.append(1)
-
-    def test_in_module_1(a=a):
-        pass
-
-    def test_in_module_2(a=a):
-        pass
-
-    def test_another_in_module_2(a=a):
-        pass
-
-    suite = Suite(
-        tests=[
-            Test(fn=test_in_module_1, module_name="module1"),
-            Test(fn=test_in_module_2, module_name="module2"),
-            Test(fn=test_another_in_module_2, module_name="module2"),
-        ]
-    )
-
-    list(suite.generate_test_runs())
-
-    num_unique_modules = 2
-    expect(len(events)).equals(num_unique_modules)
-
-
 @test("Suite.generate_test_runs correctly tears down module scoped fixtures")
 def _():
     events = []
@@ -279,6 +248,7 @@ def _():
             "teardown",  # Teardown at end of module2
         ]
     )
+    expect(len(suite.cache)).equals(0)
 
 
 @test("Suite.generate_test_runs resolves and tears down global fixtures once only")
@@ -312,10 +282,16 @@ def _():
 
     expect(events).equals(
         [
-            "resolve",
+            "resolve",  # Resolve at start of run only
             "test1",
             "test2",
             "test3",
-            "teardown",
+            "teardown",  # Teardown only at end of run
         ]
     )
+    expect(len(suite.cache)).equals(0)  # Teardown includes cache cleanup
+
+
+@test("Suite.generate_test_runs resolves mixed scope fixtures correctly")
+def _():
+    pass

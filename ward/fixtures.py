@@ -91,6 +91,9 @@ class FixtureCache:
     def __delitem__(self, key: str):
         del self._fixtures[key]
 
+    def __len__(self):
+        return len(self._fixtures)
+
 
 def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
     if not isinstance(scope, Scope):
