@@ -2,7 +2,7 @@ from unittest import mock
 
 from ward import expect, fixture
 from ward.fixtures import Fixture
-from ward.models import SkipMarker, Scope
+from ward.models import Scope, SkipMarker
 from ward.suite import Suite
 from ward.test_result import TestOutcome, TestResult
 from ward.testing import Test, test
@@ -206,3 +206,34 @@ def _(module=module):
     list(suite.generate_test_runs())
 
     expect(events).equals([1, 2, 3])
+
+
+@test("Suite.generate_tests_runs runs module scoped fixtures once per module")
+def _():
+    events = []
+
+    @fixture(scope=Scope.Module)
+    def a():
+        events.append(1)
+
+    def test_in_module_1(a=a):
+        pass
+
+    def test_in_module_2(a=a):
+        pass
+
+    def test_another_in_module_2(a=a):
+        pass
+
+    suite = Suite(
+        tests=[
+            Test(fn=test_in_module_1, module_name="module1"),
+            Test(fn=test_in_module_2, module_name="module2"),
+            Test(fn=test_another_in_module_2, module_name="module2"),
+        ]
+    )
+
+    list(suite.generate_test_runs())
+
+    num_unique_modules = 2
+    expect(len(events)).equals(num_unique_modules)
