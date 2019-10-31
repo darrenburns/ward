@@ -1,3 +1,8 @@
+---
+title: "Writing tests"
+path: "/writing-tests"
+---
+
 ## Descriptive testing
 
 Test frameworks usually require that you describe how your tests work using

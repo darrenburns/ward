@@ -1,3 +1,8 @@
+---
+title: "Fixtures"
+path: "/fixtures"
+---
+
 ## Dependency injection with fixtures
 
 In the example below, we define a single fixture named `city_list`.

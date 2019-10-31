@@ -1,4 +1,9 @@
-## Test selection 
+---
+title: "Running tests"
+path: "/running-tests"
+---
+
+## Test selection
 
 ### Search and run matching tests with `--search`
 
