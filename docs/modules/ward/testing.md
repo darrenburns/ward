@@ -1,64 +1,116 @@
 ---
 path: "/modules/ward.testing"
-title: "Module"
+title: "ward.testing"
 section: "modules"
 ---
 
 Module ward.testing
 ===================
 
-Functions
----------
+#### Functions
 
+```python
     
 `skip(func_or_reason=None, *, reason=None)`
 :   
+```
 
+```python
     
 `test(description)`
 :   
+```
 
+```python
     
 `xfail(func_or_reason=None, *, reason=None)`
 :   
+```
 
-Classes
--------
+#### Classes
 
 `Test(fn, module_name, fixture_cache=<factory>, marker=None, description=None)`
 :   Test(fn: Callable, module_name: str, fixture_cache: ward.fixtures.FixtureCache = <factory>, marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None)
 
     ### Class variables
 
-    `description`
-    :
+```python
 
-    `marker`
-    :
+`description`
+:   
+
+```
+
+```python
+
+`marker`
+:   
+
+```
 
     ### Instance variables
 
-    `line_number`
-    :
+```python
 
-    `name`
-    :
+`line_number`
+:   
 
-    `qualified_name`
-    :
+```
+
+```python
+
+`name`
+:   
+
+```
+
+```python
+
+`qualified_name`
+:   
+
+```
 
     ### Methods
 
-    `deps(self)`
-    :
+```python
 
-    `has_deps(self)`
-    :
+```python
+    
+`deps(self)`
+:   
+```
 
-    `resolve_fixtures(self)`
-    :   Resolve fixtures and return the resultant name -> Fixture dict.
-        Resolved values will be stored in fixture_cache, accessible
-        using the fixture cache key (See `Fixture.key`).
+```
 
-    `teardown_fixtures_in_cache(self)`
-    :
+```python
+
+```python
+    
+`has_deps(self)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`resolve_fixtures(self)`
+:   Resolve fixtures and return the resultant name -> Fixture dict.
+    Resolved values will be stored in fixture_cache, accessible
+    using the fixture cache key (See `Fixture.key`).
+```
+
+```
+
+```python
+
+```python
+    
+`teardown_fixtures_in_cache(self)`
+:   
+```
+
+```

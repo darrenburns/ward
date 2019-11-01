@@ -1,79 +1,103 @@
 ---
 path: "/modules/ward.fixtures"
-title: "Module"
+title: "ward.fixtures"
 section: "modules"
 ---
 
 Module ward.fixtures
 ====================
 
-Functions
----------
+#### Functions
 
+```python
     
 `fixture(func=None, *, description=None)`
 :   
+```
 
-Classes
--------
+#### Classes
 
 `CollectionError(*args, **kwargs)`
 :   Common base class for all non-exit exceptions.
-
-    ### Ancestors (in MRO)
-
-    * ward.fixtures.TestSetupError
-    * builtins.Exception
-    * builtins.BaseException
 
 `Fixture(fn)`
 :   Fixture(fn: Callable)
 
     ### Instance variables
 
-    `is_generator_fixture`
-    :
+```python
 
-    `key`
-    :
+`is_generator_fixture`
+:   
 
-    `name`
-    :
+```
+
+```python
+
+`key`
+:   
+
+```
+
+```python
+
+`name`
+:   
+
+```
 
     ### Methods
 
-    `deps(self)`
-    :
+```python
 
-    `teardown(self)`
-    :
+```python
+    
+`deps(self)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`teardown(self)`
+:   
+```
+
+```
 
 `FixtureCache()`
 :   FixtureCache(_fixtures: Dict[str, ward.fixtures.Fixture] = <factory>)
 
     ### Methods
 
-    `cache_fixture(self, fixture)`
-    :
+```python
 
-    `teardown_all(self)`
-    :   Run the teardown code for all generator fixtures in the cache
+```python
+    
+`cache_fixture(self, fixture)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`teardown_all(self)`
+:   Run the teardown code for all generator fixtures in the cache
+```
+
+```
 
 `FixtureExecutionError(*args, **kwargs)`
 :   Common base class for all non-exit exceptions.
 
-    ### Ancestors (in MRO)
-
-    * builtins.Exception
-    * builtins.BaseException
-
 `TestSetupError(*args, **kwargs)`
 :   Common base class for all non-exit exceptions.
-
-    ### Ancestors (in MRO)
-
-    * builtins.Exception
-    * builtins.BaseException
 
     ### Descendants
 

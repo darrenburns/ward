@@ -1,6 +1,6 @@
 ---
 path: "/modules/ward.run"
-title: "Module"
+title: "ward.run"
 section: "modules"
 ---
 

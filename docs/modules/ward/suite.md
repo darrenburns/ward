@@ -1,24 +1,34 @@
 ---
 path: "/modules/ward.suite"
-title: "Module"
+title: "ward.suite"
 section: "modules"
 ---
 
 Module ward.suite
 =================
 
-Classes
--------
+#### Classes
 
 `Suite(tests)`
 :   Suite(tests: List[ward.testing.Test])
 
     ### Instance variables
 
-    `num_tests`
-    :
+```python
+
+`num_tests`
+:   
+
+```
 
     ### Methods
 
-    `generate_test_runs(self)`
-    :
+```python
+
+```python
+    
+`generate_test_runs(self)`
+:   
+```
+
+```

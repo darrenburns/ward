@@ -11,7 +11,11 @@
 <%def name="h3(s)">### ${s}
 </%def>
 
+<%def name="h4(s)">#### ${s}
+</%def>
+
 <%def name="function(func)" buffered="True">
+```python
     <%
         returns = show_type_annotations and func.return_annotation() or ''
         if returns:
@@ -19,6 +23,7 @@
     %>
 `${func.name}(${", ".join(func.params(annotate=show_type_annotations))})${returns}`
 ${func.docstring | deflist}
+```
 </%def>
 
 <%def name="variable(var)" buffered="True">
@@ -37,13 +42,13 @@ ${cls.docstring | deflist}
   mro = cls.mro()
   subclasses = cls.subclasses()
 %>
-% if mro:
-    ${h3('Ancestors (in MRO)')}
-    % for c in mro:
-    * ${c.refname}
-    % endfor
-
-% endif
+## % if mro:
+##     ${h3('Ancestors (in MRO)')}
+##     % for c in mro:
+##     * ${c.refname}
+##     % endfor
+##
+## % endif
 % if subclasses:
     ${h3('Descendants')}
     % for c in subclasses:
@@ -54,28 +59,36 @@ ${cls.docstring | deflist}
 % if class_vars:
     ${h3('Class variables')}
     % for v in class_vars:
-${variable(v) | indent}
+```python
+${variable(v)}
+```
 
     % endfor
 % endif
 % if static_methods:
     ${h3('Static methods')}
     % for f in static_methods:
-${function(f) | indent}
+```python
+${function(f)}
+```
 
     % endfor
 % endif
 % if inst_vars:
     ${h3('Instance variables')}
     % for v in inst_vars:
-${variable(v) | indent}
+```python
+${variable(v)}
+```
 
     % endfor
 % endif
 % if methods:
     ${h3('Methods')}
     % for m in methods:
-${function(m) | indent}
+```python
+${function(m)}
+```
 
     % endfor
 % endif
@@ -93,7 +106,7 @@ ${function(m) | indent}
 
 ---
 path: "/modules/${module.name}"
-title: "${heading}"
+title: "${module.name}"
 section: "modules"
 ---
 
@@ -103,16 +116,14 @@ ${module.docstring}
 
 
 % if submodules:
-Sub-modules
------------
+${h4("Sub-modules")}
     % for m in submodules:
 * ${m.name}
     % endfor
 % endif
 
 % if variables:
-Variables
----------
+${h4("Variables")}
     % for v in variables:
 ${variable(v)}
 
@@ -120,8 +131,7 @@ ${variable(v)}
 % endif
 
 % if functions:
-Functions
----------
+${h4("Functions")}
     % for f in functions:
 ${function(f)}
 
@@ -129,8 +139,7 @@ ${function(f)}
 % endif
 
 % if classes:
-Classes
--------
+${h4("Classes")}
     % for c in classes:
 ${class_(c)}
 

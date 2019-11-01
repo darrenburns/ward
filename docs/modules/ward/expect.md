@@ -1,126 +1,327 @@
 ---
 path: "/modules/ward.expect"
-title: "Module"
+title: "ward.expect"
 section: "modules"
 ---
 
 Module ward.expect
 ==================
 
-Classes
--------
+#### Classes
 
 `ExpectationFailed(message, history)`
 :   Common base class for all non-exit exceptions.
-
-    ### Ancestors (in MRO)
-
-    * builtins.Exception
-    * builtins.BaseException
 
 `Expected(this, op, that, op_args, op_kwargs, success=True)`
 :   Expected(this: Any, op: str, that: Union[Any, NoneType], op_args: Tuple, op_kwargs: Dict, success: bool = True)
 
     ### Class variables
 
-    `success`
-    :   bool(x) -> bool
-        
-        Returns True when the argument x is true, False otherwise.
-        The builtins True and False are the only two instances of the class bool.
-        The class bool is a subclass of the class int, and cannot be subclassed.
+```python
+
+`success`
+:   bool(x) -> bool
+    
+    Returns True when the argument x is true, False otherwise.
+    The builtins True and False are the only two instances of the class bool.
+    The class bool is a subclass of the class int, and cannot be subclassed.
+
+```
 
 `expect(this)`
 :   
 
     ### Methods
 
-    `approx(self, that, rel_tol=1e-09, abs_tol=0.0)`
-    :
+```python
 
-    `called(self)`
-    :
+```python
+    
+`approx(self, that, rel_tol=1e-09, abs_tol=0.0)`
+:   
+```
 
-    `called_once_with(self, *args, **kwargs)`
-    :
+```
 
-    `called_with(self, *args, **kwargs)`
-    :
+```python
 
-    `contained_in(self, that)`
-    :
+```python
+    
+`called(self)`
+:   
+```
 
-    `contains(self, that)`
-    :
+```
 
-    `equals(self, expected)`
-    :
+```python
 
-    `greater_than(self, that)`
-    :
+```python
+    
+`called_once_with(self, *args, **kwargs)`
+:   
+```
 
-    `greater_than_or_equals(self, that)`
-    :
+```
 
-    `has_calls(self, calls, any_order=False)`
-    :
+```python
 
-    `has_length(self, length)`
-    :
+```python
+    
+`called_with(self, *args, **kwargs)`
+:   
+```
 
-    `identical_to(self, that)`
-    :
+```
 
-    `instance_of(self, type)`
-    :
+```python
 
-    `less_than(self, that)`
-    :
+```python
+    
+`contained_in(self, that)`
+:   
+```
 
-    `less_than_or_equals(self, that)`
-    :
+```
 
-    `not_approx(self, that, rel_tol=1e-09, abs_tol=0.0)`
-    :
+```python
 
-    `not_called(self)`
-    :
+```python
+    
+`contains(self, that)`
+:   
+```
 
-    `not_contained_in(self, that)`
-    :
+```
 
-    `not_contains(self, that)`
-    :
+```python
 
-    `not_equals(self, that)`
-    :
+```python
+    
+`equals(self, expected)`
+:   
+```
 
-    `not_greater_than(self, that)`
-    :
+```
 
-    `not_greater_than_or_equals(self, that)`
-    :
+```python
 
-    `not_has_length(self, length)`
-    :
+```python
+    
+`greater_than(self, that)`
+:   
+```
 
-    `not_identical_to(self, that)`
-    :
+```
 
-    `not_instance_of(self, type)`
-    :
+```python
 
-    `not_less_than(self, that)`
-    :
+```python
+    
+`greater_than_or_equals(self, that)`
+:   
+```
 
-    `not_less_than_or_equals(self, that)`
-    :
+```
 
-    `not_satisfies(self, predicate)`
-    :
+```python
 
-    `satisfies(self, predicate)`
-    :
+```python
+    
+`has_calls(self, calls, any_order=False)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`has_length(self, length)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`identical_to(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`instance_of(self, type)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`less_than(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`less_than_or_equals(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_approx(self, that, rel_tol=1e-09, abs_tol=0.0)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_called(self)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_contained_in(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_contains(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_equals(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_greater_than(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_greater_than_or_equals(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_has_length(self, length)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_identical_to(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_instance_of(self, type)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_less_than(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_less_than_or_equals(self, that)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`not_satisfies(self, predicate)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`satisfies(self, predicate)`
+:   
+```
+
+```
 
 `raises(expected_ex_type)`
 :

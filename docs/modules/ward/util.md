@@ -1,36 +1,44 @@
 ---
 path: "/modules/ward.util"
-title: "Module"
+title: "ward.util"
 section: "modules"
 ---
 
 Module ward.util
 ================
 
-Functions
----------
+#### Functions
 
+```python
     
 `get_exit_code(results)`
 :   
+```
 
-Classes
--------
+#### Classes
 
 `ExitCode(*args, **kwargs)`
 :   An enumeration.
 
-    ### Ancestors (in MRO)
-
-    * enum.Enum
-
     ### Class variables
 
-    `ERROR`
-    :   An enumeration.
+```python
 
-    `FAILED`
-    :   An enumeration.
+`ERROR`
+:   An enumeration.
 
-    `SUCCESS`
-    :   An enumeration.
+```
+
+```python
+
+`FAILED`
+:   An enumeration.
+
+```
+
+```python
+
+`SUCCESS`
+:   An enumeration.
+
+```

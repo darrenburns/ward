@@ -1,65 +1,128 @@
 ---
 path: "/modules/ward.terminal"
-title: "Module"
+title: "ward.terminal"
 section: "modules"
 ---
 
 Module ward.terminal
 ====================
 
-Functions
----------
+#### Functions
 
+```python
     
 `get_terminal_size()`
 :   
+```
 
+```python
     
 `lightblack(s)`
 :   
+```
 
+```python
     
 `truncate(s, num_chars)`
 :   
+```
 
-Classes
--------
+#### Classes
 
 `SimpleTestResultWrite(suite)`
 :   
 
-    ### Ancestors (in MRO)
-
-    * ward.terminal.TestResultWriterBase
-
     ### Methods
 
-    `generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp)`
-    :
+```python
 
-    `output_captured_stderr(self, test_result)`
-    :
+```python
+    
+`generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp)`
+:   
+```
 
-    `output_captured_stdout(self, test_result)`
-    :
+```
 
-    `output_test_result_summary(self, test_results, time_taken)`
-    :
+```python
 
-    `output_test_run_post_failure_summary(self, test_results)`
-    :
+```python
+    
+`output_captured_stderr(self, test_result)`
+:   
+```
 
-    `print_expect_chain_item(self, expect)`
-    :
+```
 
-    `print_failure_equals(self, err)`
-    :
+```python
 
-    `print_traceback(self, err)`
-    :
+```python
+    
+`output_captured_stdout(self, test_result)`
+:   
+```
 
-    `result_checkbox(self, expect)`
-    :
+```
+
+```python
+
+```python
+    
+`output_test_result_summary(self, test_results, time_taken)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`output_test_run_post_failure_summary(self, test_results)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`print_expect_chain_item(self, expect)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`print_failure_equals(self, err)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`print_traceback(self, err)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`result_checkbox(self, expect)`
+:   
+```
+
+```
 
 `TerminalSize(height, width)`
 :   TerminalSize(height: int, width: int)
@@ -73,27 +136,83 @@ Classes
 
     ### Methods
 
-    `output_all_test_results(self, test_results_gen, time_to_collect, fail_limit=None)`
-    :
+```python
 
-    `output_captured_stderr(self, test_result)`
-    :
+```python
+    
+`output_all_test_results(self, test_results_gen, time_to_collect, fail_limit=None)`
+:   
+```
 
-    `output_captured_stdout(self, test_result)`
-    :
+```
 
-    `output_single_test_result(self, test_result)`
-    :   Indicate whether a test passed, failed, was skipped etc.
+```python
 
-    `output_test_result_summary(self, test_results, time_taken)`
-    :
+```python
+    
+`output_captured_stderr(self, test_result)`
+:   
+```
 
-    `output_test_run_post_failure_summary(self, test_results)`
-    :
+```
 
-    `output_why_test_failed(self, test_result)`
-    :   Extended output shown for failing tests, may include further explanations,
-        assertion error info, diffs, etc.
+```python
 
-    `output_why_test_failed_header(self, test_result)`
-    :   Printed above the failing test output
+```python
+    
+`output_captured_stdout(self, test_result)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`output_single_test_result(self, test_result)`
+:   Indicate whether a test passed, failed, was skipped etc.
+```
+
+```
+
+```python
+
+```python
+    
+`output_test_result_summary(self, test_results, time_taken)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`output_test_run_post_failure_summary(self, test_results)`
+:   
+```
+
+```
+
+```python
+
+```python
+    
+`output_why_test_failed(self, test_result)`
+:   Extended output shown for failing tests, may include further explanations,
+    assertion error info, diffs, etc.
+```
+
+```
+
+```python
+
+```python
+    
+`output_why_test_failed_header(self, test_result)`
+:   Printed above the failing test output
+```
+
+```
