@@ -53,34 +53,29 @@ ${h4('Descendants')}
 % for c in subclasses:
 * `${c.refname}`
 % endfor
-
 % endif
 % if class_vars:
 ${h4('Class variables')}
 % for v in class_vars:
-${variable(v)}
-
+* ${variable(v)}
 % endfor
 % endif
 % if static_methods:
 ${h4('Static methods')}
 % for f in static_methods:
 ${function(f)}
-
-    % endfor
+% endfor
 % endif
 % if inst_vars:
 ${h4('Instance variables')}
 % for v in inst_vars:
 * ${variable(v)}
-
 % endfor
 % endif
 % if methods:
 ${h4('Methods')}
 % for m in methods:
 ${function(m)}
-
 % endfor
 % endif
 </%def>
@@ -101,7 +96,7 @@ title: "${module.name}"
 section: "modules"
 ---
 
-${heading} ${module.name}
+${heading} `${module.name}`
 =${'=' * (len(module.name) + len(heading))}
 ${module.docstring}
 

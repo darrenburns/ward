@@ -4,7 +4,7 @@ title: "ward.util"
 section: "modules"
 ---
 
-Module ward.util
+Module `ward.util`
 ================
 
 ### Functions
@@ -22,8 +22,6 @@ An enumeration.
 
 #### Class variables
 
-`ERROR` An enumeration.
-
-`FAILED` An enumeration.
-
-`SUCCESS` An enumeration.
+* `ERROR` An enumeration.
+* `FAILED` An enumeration.
+* `SUCCESS` An enumeration.

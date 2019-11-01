@@ -4,7 +4,7 @@ title: "ward.expect"
 section: "modules"
 ---
 
-Module ward.expect
+Module `ward.expect`
 ==================
 
 ### Classes
@@ -21,7 +21,7 @@ Expected(this: Any, op: str, that: Union[Any, NoneType], op_args: Tuple, op_kwar
 
 #### Class variables
 
-`success` bool(x) -> bool
+* `success` bool(x) -> bool
 
 Returns True when the argument x is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.

@@ -4,7 +4,7 @@ title: "ward.fixtures"
 section: "modules"
 ---
 
-Module ward.fixtures
+Module `ward.fixtures`
 ====================
 
 ### Functions
@@ -28,9 +28,7 @@ Fixture(fn: Callable)
 #### Instance variables
 
 * `is_generator_fixture` 
-
 * `key` 
-
 * `name` 
 
 #### Methods

@@ -4,7 +4,7 @@ title: "ward"
 section: "modules"
 ---
 
-Module ward
+Module `ward`
 ===========
 
 ### Sub-modules

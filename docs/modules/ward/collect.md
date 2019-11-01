@@ -4,7 +4,7 @@ title: "ward.collect"
 section: "modules"
 ---
 
-Module ward.collect
+Module `ward.collect`
 ===================
 
 ### Functions

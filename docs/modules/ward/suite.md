@@ -4,7 +4,7 @@ title: "ward.suite"
 section: "modules"
 ---
 
-Module ward.suite
+Module `ward.suite`
 =================
 
 ### Classes

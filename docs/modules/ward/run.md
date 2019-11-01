@@ -4,5 +4,5 @@ title: "ward.run"
 section: "modules"
 ---
 
-Module ward.run
+Module `ward.run`
 ===============

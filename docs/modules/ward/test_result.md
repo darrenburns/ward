@@ -4,7 +4,7 @@ title: "ward.test_result"
 section: "modules"
 ---
 
-Module ward.test_result
+Module `ward.test_result`
 =======================
 
 ### Classes
@@ -16,15 +16,11 @@ An enumeration.
 
 #### Class variables
 
-`FAIL` An enumeration.
-
-`PASS` An enumeration.
-
-`SKIP` An enumeration.
-
-`XFAIL` An enumeration.
-
-`XPASS` An enumeration.
+* `FAIL` An enumeration.
+* `PASS` An enumeration.
+* `SKIP` An enumeration.
+* `XFAIL` An enumeration.
+* `XPASS` An enumeration.
 
 ```python
 TestResult(test: ward.testing.Test, outcome: ward.test_result.TestOutcome, error: Union[Exception, NoneType] = None, message: str = '', captured_stdout: str = '', captured_stderr: str = '')
@@ -33,7 +29,7 @@ TestResult(test: ward.testing.Test, outcome: ward.test_result.TestOutcome, error
 
 #### Class variables
 
-`captured_stderr` str(object='') -> str
+* `captured_stderr` str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or
@@ -43,8 +39,7 @@ Otherwise, returns the result of object.__str__() (if defined)
 or repr(object).
 encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
-
-`captured_stdout` str(object='') -> str
+* `captured_stdout` str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or
@@ -54,10 +49,8 @@ Otherwise, returns the result of object.__str__() (if defined)
 or repr(object).
 encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
-
-`error` 
-
-`message` str(object='') -> str
+* `error` 
+* `message` str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or

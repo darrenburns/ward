@@ -4,7 +4,7 @@ title: "ward.terminal"
 section: "modules"
 ---
 
-Module ward.terminal
+Module `ward.terminal`
 ====================
 
 ### Functions

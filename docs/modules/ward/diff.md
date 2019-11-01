@@ -4,7 +4,7 @@ title: "ward.diff"
 section: "modules"
 ---
 
-Module ward.diff
+Module `ward.diff`
 ================
 
 ### Functions

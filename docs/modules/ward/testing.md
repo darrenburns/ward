@@ -4,7 +4,7 @@ title: "ward.testing"
 section: "modules"
 ---
 
-Module ward.testing
+Module `ward.testing`
 ===================
 
 ### Functions
@@ -30,16 +30,13 @@ Test(fn: Callable, module_name: str, fixture_cache: ward.fixtures.FixtureCache =
 
 #### Class variables
 
-`description` 
-
-`marker` 
+* `description` 
+* `marker` 
 
 #### Instance variables
 
 * `line_number` 
-
 * `name` 
-
 * `qualified_name` 
 
 #### Methods
