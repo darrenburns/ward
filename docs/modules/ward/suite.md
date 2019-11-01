@@ -1,3 +1,9 @@
+---
+path: "/modules/ward.suite"
+title: "Module"
+section: "modules"
+---
+
 Module ward.suite
 =================
 

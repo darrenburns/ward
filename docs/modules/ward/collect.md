@@ -1,3 +1,9 @@
+---
+path: "/modules/ward.collect"
+title: "Module"
+section: "modules"
+---
+
 Module ward.collect
 ===================
 

@@ -1,3 +1,9 @@
+---
+path: "/modules/ward"
+title: "Module"
+section: "modules"
+---
+
 Module ward
 ===========
 

@@ -1,3 +1,9 @@
+---
+path: "/modules/ward.diff"
+title: "Module"
+section: "modules"
+---
+
 Module ward.diff
 ================
 

@@ -1,3 +1,9 @@
+---
+path: "/modules/ward.models"
+title: "Module"
+section: "modules"
+---
+
 Module ward.models
 ==================
 

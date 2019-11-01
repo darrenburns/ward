@@ -1,3 +1,9 @@
+---
+path: "/modules/ward.test_result"
+title: "Module"
+section: "modules"
+---
+
 Module ward.test_result
 =======================
 

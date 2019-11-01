@@ -1,3 +1,9 @@
+---
+path: "/modules/ward.terminal"
+title: "Module"
+section: "modules"
+---
+
 Module ward.terminal
 ====================
 

@@ -1,3 +1,9 @@
+---
+path: "/modules/ward.expect"
+title: "Module"
+section: "modules"
+---
+
 Module ward.expect
 ==================
 

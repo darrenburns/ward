@@ -1,3 +1,9 @@
+---
+path: "/modules/ward.fixtures"
+title: "Module"
+section: "modules"
+---
+
 Module ward.fixtures
 ====================
 

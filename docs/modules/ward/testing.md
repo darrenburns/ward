@@ -1,3 +1,9 @@
+---
+path: "/modules/ward.testing"
+title: "Module"
+section: "modules"
+---
+
 Module ward.testing
 ===================
 
