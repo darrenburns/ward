@@ -7,38 +7,39 @@ section: "modules"
 Module ward.util
 ================
 
-#### Functions
+    ### Functions
 
-```python
+        
+    ```python
     
-`get_exit_code(results)`
-:   
-```
+    `get_exit_code(results: Iterable[ward.test_result.TestResult])`
+    ```
+    
 
-#### Classes
+    ### Classes
 
-`ExitCode(*args, **kwargs)`
-:   An enumeration.
+        
+    ```python
+    ExitCode(*args, **kwargs)
+    ```
+    An enumeration.
 
     ### Class variables
 
-```python
+        
+    ```python
+    ERROR
+    ```
+    An enumeration.
 
-`ERROR`
-:   An enumeration.
+        
+    ```python
+    FAILED
+    ```
+    An enumeration.
 
-```
-
-```python
-
-`FAILED`
-:   An enumeration.
-
-```
-
-```python
-
-`SUCCESS`
-:   An enumeration.
-
-```
+        
+    ```python
+    SUCCESS
+    ```
+    An enumeration.

@@ -7,110 +7,98 @@ section: "modules"
 Module ward.testing
 ===================
 
-#### Functions
+    ### Functions
 
-```python
+        
+    ```python
     
-`skip(func_or_reason=None, *, reason=None)`
-:   
-```
-
-```python
+    `skip(func_or_reason=None, *, reason: str = None)`
+    ```
     
-`test(description)`
-:   
-```
 
-```python
+        
+    ```python
     
-`xfail(func_or_reason=None, *, reason=None)`
-:   
-```
+    `test(description: str)`
+    ```
+    
 
-#### Classes
+        
+    ```python
+    
+    `xfail(func_or_reason=None, *, reason: str = None)`
+    ```
+    
 
-`Test(fn, module_name, fixture_cache=<factory>, marker=None, description=None)`
-:   Test(fn: Callable, module_name: str, fixture_cache: ward.fixtures.FixtureCache = <factory>, marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None)
+    ### Classes
+
+        
+    ```python
+    Test(fn: Callable, module_name: str, fixture_cache: ward.fixtures.FixtureCache = <factory>, marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None)
+    ```
+    Test(fn: Callable, module_name: str, fixture_cache: ward.fixtures.FixtureCache = <factory>, marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None)
 
     ### Class variables
 
-```python
+        
+    ```python
+    description
+    ```
+    
 
-`description`
-:   
-
-```
-
-```python
-
-`marker`
-:   
-
-```
+        
+    ```python
+    marker
+    ```
+    
 
     ### Instance variables
 
-```python
+        
+    ```python
+    line_number
+    ```
+    
 
-`line_number`
-:   
+        
+    ```python
+    name
+    ```
+    
 
-```
-
-```python
-
-`name`
-:   
-
-```
-
-```python
-
-`qualified_name`
-:   
-
-```
+        
+    ```python
+    qualified_name
+    ```
+    
 
     ### Methods
 
-```python
-
-```python
+        
+    ```python
     
-`deps(self)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `deps(self)`
+    ```
     
-`has_deps(self)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`resolve_fixtures(self)`
-:   Resolve fixtures and return the resultant name -> Fixture dict.
-    Resolved values will be stored in fixture_cache, accessible
-    using the fixture cache key (See `Fixture.key`).
-```
-
-```
-
-```python
-
-```python
+    `has_deps(self)`
+    ```
     
-`teardown_fixtures_in_cache(self)`
-:   
-```
 
-```
+        
+    ```python
+    
+    `resolve_fixtures(self)`
+    ```
+    Resolve fixtures and return the resultant name -> Fixture dict.
+Resolved values will be stored in fixture_cache, accessible
+using the fixture cache key (See `Fixture.key`).
+
+        
+    ```python
+    
+    `teardown_fixtures_in_cache(self)`
+    ```

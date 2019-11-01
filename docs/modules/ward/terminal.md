@@ -7,212 +7,173 @@ section: "modules"
 Module ward.terminal
 ====================
 
-#### Functions
+    ### Functions
 
-```python
+        
+    ```python
     
-`get_terminal_size()`
-:   
-```
-
-```python
+    `get_terminal_size()`
+    ```
     
-`lightblack(s)`
-:   
-```
 
-```python
+        
+    ```python
     
-`truncate(s, num_chars)`
-:   
-```
+    `lightblack(s: str)`
+    ```
+    
 
-#### Classes
+        
+    ```python
+    
+    `truncate(s: str, num_chars: int)`
+    ```
+    
 
-`SimpleTestResultWrite(suite)`
-:   
+    ### Classes
+
+        
+    ```python
+    SimpleTestResultWrite(suite: ward.suite.Suite)
+    ```
+    
 
     ### Methods
 
-```python
-
-```python
+        
+    ```python
     
-`generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp)`
+    ```
     
-`output_captured_stderr(self, test_result)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`output_captured_stdout(self, test_result)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `output_captured_stderr(self, test_result: ward.test_result.TestResult)`
+    ```
     
-`output_test_result_summary(self, test_results, time_taken)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`output_test_run_post_failure_summary(self, test_results)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `output_captured_stdout(self, test_result: ward.test_result.TestResult)`
+    ```
     
-`print_expect_chain_item(self, expect)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`print_failure_equals(self, err)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `output_test_result_summary(self, test_results: List[ward.test_result.TestResult], time_taken: float)`
+    ```
     
-`print_traceback(self, err)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`result_checkbox(self, expect)`
-:   
-```
+    `output_test_run_post_failure_summary(self, test_results: List[ward.test_result.TestResult])`
+    ```
+    
 
-```
+        
+    ```python
+    
+    `print_expect_chain_item(self, expect: ward.expect.Expected)`
+    ```
+    
 
-`TerminalSize(height, width)`
-:   TerminalSize(height: int, width: int)
+        
+    ```python
+    
+    `print_failure_equals(self, err)`
+    ```
+    
 
-`TestResultWriterBase(suite)`
-:   
+        
+    ```python
+    
+    `print_traceback(self, err)`
+    ```
+    
+
+        
+    ```python
+    
+    `result_checkbox(self, expect)`
+    ```
+    
+
+        
+    ```python
+    TerminalSize(height: int, width: int)
+    ```
+    TerminalSize(height: int, width: int)
+
+        
+    ```python
+    TestResultWriterBase(suite: ward.suite.Suite)
+    ```
+    
 
     ### Descendants
 
-    * ward.terminal.SimpleTestResultWrite
+        * `ward.terminal.SimpleTestResultWrite`
 
     ### Methods
 
-```python
-
-```python
+        
+    ```python
     
-`output_all_test_results(self, test_results_gen, time_to_collect, fail_limit=None)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `output_all_test_results(self, test_results_gen: Generator[ward.test_result.TestResult, NoneType, NoneType], time_to_collect: float, fail_limit: Union[int, NoneType] = None)`
+    ```
     
-`output_captured_stderr(self, test_result)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`output_captured_stdout(self, test_result)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `output_captured_stderr(self, test_result: ward.test_result.TestResult)`
+    ```
     
-`output_single_test_result(self, test_result)`
-:   Indicate whether a test passed, failed, was skipped etc.
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`output_test_result_summary(self, test_results, time_taken)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `output_captured_stdout(self, test_result: ward.test_result.TestResult)`
+    ```
     
-`output_test_run_post_failure_summary(self, test_results)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`output_why_test_failed(self, test_result)`
-:   Extended output shown for failing tests, may include further explanations,
-    assertion error info, diffs, etc.
-```
+    `output_single_test_result(self, test_result: ward.test_result.TestResult)`
+    ```
+    Indicate whether a test passed, failed, was skipped etc.
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`output_why_test_failed_header(self, test_result)`
-:   Printed above the failing test output
-```
+    `output_test_result_summary(self, test_results: List[ward.test_result.TestResult], time_taken: float)`
+    ```
+    
 
-```
+        
+    ```python
+    
+    `output_test_run_post_failure_summary(self, test_results: List[ward.test_result.TestResult])`
+    ```
+    
+
+        
+    ```python
+    
+    `output_why_test_failed(self, test_result: ward.test_result.TestResult)`
+    ```
+    Extended output shown for failing tests, may include further explanations,
+assertion error info, diffs, etc.
+
+        
+    ```python
+    
+    `output_why_test_failed_header(self, test_result: ward.test_result.TestResult)`
+    ```
+    Printed above the failing test output

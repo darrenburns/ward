@@ -7,98 +7,99 @@ section: "modules"
 Module ward.fixtures
 ====================
 
-#### Functions
+    ### Functions
 
-```python
+        
+    ```python
     
-`fixture(func=None, *, description=None)`
-:   
-```
+    `fixture(func=None, *, description=None)`
+    ```
+    
 
-#### Classes
+    ### Classes
 
-`CollectionError(*args, **kwargs)`
-:   Common base class for all non-exit exceptions.
+        
+    ```python
+    CollectionError(*args, **kwargs)
+    ```
+    Common base class for all non-exit exceptions.
 
-`Fixture(fn)`
-:   Fixture(fn: Callable)
+        
+    ```python
+    Fixture(fn: Callable)
+    ```
+    Fixture(fn: Callable)
 
     ### Instance variables
 
-```python
+        
+    ```python
+    is_generator_fixture
+    ```
+    
 
-`is_generator_fixture`
-:   
+        
+    ```python
+    key
+    ```
+    
 
-```
-
-```python
-
-`key`
-:   
-
-```
-
-```python
-
-`name`
-:   
-
-```
+        
+    ```python
+    name
+    ```
+    
 
     ### Methods
 
-```python
-
-```python
+        
+    ```python
     
-`deps(self)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `deps(self)`
+    ```
     
-`teardown(self)`
-:   
-```
 
-```
+        
+    ```python
+    
+    `teardown(self)`
+    ```
+    
 
-`FixtureCache()`
-:   FixtureCache(_fixtures: Dict[str, ward.fixtures.Fixture] = <factory>)
+        
+    ```python
+    FixtureCache()
+    ```
+    FixtureCache(_fixtures: Dict[str, ward.fixtures.Fixture] = <factory>)
 
     ### Methods
 
-```python
-
-```python
+        
+    ```python
     
-`cache_fixture(self, fixture)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `cache_fixture(self, fixture: ward.fixtures.Fixture)`
+    ```
     
-`teardown_all(self)`
-:   Run the teardown code for all generator fixtures in the cache
-```
 
-```
+        
+    ```python
+    
+    `teardown_all(self)`
+    ```
+    Run the teardown code for all generator fixtures in the cache
 
-`FixtureExecutionError(*args, **kwargs)`
-:   Common base class for all non-exit exceptions.
+        
+    ```python
+    FixtureExecutionError(*args, **kwargs)
+    ```
+    Common base class for all non-exit exceptions.
 
-`TestSetupError(*args, **kwargs)`
-:   Common base class for all non-exit exceptions.
+        
+    ```python
+    TestSetupError(*args, **kwargs)
+    ```
+    Common base class for all non-exit exceptions.
 
     ### Descendants
 
-    * ward.fixtures.CollectionError
+        * `ward.fixtures.CollectionError`

@@ -7,34 +7,38 @@ section: "modules"
 Module ward.collect
 ===================
 
-#### Functions
+    ### Functions
 
-```python
+        
+    ```python
     
-`get_info_for_modules(path)`
-:   
-```
+    `get_info_for_modules(path: str)`
+    ```
+    
 
-```python
+        
+    ```python
     
-`get_tests_in_modules(modules)`
-:   
-```
+    `get_tests_in_modules(modules: Iterable)`
+    ```
+    
 
-```python
+        
+    ```python
     
-`is_test_module(module)`
-:   
-```
+    `is_test_module(module: pkgutil.ModuleInfo)`
+    ```
+    
 
-```python
+        
+    ```python
     
-`load_modules(modules)`
-:   
-```
+    `load_modules(modules: Iterable[pkgutil.ModuleInfo])`
+    ```
+    
 
-```python
+        
+    ```python
     
-`search_generally(tests, query='')`
-:   
-```
+    `search_generally(tests: Iterable[ward.testing.Test], query: str = '')`
+    ```

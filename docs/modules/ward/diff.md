@@ -7,28 +7,32 @@ section: "modules"
 Module ward.diff
 ================
 
-#### Functions
+    ### Functions
 
-```python
+        
+    ```python
     
-`bright_green(s)`
-:   
-```
+    `bright_green(s: str)`
+    ```
+    
 
-```python
+        
+    ```python
     
-`bright_red(s)`
-:   
-```
+    `bright_red(s: str)`
+    ```
+    
 
-```python
+        
+    ```python
     
-`build_unified_diff(lhs_repr, rhs_repr, margin_left=4)`
-:   
-```
+    `build_unified_diff(lhs_repr, rhs_repr, margin_left=4)`
+    ```
+    
 
-```python
+        
+    ```python
     
-`make_diff(lhs, rhs, width=60)`
-:   Transform input into best format for diffing, then return output diff.
-```
+    `make_diff(lhs, rhs, width=60)`
+    ```
+    Transform input into best format for diffing, then return output diff.

@@ -7,321 +7,244 @@ section: "modules"
 Module ward.expect
 ==================
 
-#### Classes
+    ### Classes
 
-`ExpectationFailed(message, history)`
-:   Common base class for all non-exit exceptions.
+        
+    ```python
+    ExpectationFailed(message: str, history: List[ward.expect.Expected])
+    ```
+    Common base class for all non-exit exceptions.
 
-`Expected(this, op, that, op_args, op_kwargs, success=True)`
-:   Expected(this: Any, op: str, that: Union[Any, NoneType], op_args: Tuple, op_kwargs: Dict, success: bool = True)
+        
+    ```python
+    Expected(this: Any, op: str, that: Union[Any, NoneType], op_args: Tuple, op_kwargs: Dict, success: bool = True)
+    ```
+    Expected(this: Any, op: str, that: Union[Any, NoneType], op_args: Tuple, op_kwargs: Dict, success: bool = True)
 
     ### Class variables
 
-```python
+        
+    ```python
+    success
+    ```
+    bool(x) -> bool
 
-`success`
-:   bool(x) -> bool
+Returns True when the argument x is true, False otherwise.
+The builtins True and False are the only two instances of the class bool.
+The class bool is a subclass of the class int, and cannot be subclassed.
+
+        
+    ```python
+    expect(this: Any)
+    ```
     
-    Returns True when the argument x is true, False otherwise.
-    The builtins True and False are the only two instances of the class bool.
-    The class bool is a subclass of the class int, and cannot be subclassed.
-
-```
-
-`expect(this)`
-:   
 
     ### Methods
 
-```python
-
-```python
+        
+    ```python
     
-`approx(self, that, rel_tol=1e-09, abs_tol=0.0)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `approx(self, that: Any, rel_tol: float = 1e-09, abs_tol: float = 0.0)`
+    ```
     
-`called(self)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`called_once_with(self, *args, **kwargs)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `called(self)`
+    ```
     
-`called_with(self, *args, **kwargs)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`contained_in(self, that)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `called_once_with(self, *args, **kwargs)`
+    ```
     
-`contains(self, that)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`equals(self, expected)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `called_with(self, *args, **kwargs)`
+    ```
     
-`greater_than(self, that)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`greater_than_or_equals(self, that)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `contained_in(self, that: Iterable[Any])`
+    ```
     
-`has_calls(self, calls, any_order=False)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`has_length(self, length)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `contains(self, that: Any)`
+    ```
     
-`identical_to(self, that)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`instance_of(self, type)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `equals(self, expected: Any)`
+    ```
     
-`less_than(self, that)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`less_than_or_equals(self, that)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `greater_than(self, that: Any)`
+    ```
     
-`not_approx(self, that, rel_tol=1e-09, abs_tol=0.0)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`not_called(self)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `greater_than_or_equals(self, that: Any)`
+    ```
     
-`not_contained_in(self, that)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`not_contains(self, that)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `has_calls(self, calls: List[unittest.mock._Call], any_order: bool = False)`
+    ```
     
-`not_equals(self, that)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`not_greater_than(self, that)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `has_length(self, length: int)`
+    ```
     
-`not_greater_than_or_equals(self, that)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`not_has_length(self, length)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `identical_to(self, that: Any)`
+    ```
     
-`not_identical_to(self, that)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`not_instance_of(self, type)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `instance_of(self, type: Type)`
+    ```
     
-`not_less_than(self, that)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`not_less_than_or_equals(self, that)`
-:   
-```
-
-```
-
-```python
-
-```python
+    `less_than(self, that: Any)`
+    ```
     
-`not_satisfies(self, predicate)`
-:   
-```
 
-```
-
-```python
-
-```python
+        
+    ```python
     
-`satisfies(self, predicate)`
-:   
-```
+    `less_than_or_equals(self, that: Any)`
+    ```
+    
 
-```
+        
+    ```python
+    
+    `not_approx(self, that: Any, rel_tol: float = 1e-09, abs_tol: float = 0.0)`
+    ```
+    
 
-`raises(expected_ex_type)`
-:
+        
+    ```python
+    
+    `not_called(self)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_contained_in(self, that: Iterable[Any])`
+    ```
+    
+
+        
+    ```python
+    
+    `not_contains(self, that: Any)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_equals(self, that: Any)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_greater_than(self, that: Any)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_greater_than_or_equals(self, that: Any)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_has_length(self, length: int)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_identical_to(self, that: Any)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_instance_of(self, type: Type)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_less_than(self, that: Any)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_less_than_or_equals(self, that: Any)`
+    ```
+    
+
+        
+    ```python
+    
+    `not_satisfies(self, predicate: Callable[[ForwardRef('expect')], bool])`
+    ```
+    
+
+        
+    ```python
+    
+    `satisfies(self, predicate: Callable[[ForwardRef('expect')], bool])`
+    ```
+    
+
+        
+    ```python
+    raises(expected_ex_type: Type[Exception])
+    ```

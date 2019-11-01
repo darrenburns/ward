@@ -7,28 +7,26 @@ section: "modules"
 Module ward.suite
 =================
 
-#### Classes
+    ### Classes
 
-`Suite(tests)`
-:   Suite(tests: List[ward.testing.Test])
+        
+    ```python
+    Suite(tests: List[ward.testing.Test])
+    ```
+    Suite(tests: List[ward.testing.Test])
 
     ### Instance variables
 
-```python
-
-`num_tests`
-:   
-
-```
+        
+    ```python
+    num_tests
+    ```
+    
 
     ### Methods
 
-```python
-
-```python
+        
+    ```python
     
-`generate_test_runs(self)`
-:   
-```
-
-```
+    `generate_test_runs(self)`
+    ```
