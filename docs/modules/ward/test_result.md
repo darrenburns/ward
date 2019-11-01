@@ -7,59 +7,33 @@ section: "modules"
 Module ward.test_result
 =======================
 
-    ### Classes
+### Classes
 
-        
-    ```python
-    TestOutcome(*args, **kwargs)
-    ```
-    An enumeration.
+```python
+TestOutcome(*args, **kwargs)
+```
+An enumeration.
 
-    ### Class variables
+#### Class variables
 
-        
-    ```python
-    FAIL
-    ```
-    An enumeration.
+`FAIL` An enumeration.
 
-        
-    ```python
-    PASS
-    ```
-    An enumeration.
+`PASS` An enumeration.
 
-        
-    ```python
-    SKIP
-    ```
-    An enumeration.
+`SKIP` An enumeration.
 
-        
-    ```python
-    XFAIL
-    ```
-    An enumeration.
+`XFAIL` An enumeration.
 
-        
-    ```python
-    XPASS
-    ```
-    An enumeration.
+`XPASS` An enumeration.
 
-        
-    ```python
-    TestResult(test: ward.testing.Test, outcome: ward.test_result.TestOutcome, error: Union[Exception, NoneType] = None, message: str = '', captured_stdout: str = '', captured_stderr: str = '')
-    ```
-    TestResult(test: ward.testing.Test, outcome: ward.test_result.TestOutcome, error: Union[Exception, NoneType] = None, message: str = '', captured_stdout: str = '', captured_stderr: str = '')
+```python
+TestResult(test: ward.testing.Test, outcome: ward.test_result.TestOutcome, error: Union[Exception, NoneType] = None, message: str = '', captured_stdout: str = '', captured_stderr: str = '')
+```
+TestResult(test: ward.testing.Test, outcome: ward.test_result.TestOutcome, error: Union[Exception, NoneType] = None, message: str = '', captured_stdout: str = '', captured_stderr: str = '')
 
-    ### Class variables
+#### Class variables
 
-        
-    ```python
-    captured_stderr
-    ```
-    str(object='') -> str
+`captured_stderr` str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or
@@ -70,11 +44,7 @@ or repr(object).
 encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
 
-        
-    ```python
-    captured_stdout
-    ```
-    str(object='') -> str
+`captured_stdout` str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or
@@ -85,17 +55,9 @@ or repr(object).
 encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
 
-        
-    ```python
-    error
-    ```
-    
+`error` 
 
-        
-    ```python
-    message
-    ```
-    str(object='') -> str
+`message` str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or

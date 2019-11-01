@@ -6,36 +6,33 @@
       return ' ' * spaces + new.strip()
 %>
 
-<%def name="h3(s)">### ${s}
+<%def name="h3(s)">
+${"###"} ${s}
 </%def>
 
-<%def name="h4(s)">#### ${s}
+<%def name="h4(s)">
+${"####"} ${s}
 </%def>
 
 <%def name="function(func)" buffered="True">
-    ```python
-    <%
-        returns = show_type_annotations and func.return_annotation() or ''
-        if returns:
-            returns = ' -> ' + returns
-    %>
-    `${func.name}(${", ".join(func.params(annotate=True))})${returns}`
-    ```
-    ${func.docstring}
+<%
+returns = show_type_annotations and func.return_annotation() or ''
+if returns:
+    returns = ' -> ' + returns
+%>
+```python
+${func.name}(${", ".join(func.params(annotate=True))})${returns}
+```
+${func.docstring}
 </%def>
 
-<%def name="variable(var)" buffered="True">
-    ```python
-    ${var.name}
-    ```
-    ${var.docstring}
-</%def>
+<%def name="variable(var)" buffered="True">`${var.name}` ${var.docstring}</%def>
 
 <%def name="class_(cls)" buffered="True">
-    ```python
-    ${cls.name}(${", ".join(cls.params(annotate=True))})
-    ```
-    ${cls.docstring}
+```python
+${cls.name}(${", ".join(cls.params(annotate=True))})
+```
+${cls.docstring}
 <%
     class_vars = cls.class_variables(show_inherited_members, sort=sort_identifiers)
     static_methods = cls.functions(show_inherited_members, sort=sort_identifiers)
@@ -52,39 +49,39 @@
 ##
 ## % endif
 % if subclasses:
-    ${h3('Descendants')}
-    % for c in subclasses:
-        * `${c.refname}`
-    % endfor
+${h4('Descendants')}
+% for c in subclasses:
+* `${c.refname}`
+% endfor
 
 % endif
 % if class_vars:
-    ${h3('Class variables')}
-    % for v in class_vars:
-        ${variable(v)}
+${h4('Class variables')}
+% for v in class_vars:
+${variable(v)}
 
-    % endfor
+% endfor
 % endif
 % if static_methods:
-    ${h3('Static methods')}
-    % for f in static_methods:
-        ${function(f)}
+${h4('Static methods')}
+% for f in static_methods:
+${function(f)}
 
     % endfor
 % endif
 % if inst_vars:
-    ${h3('Instance variables')}
-    % for v in inst_vars:
-        ${variable(v)}
+${h4('Instance variables')}
+% for v in inst_vars:
+* ${variable(v)}
 
-    % endfor
+% endfor
 % endif
 % if methods:
-    ${h3('Methods')}
-    % for m in methods:
-        ${function(m)}
+${h4('Methods')}
+% for m in methods:
+${function(m)}
 
-    % endfor
+% endfor
 % endif
 </%def>
 
@@ -110,32 +107,32 @@ ${module.docstring}
 
 
 % if submodules:
-    ${h3("Sub-modules")}
-    % for m in submodules:
-        * ${m.name}
-    % endfor
+${h3("Sub-modules")}
+% for m in submodules:
+* ${m.name}
+% endfor
 % endif
 
 % if variables:
-    ${h3("Variables")}
-    % for v in variables:
-        ${variable(v)}
+${h3("Variables")}
+% for v in variables:
+${variable(v)}
 
-    % endfor
+% endfor
 % endif
 
 % if functions:
-    ${h3("Functions")}
-    % for f in functions:
-        ${function(f)}
+${h3("Functions")}
+% for f in functions:
+${function(f)}
 
-    % endfor
+% endfor
 % endif
 
 % if classes:
-    ${h3("Classes")}
-    % for c in classes:
-        ${class_(c)}
+${h3("Classes")}
+% for c in classes:
+${class_(c)}
 
-    % endfor
+% endfor
 % endif

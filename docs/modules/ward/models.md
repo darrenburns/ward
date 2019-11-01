@@ -7,32 +7,26 @@ section: "modules"
 Module ward.models
 ==================
 
-    ### Classes
+### Classes
 
-        
-    ```python
-    Marker(name: str)
-    ```
-    Marker(name: str)
+```python
+Marker(name: str)
+```
+Marker(name: str)
 
-    ### Descendants
+#### Descendants
 
-        * `ward.models.SkipMarker`
-        * `ward.models.XfailMarker`
+* `ward.models.SkipMarker`
+* `ward.models.XfailMarker`
 
-        
-    ```python
-    SkipMarker(name: str = 'SKIP', reason: Union[str, NoneType] = None)
-    ```
-    SkipMarker(name: str = 'SKIP', reason: Union[str, NoneType] = None)
+```python
+SkipMarker(name: str = 'SKIP', reason: Union[str, NoneType] = None)
+```
+SkipMarker(name: str = 'SKIP', reason: Union[str, NoneType] = None)
 
-    ### Class variables
+#### Class variables
 
-        
-    ```python
-    name
-    ```
-    str(object='') -> str
+`name` str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or
@@ -43,55 +37,33 @@ or repr(object).
 encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
 
-        
-    ```python
-    reason
-    ```
-    
+`reason` 
 
-        
-    ```python
-    WardMeta(marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None, is_fixture: bool = False)
-    ```
-    WardMeta(marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None, is_fixture: bool = False)
+```python
+WardMeta(marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None, is_fixture: bool = False)
+```
+WardMeta(marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None, is_fixture: bool = False)
 
-    ### Class variables
+#### Class variables
 
-        
-    ```python
-    description
-    ```
-    
+`description` 
 
-        
-    ```python
-    is_fixture
-    ```
-    bool(x) -> bool
+`is_fixture` bool(x) -> bool
 
 Returns True when the argument x is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.
 
-        
-    ```python
-    marker
-    ```
-    
+`marker` 
 
-        
-    ```python
-    XfailMarker(name: str = 'XFAIL', reason: Union[str, NoneType] = None)
-    ```
-    XfailMarker(name: str = 'XFAIL', reason: Union[str, NoneType] = None)
+```python
+XfailMarker(name: str = 'XFAIL', reason: Union[str, NoneType] = None)
+```
+XfailMarker(name: str = 'XFAIL', reason: Union[str, NoneType] = None)
 
-    ### Class variables
+#### Class variables
 
-        
-    ```python
-    name
-    ```
-    str(object='') -> str
+`name` str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or
@@ -102,7 +74,4 @@ or repr(object).
 encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
 
-        
-    ```python
-    reason
-    ```
+`reason`
