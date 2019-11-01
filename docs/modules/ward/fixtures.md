@@ -12,7 +12,7 @@ fixture(func=None, *, description=None)
 
 ## Classes
 
-### CollectionError
+### Class `CollectionError`
 
 ```python
 CollectionError (*args, **kwargs)
@@ -20,7 +20,7 @@ CollectionError (*args, **kwargs)
 
 Common base class for all non-exit exceptions.
 
-### Fixture
+### Class `Fixture`
 
 ```python
 Fixture (fn)
@@ -44,7 +44,7 @@ deps(self)
 teardown(self)
 ```
 
-### FixtureCache
+### Class `FixtureCache`
 
 ```python
 FixtureCache ()
@@ -63,7 +63,7 @@ teardown_all(self)
 ```
 Run the teardown code for all generator fixtures in the cache
 
-### FixtureExecutionError
+### Class `FixtureExecutionError`
 
 ```python
 FixtureExecutionError (*args, **kwargs)
@@ -71,7 +71,7 @@ FixtureExecutionError (*args, **kwargs)
 
 Common base class for all non-exit exceptions.
 
-### TestSetupError
+### Class `TestSetupError`
 
 ```python
 TestSetupError (*args, **kwargs)

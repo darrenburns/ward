@@ -40,7 +40,7 @@ ${func.docstring}
 <%
 annotated_class = cls.name + " (" + ", ".join(cls.params(annotate=False)) + ")"
 %>
-${h3(cls.name)}
+${h3("Class `" + cls.name + "`")}
 ```python
 ${annotated_class}
 ```

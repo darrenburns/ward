@@ -6,7 +6,7 @@ section: "modules"
 
 ## Classes
 
-### Suite
+### Class `Suite`
 
 ```python
 Suite (tests)

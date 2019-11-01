@@ -57,6 +57,9 @@ def xfail(func_or_reason=None, *, reason: str = None):
 
 @dataclass
 class Test:
+    """
+    A representation of a single Ward test.
+    """
     fn: Callable
     module_name: str
     fixture_cache: FixtureCache = field(default_factory=FixtureCache)

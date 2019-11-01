@@ -6,7 +6,7 @@ section: "modules"
 
 ## Classes
 
-### TestOutcome
+### Class `TestOutcome`
 
 ```python
 TestOutcome (*args, **kwargs)
@@ -22,7 +22,7 @@ An enumeration.
 * `XFAIL` An enumeration.
 * `XPASS` An enumeration.
 
-### TestResult
+### Class `TestResult`
 
 ```python
 TestResult (test, outcome, error=None, message='', captured_stdout='', captured_stderr='')

@@ -12,7 +12,7 @@ get_exit_code(results: Iterable[ward.test_result.TestResult])
 
 ## Classes
 
-### ExitCode
+### Class `ExitCode`
 
 ```python
 ExitCode (*args, **kwargs)

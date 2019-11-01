@@ -6,7 +6,7 @@ section: "modules"
 
 ## Classes
 
-### Marker
+### Class `Marker`
 
 ```python
 Marker (name)
@@ -19,7 +19,7 @@ Marker(name: str)
 * `ward.models.SkipMarker`
 * `ward.models.XfailMarker`
 
-### SkipMarker
+### Class `SkipMarker`
 
 ```python
 SkipMarker (name='SKIP', reason=None)
@@ -41,7 +41,7 @@ encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
 * `reason` 
 
-### WardMeta
+### Class `WardMeta`
 
 ```python
 WardMeta (marker=None, description=None, is_fixture=False)
@@ -59,7 +59,7 @@ The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.
 * `marker` 
 
-### XfailMarker
+### Class `XfailMarker`
 
 ```python
 XfailMarker (name='XFAIL', reason=None)

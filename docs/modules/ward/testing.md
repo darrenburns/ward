@@ -20,13 +20,13 @@ xfail(func_or_reason=None, *, reason: str = None)
 
 ## Classes
 
-### Test
+### Class `Test`
 
 ```python
 Test (fn, module_name, fixture_cache=<factory>, marker=None, description=None)
 ```
 
-Test(fn: Callable, module_name: str, fixture_cache: ward.fixtures.FixtureCache = <factory>, marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None)
+A representation of a single Ward test.
 
 #### Class variables
 

@@ -6,7 +6,7 @@ section: "modules"
 
 ## Classes
 
-### ExpectationFailed
+### Class `ExpectationFailed`
 
 ```python
 ExpectationFailed (message, history)
@@ -14,7 +14,7 @@ ExpectationFailed (message, history)
 
 Common base class for all non-exit exceptions.
 
-### Expected
+### Class `Expected`
 
 ```python
 Expected (this, op, that, op_args, op_kwargs, success=True)
@@ -30,7 +30,7 @@ Returns True when the argument x is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.
 
-### expect
+### Class `expect`
 
 ```python
 expect (this)
@@ -154,7 +154,7 @@ not_satisfies(self, predicate: Callable[[ForwardRef('expect')], bool])
 satisfies(self, predicate: Callable[[ForwardRef('expect')], bool])
 ```
 
-### raises
+### Class `raises`
 
 ```python
 raises (expected_ex_type)

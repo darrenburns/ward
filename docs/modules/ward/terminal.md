@@ -20,7 +20,7 @@ truncate(s: str, num_chars: int)
 
 ## Classes
 
-### SimpleTestResultWrite
+### Class `SimpleTestResultWrite`
 
 ```python
 SimpleTestResultWrite (suite)
@@ -64,7 +64,7 @@ print_traceback(self, err)
 result_checkbox(self, expect)
 ```
 
-### TerminalSize
+### Class `TerminalSize`
 
 ```python
 TerminalSize (height, width)
@@ -72,7 +72,7 @@ TerminalSize (height, width)
 
 TerminalSize(height: int, width: int)
 
-### TestResultWriterBase
+### Class `TestResultWriterBase`
 
 ```python
 TestResultWriterBase (suite)
