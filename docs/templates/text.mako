@@ -34,7 +34,7 @@ ${func.name}(${", ".join(func.params(annotate=True))})${returns}
 ${func.docstring}
 </%def>
 
-<%def name="variable(var)" buffered="True">`${var.name}` ${var.docstring}</%def>
+<%def name="variable(var)" buffered="True">`${var.name}` Docstring ${var.docstring}</%def>
 
 <%def name="class_(cls)" buffered="True">
 <%
@@ -79,6 +79,7 @@ ${h4('Static methods')}
 ${function(f)}
 % endfor
 % endif
+${inst_vars}
 % if inst_vars:
 ${h4('Instance variables')}
 % for v in inst_vars:

@@ -26,6 +26,8 @@ truncate(s: str, num_chars: int)
 SimpleTestResultWrite (suite)
 ```
 
+[]
+
 #### Methods
 
 ```python
@@ -72,6 +74,8 @@ TerminalSize (height, width)
 
 TerminalSize(height: int, width: int)
 
+[]
+
 ### Class `TestResultWriterBase`
 
 ```python
@@ -81,6 +85,7 @@ TestResultWriterBase (suite)
 #### Descendants
 
 * `ward.terminal.SimpleTestResultWrite`
+[]
 
 #### Methods
 

@@ -22,6 +22,7 @@ An enumeration.
 
 #### Class variables
 
-* `ERROR` An enumeration.
-* `FAILED` An enumeration.
-* `SUCCESS` An enumeration.
+* `ERROR` Docstring An enumeration.
+* `FAILED` Docstring An enumeration.
+* `SUCCESS` Docstring An enumeration.
+[]

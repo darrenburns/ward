@@ -30,14 +30,15 @@ A representation of a single Ward test.
 
 #### Class variables
 
-* `description` 
-* `marker` 
+* `description` Docstring 
+* `marker` Docstring 
+[<Variable 'ward.testing.Test.line_number'>, <Variable 'ward.testing.Test.name'>, <Variable 'ward.testing.Test.qualified_name'>]
 
 #### Instance variables
 
-* `line_number` 
-* `name` 
-* `qualified_name` 
+* `line_number` Docstring 
+* `name` Docstring 
+* `qualified_name` Docstring 
 
 #### Methods
 

@@ -14,6 +14,8 @@ ExpectationFailed (message, history)
 
 Common base class for all non-exit exceptions.
 
+[]
+
 ### Class `Expected`
 
 ```python
@@ -24,17 +26,20 @@ Expected(this: Any, op: str, that: Union[Any, NoneType], op_args: Tuple, op_kwar
 
 #### Class variables
 
-* `success` bool(x) -> bool
+* `success` Docstring bool(x) -> bool
 
 Returns True when the argument x is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.
+[]
 
 ### Class `expect`
 
 ```python
 expect (this)
 ```
+
+[]
 
 #### Methods
 
@@ -159,3 +164,5 @@ satisfies(self, predicate: Callable[[ForwardRef('expect')], bool])
 ```python
 raises (expected_ex_type)
 ```
+
+[]

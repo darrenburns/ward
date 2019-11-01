@@ -20,6 +20,8 @@ CollectionError (*args, **kwargs)
 
 Common base class for all non-exit exceptions.
 
+[]
+
 ### Class `Fixture`
 
 ```python
@@ -28,11 +30,13 @@ Fixture (fn)
 
 Fixture(fn: Callable)
 
+[<Variable 'ward.fixtures.Fixture.is_generator_fixture'>, <Variable 'ward.fixtures.Fixture.key'>, <Variable 'ward.fixtures.Fixture.name'>]
+
 #### Instance variables
 
-* `is_generator_fixture` 
-* `key` 
-* `name` 
+* `is_generator_fixture` Docstring 
+* `key` Docstring 
+* `name` Docstring 
 
 #### Methods
 
@@ -51,6 +55,8 @@ FixtureCache ()
 ```
 
 FixtureCache(_fixtures: Dict[str, ward.fixtures.Fixture] = <factory>)
+
+[]
 
 #### Methods
 
@@ -71,6 +77,8 @@ FixtureExecutionError (*args, **kwargs)
 
 Common base class for all non-exit exceptions.
 
+[]
+
 ### Class `TestSetupError`
 
 ```python
@@ -82,3 +90,4 @@ Common base class for all non-exit exceptions.
 #### Descendants
 
 * `ward.fixtures.CollectionError`
+[]

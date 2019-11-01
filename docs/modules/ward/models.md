@@ -18,6 +18,7 @@ Marker(name: str)
 
 * `ward.models.SkipMarker`
 * `ward.models.XfailMarker`
+[]
 
 ### Class `SkipMarker`
 
@@ -29,7 +30,7 @@ SkipMarker(name: str = 'SKIP', reason: Union[str, NoneType] = None)
 
 #### Class variables
 
-* `name` str(object='') -> str
+* `name` Docstring str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or
@@ -39,7 +40,8 @@ Otherwise, returns the result of object.__str__() (if defined)
 or repr(object).
 encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
-* `reason` 
+* `reason` Docstring 
+[]
 
 ### Class `WardMeta`
 
@@ -51,13 +53,14 @@ WardMeta(marker: Union[ward.models.Marker, NoneType] = None, description: Union[
 
 #### Class variables
 
-* `description` 
-* `is_fixture` bool(x) -> bool
+* `description` Docstring 
+* `is_fixture` Docstring bool(x) -> bool
 
 Returns True when the argument x is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.
-* `marker` 
+* `marker` Docstring 
+[]
 
 ### Class `XfailMarker`
 
@@ -69,7 +72,7 @@ XfailMarker(name: str = 'XFAIL', reason: Union[str, NoneType] = None)
 
 #### Class variables
 
-* `name` str(object='') -> str
+* `name` Docstring str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or
@@ -79,4 +82,5 @@ Otherwise, returns the result of object.__str__() (if defined)
 or repr(object).
 encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
-* `reason`
+* `reason` Docstring 
+[]
