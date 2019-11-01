@@ -4,20 +4,20 @@ title: "ward.util"
 section: "modules"
 ---
 
-Module `ward.util`
-================
-
-### Functions
+## Functions
 
 ```python
 get_exit_code(results: Iterable[ward.test_result.TestResult])
 ```
 
-### Classes
+## Classes
+
+### ExitCode
 
 ```python
-ExitCode(*args, **kwargs)
+ExitCode (*args, **kwargs)
 ```
+
 An enumeration.
 
 #### Class variables

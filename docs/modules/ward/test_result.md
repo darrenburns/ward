@@ -4,14 +4,14 @@ title: "ward.test_result"
 section: "modules"
 ---
 
-Module `ward.test_result`
-=======================
+## Classes
 
-### Classes
+### TestOutcome
 
 ```python
-TestOutcome(*args, **kwargs)
+TestOutcome (*args, **kwargs)
 ```
+
 An enumeration.
 
 #### Class variables
@@ -22,9 +22,12 @@ An enumeration.
 * `XFAIL` An enumeration.
 * `XPASS` An enumeration.
 
+### TestResult
+
 ```python
-TestResult(test: ward.testing.Test, outcome: ward.test_result.TestOutcome, error: Union[Exception, NoneType] = None, message: str = '', captured_stdout: str = '', captured_stderr: str = '')
+TestResult (test, outcome, error=None, message='', captured_stdout='', captured_stderr='')
 ```
+
 TestResult(test: ward.testing.Test, outcome: ward.test_result.TestOutcome, error: Union[Exception, NoneType] = None, message: str = '', captured_stdout: str = '', captured_stderr: str = '')
 
 #### Class variables

@@ -4,14 +4,14 @@ title: "ward.suite"
 section: "modules"
 ---
 
-Module `ward.suite`
-=================
+## Classes
 
-### Classes
+### Suite
 
 ```python
-Suite(tests: List[ward.testing.Test])
+Suite (tests)
 ```
+
 Suite(tests: List[ward.testing.Test])
 
 #### Instance variables

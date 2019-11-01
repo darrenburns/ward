@@ -4,10 +4,7 @@ title: "ward.terminal"
 section: "modules"
 ---
 
-Module `ward.terminal`
-====================
-
-### Functions
+## Functions
 
 ```python
 get_terminal_size()
@@ -21,10 +18,12 @@ lightblack(s: str)
 truncate(s: str, num_chars: int)
 ```
 
-### Classes
+## Classes
+
+### SimpleTestResultWrite
 
 ```python
-SimpleTestResultWrite(suite: ward.suite.Suite)
+SimpleTestResultWrite (suite)
 ```
 
 #### Methods
@@ -65,13 +64,18 @@ print_traceback(self, err)
 result_checkbox(self, expect)
 ```
 
-```python
-TerminalSize(height: int, width: int)
-```
-TerminalSize(height: int, width: int)
+### TerminalSize
 
 ```python
-TestResultWriterBase(suite: ward.suite.Suite)
+TerminalSize (height, width)
+```
+
+TerminalSize(height: int, width: int)
+
+### TestResultWriterBase
+
+```python
+TestResultWriterBase (suite)
 ```
 
 #### Descendants

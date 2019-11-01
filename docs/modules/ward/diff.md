@@ -4,10 +4,7 @@ title: "ward.diff"
 section: "modules"
 ---
 
-Module `ward.diff`
-================
-
-### Functions
+## Functions
 
 ```python
 bright_green(s: str)

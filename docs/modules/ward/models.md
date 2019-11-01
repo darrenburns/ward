@@ -4,14 +4,14 @@ title: "ward.models"
 section: "modules"
 ---
 
-Module `ward.models`
-==================
+## Classes
 
-### Classes
+### Marker
 
 ```python
-Marker(name: str)
+Marker (name)
 ```
+
 Marker(name: str)
 
 #### Descendants
@@ -19,9 +19,12 @@ Marker(name: str)
 * `ward.models.SkipMarker`
 * `ward.models.XfailMarker`
 
+### SkipMarker
+
 ```python
-SkipMarker(name: str = 'SKIP', reason: Union[str, NoneType] = None)
+SkipMarker (name='SKIP', reason=None)
 ```
+
 SkipMarker(name: str = 'SKIP', reason: Union[str, NoneType] = None)
 
 #### Class variables
@@ -38,9 +41,12 @@ encoding defaults to sys.getdefaultencoding().
 errors defaults to 'strict'.
 * `reason` 
 
+### WardMeta
+
 ```python
-WardMeta(marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None, is_fixture: bool = False)
+WardMeta (marker=None, description=None, is_fixture=False)
 ```
+
 WardMeta(marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None, is_fixture: bool = False)
 
 #### Class variables
@@ -53,9 +59,12 @@ The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.
 * `marker` 
 
+### XfailMarker
+
 ```python
-XfailMarker(name: str = 'XFAIL', reason: Union[str, NoneType] = None)
+XfailMarker (name='XFAIL', reason=None)
 ```
+
 XfailMarker(name: str = 'XFAIL', reason: Union[str, NoneType] = None)
 
 #### Class variables

@@ -6,12 +6,20 @@
       return ' ' * spaces + new.strip()
 %>
 
+<%def name="h2(s)">
+${"##"} ${s}
+</%def>
+
 <%def name="h3(s)">
 ${"###"} ${s}
 </%def>
 
 <%def name="h4(s)">
 ${"####"} ${s}
+</%def>
+
+<%def name="h5(s)">
+${"#####"} ${s}
 </%def>
 
 <%def name="function(func)" buffered="True">
@@ -29,9 +37,14 @@ ${func.docstring}
 <%def name="variable(var)" buffered="True">`${var.name}` ${var.docstring}</%def>
 
 <%def name="class_(cls)" buffered="True">
+<%
+annotated_class = cls.name + " (" + ", ".join(cls.params(annotate=False)) + ")"
+%>
+${h3(cls.name)}
 ```python
-${cls.name}(${", ".join(cls.params(annotate=True))})
+${annotated_class}
 ```
+
 ${cls.docstring}
 <%
     class_vars = cls.class_variables(show_inherited_members, sort=sort_identifiers)
@@ -96,20 +109,17 @@ title: "${module.name}"
 section: "modules"
 ---
 
-${heading} `${module.name}`
-=${'=' * (len(module.name) + len(heading))}
 ${module.docstring}
 
-
 % if submodules:
-${h3("Sub-modules")}
+${h2("Sub-modules")}
 % for m in submodules:
 * ${m.name}
 % endfor
 % endif
 
 % if variables:
-${h3("Variables")}
+${h2("Variables")}
 % for v in variables:
 ${variable(v)}
 
@@ -117,7 +127,7 @@ ${variable(v)}
 % endif
 
 % if functions:
-${h3("Functions")}
+${h2("Functions")}
 % for f in functions:
 ${function(f)}
 
@@ -125,7 +135,7 @@ ${function(f)}
 % endif
 
 % if classes:
-${h3("Classes")}
+${h2("Classes")}
 % for c in classes:
 ${class_(c)}
 

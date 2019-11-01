@@ -4,10 +4,7 @@ title: "ward"
 section: "modules"
 ---
 
-Module `ward`
-===========
-
-### Sub-modules
+## Sub-modules
 
 * ward.collect
 * ward.diff

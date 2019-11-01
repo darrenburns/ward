@@ -4,10 +4,7 @@ title: "ward.collect"
 section: "modules"
 ---
 
-Module `ward.collect`
-===================
-
-### Functions
+## Functions
 
 ```python
 get_info_for_modules(path: str)

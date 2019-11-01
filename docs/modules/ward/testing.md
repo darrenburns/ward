@@ -4,10 +4,7 @@ title: "ward.testing"
 section: "modules"
 ---
 
-Module `ward.testing`
-===================
-
-### Functions
+## Functions
 
 ```python
 skip(func_or_reason=None, *, reason: str = None)
@@ -21,11 +18,14 @@ test(description: str)
 xfail(func_or_reason=None, *, reason: str = None)
 ```
 
-### Classes
+## Classes
+
+### Test
 
 ```python
-Test(fn: Callable, module_name: str, fixture_cache: ward.fixtures.FixtureCache = <factory>, marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None)
+Test (fn, module_name, fixture_cache=<factory>, marker=None, description=None)
 ```
+
 Test(fn: Callable, module_name: str, fixture_cache: ward.fixtures.FixtureCache = <factory>, marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None)
 
 #### Class variables

@@ -4,25 +4,28 @@ title: "ward.fixtures"
 section: "modules"
 ---
 
-Module `ward.fixtures`
-====================
-
-### Functions
+## Functions
 
 ```python
 fixture(func=None, *, description=None)
 ```
 
-### Classes
+## Classes
+
+### CollectionError
 
 ```python
-CollectionError(*args, **kwargs)
+CollectionError (*args, **kwargs)
 ```
+
 Common base class for all non-exit exceptions.
 
+### Fixture
+
 ```python
-Fixture(fn: Callable)
+Fixture (fn)
 ```
+
 Fixture(fn: Callable)
 
 #### Instance variables
@@ -41,9 +44,12 @@ deps(self)
 teardown(self)
 ```
 
+### FixtureCache
+
 ```python
-FixtureCache()
+FixtureCache ()
 ```
+
 FixtureCache(_fixtures: Dict[str, ward.fixtures.Fixture] = <factory>)
 
 #### Methods
@@ -57,14 +63,20 @@ teardown_all(self)
 ```
 Run the teardown code for all generator fixtures in the cache
 
-```python
-FixtureExecutionError(*args, **kwargs)
-```
-Common base class for all non-exit exceptions.
+### FixtureExecutionError
 
 ```python
-TestSetupError(*args, **kwargs)
+FixtureExecutionError (*args, **kwargs)
 ```
+
+Common base class for all non-exit exceptions.
+
+### TestSetupError
+
+```python
+TestSetupError (*args, **kwargs)
+```
+
 Common base class for all non-exit exceptions.
 
 #### Descendants
