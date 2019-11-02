@@ -28,7 +28,6 @@ Planned features:
 * Highly configurable output modes
 * Code coverage with `--coverage` flag
 * Handling flaky tests with test-specific retries, timeouts
-* Integration with unittest.mock (specifics to be ironed out)
 * Plugin system
 
 ## Getting Started

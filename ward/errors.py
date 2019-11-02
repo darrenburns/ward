@@ -1,0 +1,2 @@
+class FixtureError(Exception):
+    pass
