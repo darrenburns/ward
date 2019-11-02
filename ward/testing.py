@@ -59,6 +59,9 @@ def generate_id():
 
 @dataclass
 class Test:
+    """
+    A representation of a single Ward test.
+    """
     fn: Callable
     module_name: str
     id: str = field(default_factory=generate_id)
