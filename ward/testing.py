@@ -1,15 +1,13 @@
 import functools
 import inspect
+import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Callable, Dict, List, Optional, Any
 
-from ward.fixtures import (
-    Fixture,
-    FixtureCache,
-    FixtureExecutionError,
-)
+from ward.errors import FixtureError
+from ward.fixtures import Fixture, FixtureCache, Scope
 from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
 
 
@@ -55,11 +53,15 @@ def xfail(func_or_reason=None, *, reason: str = None):
     return wrapper
 
 
+def generate_id():
+    return uuid.uuid4().hex
+
+
 @dataclass
 class Test:
     fn: Callable
     module_name: str
-    fixture_cache: FixtureCache = field(default_factory=FixtureCache)
+    id: str = field(default_factory=generate_id)
     marker: Optional[Marker] = None
     description: Optional[str] = None
 
@@ -85,7 +87,7 @@ class Test:
     def has_deps(self) -> bool:
         return len(self.deps()) > 0
 
-    def resolve_fixtures(self) -> Dict[str, Fixture]:
+    def resolve_fixtures(self, cache: FixtureCache) -> Dict[str, Fixture]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         Resolved values will be stored in fixture_cache, accessible
@@ -101,20 +103,34 @@ class Test:
         resolved_args: Dict[str, Fixture] = {}
         for name, arg in default_binding.arguments.items():
             if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
-                resolved = self._resolve_single_fixture(arg)
+                resolved = self._resolve_single_fixture(arg, cache)
             else:
                 resolved = arg
             resolved_args[name] = resolved
         return resolved_args
 
-    def _resolve_single_fixture(self, fixture_fn: Callable) -> Fixture:
+    def _resolve_single_fixture(
+        self, fixture_fn: Callable, cache: FixtureCache
+    ) -> Fixture:
         fixture = Fixture(fixture_fn)
-        if fixture.key in self.fixture_cache:
-            return self.fixture_cache[fixture.key]
 
-        deps = inspect.signature(fixture_fn)
-        has_deps = len(deps.parameters) > 0
-        is_generator = inspect.isgeneratorfunction(inspect.unwrap(fixture_fn))
+        if fixture.key in cache:
+            cached_fixture = cache[fixture.key]
+            if fixture.scope == Scope.Global:
+                return cached_fixture
+            elif fixture.scope == Scope.Module:
+                if cached_fixture.last_resolved_module_name == self.module_name:
+                    return cached_fixture
+            elif fixture.scope == Scope.Test:
+                if cached_fixture.last_resolved_test_id == self.id:
+                    return cached_fixture
+
+        # Cache miss, so update the fixture metadata before we resolve and cache it
+        fixture.last_resolved_test_id = self.id
+        fixture.last_resolved_module_name = self.module_name
+
+        has_deps = len(fixture.deps()) > 0
+        is_generator = fixture.is_generator_fixture
         if not has_deps:
             try:
                 if is_generator:
@@ -123,10 +139,8 @@ class Test:
                 else:
                     fixture.resolved_val = fixture_fn()
             except Exception as e:
-                raise FixtureExecutionError(
-                    f"Unable to execute fixture '{fixture.name}'"
-                ) from e
-            self.fixture_cache.cache_fixture(fixture)
+                raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
+            cache.cache_fixture(fixture)
             return fixture
 
         signature = inspect.signature(fixture_fn)
@@ -134,28 +148,27 @@ class Test:
         children_defaults.apply_defaults()
         children_resolved = {}
         for name, child_fixture in children_defaults.arguments.items():
-            child_resolved = self._resolve_single_fixture(child_fixture)
+            child_resolved = self._resolve_single_fixture(child_fixture, cache)
             children_resolved[name] = child_resolved
         try:
             if is_generator:
-                fixture.gen = fixture_fn(**self._resolve_fixture_values(children_resolved))
+                fixture.gen = fixture_fn(
+                    **self._resolve_fixture_values(children_resolved)
+                )
                 fixture.resolved_val = next(fixture.gen)
             else:
                 fixture.resolved_val = fixture_fn(
                     **self._resolve_fixture_values(children_resolved)
                 )
         except Exception as e:
-            raise FixtureExecutionError(f"Unable to execute fixture '{fixture.name}'") from e
-        self.fixture_cache.cache_fixture(fixture)
+            raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
+        cache.cache_fixture(fixture)
         return fixture
 
     def _resolve_fixture_values(
         self, fixture_dict: Dict[str, Fixture]
     ) -> Dict[str, Any]:
         return {key: f.resolved_val for key, f in fixture_dict.items()}
-
-    def teardown_fixtures_in_cache(self):
-        self.fixture_cache.teardown_all()
 
 
 # Tests declared with the name _, and with the @test decorator

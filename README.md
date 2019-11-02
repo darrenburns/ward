@@ -84,11 +84,6 @@ def _(cities=city_list):
 
 Fixtures can be injected into each other, using the same syntax.
 
-The fixture will be executed exactly once each time a test depends on it. 
-
-More specifically, if a fixture F is required by multiple other fixtures that are all injected into a single
-test, then F will only be resolved once.
-
 Fixtures are great for extracting common setup code that you'd otherwise need to repeat at the top of your tests, 
 but they can also execute teardown code:
 
@@ -110,8 +105,17 @@ def _(db=database):
     expect(users).contains("Bob")
 ```
 
-The code below the `yield` statement in a fixture will be executed after the test that depends on it completes,
-regardless of the result of the test. 
+The code below the `yield` statement in the fixture will be executed after the test that depends on it completes,
+regardless of the result of the test.
+
+By default, a fixture will be executed exactly once each time a test depends on it.
+This is because the default `scope` of a fixture is `"test"`.
+
+More specifically, if a test-scoped fixture F is required by multiple other fixtures that are all injected into a single
+test, then F will only be resolved once.
+
+You can alter the scope of a fixture using the `scope` argument of the `fixture` decorator.
+For example `@fixture(scope="module")` will tell Ward to only execute the fixture at most once per module, and have all other tests in the module use the cached value from this execution.
 
 ### Descriptive testing
 
