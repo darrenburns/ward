@@ -1,6 +1,7 @@
 ---
 title: "Running tests"
-path: "/running-tests"
+path: "/guide/running-tests"
+section: "user guide"
 ---
 
 ## Test selection

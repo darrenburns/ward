@@ -1,6 +1,7 @@
 ---
 title: "Writing tests"
-path: "/writing-tests"
+path: "/guide/writing-tests"
+section: "user guide"
 ---
 
 ## Descriptive testing

@@ -1,6 +1,7 @@
 ---
 title: "Fixtures"
-path: "/fixtures"
+path: "/guide/fixtures"
+section: "user guide"
 ---
 
 ## Dependency injection with fixtures
