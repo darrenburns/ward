@@ -2,6 +2,7 @@
 path: "/modules/ward.suite"
 title: "ward.suite"
 section: "modules"
+type: "apidocs"
 ---
 
 ## Classes
@@ -9,10 +10,10 @@ section: "modules"
 ### Class `Suite`
 
 ```python
-Suite (tests)
+Suite (tests, cache=<factory>)
 ```
 
-Suite(tests: List[ward.testing.Test])
+Suite(tests: List[ward.testing.Test], cache: ward.fixtures.FixtureCache = <factory>)
 
 [<Variable 'ward.suite.Suite.num_tests'>]
 

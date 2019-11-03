@@ -2,6 +2,7 @@
 path: "/modules/ward.models"
 title: "ward.models"
 section: "modules"
+type: "apidocs"
 ---
 
 ## Classes
@@ -18,6 +19,21 @@ Marker(name: str)
 
 * `ward.models.SkipMarker`
 * `ward.models.XfailMarker`
+[]
+
+### Class `Scope`
+
+```python
+Scope (*args, **kwargs)
+```
+
+An enumeration.
+
+#### Class variables
+
+* `Global` Docstring An enumeration.
+* `Module` Docstring An enumeration.
+* `Test` Docstring An enumeration.
 []
 
 ### Class `SkipMarker`
@@ -46,10 +62,10 @@ errors defaults to 'strict'.
 ### Class `WardMeta`
 
 ```python
-WardMeta (marker=None, description=None, is_fixture=False)
+WardMeta (marker=None, description=None, is_fixture=False, scope=<Scope.Test: 'test'>)
 ```
 
-WardMeta(marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None, is_fixture: bool = False)
+WardMeta(marker: Union[ward.models.Marker, NoneType] = None, description: Union[str, NoneType] = None, is_fixture: bool = False, scope: ward.models.Scope = <Scope.Test: 'test'>)
 
 #### Class variables
 
@@ -60,6 +76,7 @@ Returns True when the argument x is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.
 * `marker` Docstring 
+* `scope` Docstring An enumeration.
 []
 
 ### Class `XfailMarker`

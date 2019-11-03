@@ -2,6 +2,7 @@
 path: "/modules/ward.collect"
 title: "ward.collect"
 section: "modules"
+type: "apidocs"
 ---
 
 ## Functions

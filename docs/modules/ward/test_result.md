@@ -2,6 +2,7 @@
 path: "/modules/ward.test_result"
 title: "ward.test_result"
 section: "modules"
+type: "apidocs"
 ---
 
 ## Classes

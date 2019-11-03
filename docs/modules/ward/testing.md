@@ -2,9 +2,14 @@
 path: "/modules/ward.testing"
 title: "ward.testing"
 section: "modules"
+type: "apidocs"
 ---
 
 ## Functions
+
+```python
+generate_id()
+```
 
 ```python
 skip(func_or_reason=None, *, reason: str = None)
@@ -23,7 +28,7 @@ xfail(func_or_reason=None, *, reason: str = None)
 ### Class `Test`
 
 ```python
-Test (fn, module_name, fixture_cache=<factory>, marker=None, description=None)
+Test (fn, module_name, id=<factory>, marker=None, description=None)
 ```
 
 A representation of a single Ward test.
@@ -51,12 +56,8 @@ has_deps(self)
 ```
 
 ```python
-resolve_fixtures(self)
+resolve_fixtures(self, cache: ward.fixtures.FixtureCache)
 ```
 Resolve fixtures and return the resultant name -> Fixture dict.
 Resolved values will be stored in fixture_cache, accessible
 using the fixture cache key (See `Fixture.key`).
-
-```python
-teardown_fixtures_in_cache(self)
-```

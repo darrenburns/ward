@@ -2,12 +2,14 @@
 path: "/modules/ward"
 title: "ward"
 section: "modules"
+type: "apidocs"
 ---
 
 ## Sub-modules
 
 * ward.collect
 * ward.diff
+* ward.errors
 * ward.expect
 * ward.fixtures
 * ward.models

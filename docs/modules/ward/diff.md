@@ -2,6 +2,7 @@
 path: "/modules/ward.diff"
 title: "ward.diff"
 section: "modules"
+type: "apidocs"
 ---
 
 ## Functions

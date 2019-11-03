@@ -2,6 +2,7 @@
 path: "/modules/ward.expect"
 title: "ward.expect"
 section: "modules"
+type: "apidocs"
 ---
 
 ## Classes

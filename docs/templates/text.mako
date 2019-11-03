@@ -108,6 +108,7 @@ ${function(m)}
 path: "/modules/${module.name}"
 title: "${module.name}"
 section: "modules"
+type: "apidocs"
 ---
 
 ${module.docstring}

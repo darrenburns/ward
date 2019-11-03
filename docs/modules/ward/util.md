@@ -2,6 +2,7 @@
 path: "/modules/ward.util"
 title: "ward.util"
 section: "modules"
+type: "apidocs"
 ---
 
 ## Functions
