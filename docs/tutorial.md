@@ -4,7 +4,7 @@ path: "/guide/tutorial"
 section: "user guide"
 ---
 
-Ward is available on [PyPI](https://pypi.org/project/ward/), meaning it can be installed using `pip`.
+Ward is available on [PyPI](https://pypi.org/project/ward/), so it can be installed using `pip`.
 
 ```
 pip install ward
@@ -24,7 +24,7 @@ def contains(list_of_items, target_item):
     return False
 ```
 
-This function should return `True`, if the `item` is contained within a list. Otherwise it should return `False`.
+This function should return `True`, if the `target_item` is contained within `list_of_items`. Otherwise it should return `False`.
 
 ## Our first test
 
@@ -47,8 +47,7 @@ def _():
 ```
 
 In this file, we've defined a single test function called `_`. It's been
-annotated as a test using `@test`, and has a helpful description. We don't have to read the code inside the test to 
-understand its purpose.
+annotated with `@test`, and has a helpful description. We don't have to read the code inside the test to understand its purpose.
 
 The description can be queried when running a subset of 
 tests. You may decide to use your own conventions inside the description
@@ -73,7 +72,7 @@ test. This duplicated setup code can be extracted out into a *fixture* so that w
 don't have to repeat ourselves at the start of every test.
 
 The `@fixture` decorator lets us define a fixture, which is a unit of test setup code. It can optionally contain some additional code to clean up any resources
-the fixture used (e.g. cleaning up a test database).
+the it used (e.g. cleaning up a test database).
 
 Lets define a fixture immediately above the tests we just wrote.
 
@@ -85,7 +84,7 @@ def list_of_items():
     return list(range(100000))
 ```
 
-We can now rewrite our tests to make use of this fixture. Here's how we'd rewrite the second test to use the fixture.
+We can now rewrite our tests to make use of this fixture. Here's how we'd rewrite the second test.
 
 ```python
 @test("contains returns False when item is not in list")
@@ -95,12 +94,14 @@ def _(l=list_of_items):
 ```
 
 By binding the name of the fixture as a default argument to the test, Ward will
-resolve the value of the fixture before the test runs, and inject it into the test. 
+resolve it before the test runs, and inject it into the test. 
 
 By default, a fixture is executed immediately before being injected into
-a test. In the case of this fixture, that could be problematic if lots of tests
+a test. In the case of `list_of_items`, that could be problematic if lots of tests
 depend on it. Do we really want to instantiate a list of 100000 integers before
 each of those tests? Probably not.
+
+### Fixture scope
 
 To avoid this repeated expensive test setup, you can tell Ward what the *scope* of a fixture is. The scope of a fixture defines how long it should be cached for.
 
@@ -110,10 +111,10 @@ Ward supports 3 scopes: `test` (default), `module`, and `global`.
 * A `module` scoped fixture will be executed at most once per module.
 * A `global` scoped fixture will be executed at most once per invocation of `ward`.
 
-We can safely say that we only need to generate our `list_of_items` fixture once, and we can reuse its value in every test that depends on it. So lets give it a `global` scope:
+We can safely say that we only need to generate our `list_of_items` once, and we can reuse its value in every test that depends on it. So lets give it a `global` scope:
 
 ```python
-from ward import Scope
+from ward import fixture, Scope
 
 @fixture(scope=Scope.Global)  # or scope="global"
 def list_of_items():
@@ -121,6 +122,9 @@ def list_of_items():
 ```
 
 With this change, our fixture will now only be executed once, regardless of how
-many tests depend on it.
+many tests depend on it. Careful management of fixture scope can drastically reduce the time and resources required to run a suite of tests.
 
-TODO: Note on read-only fixtures and scoping
+As a general rule of thumb, if the value returned by a fixture is immutable, or we know that no test will mutate it, then we can make it `global`. 
+
+You should *never* mutate a `global` or `module` scoped fixture. Doing so breaks
+the isolated nature of tests, and introduces hidden dependencies between them. Ward will warn you if it detects a `global` or `module` scoped fixture has been mutated inside a test (coming in v1.0).
