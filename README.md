@@ -3,6 +3,8 @@
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
+See the full documentation and feature set [here](https://wardpy.com).
+
 A modern Python test framework designed to help you find and fix flaws faster.
 
 ![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
@@ -50,7 +52,7 @@ Now run your test with `ward` (no arguments needed). Ward will output the follow
  PASS  test_sum: 1 plus 2 equals 3
 ```
 
-*You've just wrote your first test with Ward, congrats!* Look [here](docs/writing-tests.md) for more examples.
+*You've just wrote your first test with Ward, congrats!*
 
 ## How to Contribute
 
