@@ -79,7 +79,7 @@ def _():
 @test("Test.is_parameterised should return True for parameterised test")
 def _():
     def parameterised_test(
-        a=each(1,2,3),
+        a=each(1, 2, 3),
         b="a value",
     ):
         pass
@@ -97,3 +97,13 @@ def _():
     t = Test(fn=test, module_name=mod)
 
     expect(t.is_parameterised).equals(False)
+
+
+@test("Test.get_parameterised_instances returns test in list if not parameterised")
+def _():
+    def test():
+        pass
+
+    t = Test(fn=test, module_name=mod)
+
+    expect(t.get_parameterised_instances()).equals([t])
