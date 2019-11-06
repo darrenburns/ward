@@ -4,7 +4,7 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Callable, Dict, List, Optional, Any, Tuple
+from typing import Callable, Dict, List, Optional, Any, Tuple, Union
 
 from ward.errors import FixtureError, ParameterisationError
 from ward.fixtures import Fixture, FixtureCache, Scope
@@ -170,7 +170,7 @@ class Test:
             if isinstance(arg, Each):
                 arg = arg[iteration]
             if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
-                resolved = self._resolve_single_fixture(arg, cache)
+                resolved = self._resolve_single_arg(arg, cache)
             else:
                 resolved = arg
             resolved_args[name] = resolved
@@ -207,11 +207,13 @@ class Test:
             )
         return lengths[0]
 
-    def _resolve_single_fixture(
-        self, fixture_fn: Callable, cache: FixtureCache
-    ) -> Fixture:
-        fixture = Fixture(fixture_fn)
+    def _resolve_single_arg(
+        self, arg: Callable, cache: FixtureCache
+    ) -> Union[Any, Fixture]:
+        if not (hasattr(arg, "ward_meta") or arg.ward_meta.is_fixture):
+            return arg
 
+        fixture = Fixture(arg)
         if fixture.key in cache:
             cached_fixture = cache[fixture.key]
             if fixture.scope == Scope.Global:
@@ -232,30 +234,30 @@ class Test:
         if not has_deps:
             try:
                 if is_generator:
-                    fixture.gen = fixture_fn()
+                    fixture.gen = arg()
                     fixture.resolved_val = next(fixture.gen)
                 else:
-                    fixture.resolved_val = fixture_fn()
+                    fixture.resolved_val = arg()
             except Exception as e:
                 raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
             cache.cache_fixture(fixture)
             return fixture
 
-        signature = inspect.signature(fixture_fn)
+        signature = inspect.signature(arg)
         children_defaults = signature.bind_partial()
         children_defaults.apply_defaults()
         children_resolved = {}
         for name, child_fixture in children_defaults.arguments.items():
-            child_resolved = self._resolve_single_fixture(child_fixture, cache)
+            child_resolved = self._resolve_single_arg(child_fixture, cache)
             children_resolved[name] = child_resolved
         try:
             if is_generator:
-                fixture.gen = fixture_fn(
+                fixture.gen = arg(
                     **self._resolve_fixture_values(children_resolved)
                 )
                 fixture.resolved_val = next(fixture.gen)
             else:
-                fixture.resolved_val = fixture_fn(
+                fixture.resolved_val = arg(
                     **self._resolve_fixture_values(children_resolved)
                 )
         except Exception as e:
