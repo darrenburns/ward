@@ -4,7 +4,7 @@ from unittest.mock import Mock
 from ward import expect, raises
 from ward.errors import ParameterisationError
 from ward.fixtures import fixture
-from ward.testing import Test, test, each
+from ward.testing import Test, test, each, ParamMeta
 
 
 def f():
@@ -121,7 +121,10 @@ def _():
 
     t = Test(fn=test, module_name=mod)
     expect(t.get_parameterised_instances()).equals(
-        2 * [Test(id=mock.ANY, fn=t.fn, module_name=t.module_name)],
+        [
+            Test(id=mock.ANY, fn=t.fn, module_name=t.module_name, param_meta=ParamMeta(0, 2)),
+            Test(id=mock.ANY, fn=t.fn, module_name=t.module_name, param_meta=ParamMeta(1, 2)),
+        ],
     )
 
 

@@ -73,6 +73,12 @@ def generate_id():
 
 
 @dataclass
+class ParamMeta:
+    instance_index: int = 0
+    group_size: int = 1
+
+
+@dataclass
 class Test:
     """
     A representation of a single Ward test.
@@ -82,6 +88,7 @@ class Test:
     id: str = field(default_factory=generate_id)
     marker: Optional[Marker] = None
     description: Optional[str] = None
+    param_meta: Optional[ParamMeta] = ParamMeta()
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)
@@ -129,12 +136,16 @@ class Test:
         number_of_instances = self._find_number_of_instances()
 
         generated_tests = []
-        for instance_number in range(number_of_instances):
+        for instance_index in range(number_of_instances):
             generated_tests.append(Test(
                 fn=self.fn,
                 module_name=self.module_name,
                 marker=self.marker,
                 description=self.description,
+                param_meta=ParamMeta(
+                    instance_index=instance_index,
+                    group_size=number_of_instances,
+                ),
             ))
         return generated_tests
 
