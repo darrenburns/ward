@@ -87,3 +87,13 @@ def _():
     t = Test(fn=parameterised_test, module_name=mod)
 
     expect(t.is_parameterised).equals(True)
+
+
+@test("Test.is_parameterised should return False for standard tests")
+def _():
+    def test():
+        pass
+
+    t = Test(fn=test, module_name=mod)
+
+    expect(t.is_parameterised).equals(False)
