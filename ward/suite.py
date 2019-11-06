@@ -31,7 +31,7 @@ class Suite:
                 self.cache.teardown_fixtures(to_teardown)
 
             generated_tests = test.get_parameterised_instances()
-            for generated_test in generated_tests:
+            for i, generated_test in enumerate(generated_tests):
                 marker = generated_test.marker.name if generated_test.marker else None
                 if marker == "SKIP":
                     yield TestResult(generated_test, TestOutcome.SKIP)
@@ -41,7 +41,7 @@ class Suite:
                 sout, serr = io.StringIO(), io.StringIO()
                 try:
                     with redirect_stdout(sout), redirect_stderr(serr):
-                        resolved_args = generated_test.resolve_args(self.cache)
+                        resolved_args = generated_test.resolve_args(self.cache, iteration=i)
                 except FixtureError as e:
                     # We can't run teardown code here because we can't know how much
                     # of the fixture has been executed.
@@ -62,7 +62,7 @@ class Suite:
                         if isinstance(arg, Fixture):
                             resolved_vals[k] = arg.resolved_val
                         else:
-                            resolved_vals = arg
+                            resolved_vals[k] = arg
 
                     # Run the test, while capturing output.
                     with redirect_stdout(sout), redirect_stderr(serr):

@@ -138,7 +138,7 @@ class Test:
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
-    def resolve_args(self, cache: FixtureCache) -> Dict[str, Fixture]:
+    def resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Fixture]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         Resolved values will be stored in fixture_cache, accessible
@@ -151,6 +151,10 @@ class Test:
 
         resolved_args: Dict[str, Fixture] = {}
         for name, arg in default_args.items():
+            # In the case of parameterised testing, grab the arg corresponding
+            # to the current iteration of the parameterised group of tests.
+            if isinstance(arg, Each):
+                arg = arg[iteration]
             if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
                 resolved = self._resolve_single_fixture(arg, cache)
             else:
