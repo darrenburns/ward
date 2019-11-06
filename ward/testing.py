@@ -119,6 +119,9 @@ class Test:
         If the test is parameterised, return a list of `Test` objects representing
         each test generated as a result of the parameterisation.
         If the test is not parameterised, return a list containing only the test itself.
+        If the test is parameterised incorrectly, for example the number of
+        items don't match across occurrences of `each` in the test signature,
+        then a `ParameterisationError` is raised.
         """
         if not self.is_parameterised:
             return [self]

@@ -1,3 +1,4 @@
+from unittest import mock
 from unittest.mock import Mock
 
 from ward import expect
@@ -107,3 +108,17 @@ def _():
     t = Test(fn=test, module_name=mod)
 
     expect(t.get_parameterised_instances()).equals([t])
+
+
+@test("Test.get_parameterised_instances returns correct number of test instances")
+def _():
+    def test(
+        a=each(1, 2),
+        b=each(3, 4),
+    ):
+        pass
+
+    t = Test(fn=test, module_name=mod)
+    expect(t.get_parameterised_instances()).equals(
+        2 * [Test(id=mock.ANY, fn=t.fn, module_name=t.module_name)],
+    )
