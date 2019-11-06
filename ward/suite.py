@@ -7,7 +7,7 @@ from ward.errors import FixtureError
 from ward.fixtures import FixtureCache, Fixture
 from ward.models import Scope
 from ward.test_result import TestOutcome, TestResult
-from ward.testing import Test, Each
+from ward.testing import Test
 
 
 @dataclass
@@ -30,14 +30,14 @@ class Suite:
                 )
                 self.cache.teardown_fixtures(to_teardown)
 
-            marker = test.marker.name if test.marker else None
-            if marker == "SKIP":
-                yield TestResult(test, TestOutcome.SKIP)
-                previous_test_module = test.module_name
-                continue
-
             generated_tests = test.get_parameterised_instances()
             for generated_test in generated_tests:
+                marker = generated_test.marker.name if generated_test.marker else None
+                if marker == "SKIP":
+                    yield TestResult(generated_test, TestOutcome.SKIP)
+                    previous_test_module = generated_test.module_name
+                    continue
+
                 sout, serr = io.StringIO(), io.StringIO()
                 try:
                     with redirect_stdout(sout), redirect_stderr(serr):
