@@ -36,64 +36,66 @@ class Suite:
                 previous_test_module = test.module_name
                 continue
 
-            sout, serr = io.StringIO(), io.StringIO()
-            try:
-                with redirect_stdout(sout), redirect_stderr(serr):
-                    resolved_args = test.resolve_args(self.cache)
-            except FixtureError as e:
-                # We can't run teardown code here because we can't know how much
-                # of the fixture has been executed.
-                yield TestResult(
-                    test,
-                    TestOutcome.FAIL,
-                    e,
-                    captured_stdout=sout.getvalue(),
-                    captured_stderr=serr.getvalue(),
-                )
-                sout.close()
-                serr.close()
-                previous_test_module = test.module_name
-                continue
-            try:
-                resolved_vals = {}
-                for (k, arg) in resolved_args.items():
-                    if isinstance(arg, Fixture):
-                        resolved_vals[k] = arg.resolved_val
-                    else:
-                        resolved_vals = arg
-
-                # Run the test, while capturing output.
-                with redirect_stdout(sout), redirect_stderr(serr):
-                    test(**resolved_vals)
-
-                # The test has completed without exception and therefore passed
-                if marker == "XFAIL":
+            generated_tests = test.get_parameterised_instances()
+            for generated_test in generated_tests:
+                sout, serr = io.StringIO(), io.StringIO()
+                try:
+                    with redirect_stdout(sout), redirect_stderr(serr):
+                        resolved_args = generated_test.resolve_args(self.cache)
+                except FixtureError as e:
+                    # We can't run teardown code here because we can't know how much
+                    # of the fixture has been executed.
                     yield TestResult(
-                        test,
-                        TestOutcome.XPASS,
-                        captured_stdout=sout.getvalue(),
-                        captured_stderr=serr.getvalue(),
-                    )
-                else:
-                    yield TestResult(test, TestOutcome.PASS)
-            except Exception as e:
-                # TODO: Differentiate between ExpectationFailed and other Exceptions.
-                if marker == "XFAIL":
-                    yield TestResult(test, TestOutcome.XFAIL, e)
-                else:
-                    yield TestResult(
-                        test,
+                        generated_test,
                         TestOutcome.FAIL,
                         e,
                         captured_stdout=sout.getvalue(),
                         captured_stderr=serr.getvalue(),
                     )
-            finally:
-                sout.close()
-                serr.close()
+                    sout.close()
+                    serr.close()
+                    previous_test_module = generated_test.module_name
+                    continue
+                try:
+                    resolved_vals = {}
+                    for (k, arg) in resolved_args.items():
+                        if isinstance(arg, Fixture):
+                            resolved_vals[k] = arg.resolved_val
+                        else:
+                            resolved_vals = arg
 
-            self._teardown_fixtures_scoped_to_test(test)
-            previous_test_module = test.module_name
+                    # Run the test, while capturing output.
+                    with redirect_stdout(sout), redirect_stderr(serr):
+                        generated_test(**resolved_vals)
+
+                    # The test has completed without exception and therefore passed
+                    if marker == "XFAIL":
+                        yield TestResult(
+                            generated_test,
+                            TestOutcome.XPASS,
+                            captured_stdout=sout.getvalue(),
+                            captured_stderr=serr.getvalue(),
+                        )
+                    else:
+                        yield TestResult(generated_test, TestOutcome.PASS)
+                except Exception as e:
+                    # TODO: Differentiate between ExpectationFailed and other Exceptions.
+                    if marker == "XFAIL":
+                        yield TestResult(generated_test, TestOutcome.XFAIL, e)
+                    else:
+                        yield TestResult(
+                            generated_test,
+                            TestOutcome.FAIL,
+                            e,
+                            captured_stdout=sout.getvalue(),
+                            captured_stderr=serr.getvalue(),
+                        )
+                finally:
+                    sout.close()
+                    serr.close()
+
+                self._teardown_fixtures_scoped_to_test(generated_test)
+                previous_test_module = generated_test.module_name
 
         # Take care of any additional teardown.
         self.cache.teardown_all()
