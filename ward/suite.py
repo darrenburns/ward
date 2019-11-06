@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 from typing import Generator, List
 
 from ward.errors import FixtureError
-from ward.fixtures import FixtureCache
+from ward.fixtures import FixtureCache, Fixture
 from ward.models import Scope
 from ward.test_result import TestOutcome, TestResult
-from ward.testing import Test
+from ward.testing import Test, Each
 
 
 @dataclass
@@ -39,7 +39,7 @@ class Suite:
             sout, serr = io.StringIO(), io.StringIO()
             try:
                 with redirect_stdout(sout), redirect_stderr(serr):
-                    resolved_fixtures = test.resolve_fixtures(self.cache)
+                    resolved_args = test.resolve_args(self.cache)
             except FixtureError as e:
                 # We can't run teardown code here because we can't know how much
                 # of the fixture has been executed.
@@ -55,9 +55,12 @@ class Suite:
                 previous_test_module = test.module_name
                 continue
             try:
-                resolved_vals = {
-                    k: fix.resolved_val for (k, fix) in resolved_fixtures.items()
-                }
+                resolved_vals = {}
+                for (k, arg) in resolved_args.items():
+                    if isinstance(arg, Fixture):
+                        resolved_vals[k] = arg.resolved_val
+                    else:
+                        resolved_vals = arg
 
                 # Run the test, while capturing output.
                 with redirect_stdout(sout), redirect_stderr(serr):

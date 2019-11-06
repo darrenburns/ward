@@ -4,11 +4,26 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Callable, Dict, List, Optional, Any
+from typing import Callable, Dict, List, Optional, Any, Tuple
 
-from ward.errors import FixtureError
+from ward.errors import FixtureError, ParameterisationError
 from ward.fixtures import Fixture, FixtureCache, Scope
 from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
+
+
+@dataclass
+class Each:
+    args: Tuple[Any]
+
+    def __getitem__(self, args):
+        return self.args[args]
+
+    def __len__(self):
+        return len(self.args)
+
+
+def each(*args):
+    return Each(args)
 
 
 def skip(func_or_reason=None, *, reason: str = None):
@@ -84,33 +99,95 @@ class Test:
     def line_number(self):
         return inspect.getsourcelines(self.fn)[1]
 
-    def deps(self) -> MappingProxyType:
-        return inspect.signature(self.fn).parameters
-
+    @property
     def has_deps(self) -> bool:
         return len(self.deps()) > 0
 
-    def resolve_fixtures(self, cache: FixtureCache) -> Dict[str, Fixture]:
+    @property
+    def is_parameterised(self) -> bool:
+        """
+        Return `True` if a test is parameterised, `False` otherwise.
+        A test is considered parameterised if any of its default arguments
+        have a value that is an instance of `Each`.
+        """
+        default_args = self._get_default_args()
+        return any(isinstance(arg, Each)
+                   for arg in default_args.values())
+
+    def get_parameterised_instances(self) -> List["Test"]:
+        """
+        If the test is parameterised, return a list of `Test` objects representing
+        each test generated as a result of the parameterisation.
+        If the test is not parameterised, return a list containing only the test itself.
+        """
+        if not self.is_parameterised:
+            return [self]
+
+        number_of_instances = self._find_number_of_instances()
+
+        generated_tests = []
+        for instance_number in range(number_of_instances):
+            generated_tests.append(Test(
+                fn=self.fn,
+                module_name=self.module_name,
+                marker=self.marker,
+                description=self.description,
+            ))
+        return generated_tests
+
+    def deps(self) -> MappingProxyType:
+        return inspect.signature(self.fn).parameters
+
+    def resolve_args(self, cache: FixtureCache) -> Dict[str, Fixture]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         Resolved values will be stored in fixture_cache, accessible
         using the fixture cache key (See `Fixture.key`).
         """
-        signature = inspect.signature(self.fn)
-        default_binding = signature.bind_partial()
-        if not self.has_deps():
+        if not self.has_deps:
             return {}
 
-        default_binding.apply_defaults()
+        default_args = self._get_default_args()
 
         resolved_args: Dict[str, Fixture] = {}
-        for name, arg in default_binding.arguments.items():
+        for name, arg in default_args.items():
             if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
                 resolved = self._resolve_single_fixture(arg, cache)
             else:
                 resolved = arg
             resolved_args[name] = resolved
         return resolved_args
+
+    def _get_default_args(self) -> Dict[str, Any]:
+        """
+        Returns a mapping of test argument names to values. This method does no
+        fixture resolution. If a value is a fixture function, then the raw fixture
+        function is used, *not* the `Fixture` object.
+        """
+        signature = inspect.signature(self.fn)
+        default_binding = signature.bind_partial()
+        default_binding.apply_defaults()
+        return default_binding.arguments
+
+    def _find_number_of_instances(self) -> int:
+        """
+        Returns the number of instances that would be generated for the current
+        parameterised test.
+
+        A parameterised test is only valid if every instance of `each` contains
+        an equal number of items. If the current test is an invalid parameterisation,
+        then a `ParameterisationError` is raised.
+        """
+        default_args = self._get_default_args()
+        lengths = [len(arg) for _, arg in default_args.items() if isinstance(arg, Each)]
+        is_valid = len(set(lengths)) in (0, 1)
+        if not is_valid:
+            raise ParameterisationError(
+                f"The test {self.name}/{self.description} is parameterised incorrectly. "
+                f"Please ensure all instances of 'each' in the test signature "
+                f"are of equal length."
+            )
+        return lengths[0]
 
     def _resolve_single_fixture(
         self, fixture_fn: Callable, cache: FixtureCache

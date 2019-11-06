@@ -60,12 +60,12 @@ def _(dependent_test=dependent_test):
 
 @test("Test.has_deps should return True when test uses fixtures")
 def _(dependent_test=dependent_test):
-    expect(dependent_test.has_deps()).equals(True)
+    expect(dependent_test.has_deps).equals(True)
 
 
 @test("Test.has_deps should return False when test doesn't use fixtures")
 def _(anonymous_test=anonymous_test):
-    expect(anonymous_test.has_deps()).equals(False)
+    expect(anonymous_test.has_deps).equals(False)
 
 
 @test("Test.__call__ should delegate to the function it wraps")
