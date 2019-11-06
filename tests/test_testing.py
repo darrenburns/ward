@@ -1,7 +1,8 @@
 from unittest import mock
 from unittest.mock import Mock
 
-from ward import expect
+from ward import expect, raises
+from ward.errors import ParameterisationError
 from ward.fixtures import fixture
 from ward.testing import Test, test, each
 
@@ -122,3 +123,17 @@ def _():
     expect(t.get_parameterised_instances()).equals(
         2 * [Test(id=mock.ANY, fn=t.fn, module_name=t.module_name)],
     )
+
+
+@test("Test.get_parameterised_instances raises exception for arg count mismatch")
+def _():
+    def invalid_test(
+        a=each(1, 2),
+        b=each(3, 4, 5),
+    ):
+        pass
+
+    t = Test(fn=invalid_test, module_name=mod)
+
+    with raises(ParameterisationError):
+        a = t.get_parameterised_instances()
