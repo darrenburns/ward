@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from ward import expect
 from ward.fixtures import fixture
-from ward.testing import Test, test
+from ward.testing import Test, test, each
 
 
 def f():
@@ -74,3 +74,16 @@ def _():
     t = Test(fn=mock, module_name=mod)
     t(1, 2, key="val")
     expect(mock).called_once_with(1, 2, key="val")
+
+
+@test("Test.is_parameterised should return True for parameterised test")
+def _():
+    def parameterised_test(
+        a=each(1,2,3),
+        b="a value",
+    ):
+        pass
+
+    t = Test(fn=parameterised_test, module_name=mod)
+
+    expect(t.is_parameterised).equals(True)
