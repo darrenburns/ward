@@ -156,6 +156,7 @@ class Test:
     def resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Fixture]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
+        If the argument is not a fixture, the raw argument will be used.
         Resolved values will be stored in fixture_cache, accessible
         using the fixture cache key (See `Fixture.key`).
         """
