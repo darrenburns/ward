@@ -1,3 +1,4 @@
+import functools
 import inspect
 from contextlib import suppress
 from dataclasses import dataclass, field
@@ -119,3 +120,20 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def using(*args, **kwargs):
+    def decorator_using(func):
+        using_signature = inspect.signature(func)
+        if hasattr(func, "ward_meta"):
+            func.ward_meta.using_signature = using_signature
+        else:
+            func.ward_meta = WardMeta(using_signature=using_signature)
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator_using
