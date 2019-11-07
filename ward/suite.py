@@ -6,8 +6,7 @@ from typing import Generator, List
 from ward.errors import FixtureError
 from ward.fixtures import FixtureCache, Fixture
 from ward.models import Scope
-from ward.test_result import TestOutcome, TestResult
-from ward.testing import Test
+from ward.testing import Test, TestOutcome, TestResult
 
 
 @dataclass

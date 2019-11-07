@@ -1,6 +1,6 @@
 from tests.test_suite import example_test
 from ward import expect, test
-from ward.test_result import TestOutcome, TestResult
+from ward.testing import TestOutcome, TestResult
 from ward.util import ExitCode, get_exit_code
 
 

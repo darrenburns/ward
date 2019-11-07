@@ -10,7 +10,7 @@ from termcolor import colored, cprint
 from ward.diff import make_diff
 from ward.expect import ExpectationFailed, Expected
 from ward.suite import Suite
-from ward.test_result import TestOutcome, TestResult
+from ward.testing import TestOutcome, TestResult
 from ward.util import ExitCode, get_exit_code
 
 

@@ -4,8 +4,7 @@ from ward import expect, fixture
 from ward.fixtures import Fixture
 from ward.models import Scope, SkipMarker
 from ward.suite import Suite
-from ward.test_result import TestOutcome, TestResult
-from ward.testing import Test, skip, test
+from ward.testing import Test, skip, test, TestOutcome, TestResult
 
 NUMBER_OF_TESTS = 5
 
