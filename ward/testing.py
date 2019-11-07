@@ -2,8 +2,10 @@ import functools
 import inspect
 import uuid
 from collections import defaultdict
+from contextlib import closing, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from io import StringIO
 from types import MappingProxyType
 from typing import Callable, Dict, List, Optional, Any, Tuple, Union
 
@@ -90,9 +92,12 @@ class Test:
     marker: Optional[Marker] = None
     description: Optional[str] = None
     param_meta: Optional[ParamMeta] = ParamMeta()
+    sout: StringIO = field(default_factory=StringIO)
+    serr: StringIO = field(default_factory=StringIO)
 
     def __call__(self, *args, **kwargs):
-        return self.fn(*args, **kwargs)
+        with redirect_stdout(self.sout), redirect_stderr(self.serr):
+            return self.fn(*args, **kwargs)
 
     @property
     def name(self):
@@ -159,23 +164,38 @@ class Test:
         Resolved values will be stored in fixture_cache, accessible
         using the fixture cache key (See `Fixture.key`).
         """
-        if not self.has_deps:
-            return {}
+        with redirect_stdout(self.sout), redirect_stderr(self.serr):
+            if not self.has_deps:
+                return {}
 
-        default_args = self._get_default_args()
+            default_args = self._get_default_args()
 
-        resolved_args: Dict[str, Fixture] = {}
-        for name, arg in default_args.items():
-            # In the case of parameterised testing, grab the arg corresponding
-            # to the current iteration of the parameterised group of tests.
-            if isinstance(arg, Each):
-                arg = arg[iteration]
-            if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
-                resolved = self._resolve_single_arg(arg, cache)
+            resolved_args: Dict[str, Fixture] = {}
+            for name, arg in default_args.items():
+                # In the case of parameterised testing, grab the arg corresponding
+                # to the current iteration of the parameterised group of tests.
+                if isinstance(arg, Each):
+                    arg = arg[iteration]
+                if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
+                    resolved = self._resolve_single_arg(arg, cache)
+                else:
+                    resolved = arg
+                resolved_args[name] = resolved
+            return resolved_args
+
+    def get_result(self, outcome, exception=None):
+        with closing(self.sout), closing(self.serr):
+            if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
+                result = TestResult(self, outcome)
             else:
-                resolved = arg
-            resolved_args[name] = resolved
-        return resolved_args
+                result = TestResult(
+                    self,
+                    outcome,
+                    exception,
+                    captured_stdout=self.sout.getvalue(),
+                    captured_stderr=self.serr.getvalue()
+                )
+            return result
 
     def _get_default_args(self) -> Dict[str, Any]:
         """
