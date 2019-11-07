@@ -211,7 +211,7 @@ class Test:
     def _resolve_single_arg(
         self, arg: Callable, cache: FixtureCache
     ) -> Union[Any, Fixture]:
-        if not (hasattr(arg, "ward_meta") or arg.ward_meta.is_fixture):
+        if not hasattr(arg, "ward_meta"):
             return arg
 
         fixture = Fixture(arg)
@@ -269,7 +269,7 @@ class Test:
     def _resolve_fixture_values(
         self, fixture_dict: Dict[str, Fixture]
     ) -> Dict[str, Any]:
-        return {key: f.resolved_val for key, f in fixture_dict.items()}
+        return {key: getattr(f, "resolved_val", f) for key, f in fixture_dict.items()}
 
 
 # Tests declared with the name _, and with the @test decorator
