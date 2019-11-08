@@ -4,10 +4,9 @@ from dataclasses import dataclass, field
 from typing import Generator, List
 
 from ward.errors import FixtureError
-from ward.fixtures import FixtureCache
+from ward.fixtures import FixtureCache, Fixture
 from ward.models import Scope
-from ward.test_result import TestOutcome, TestResult
-from ward.testing import Test
+from ward.testing import Test, TestOutcome, TestResult
 
 
 @dataclass
@@ -30,67 +29,42 @@ class Suite:
                 )
                 self.cache.teardown_fixtures(to_teardown)
 
-            marker = test.marker.name if test.marker else None
-            if marker == "SKIP":
-                yield TestResult(test, TestOutcome.SKIP)
-                previous_test_module = test.module_name
-                continue
+            generated_tests = test.get_parameterised_instances()
+            for i, generated_test in enumerate(generated_tests):
+                marker = generated_test.marker.name if generated_test.marker else None
+                if marker == "SKIP":
+                    yield generated_test.get_result(TestOutcome.SKIP)
+                    previous_test_module = generated_test.module_name
+                    continue
 
-            sout, serr = io.StringIO(), io.StringIO()
-            try:
-                with redirect_stdout(sout), redirect_stderr(serr):
-                    resolved_fixtures = test.resolve_fixtures(self.cache)
-            except FixtureError as e:
-                # We can't run teardown code here because we can't know how much
-                # of the fixture has been executed.
-                yield TestResult(
-                    test,
-                    TestOutcome.FAIL,
-                    e,
-                    captured_stdout=sout.getvalue(),
-                    captured_stderr=serr.getvalue(),
-                )
-                sout.close()
-                serr.close()
-                previous_test_module = test.module_name
-                continue
-            try:
-                resolved_vals = {
-                    k: fix.resolved_val for (k, fix) in resolved_fixtures.items()
-                }
+                try:
+                    resolved_vals = generated_test.resolve_args(self.cache, iteration=i)
 
-                # Run the test, while capturing output.
-                with redirect_stdout(sout), redirect_stderr(serr):
-                    test(**resolved_vals)
+                    # Run the test, while capturing output.
+                    generated_test(**resolved_vals)
 
-                # The test has completed without exception and therefore passed
-                if marker == "XFAIL":
-                    yield TestResult(
-                        test,
-                        TestOutcome.XPASS,
-                        captured_stdout=sout.getvalue(),
-                        captured_stderr=serr.getvalue(),
+                    # The test has completed without exception and therefore passed
+                    outcome = (
+                        TestOutcome.XPASS if marker == "XFAIL" else TestOutcome.PASS
                     )
-                else:
-                    yield TestResult(test, TestOutcome.PASS)
-            except Exception as e:
-                # TODO: Differentiate between ExpectationFailed and other Exceptions.
-                if marker == "XFAIL":
-                    yield TestResult(test, TestOutcome.XFAIL, e)
-                else:
-                    yield TestResult(
-                        test,
-                        TestOutcome.FAIL,
-                        e,
-                        captured_stdout=sout.getvalue(),
-                        captured_stderr=serr.getvalue(),
-                    )
-            finally:
-                sout.close()
-                serr.close()
+                    yield generated_test.get_result(outcome)
 
-            self._teardown_fixtures_scoped_to_test(test)
-            previous_test_module = test.module_name
+                except FixtureError as e:
+                    # We can't run teardown code here because we can't know how much
+                    # of the fixture has been executed.
+                    yield generated_test.get_result(TestOutcome.FAIL, e)
+                    previous_test_module = generated_test.module_name
+                    continue
+
+                except Exception as e:
+                    # TODO: Differentiate between ExpectationFailed and other Exceptions.
+                    outcome = (
+                        TestOutcome.XFAIL if marker == "XFAIL" else TestOutcome.FAIL
+                    )
+                    yield generated_test.get_result(outcome, e)
+
+                self._teardown_fixtures_scoped_to_test(generated_test)
+                previous_test_module = generated_test.module_name
 
         # Take care of any additional teardown.
         self.cache.teardown_all()

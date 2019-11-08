@@ -1,8 +1,10 @@
+from unittest import mock
 from unittest.mock import Mock
 
-from ward import expect
+from ward import expect, raises
+from ward.errors import ParameterisationError
 from ward.fixtures import fixture
-from ward.testing import Test, test
+from ward.testing import Test, test, each, ParamMeta
 
 
 def f():
@@ -60,12 +62,12 @@ def _(dependent_test=dependent_test):
 
 @test("Test.has_deps should return True when test uses fixtures")
 def _(dependent_test=dependent_test):
-    expect(dependent_test.has_deps()).equals(True)
+    expect(dependent_test.has_deps).equals(True)
 
 
 @test("Test.has_deps should return False when test doesn't use fixtures")
 def _(anonymous_test=anonymous_test):
-    expect(anonymous_test.has_deps()).equals(False)
+    expect(anonymous_test.has_deps).equals(False)
 
 
 @test("Test.__call__ should delegate to the function it wraps")
@@ -74,3 +76,72 @@ def _():
     t = Test(fn=mock, module_name=mod)
     t(1, 2, key="val")
     expect(mock).called_once_with(1, 2, key="val")
+
+
+@test("Test.is_parameterised should return True for parameterised test")
+def _():
+    def parameterised_test(a=each(1, 2, 3), b="a value"):
+        pass
+
+    t = Test(fn=parameterised_test, module_name=mod)
+
+    expect(t.is_parameterised).equals(True)
+
+
+@test("Test.is_parameterised should return False for standard tests")
+def _():
+    def test():
+        pass
+
+    t = Test(fn=test, module_name=mod)
+
+    expect(t.is_parameterised).equals(False)
+
+
+@test("Test.get_parameterised_instances returns test in list if not parameterised")
+def _():
+    def test():
+        pass
+
+    t = Test(fn=test, module_name=mod)
+
+    expect(t.get_parameterised_instances()).equals([t])
+
+
+@test("Test.get_parameterised_instances returns correct number of test instances")
+def _():
+    def test(a=each(1, 2), b=each(3, 4)):
+        pass
+
+    t = Test(fn=test, module_name=mod)
+    expect(t.get_parameterised_instances()).equals(
+        [
+            Test(
+                id=mock.ANY,
+                fn=t.fn,
+                module_name=t.module_name,
+                param_meta=ParamMeta(0, 2),
+                sout=mock.ANY,
+                serr=mock.ANY,
+            ),
+            Test(
+                id=mock.ANY,
+                fn=t.fn,
+                module_name=t.module_name,
+                param_meta=ParamMeta(1, 2),
+                sout=mock.ANY,
+                serr=mock.ANY,
+            ),
+        ]
+    )
+
+
+@test("Test.get_parameterised_instances raises exception for arg count mismatch")
+def _():
+    def invalid_test(a=each(1, 2), b=each(3, 4, 5)):
+        pass
+
+    t = Test(fn=invalid_test, module_name=mod)
+
+    with raises(ParameterisationError):
+        a = t.get_parameterised_instances()

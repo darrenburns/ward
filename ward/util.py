@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Iterable
 
-from ward.test_result import TestOutcome, TestResult
+from ward.testing import TestOutcome, TestResult
 
 
 class ExitCode(Enum):
