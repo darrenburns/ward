@@ -106,17 +106,17 @@ class Suite:
         if hasattr(generated_test.fn, "hypothesis"):
             inner_test = generated_test.fn.hypothesis.inner_test
 
-        def executor(*args, **kwargs):
-            try:
-                inner_test(*args, **kwargs)
-            except Exception as e:
+            def executor(*args, **kwargs):
+                try:
+                    inner_test(*args, **kwargs)
+                except Exception as e:
+                    generated_test.hypothesis_examples.append(
+                        HypothesisExample(example=(args, kwargs), did_succeed=False))
+                    raise e
                 generated_test.hypothesis_examples.append(
-                    HypothesisExample(example=(args, kwargs), did_succeed=False))
-                raise e
-            generated_test.hypothesis_examples.append(
-                HypothesisExample(example=(args, kwargs), did_succeed=True))
+                    HypothesisExample(example=(args, kwargs), did_succeed=True))
 
-        generated_test.fn.hypothesis.inner_test = executor
+            generated_test.fn.hypothesis.inner_test = executor
 
     def _teardown_fixtures_scoped_to_test(self, test: Test):
         """
