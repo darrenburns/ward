@@ -18,6 +18,7 @@ name matching.
 * **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
 * **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
+* **Parameterised testing:** easily parameterise your tests using `each`.
 * **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
 * **Cross platform:** Tested on Mac OS, Linux, and Windows.
 * **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
@@ -48,10 +49,12 @@ def _():
 Now run your test with `ward` (no arguments needed). Ward will output the following:
 
 ```
- PASS  test_sum: 1 plus 2 equals 3
+ PASS  test_sum:2: 1 plus 2 equals 3
 ```
 
 *You've just wrote your first test with Ward, congrats!*
+
+[See the official documentation for more examples.](https://wardpy.com)
 
 ## How to Contribute
 

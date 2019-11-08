@@ -119,3 +119,22 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def using(*using_args, **using_kwargs):
+    def decorator_using(func):
+
+        signature = inspect.signature(func)
+        bound_args = signature.bind_partial(*using_args, **using_kwargs)
+        if hasattr(func, "ward_meta"):
+            func.ward_meta.bound_args = bound_args
+        else:
+            func.ward_meta = WardMeta(bound_args=bound_args)
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator_using
