@@ -118,7 +118,7 @@ class Test:
         A test is considered parameterised if any of its default arguments
         have a value that is an instance of `Each`.
         """
-        default_args = self._get_default_args()
+        default_args = self._get_injection_args()
         return any(isinstance(arg, Each)
                    for arg in default_args.values())
 
@@ -163,7 +163,7 @@ class Test:
         if not self.has_deps:
             return {}
 
-        default_args = self._get_default_args()
+        default_args = self._get_injection_args()
 
         resolved_args: Dict[str, Fixture] = {}
         for name, arg in default_args.items():
@@ -178,13 +178,26 @@ class Test:
             resolved_args[name] = resolved
         return resolved_args
 
-    def _get_default_args(self) -> Dict[str, Any]:
+    def _get_injection_args(self, func: Optional[Callable] = None) -> Dict[str, Any]:
         """
-        Returns a mapping of test argument names to values. This method does no
-        fixture resolution. If a value is a fixture function, then the raw fixture
-        function is used, *not* the `Fixture` object.
+        Returns a mapping of test argument names to values.
+
+        This method does no fixture resolution.
+
+        If a value is a fixture function, then the raw fixture
+        function is returned as a value in the dict, *not* the `Fixture` object.
         """
-        signature = inspect.signature(self.fn)
+        fn = func or self.fn
+        meta = getattr(fn, "ward_meta", None)
+        signature = inspect.signature(fn)
+
+        # Override the signature if @using is present
+        if meta:
+            bound_args = getattr(fn.ward_meta, "bound_args", None)
+            if bound_args:
+                bound_args.apply_defaults()
+                return bound_args.arguments
+
         default_binding = signature.bind_partial()
         default_binding.apply_defaults()
         return default_binding.arguments
@@ -198,7 +211,7 @@ class Test:
         an equal number of items. If the current test is an invalid parameterisation,
         then a `ParameterisationError` is raised.
         """
-        default_args = self._get_default_args()
+        default_args = self._get_injection_args()
         lengths = [len(arg) for _, arg in default_args.items() if isinstance(arg, Each)]
         is_valid = len(set(lengths)) in (0, 1)
         if not is_valid:
@@ -245,11 +258,11 @@ class Test:
             cache.cache_fixture(fixture)
             return fixture
 
-        signature = inspect.signature(arg)
-        children_defaults = signature.bind_partial()
-        children_defaults.apply_defaults()
+        injection_args = self._get_injection_args(func=arg)
+        print(injection_args)
+
         children_resolved = {}
-        for name, child_fixture in children_defaults.arguments.items():
+        for name, child_fixture in injection_args.items():
             child_resolved = self._resolve_single_arg(child_fixture, cache)
             children_resolved[name] = child_resolved
         try:

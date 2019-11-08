@@ -42,4 +42,4 @@ class WardMeta:
     description: Optional[str] = None
     is_fixture: bool = False
     scope: Scope = Scope.Test
-    using_signature: Optional[Signature] = None
+    bound_args: Optional[Signature] = None
