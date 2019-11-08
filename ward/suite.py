@@ -38,20 +38,7 @@ class Suite:
                     continue
 
                 try:
-                    resolved_args = generated_test.resolve_args(self.cache, iteration=i)
-                except FixtureError as e:
-                    # We can't run teardown code here because we can't know how much
-                    # of the fixture has been executed.
-                    yield generated_test.get_result(TestOutcome.FAIL, e)
-                    previous_test_module = generated_test.module_name
-                    continue
-                try:
-                    resolved_vals = {}
-                    for (k, arg) in resolved_args.items():
-                        if isinstance(arg, Fixture):
-                            resolved_vals[k] = arg.resolved_val
-                        else:
-                            resolved_vals[k] = arg
+                    resolved_vals = generated_test.resolve_args(self.cache, iteration=i)
 
                     # Run the test, while capturing output.
                     generated_test(**resolved_vals)
@@ -59,6 +46,13 @@ class Suite:
                     # The test has completed without exception and therefore passed
                     outcome = TestOutcome.XPASS if marker == "XFAIL" else TestOutcome.PASS
                     yield generated_test.get_result(outcome)
+
+                except FixtureError as e:
+                    # We can't run teardown code here because we can't know how much
+                    # of the fixture has been executed.
+                    yield generated_test.get_result(TestOutcome.FAIL, e)
+                    previous_test_module = generated_test.module_name
+                    continue
 
                 except Exception as e:
                     # TODO: Differentiate between ExpectationFailed and other Exceptions.

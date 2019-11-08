@@ -158,7 +158,7 @@ class Test:
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
-    def resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Fixture]:
+    def resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         Resolved values will be stored in fixture_cache, accessible
@@ -170,7 +170,7 @@ class Test:
 
             default_args = self._get_default_args()
 
-            resolved_args: Dict[str, Fixture] = {}
+            resolved_args: Dict[str, Any] = {}
             for name, arg in default_args.items():
                 # In the case of parameterised testing, grab the arg corresponding
                 # to the current iteration of the parameterised group of tests.
@@ -181,7 +181,7 @@ class Test:
                 else:
                     resolved = arg
                 resolved_args[name] = resolved
-            return resolved_args
+            return self._resolve_fixture_values(resolved_args)
 
     def get_result(self, outcome, exception=None):
         with closing(self.sout), closing(self.serr):
@@ -231,7 +231,7 @@ class Test:
     def _resolve_single_arg(
         self, arg: Callable, cache: FixtureCache
     ) -> Union[Any, Fixture]:
-        if not (hasattr(arg, "ward_meta") or arg.ward_meta.is_fixture):
+        if not hasattr(arg, "ward_meta"):
             return arg
 
         fixture = Fixture(arg)
@@ -287,9 +287,15 @@ class Test:
         return fixture
 
     def _resolve_fixture_values(
-        self, fixture_dict: Dict[str, Fixture]
+        self, fixture_dict: Dict[str, Any]
     ) -> Dict[str, Any]:
-        return {key: f.resolved_val for key, f in fixture_dict.items()}
+        resolved_vals = {}
+        for (k, arg) in fixture_dict.items():
+            if isinstance(arg, Fixture):
+                resolved_vals[k] = arg.resolved_val
+            else:
+                resolved_vals[k] = arg
+        return resolved_vals
 
 
 # Tests declared with the name _, and with the @test decorator
