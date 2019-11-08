@@ -122,8 +122,8 @@ def _():
     t = Test(fn=test, module_name=mod)
     expect(t.get_parameterised_instances()).equals(
         [
-            Test(id=mock.ANY, fn=t.fn, module_name=t.module_name, param_meta=ParamMeta(0, 2)),
-            Test(id=mock.ANY, fn=t.fn, module_name=t.module_name, param_meta=ParamMeta(1, 2)),
+            Test(id=mock.ANY, fn=t.fn, module_name=t.module_name, param_meta=ParamMeta(0, 2), sout=mock.ANY, serr=mock.ANY),
+            Test(id=mock.ANY, fn=t.fn, module_name=t.module_name, param_meta=ParamMeta(1, 2), sout=mock.ANY, serr=mock.ANY),
         ],
     )
 

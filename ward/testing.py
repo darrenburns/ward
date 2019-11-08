@@ -2,8 +2,10 @@ import functools
 import inspect
 import uuid
 from collections import defaultdict
+from contextlib import closing, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from io import StringIO
 from types import MappingProxyType
 from typing import Callable, Dict, List, Optional, Any, Tuple, Union
 
@@ -90,9 +92,12 @@ class Test:
     marker: Optional[Marker] = None
     description: Optional[str] = None
     param_meta: Optional[ParamMeta] = ParamMeta()
+    sout: StringIO = field(default_factory=StringIO)
+    serr: StringIO = field(default_factory=StringIO)
 
     def __call__(self, *args, **kwargs):
-        return self.fn(*args, **kwargs)
+        with redirect_stdout(self.sout), redirect_stderr(self.serr):
+            return self.fn(*args, **kwargs)
 
     @property
     def name(self):
@@ -153,30 +158,45 @@ class Test:
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
-    def resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Fixture]:
+    def resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         If the argument is not a fixture, the raw argument will be used.
         Resolved values will be stored in fixture_cache, accessible
         using the fixture cache key (See `Fixture.key`).
         """
-        if not self.has_deps:
-            return {}
+        with redirect_stdout(self.sout), redirect_stderr(self.serr):
+            if not self.has_deps:
+                return {}
 
-        default_args = self._get_default_args()
+            default_args = self._get_default_args()
 
-        resolved_args: Dict[str, Fixture] = {}
-        for name, arg in default_args.items():
-            # In the case of parameterised testing, grab the arg corresponding
-            # to the current iteration of the parameterised group of tests.
-            if isinstance(arg, Each):
-                arg = arg[iteration]
-            if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
-                resolved = self._resolve_single_arg(arg, cache)
+            resolved_args: Dict[str, Any] = {}
+            for name, arg in default_args.items():
+                # In the case of parameterised testing, grab the arg corresponding
+                # to the current iteration of the parameterised group of tests.
+                if isinstance(arg, Each):
+                    arg = arg[iteration]
+                if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
+                    resolved = self._resolve_single_arg(arg, cache)
+                else:
+                    resolved = arg
+                resolved_args[name] = resolved
+            return self._resolve_fixture_values(resolved_args)
+
+    def get_result(self, outcome, exception=None):
+        with closing(self.sout), closing(self.serr):
+            if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
+                result = TestResult(self, outcome)
             else:
-                resolved = arg
-            resolved_args[name] = resolved
-        return resolved_args
+                result = TestResult(
+                    self,
+                    outcome,
+                    exception,
+                    captured_stdout=self.sout.getvalue(),
+                    captured_stderr=self.serr.getvalue()
+                )
+            return result
 
     def _get_default_args(self) -> Dict[str, Any]:
         """
@@ -268,9 +288,15 @@ class Test:
         return fixture
 
     def _resolve_fixture_values(
-        self, fixture_dict: Dict[str, Fixture]
+        self, fixture_dict: Dict[str, Any]
     ) -> Dict[str, Any]:
-        return {key: getattr(f, "resolved_val", f) for key, f in fixture_dict.items()}
+        resolved_vals = {}
+        for (k, arg) in fixture_dict.items():
+            if isinstance(arg, Fixture):
+                resolved_vals[k] = arg.resolved_val
+            else:
+                resolved_vals[k] = arg
+        return resolved_vals
 
 
 # Tests declared with the name _, and with the @test decorator
