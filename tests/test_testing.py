@@ -80,10 +80,7 @@ def _():
 
 @test("Test.is_parameterised should return True for parameterised test")
 def _():
-    def parameterised_test(
-        a=each(1, 2, 3),
-        b="a value",
-    ):
+    def parameterised_test(a=each(1, 2, 3), b="a value"):
         pass
 
     t = Test(fn=parameterised_test, module_name=mod)
@@ -113,27 +110,35 @@ def _():
 
 @test("Test.get_parameterised_instances returns correct number of test instances")
 def _():
-    def test(
-        a=each(1, 2),
-        b=each(3, 4),
-    ):
+    def test(a=each(1, 2), b=each(3, 4)):
         pass
 
     t = Test(fn=test, module_name=mod)
     expect(t.get_parameterised_instances()).equals(
         [
-            Test(id=mock.ANY, fn=t.fn, module_name=t.module_name, param_meta=ParamMeta(0, 2), sout=mock.ANY, serr=mock.ANY),
-            Test(id=mock.ANY, fn=t.fn, module_name=t.module_name, param_meta=ParamMeta(1, 2), sout=mock.ANY, serr=mock.ANY),
-        ],
+            Test(
+                id=mock.ANY,
+                fn=t.fn,
+                module_name=t.module_name,
+                param_meta=ParamMeta(0, 2),
+                sout=mock.ANY,
+                serr=mock.ANY,
+            ),
+            Test(
+                id=mock.ANY,
+                fn=t.fn,
+                module_name=t.module_name,
+                param_meta=ParamMeta(1, 2),
+                sout=mock.ANY,
+                serr=mock.ANY,
+            ),
+        ]
     )
 
 
 @test("Test.get_parameterised_instances raises exception for arg count mismatch")
 def _():
-    def invalid_test(
-        a=each(1, 2),
-        b=each(3, 4, 5),
-    ):
+    def invalid_test(a=each(1, 2), b=each(3, 4, 5)):
         pass
 
     t = Test(fn=invalid_test, module_name=mod)

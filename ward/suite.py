@@ -44,7 +44,9 @@ class Suite:
                     generated_test(**resolved_vals)
 
                     # The test has completed without exception and therefore passed
-                    outcome = TestOutcome.XPASS if marker == "XFAIL" else TestOutcome.PASS
+                    outcome = (
+                        TestOutcome.XPASS if marker == "XFAIL" else TestOutcome.PASS
+                    )
                     yield generated_test.get_result(outcome)
 
                 except FixtureError as e:
@@ -56,7 +58,9 @@ class Suite:
 
                 except Exception as e:
                     # TODO: Differentiate between ExpectationFailed and other Exceptions.
-                    outcome = TestOutcome.XFAIL if marker == "XFAIL" else TestOutcome.FAIL
+                    outcome = (
+                        TestOutcome.XFAIL if marker == "XFAIL" else TestOutcome.FAIL
+                    )
                     yield generated_test.get_result(outcome, e)
 
                 self._teardown_fixtures_scoped_to_test(generated_test)

@@ -86,6 +86,7 @@ class Test:
     """
     A representation of a single Ward test.
     """
+
     fn: Callable
     module_name: str
     id: str = field(default_factory=generate_id)
@@ -124,8 +125,7 @@ class Test:
         have a value that is an instance of `Each`.
         """
         default_args = self._get_default_args()
-        return any(isinstance(arg, Each)
-                   for arg in default_args.values())
+        return any(isinstance(arg, Each) for arg in default_args.values())
 
     def get_parameterised_instances(self) -> List["Test"]:
         """
@@ -143,16 +143,17 @@ class Test:
 
         generated_tests = []
         for instance_index in range(number_of_instances):
-            generated_tests.append(Test(
-                fn=self.fn,
-                module_name=self.module_name,
-                marker=self.marker,
-                description=self.description,
-                param_meta=ParamMeta(
-                    instance_index=instance_index,
-                    group_size=number_of_instances,
-                ),
-            ))
+            generated_tests.append(
+                Test(
+                    fn=self.fn,
+                    module_name=self.module_name,
+                    marker=self.marker,
+                    description=self.description,
+                    param_meta=ParamMeta(
+                        instance_index=instance_index, group_size=number_of_instances
+                    ),
+                )
+            )
         return generated_tests
 
     def deps(self) -> MappingProxyType:
@@ -194,7 +195,7 @@ class Test:
                     outcome,
                     exception,
                     captured_stdout=self.sout.getvalue(),
-                    captured_stderr=self.serr.getvalue()
+                    captured_stderr=self.serr.getvalue(),
                 )
             return result
 
@@ -274,9 +275,7 @@ class Test:
             children_resolved[name] = child_resolved
         try:
             if is_generator:
-                fixture.gen = arg(
-                    **self._resolve_fixture_values(children_resolved)
-                )
+                fixture.gen = arg(**self._resolve_fixture_values(children_resolved))
                 fixture.resolved_val = next(fixture.gen)
             else:
                 fixture.resolved_val = arg(
@@ -287,9 +286,7 @@ class Test:
         cache.cache_fixture(fixture)
         return fixture
 
-    def _resolve_fixture_values(
-        self, fixture_dict: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _resolve_fixture_values(self, fixture_dict: Dict[str, Any]) -> Dict[str, Any]:
         resolved_vals = {}
         for (k, arg) in fixture_dict.items():
             if isinstance(arg, Fixture):
