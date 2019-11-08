@@ -4,9 +4,9 @@ from dataclasses import dataclass, field
 from typing import Generator, List
 
 from ward.errors import FixtureError
-from ward.fixtures import FixtureCache, Fixture
+from ward.fixtures import Fixture, FixtureCache
 from ward.models import Scope
-from ward.testing import Test, TestOutcome, TestResult
+from ward.testing import HypothesisExample, Test, TestOutcome, TestResult
 
 
 @dataclass
@@ -30,7 +30,10 @@ class Suite:
                 self.cache.teardown_fixtures(to_teardown)
 
             generated_tests = test.get_parameterised_instances()
+
             for i, generated_test in enumerate(generated_tests):
+                self._setup_hypothesis(generated_test)
+
                 marker = generated_test.marker.name if generated_test.marker else None
                 if marker == "SKIP":
                     yield TestResult(generated_test, TestOutcome.SKIP)
@@ -98,6 +101,22 @@ class Suite:
 
         # Take care of any additional teardown.
         self.cache.teardown_all()
+
+    def _setup_hypothesis(self, generated_test):
+        if hasattr(generated_test.fn, "hypothesis"):
+            inner_test = generated_test.fn.hypothesis.inner_test
+
+        def executor(*args, **kwargs):
+            try:
+                inner_test(*args, **kwargs)
+            except Exception as e:
+                generated_test.hypothesis_examples.append(
+                    HypothesisExample(example=(args, kwargs), did_succeed=False))
+                raise e
+            generated_test.hypothesis_examples.append(
+                HypothesisExample(example=(args, kwargs), did_succeed=True))
+
+        generated_test.fn.hypothesis.inner_test = executor
 
     def _teardown_fixtures_scoped_to_test(self, test: Test):
         """

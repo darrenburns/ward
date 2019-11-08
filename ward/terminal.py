@@ -164,6 +164,18 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
+        examples = test_result.test.hypothesis_examples
+        if examples:
+            print(f"   Hypothesis ran {len(examples)} examples:\n")
+            for example in examples:
+                checkbox = self.result_checkbox(example.did_succeed)
+                if example.did_succeed:
+                    colour = "green"
+                else:
+                    colour = "red"
+                cprint(f"    {checkbox} {example.example}", color=colour)
+            print()
+
         if isinstance(err, ExpectationFailed):
             print(
                 f"   Given {truncate(repr(err.history[0].this), num_chars=self.terminal_size.width - 24)}\n"
@@ -209,7 +221,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             print(str(err))
 
     def print_expect_chain_item(self, expect: Expected):
-        checkbox = self.result_checkbox(expect)
+        checkbox = self.result_checkbox(expect.success)
         that_width = self.terminal_size.width - 32
         if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
             expect_that = truncate(expect.that.__name__, num_chars=that_width)
@@ -218,11 +230,11 @@ class SimpleTestResultWrite(TestResultWriterBase):
             expect_that = truncate(that, num_chars=that_width)
         print(f"    {checkbox} it {expect.op} {expect_that}{Style.RESET_ALL}")
 
-    def result_checkbox(self, expect):
-        if expect.success:
-            result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
+    def result_checkbox(self, is_success: bool) -> str:
+        if is_success:
+            result_marker = f"{Style.RESET_ALL}[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
         else:
-            result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+            result_marker = f"{Style.RESET_ALL}[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
         return result_marker
 
     def output_test_result_summary(

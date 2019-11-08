@@ -5,11 +5,11 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from types import MappingProxyType
-from typing import Callable, Dict, List, Optional, Any, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from ward.errors import FixtureError, ParameterisationError
 from ward.fixtures import Fixture, FixtureCache, Scope
-from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
+from ward.models import Marker, SkipMarker, WardMeta, XfailMarker
 
 
 @dataclass
@@ -80,6 +80,12 @@ class ParamMeta:
 
 
 @dataclass
+class HypothesisExample:
+    example: Any
+    did_succeed: bool
+
+
+@dataclass
 class Test:
     """
     A representation of a single Ward test.
@@ -89,7 +95,8 @@ class Test:
     id: str = field(default_factory=generate_id)
     marker: Optional[Marker] = None
     description: Optional[str] = None
-    param_meta: Optional[ParamMeta] = ParamMeta()
+    param_meta: Optional[ParamMeta] = field(default_factory=ParamMeta)
+    hypothesis_examples: List[HypothesisExample] = field(default_factory=list)
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)
