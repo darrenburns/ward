@@ -51,11 +51,11 @@ def module_fixture(events=recorded_events):
 @fixture
 def default_fixture(events=recorded_events):
     @fixture
-    def d():
-        yield "d"
-        events.append("teardown d")
+    def t():
+        yield "t"
+        events.append("teardown t")
 
-    return d
+    return t
 
 
 @fixture
@@ -123,23 +123,65 @@ def _(
     expect(fixture.fn).equals(global_fixture)
 
 
-@test("FixtureCache.teardown_global_fixtures runs teardown code of all Global fixtures")
+@test("FixtureCache.teardown_fixtures_for_scope removes Test fixtures from cache")
+def _(
+    cache: FixtureCache = cache,
+    test: Test = my_test,
+):
+    cache.teardown_fixtures_for_scope(Scope.Test, test.id)
+
+    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Test, test.id)
+
+    expect(fixtures_at_scope).equals({})
+
+@test("FixtureCache.teardown_fixtures_for_scope runs teardown for Test fixtures")
+def _(
+    cache: FixtureCache = cache,
+    test: Test = my_test,
+    events: List = recorded_events,
+):
+    cache.teardown_fixtures_for_scope(Scope.Test, test.id)
+
+    expect(events).equals(["teardown t"])
+
+
+@test("FixtureCache.teardown_fixtures_for_scope removes Module fixtures from cache")
+def _(
+    cache: FixtureCache = cache,
+):
+    cache.teardown_fixtures_for_scope(Scope.Module, FORCE_TEST_PATH)
+
+    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, FORCE_TEST_PATH)
+
+    expect(fixtures_at_scope).equals({})
+
+
+@test("FixtureCache.teardown_fixtures_for_scope runs teardown for Module fixtures")
+def _(
+    cache: FixtureCache = cache,
+    events: List = recorded_events,
+):
+    cache.teardown_fixtures_for_scope(Scope.Module, FORCE_TEST_PATH)
+
+    expect(events).equals(["teardown m"])
+
+
+@test("FixtureCache.teardown_global_fixtures removes Global fixtures from cache")
+def _(
+    cache: FixtureCache = cache,
+):
+    cache.teardown_global_fixtures()
+
+    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Global, Scope.Global)
+
+    expect(fixtures_at_scope).equals({})
+
+
+@test("FixtureCache.teardown_global_fixtures runs teardown of all Global fixtures")
 def _(
     cache: FixtureCache = cache,
     events: List = recorded_events,
 ):
     cache.teardown_global_fixtures()
+
     expect(events).equals(["teardown g"])
-
-
-@test("FixtureCache.teardown_fixtures_for_scope runs teardown code for Module fixtures")
-def _(
-    cache: FixtureCache = cache,
-    events: List = recorded_events,
-    module_fixture=module_fixture,
-):
-    cache.teardown_fixtures_for_scope(Scope.Module, FORCE_TEST_PATH)
-    expect(events).equals(["teardown m"])
-
-    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, FORCE_TEST_PATH)
-    expect(fixtures_at_scope).equals({})
