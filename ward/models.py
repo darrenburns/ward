@@ -43,4 +43,4 @@ class WardMeta:
     is_fixture: bool = False
     scope: Scope = Scope.Test
     bound_args: Optional[Signature] = None
-    defined_in_file: Optional[str] = None
+    path: Optional[str] = None

@@ -4,8 +4,9 @@ import uuid
 from collections import defaultdict
 from contextlib import closing, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import auto, Enum
 from io import StringIO
+from pathlib import Path
 from types import MappingProxyType
 from typing import Callable, Dict, List, Optional, Any, Tuple, Union
 
@@ -105,8 +106,8 @@ class Test:
         return self.fn.__name__
 
     @property
-    def module_path(self):
-        return inspect.getmodule(self.fn)
+    def path(self):
+        return self.fn.ward_meta.path
 
     @property
     def qualified_name(self):
@@ -135,7 +136,7 @@ class Test:
         if scope == Scope.Test:
             return self.id
         elif scope == Scope.Module:
-            return self.module_path
+            return self.path
         else:
             return Scope.Global
 
@@ -309,14 +310,21 @@ class Test:
 anonymous_tests: Dict[str, List[Callable]] = defaultdict(list)
 
 
-def test(description: str):
+def test(description: str, _collect_into: Optional[Dict[str, List[Callable]]] = None):
     def decorator_test(func):
-        if func.__name__ == "_":
-            mod_name = func.__module__
-            if hasattr(func, "ward_meta"):
-                func.ward_meta.description = description
-            else:
-                func.ward_meta = WardMeta(description=description)
+        mod_name = func.__module__
+        path = Path(inspect.getfile(func)).absolute()
+        if hasattr(func, "ward_meta"):
+            func.ward_meta.description = description
+            func.ward_meta.path = path
+        else:
+            func.ward_meta = WardMeta(
+                description=description,
+                path=path,
+            )
+        if _collect_into is not None:
+            _collect_into[mod_name].append(func)
+        else:
             anonymous_tests[mod_name].append(func)
 
         @functools.wraps(func)

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Generator, List
 
@@ -16,12 +17,15 @@ class Suite:
     def num_tests(self):
         return len(self.tests)
 
-    def generate_test_runs(self) -> Generator[TestResult, None, None]:
-        # TODO: Work out when we're finished in a module, and run teardown
-        #   for all module-scoped fixtures inside the cache for that module.
-        #  We're finished in a module when the number of tests we've executed
-        #  in the module == the number of tests in the module
+    def _test_counts_per_module(self):
+        module_paths = [test.path for test in self.tests]
+        counts = defaultdict(int)
+        for path in module_paths:
+            counts[path] += 1
+        return counts
 
+    def generate_test_runs(self) -> Generator[TestResult, None, None]:
+        num_tests_per_module = self._test_counts_per_module()
         for test in self.tests:
             generated_tests = test.get_parameterised_instances()
             for i, generated_test in enumerate(generated_tests):
@@ -40,12 +44,13 @@ class Suite:
                 except FixtureError as e:
                     yield generated_test.get_result(TestOutcome.FAIL, e)
                     continue
-
                 except Exception as e:
                     outcome = (
                         TestOutcome.XFAIL if marker == "XFAIL" else TestOutcome.FAIL
                     )
                     yield generated_test.get_result(outcome, e)
+                finally:
+                    num_tests_per_module[generated_test.path] -= 1
 
                 self.cache.teardown_fixtures_for_scope(Scope.Test, generated_test.id)
 

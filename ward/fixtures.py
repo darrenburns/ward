@@ -1,5 +1,4 @@
 import inspect
-import pprint
 from contextlib import suppress
 from dataclasses import dataclass, field
 from functools import partial, wraps
@@ -31,7 +30,7 @@ class Fixture:
 
     @property
     def path(self):
-        return self.fn.ward_meta.defined_in_file
+        return self.fn.ward_meta.path
 
     @property
     def is_generator_fixture(self):
@@ -94,8 +93,6 @@ class FixtureCache:
         """
         fixtures = self._get_fixtures(fixture.scope, scope_key)
         fixtures[fixture.key] = fixture
-        print("storing", fixture)
-        pprint.pprint(self._scope_cache)
 
     def teardown_fixtures_for_scope(self, scope: Scope, scope_key: ScopeKey):
         fixture_dict = self._get_fixtures(scope, scope_key)
@@ -127,15 +124,15 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
     # By setting is_fixture = True, the framework will know
     # that if this fixture is provided as a default arg, it
     # is responsible for resolving the value.
-    file = Path(inspect.getfile(func)).absolute()
+    path = Path(inspect.getfile(func)).absolute()
     if hasattr(func, "ward_meta"):
         func.ward_meta.is_fixture = True
-        func.ward_meta.defined_in_file = file
+        func.ward_meta.path = path
     else:
         func.ward_meta = WardMeta(
             is_fixture=True,
             scope=scope,
-            defined_in_file=file,
+            path=path,
         )
 
     @wraps(func)

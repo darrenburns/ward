@@ -7,8 +7,8 @@ from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from typing import Any, Callable, Generator, Iterable, List
 
+from ward.models import WardMeta
 from ward.testing import Test, anonymous_tests
-from ward.models import Marker, WardMeta
 
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:
@@ -53,15 +53,6 @@ def get_tests_in_modules(modules: Iterable) -> Generator[Test, None, None]:
                     marker=meta.marker,
                     description=meta.description or "",
                 )
-
-        # Collect named tests from the module
-        for item in dir(mod):
-            if item.startswith("test_") and not item == "_":
-                test_name = item
-                test_fn = getattr(mod, test_name)
-                marker: Marker = getattr(test_fn, "ward_meta", WardMeta()).marker
-                if test_fn:
-                    yield Test(fn=test_fn, module_name=mod_name, marker=marker)
 
 
 def search_generally(
