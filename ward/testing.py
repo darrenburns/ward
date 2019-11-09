@@ -4,14 +4,15 @@ import uuid
 from collections import defaultdict
 from contextlib import closing, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import auto, Enum
 from io import StringIO
+from pathlib import Path
 from types import MappingProxyType
 from typing import Callable, Dict, List, Optional, Any, Tuple, Union
 
 from ward.errors import FixtureError, ParameterisationError
-from ward.fixtures import Fixture, FixtureCache, Scope
-from ward.models import Marker, SkipMarker, XfailMarker, WardMeta
+from ward.fixtures import Fixture, FixtureCache, ScopeKey
+from ward.models import Marker, SkipMarker, XfailMarker, WardMeta, Scope
 
 
 @dataclass
@@ -105,6 +106,10 @@ class Test:
         return self.fn.__name__
 
     @property
+    def path(self):
+        return self.fn.ward_meta.path
+
+    @property
     def qualified_name(self):
         name = self.name or ""
         return f"{self.module_name}.{name}"
@@ -126,6 +131,14 @@ class Test:
         """
         default_args = self._get_default_args()
         return any(isinstance(arg, Each) for arg in default_args.values())
+
+    def scope_key_from(self, scope: Scope) -> ScopeKey:
+        if scope == Scope.Test:
+            return self.id
+        elif scope == Scope.Module:
+            return self.path
+        else:
+            return Scope.Global
 
     def get_parameterised_instances(self) -> List["Test"]:
         """
@@ -159,7 +172,7 @@ class Test:
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
-    def resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
+    def resolve_args(self, cache: FixtureCache, iteration: int = 0) -> Dict[str, Any]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         If the argument is not a fixture, the raw argument will be used.
@@ -171,7 +184,6 @@ class Test:
                 return {}
 
             default_args = self._get_default_args()
-
             resolved_args: Dict[str, Any] = {}
             for name, arg in default_args.items():
                 # In the case of parameterised testing, grab the arg corresponding
@@ -183,7 +195,7 @@ class Test:
                 else:
                     resolved = arg
                 resolved_args[name] = resolved
-            return self._resolve_fixture_values(resolved_args)
+            return self._unpack_resolved(resolved_args)
 
     def get_result(self, outcome, exception=None):
         with closing(self.sout), closing(self.serr):
@@ -237,20 +249,12 @@ class Test:
             return arg
 
         fixture = Fixture(arg)
-        if fixture.key in cache:
-            cached_fixture = cache[fixture.key]
-            if fixture.scope == Scope.Global:
-                return cached_fixture
-            elif fixture.scope == Scope.Module:
-                if cached_fixture.last_resolved_module_name == self.module_name:
-                    return cached_fixture
-            elif fixture.scope == Scope.Test:
-                if cached_fixture.last_resolved_test_id == self.id:
-                    return cached_fixture
-
-        # Cache miss, so update the fixture metadata before we resolve and cache it
-        fixture.last_resolved_test_id = self.id
-        fixture.last_resolved_module_name = self.module_name
+        if cache.contains(fixture, fixture.scope, self.scope_key_from(fixture.scope)):
+            return cache.get(
+                fixture.key,
+                fixture.scope,
+                self.scope_key_from(fixture.scope),
+            )
 
         has_deps = len(fixture.deps()) > 0
         is_generator = fixture.is_generator_fixture
@@ -263,7 +267,8 @@ class Test:
                     fixture.resolved_val = arg()
             except Exception as e:
                 raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
-            cache.cache_fixture(fixture)
+            scope_key = self.scope_key_from(fixture.scope)
+            cache.cache_fixture(fixture, scope_key)
             return fixture
 
         signature = inspect.signature(arg)
@@ -273,20 +278,21 @@ class Test:
         for name, child_fixture in children_defaults.arguments.items():
             child_resolved = self._resolve_single_arg(child_fixture, cache)
             children_resolved[name] = child_resolved
+
         try:
+            args_to_inject = self._unpack_resolved(children_resolved)
             if is_generator:
-                fixture.gen = arg(**self._resolve_fixture_values(children_resolved))
+                fixture.gen = arg(**args_to_inject)
                 fixture.resolved_val = next(fixture.gen)
             else:
-                fixture.resolved_val = arg(
-                    **self._resolve_fixture_values(children_resolved)
-                )
+                fixture.resolved_val = arg(**args_to_inject)
         except Exception as e:
             raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
-        cache.cache_fixture(fixture)
+        scope_key = self.scope_key_from(fixture.scope)
+        cache.cache_fixture(fixture, scope_key)
         return fixture
 
-    def _resolve_fixture_values(self, fixture_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def _unpack_resolved(self, fixture_dict: Dict[str, Any]) -> Dict[str, Any]:
         resolved_vals = {}
         for (k, arg) in fixture_dict.items():
             if isinstance(arg, Fixture):
@@ -304,14 +310,29 @@ class Test:
 anonymous_tests: Dict[str, List[Callable]] = defaultdict(list)
 
 
-def test(description: str):
+def test(description: str, *args, **kwargs):
     def decorator_test(func):
-        if func.__name__ == "_":
-            mod_name = func.__module__
-            if hasattr(func, "ward_meta"):
-                func.ward_meta.description = description
-            else:
-                func.ward_meta = WardMeta(description=description)
+        mod_name = func.__module__
+
+        force_path = kwargs.get("_force_path")
+        if force_path:
+            path = force_path
+        else:
+            path = Path(inspect.getfile(func)).absolute()
+
+        if hasattr(func, "ward_meta"):
+            func.ward_meta.description = description
+            func.ward_meta.path = path
+        else:
+            func.ward_meta = WardMeta(
+                description=description,
+                path=path,
+            )
+
+        collect_into = kwargs.get("_collect_into")
+        if collect_into is not None:
+            collect_into[mod_name].append(func)
+        else:
             anonymous_tests[mod_name].append(func)
 
         @functools.wraps(func)
