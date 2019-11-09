@@ -1,29 +1,23 @@
 import inspect
+import pprint
 from contextlib import suppress
 from dataclasses import dataclass, field
 from functools import partial, wraps
-from typing import Callable, Dict, Union, Optional, List
+from pathlib import Path
+from typing import Callable, Dict, Union, Optional, Any, Generator
 
 from ward.models import WardMeta, Scope
 
 
 @dataclass
 class Fixture:
-    def __init__(
-        self,
-        fn: Callable,
-        last_resolved_module_name: Optional[str] = None,
-        last_resolved_test_id: Optional[str] = None,
-    ):
-        self.fn = fn
-        self.gen = None
-        self.resolved_val = None
-        self.last_resolved_module_name = last_resolved_module_name
-        self.last_resolved_test_id = last_resolved_test_id
+    fn: Callable
+    gen: Generator = None
+    resolved_val: Any = None
 
     @property
     def key(self) -> str:
-        path = inspect.getfile(fixture)
+        path = self.path
         name = self.name
         return f"{path}::{name}"
 
@@ -34,6 +28,10 @@ class Fixture:
     @property
     def name(self):
         return self.fn.__name__
+
+    @property
+    def path(self):
+        return self.fn.ward_meta.defined_in_file
 
     @property
     def is_generator_fixture(self):
@@ -50,53 +48,73 @@ class Fixture:
                 next(self.gen)
 
 
+FixtureKey = str
+TestId = str
+ModulePath = str
+ScopeKey = Union[TestId, ModulePath, Scope]
+ScopeCache = Dict[Scope, Dict[ScopeKey, Dict[FixtureKey, Fixture]]]
+
+
+def _scope_cache_factory():
+    return {scope: {} for scope in Scope}
+
+
 @dataclass
 class FixtureCache:
-    _fixtures: Dict[str, Fixture] = field(default_factory=dict)
+    """
+    A collection of caches, each storing data for a different scope.
 
-    def cache_fixture(self, fixture: Fixture):
-        self._fixtures[fixture.key] = fixture
+    When a fixture is resolved, it is stored in the appropriate cache given
+    the scope of the fixture.
 
-    def teardown_all(self):
-        """Run the teardown code for all generator fixtures in the cache"""
-        vals = [f for f in self._fixtures.values()]
-        for fixture in vals:
+    A lookup into this cache is a 3 stage process:
+
+    Scope -> ScopeKey -> FixtureKey
+
+    The first 2 lookups (Scope and ScopeKey) let us determine:
+        e.g. has a test-scoped fixture been cached for the current test?
+        e.g. has a module-scoped fixture been cached for the current test module?
+
+    The final lookup lets us retrieve the actual fixture given a fixture key.
+    """
+    _scope_cache: ScopeCache = field(default_factory=_scope_cache_factory)
+
+    def _get_subcache(self, scope: Scope) -> Dict[str, Any]:
+        return self._scope_cache[scope]
+
+    def _get_fixtures(self, scope: Scope, scope_key: ScopeKey) -> Dict[FixtureKey, Fixture]:
+        subcache = self._get_subcache(scope)
+        if scope_key not in subcache:
+            subcache[scope_key] = {}
+        return subcache.get(scope_key)
+
+    def cache_fixture(self, fixture: Fixture, scope_key: ScopeKey):
+        """
+        Cache a fixture at the appropriate scope for the given test.
+        """
+        fixtures = self._get_fixtures(fixture.scope, scope_key)
+        fixtures[fixture.key] = fixture
+        print("storing", fixture)
+        pprint.pprint(self._scope_cache)
+
+    def teardown_fixtures_for_scope(self, scope: Scope, scope_key: ScopeKey):
+        fixture_dict = self._get_fixtures(scope, scope_key)
+        fixtures = list(fixture_dict.values())
+        for fixture in fixtures:
             with suppress(RuntimeError, StopIteration):
                 fixture.teardown()
-                del self[fixture.key]
+            del fixture_dict[fixture.key]
 
-    def get(
-        self, scope: Optional[Scope], module_name: Optional[str], test_id: Optional[str]
-    ) -> List[Fixture]:
-        filtered_by_mod = [
-            f
-            for f in self._fixtures.values()
-            if f.scope == scope and f.last_resolved_module_name == module_name
-        ]
+    def teardown_global_fixtures(self):
+        self.teardown_fixtures_for_scope(Scope.Global, Scope.Global)
 
-        if test_id:
-            return [f for f in filtered_by_mod if f.last_resolved_test_id == test_id]
-        else:
-            return filtered_by_mod
+    def contains(self, fixture: Fixture, scope: Scope, scope_key: ScopeKey) -> bool:
+        fixtures = self._get_fixtures(scope, scope_key)
+        return fixture.key in fixtures
 
-    def teardown_fixtures(self, fixtures: List[Fixture]):
-        for fixture in fixtures:
-            if fixture.key in self:
-                with suppress(RuntimeError, StopIteration):
-                    fixture.teardown()
-                    del self[fixture.key]
-
-    def __contains__(self, key: str) -> bool:
-        return key in self._fixtures
-
-    def __getitem__(self, key: str) -> Fixture:
-        return self._fixtures[key]
-
-    def __delitem__(self, key: str):
-        del self._fixtures[key]
-
-    def __len__(self):
-        return len(self._fixtures)
+    def get(self, fixture_key: FixtureKey, scope: Scope, scope_key: ScopeKey) -> Fixture:
+        fixtures = self._get_fixtures(scope, scope_key)
+        return fixtures.get(fixture_key)
 
 
 def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
@@ -109,10 +127,16 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
     # By setting is_fixture = True, the framework will know
     # that if this fixture is provided as a default arg, it
     # is responsible for resolving the value.
+    file = Path(inspect.getfile(func)).absolute()
     if hasattr(func, "ward_meta"):
         func.ward_meta.is_fixture = True
+        func.ward_meta.defined_in_file = file
     else:
-        func.ward_meta = WardMeta(is_fixture=True, scope=scope)
+        func.ward_meta = WardMeta(
+            is_fixture=True,
+            scope=scope,
+            defined_in_file=file,
+        )
 
     @wraps(func)
     def wrapper(*args, **kwargs):

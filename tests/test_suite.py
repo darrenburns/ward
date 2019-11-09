@@ -285,7 +285,6 @@ def _():
             "teardown",  # Teardown only at end of run
         ]
     )
-    expect(len(suite.cache)).equals(0)  # Teardown includes cache cleanup
 
 
 @test("Suite.generate_test_runs resolves mixed scope fixtures correctly")
