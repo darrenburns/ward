@@ -121,7 +121,7 @@ def _(t: Test = anonymous_test):
     expect(scope_key).equals(Scope.Global)
 
 
-@test("Test.get_parameterised_instances returns test in list if not parameterised")
+@test("Test.get_parameterised_instances returns [self] if not parameterised")
 def _():
     def test():
         pass
