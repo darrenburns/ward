@@ -65,8 +65,6 @@ def my_test(
     f3=module_fixture,
     f4=default_fixture,
 ):
-    # Inject these fixtures into a test, and resolve them
-    # to ensure they're ready to be torn down.
     @testable_test
     def t(f1=f1, f2=f2, f3=f3, f4=f4):
         pass
@@ -188,7 +186,7 @@ def _(
     expect(events).equals(["teardown g"])
 
 
-@test("using decorator sets bound args correctly")
+@test("@using sets bound args correctly")
 def _():
     @fixture
     def fixture_a():
@@ -206,3 +204,43 @@ def _():
     expected = {"a": fixture_a, "b": "val"}
 
     expect(bound_args.arguments).equals(expected)
+
+
+@test("@using sets bound args correctly in fixtures")
+def _():
+    expected_injection = "a"
+
+    @fixture
+    def fixture_a():
+        return expected_injection
+
+    @fixture
+    @using(a=fixture_a)
+    def fixture_b(a):
+        return a
+
+    bound_args = fixture_b.ward_meta.bound_args.arguments
+    expect(bound_args).equals({"a": fixture_a})
+
+
+@test("@using composition results in correct final values injected")
+def _(cache=cache):
+    expected_injection = "a"
+
+    @fixture
+    def fixture_a():
+        return expected_injection
+
+    @fixture
+    @using(a=fixture_a)
+    def fixture_b(a):
+        return a
+
+    @testable_test
+    @using(b=fixture_b)
+    def t(b):
+        pass
+
+    my_test = Test(t, "")
+    injected = my_test.resolve_args(cache)
+    expect(injected["b"]).equals(expected_injection)
