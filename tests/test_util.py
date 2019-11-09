@@ -1,11 +1,14 @@
 from tests.test_suite import example_test
-from ward import expect, test
+from ward import expect, test, using
 from ward.testing import TestOutcome, TestResult
 from ward.util import ExitCode, get_exit_code
 
 
 @test(
     "get_exit_code returns ExitCode.SUCCESS when PASS, SKIP and XFAIL in test results"
+)
+@using(
+    example=example_test,
 )
 def _(example=example_test):
     test_results = [
