@@ -1,12 +1,25 @@
+from collections import defaultdict
 from unittest import mock
 
 from ward import expect, fixture
 from ward.fixtures import Fixture
 from ward.models import Scope, SkipMarker
 from ward.suite import Suite
-from ward.testing import Test, skip, test, TestOutcome, TestResult
+from ward.testing import Test, skip, TestOutcome, TestResult, test
 
 NUMBER_OF_TESTS = 5
+FORCE_TEST_PATH = "path/of/test"
+
+
+def testable_test(func):
+    return test(
+        "testable test description",
+        _force_path=FORCE_TEST_PATH,
+        _collect_into=defaultdict(list),
+    )(func)
+
+
+testable_test.path = FORCE_TEST_PATH
 
 
 @fixture
@@ -41,6 +54,7 @@ def example_test(module=module, fixtures=fixtures):
     def f():
         return 123
 
+    @testable_test
     def t(fix_a=f):
         return fix_a
 
@@ -49,7 +63,11 @@ def example_test(module=module, fixtures=fixtures):
 
 @fixture
 def skipped_test(module=module):
-    return Test(fn=lambda: expect(1).equals(1), module_name=module, marker=SkipMarker())
+    @testable_test
+    def t():
+        expect(1).equals(1)
+
+    return Test(fn=t, module_name=module, marker=SkipMarker())
 
 
 @fixture
@@ -85,19 +103,19 @@ def _(suite=suite):
 
 @test("Suite.generate_test_runs yields a FAIL TestResult on `assert False`")
 def _(module=module):
-    def test_i_fail():
+    @testable_test
+    def _():
         assert False
 
-    test = Test(fn=test_i_fail, module_name=module)
-    failing_suite = Suite(tests=[test])
+    t = Test(fn=_, module_name=module)
+    failing_suite = Suite(tests=[t])
 
     results = failing_suite.generate_test_runs()
     result = next(results)
 
     expected_result = TestResult(
-        test=test, outcome=TestOutcome.FAIL, error=mock.ANY, message=""
+        test=t, outcome=TestOutcome.FAIL, error=mock.ANY, message=""
     )
-
     expect(result).equals(expected_result)
     expect(result.error).instance_of(AssertionError)
 
@@ -132,6 +150,7 @@ def _(module=module):
         events.append(2)
         return "b"
 
+    @testable_test
     def my_test(fix_a=fix_a, fix_b=fix_b):
         expect(fix_a).equals("a")
         expect(fix_b).equals("b")
@@ -165,6 +184,7 @@ def _(module=module):
         yield "c"
         events.append(5)
 
+    @testable_test
     def my_test(fix_a=fix_a, fix_c=fix_c):
         expect(fix_a).equals("a")
         expect(fix_c).equals("c")
@@ -194,6 +214,7 @@ def _(module=module):
     def c(a=a):
         events.append(3)
 
+    @testable_test
     def test(b=b, c=c):
         pass
 
@@ -214,14 +235,23 @@ def _():
         yield "a"
         events.append("teardown")
 
+    @testable_test
     def test1(a=a):
         events.append("test1")
 
+    @testable_test
     def test2(a=a):
         events.append("test2")
 
+    @testable_test
     def test3(a=a):
         events.append("test3")
+
+    # For testing purposes we need to assign paths ourselves,
+    # since our test functions are all defined at the same path
+    test1.ward_meta.path = "module1"
+    test2.ward_meta.path = "module2"
+    test3.ward_meta.path = "module2"
 
     suite = Suite(
         tests=[
@@ -244,7 +274,6 @@ def _():
             "teardown",  # Teardown at end of module2
         ]
     )
-    expect(len(suite.cache)).equals(0)
 
 
 @test("Suite.generate_test_runs resolves and tears down global fixtures once only")
@@ -257,12 +286,15 @@ def _():
         yield "a"
         events.append("teardown")
 
+    @testable_test
     def test1(a=a):
         events.append("test1")
 
+    @testable_test
     def test2(a=a):
         events.append("test2")
 
+    @testable_test
     def test3(a=a):
         events.append("test3")
 
@@ -285,7 +317,6 @@ def _():
             "teardown",  # Teardown only at end of run
         ]
     )
-    expect(len(suite.cache)).equals(0)  # Teardown includes cache cleanup
 
 
 @test("Suite.generate_test_runs resolves mixed scope fixtures correctly")
@@ -310,26 +341,32 @@ def _():
         yield "c"
         events.append("teardown c")
 
-    def test1(a=a, b=b, c=c):
+    @testable_test
+    def test_1(a=a, b=b, c=c):
         events.append("test1")
 
-    def test2(a=a, b=b, c=c):
+    @testable_test
+    def test_2(a=a, b=b, c=c):
         events.append("test2")
 
-    def test3(a=a, b=b, c=c):
+    @testable_test
+    def test_3(a=a, b=b, c=c):
         events.append("test3")
+
+    test_1.ward_meta.path = "module1"
+    test_2.ward_meta.path = "module2"
+    test_3.ward_meta.path = "module2"
 
     suite = Suite(
         tests=[
-            Test(fn=test1, module_name="module1"),
-            Test(fn=test2, module_name="module2"),
-            Test(fn=test3, module_name="module2"),
+            Test(fn=test_1, module_name="module1"),
+            Test(fn=test_2, module_name="module2"),
+            Test(fn=test_3, module_name="module2"),
         ]
     )
 
     list(suite.generate_test_runs())
 
-    # Note that the ordering of the final teardowns aren't well-defined
     expect(events).equals(
         [
             "resolve a",  # global fixture so resolved at start
@@ -345,11 +382,10 @@ def _():
             "resolve c",  # test fixture resolved at start of test3
             "test3",
             "teardown c",  # test fixture teardown at end of test3
-            "teardown a",  # global fixtures are torn down at the very end
             "teardown b",  # module fixture teardown at end of module2
+            "teardown a",  # global fixtures are torn down at the very end
         ]
     )
-    expect(len(suite.cache)).equals(0)
 
 
 @skip("WIP")

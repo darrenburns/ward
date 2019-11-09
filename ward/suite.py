@@ -1,12 +1,12 @@
-import io
-from contextlib import redirect_stderr, redirect_stdout
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Generator, List
 
 from ward.errors import FixtureError
-from ward.fixtures import Fixture, FixtureCache
+from ward.fixtures import FixtureCache
 from ward.models import Scope
-from ward.testing import HypothesisExample, Test, TestOutcome, TestResult
+from ward.testing import HypothesisExample
+from ward.testing import Test, TestOutcome, TestResult
 
 
 @dataclass
@@ -18,89 +18,51 @@ class Suite:
     def num_tests(self):
         return len(self.tests)
 
-    def generate_test_runs(self) -> Generator[TestResult, None, None]:
-        previous_test_module = None
-        for test in self.tests:
-            if previous_test_module and test.module_name != previous_test_module:
-                # We've moved into a different module, so clear out all of
-                # the module scoped fixtures from the previous module.
-                to_teardown = self.cache.get(
-                    scope=Scope.Module, module_name=previous_test_module, test_id=None
-                )
-                self.cache.teardown_fixtures(to_teardown)
+    def _test_counts_per_module(self):
+        module_paths = [test.path for test in self.tests]
+        counts = defaultdict(int)
+        for path in module_paths:
+            counts[path] += 1
+        return counts
 
+    def generate_test_runs(self) -> Generator[TestResult, None, None]:
+        num_tests_per_module = self._test_counts_per_module()
+        for test in self.tests:
             generated_tests = test.get_parameterised_instances()
 
             for i, generated_test in enumerate(generated_tests):
                 self._setup_hypothesis(generated_test)
-
+                num_tests_per_module[generated_test.path] -= 1
                 marker = generated_test.marker.name if generated_test.marker else None
                 if marker == "SKIP":
-                    yield TestResult(generated_test, TestOutcome.SKIP)
-                    previous_test_module = generated_test.module_name
+                    yield generated_test.get_result(TestOutcome.SKIP)
                     continue
 
-                sout, serr = io.StringIO(), io.StringIO()
                 try:
-                    with redirect_stdout(sout), redirect_stderr(serr):
-                        resolved_args = generated_test.resolve_args(self.cache, iteration=i)
-                except FixtureError as e:
-                    # We can't run teardown code here because we can't know how much
-                    # of the fixture has been executed.
-                    yield TestResult(
-                        generated_test,
-                        TestOutcome.FAIL,
-                        e,
-                        captured_stdout=sout.getvalue(),
-                        captured_stderr=serr.getvalue(),
+                    resolved_vals = generated_test.resolve_args(self.cache, iteration=i)
+                    generated_test(**resolved_vals)
+                    outcome = (
+                        TestOutcome.XPASS if marker == "XFAIL" else TestOutcome.PASS
                     )
-                    sout.close()
-                    serr.close()
-                    previous_test_module = generated_test.module_name
+                    yield generated_test.get_result(outcome)
+                except FixtureError as e:
+                    yield generated_test.get_result(TestOutcome.FAIL, e)
                     continue
-                try:
-                    resolved_vals = {}
-                    for (k, arg) in resolved_args.items():
-                        if isinstance(arg, Fixture):
-                            resolved_vals[k] = arg.resolved_val
-                        else:
-                            resolved_vals[k] = arg
-
-                    # Run the test, while capturing output.
-                    with redirect_stdout(sout), redirect_stderr(serr):
-                        generated_test(**resolved_vals)
-
-                    # The test has completed without exception and therefore passed
-                    if marker == "XFAIL":
-                        yield TestResult(
-                            generated_test,
-                            TestOutcome.XPASS,
-                            captured_stdout=sout.getvalue(),
-                            captured_stderr=serr.getvalue(),
-                        )
-                    else:
-                        yield TestResult(generated_test, TestOutcome.PASS)
                 except Exception as e:
-                    # TODO: Differentiate between ExpectationFailed and other Exceptions.
-                    if marker == "XFAIL":
-                        yield TestResult(generated_test, TestOutcome.XFAIL, e)
-                    else:
-                        yield TestResult(
-                            generated_test,
-                            TestOutcome.FAIL,
-                            e,
-                            captured_stdout=sout.getvalue(),
-                            captured_stderr=serr.getvalue(),
-                        )
+                    outcome = (
+                        TestOutcome.XFAIL if marker == "XFAIL" else TestOutcome.FAIL
+                    )
+                    yield generated_test.get_result(outcome, e)
                 finally:
-                    sout.close()
-                    serr.close()
+                    self.cache.teardown_fixtures_for_scope(
+                        Scope.Test, scope_key=generated_test.id
+                    )
+                    if num_tests_per_module[generated_test.path] == 0:
+                        self.cache.teardown_fixtures_for_scope(
+                            Scope.Module, scope_key=generated_test.path
+                        )
 
-                self._teardown_fixtures_scoped_to_test(generated_test)
-                previous_test_module = generated_test.module_name
-
-        # Take care of any additional teardown.
-        self.cache.teardown_all()
+        self.cache.teardown_global_fixtures()
 
     def _setup_hypothesis(self, generated_test):
         if hasattr(generated_test.fn, "hypothesis"):
@@ -111,19 +73,11 @@ class Suite:
                     inner_test(*args, **kwargs)
                 except Exception as e:
                     generated_test.hypothesis_examples.append(
-                        HypothesisExample(example=(args, kwargs), did_succeed=False))
+                        HypothesisExample(example=(args, kwargs), did_succeed=False)
+                    )
                     raise e
                 generated_test.hypothesis_examples.append(
-                    HypothesisExample(example=(args, kwargs), did_succeed=True))
+                    HypothesisExample(example=(args, kwargs), did_succeed=True)
+                )
 
             generated_test.fn.hypothesis.inner_test = executor
-
-    def _teardown_fixtures_scoped_to_test(self, test: Test):
-        """
-        Get all the test-scoped fixtures that were used to form this result,
-        tear them down from the cache, and return the result.
-        """
-        to_teardown = self.cache.get(
-            scope=Scope.Test, test_id=test.id, module_name=test.module_name
-        )
-        self.cache.teardown_fixtures(to_teardown)

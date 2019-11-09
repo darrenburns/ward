@@ -232,9 +232,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def result_checkbox(self, is_success: bool) -> str:
         if is_success:
-            result_marker = f"{Style.RESET_ALL}[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
+            result_marker = (
+                f"{Style.RESET_ALL}[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
+            )
         else:
-            result_marker = f"{Style.RESET_ALL}[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+            result_marker = (
+                f"{Style.RESET_ALL}[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+            )
         return result_marker
 
     def output_test_result_summary(
