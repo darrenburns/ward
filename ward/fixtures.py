@@ -145,7 +145,6 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
 
 def using(*using_args, **using_kwargs):
     def decorator_using(func):
-
         signature = inspect.signature(func)
         bound_args = signature.bind_partial(*using_args, **using_kwargs)
         if hasattr(func, "ward_meta"):
