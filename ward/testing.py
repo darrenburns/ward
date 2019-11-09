@@ -211,13 +211,26 @@ class Test:
                 )
             return result
 
-    def _get_default_args(self) -> Dict[str, Any]:
+    def _get_default_args(self, func: Optional[Union[Callable, Fixture]] = None) -> Dict[str, Any]:
         """
-        Returns a mapping of test argument names to values. This method does no
-        fixture resolution. If a value is a fixture function, then the raw fixture
-        function is used, *not* the `Fixture` object.
+        Returns a mapping of test argument names to values.
+
+        This method does no fixture resolution.
+
+        If a value is a fixture function, then the raw fixture
+        function is returned as a value in the dict, *not* the `Fixture` object.
         """
-        signature = inspect.signature(self.fn)
+        fn = func or self.fn
+        meta = getattr(fn, "ward_meta", None)
+        signature = inspect.signature(fn)
+
+        # Override the signature if @using is present
+        if meta:
+            bound_args = getattr(fn.ward_meta, "bound_args", None)
+            if bound_args:
+                bound_args.apply_defaults()
+                return bound_args.arguments
+
         default_binding = signature.bind_partial()
         default_binding.apply_defaults()
         return default_binding.arguments
@@ -271,11 +284,9 @@ class Test:
             cache.cache_fixture(fixture, scope_key)
             return fixture
 
-        signature = inspect.signature(arg)
-        children_defaults = signature.bind_partial()
-        children_defaults.apply_defaults()
+        children_defaults = self._get_default_args(func=arg)
         children_resolved = {}
-        for name, child_fixture in children_defaults.arguments.items():
+        for name, child_fixture in children_defaults.items():
             child_resolved = self._resolve_single_arg(child_fixture, cache)
             children_resolved[name] = child_resolved
 

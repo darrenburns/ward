@@ -2,7 +2,7 @@ from typing import List
 
 from tests.test_suite import testable_test
 from ward import expect, fixture, test, Scope
-from ward.fixtures import Fixture, FixtureCache
+from ward.fixtures import Fixture, FixtureCache, using
 from ward.testing import Test
 
 
@@ -126,11 +126,11 @@ def _(
 @test("FixtureCache.teardown_fixtures_for_scope removes Test fixtures from cache")
 def _(
     cache: FixtureCache = cache,
-    test: Test = my_test,
+    t: Test = my_test,
 ):
-    cache.teardown_fixtures_for_scope(Scope.Test, test.id)
+    cache.teardown_fixtures_for_scope(Scope.Test, t.id)
 
-    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Test, test.id)
+    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Test, t.id)
 
     expect(fixtures_at_scope).equals({})
 
@@ -138,10 +138,10 @@ def _(
 @test("FixtureCache.teardown_fixtures_for_scope runs teardown for Test fixtures")
 def _(
     cache: FixtureCache = cache,
-    test: Test = my_test,
+    t: Test = my_test,
     events: List = recorded_events,
 ):
-    cache.teardown_fixtures_for_scope(Scope.Test, test.id)
+    cache.teardown_fixtures_for_scope(Scope.Test, t.id)
 
     expect(events).equals(["teardown t"])
 
@@ -186,3 +186,23 @@ def _(
     cache.teardown_global_fixtures()
 
     expect(events).equals(["teardown g"])
+
+
+@test("using decorator sets bound args correctly")
+def _():
+    @fixture
+    def fixture_a():
+        pass
+
+    @testable_test
+    @using(
+        a=fixture_a,
+        b="val",
+    )
+    def t(a, b):
+        pass
+
+    bound_args = t.ward_meta.bound_args
+    expected = {"a": fixture_a, "b": "val"}
+
+    expect(bound_args.arguments).equals(expected)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from inspect import Signature
+from inspect import BoundArguments
 from typing import Optional
 
 from ward.errors import FixtureError
@@ -42,5 +42,5 @@ class WardMeta:
     description: Optional[str] = None
     is_fixture: bool = False
     scope: Scope = Scope.Test
-    bound_args: Optional[Signature] = None
+    bound_args: Optional[BoundArguments] = None
     path: Optional[str] = None
