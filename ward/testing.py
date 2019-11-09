@@ -76,6 +76,11 @@ def generate_id():
     return uuid.uuid4().hex
 
 
+class FormatDict(dict):
+    def __missing__(self, key):
+        return "{" + key + "}"
+
+
 @dataclass
 class ParamMeta:
     instance_index: int = 0
@@ -311,6 +316,26 @@ class Test:
             else:
                 resolved_vals[k] = arg
         return resolved_vals
+
+    def format_description(self, arg_map: Dict[str, Any]) -> str:
+        """
+        Applies any necessary string formatting to the description,
+        given a dictionary `arg_map` of values that will be injected
+        into the test.
+
+        This method will mutate the Test by updating the description.
+        Returns the newly updated description.
+        """
+        format_dict = FormatDict(**arg_map)
+        if not self.description:
+            self.description = ""
+
+        try:
+            self.description = self.description.format_map(format_dict)
+        except ValueError:
+            pass
+
+        return self.description
 
 
 # Tests declared with the name _, and with the @test decorator

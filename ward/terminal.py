@@ -11,12 +11,7 @@ from ward.diff import make_diff
 from ward.expect import ExpectationFailed, Expected
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
-from ward.util import ExitCode, get_exit_code
-
-
-def truncate(s: str, num_chars: int) -> str:
-    suffix = "..." if len(s) > num_chars - 3 else ""
-    return s[:num_chars] + suffix
+from ward.util import ExitCode, get_exit_code, truncate
 
 
 class TestResultWriterBase:
@@ -120,11 +115,17 @@ class SimpleTestResultWrite(TestResultWriterBase):
         colour = outcome_to_colour[test_result.outcome]
         bg = f"on_{colour}"
         padded_outcome = f" {test_result.outcome.name[:4]} "
-        if test_result.test.description:
-            sep = f":{test_result.test.line_number}: "
+
+        # If we're executing a parameterised test
+        param_meta = test_result.test.param_meta
+        if param_meta.group_size > 1:
+            iter_indicator = f" [{param_meta.instance_index + 1} of {param_meta.group_size}]"
         else:
-            sep = "."
-        mod_name = lightblack(f"{test_result.test.module_name}{sep}")
+            iter_indicator = ""
+
+        mod_name = lightblack(f"{test_result.test.module_name}:"
+                              f"{test_result.test.line_number}"
+                              f"{iter_indicator}: ")
         if (
             test_result.outcome == TestOutcome.SKIP
             or test_result.outcome == TestOutcome.XFAIL
@@ -135,10 +136,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         else:
             reason = ""
 
-        if test_result.test.description:
-            name_or_desc = test_result.test.description
-        else:
-            name_or_desc = test_result.test.name
+        name_or_desc = test_result.test.description
         print(
             colored(padded_outcome, color="grey", on_color=bg),
             mod_name + name_or_desc,
