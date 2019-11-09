@@ -2,7 +2,7 @@ import platform
 
 from setuptools import setup
 
-version = "0.17.0a0"
+version = "0.17.1a0"
 description = "A modern Python 3 test framework for finding and fixing flaws faster."
 with open("README.md", "r") as fh:
     if platform.system() != "Windows":
