@@ -8,10 +8,15 @@ from ward.suite import Suite
 from ward.testing import Test, skip, TestOutcome, TestResult, test
 
 NUMBER_OF_TESTS = 5
+FORCE_TEST_PATH = "path/of/test"
 
 
 def testable_test(func):
-    return test("blah", _collect_into=defaultdict(list))(func)
+    return test(
+        "testable test description",
+        _force_path=FORCE_TEST_PATH,
+        _collect_into=defaultdict(list)
+    )(func)
 
 
 @fixture

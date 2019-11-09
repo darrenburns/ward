@@ -43,7 +43,7 @@ class Fixture:
         # Suppress because we can't know whether there's more code
         # to execute below the yield.
         with suppress(StopIteration, RuntimeError):
-            if self.is_generator_fixture:
+            if self.is_generator_fixture and self.gen:
                 next(self.gen)
 
 
@@ -81,7 +81,7 @@ class FixtureCache:
     def _get_subcache(self, scope: Scope) -> Dict[str, Any]:
         return self._scope_cache[scope]
 
-    def _get_fixtures(self, scope: Scope, scope_key: ScopeKey) -> Dict[FixtureKey, Fixture]:
+    def get_fixtures_at_scope(self, scope: Scope, scope_key: ScopeKey) -> Dict[FixtureKey, Fixture]:
         subcache = self._get_subcache(scope)
         if scope_key not in subcache:
             subcache[scope_key] = {}
@@ -91,27 +91,26 @@ class FixtureCache:
         """
         Cache a fixture at the appropriate scope for the given test.
         """
-        fixtures = self._get_fixtures(fixture.scope, scope_key)
+        fixtures = self.get_fixtures_at_scope(fixture.scope, scope_key)
         fixtures[fixture.key] = fixture
 
     def teardown_fixtures_for_scope(self, scope: Scope, scope_key: ScopeKey):
-        fixture_dict = self._get_fixtures(scope, scope_key)
+        fixture_dict = self.get_fixtures_at_scope(scope, scope_key)
         fixtures = list(fixture_dict.values())
         for fixture in fixtures:
             with suppress(RuntimeError, StopIteration):
-                if fixture.resolved_val:
-                    fixture.teardown()
+                fixture.teardown()
             del fixture_dict[fixture.key]
 
     def teardown_global_fixtures(self):
         self.teardown_fixtures_for_scope(Scope.Global, Scope.Global)
 
     def contains(self, fixture: Fixture, scope: Scope, scope_key: ScopeKey) -> bool:
-        fixtures = self._get_fixtures(scope, scope_key)
+        fixtures = self.get_fixtures_at_scope(scope, scope_key)
         return fixture.key in fixtures
 
     def get(self, fixture_key: FixtureKey, scope: Scope, scope_key: ScopeKey) -> Fixture:
-        fixtures = self._get_fixtures(scope, scope_key)
+        fixtures = self.get_fixtures_at_scope(scope, scope_key)
         return fixtures.get(fixture_key)
 
 

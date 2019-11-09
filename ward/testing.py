@@ -172,7 +172,7 @@ class Test:
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
-    def resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
+    def resolve_args(self, cache: FixtureCache, iteration: int = 0) -> Dict[str, Any]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         If the argument is not a fixture, the raw argument will be used.
@@ -310,10 +310,16 @@ class Test:
 anonymous_tests: Dict[str, List[Callable]] = defaultdict(list)
 
 
-def test(description: str, _collect_into: Optional[Dict[str, List[Callable]]] = None):
+def test(description: str, *args, **kwargs):
     def decorator_test(func):
         mod_name = func.__module__
-        path = Path(inspect.getfile(func)).absolute()
+
+        force_path = kwargs.get("_force_path")
+        if force_path:
+            path = force_path
+        else:
+            path = Path(inspect.getfile(func)).absolute()
+
         if hasattr(func, "ward_meta"):
             func.ward_meta.description = description
             func.ward_meta.path = path
@@ -322,8 +328,10 @@ def test(description: str, _collect_into: Optional[Dict[str, List[Callable]]] = 
                 description=description,
                 path=path,
             )
-        if _collect_into is not None:
-            _collect_into[mod_name].append(func)
+
+        collect_into = kwargs.get("_collect_into")
+        if collect_into is not None:
+            collect_into[mod_name].append(func)
         else:
             anonymous_tests[mod_name].append(func)
 
