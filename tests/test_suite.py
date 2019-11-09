@@ -18,6 +18,8 @@ def testable_test(func):
         _collect_into=defaultdict(list)
     )(func)
 
+testable_test.path = FORCE_TEST_PATH
+
 
 @fixture
 def module():

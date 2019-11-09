@@ -1,7 +1,8 @@
 from unittest import mock
 from unittest.mock import Mock
 
-from ward import expect, raises
+from tests.test_suite import testable_test
+from ward import expect, raises, Scope
 from ward.errors import ParameterisationError
 from ward.fixtures import fixture
 from ward.testing import Test, test, each, ParamMeta
@@ -17,6 +18,7 @@ t = Test(fn=f, module_name=mod)
 
 @fixture
 def anonymous_test():
+    @testable_test
     def _():
         expect(1).equals(1)
 
@@ -98,6 +100,27 @@ def _():
     expect(t.is_parameterised).equals(False)
 
 
+@test("Test.scope_key_from(Scope.Test) returns the test ID")
+def _(t: Test = anonymous_test):
+    scope_key = t.scope_key_from(Scope.Test)
+
+    expect(scope_key).equals(t.id)
+
+
+@test("Test.scope_key_from(Scope.Module) returns the path of the test module")
+def _(t: Test = anonymous_test):
+    scope_key = t.scope_key_from(Scope.Module)
+
+    expect(scope_key).equals(testable_test.path)
+
+
+@test("Test.scope_key_from(Scope.Global) returns Scope.Global")
+def _(t: Test = anonymous_test):
+    scope_key = t.scope_key_from(Scope.Global)
+
+    expect(scope_key).equals(Scope.Global)
+
+
 @test("Test.get_parameterised_instances returns test in list if not parameterised")
 def _():
     def test():
@@ -144,4 +167,4 @@ def _():
     t = Test(fn=invalid_test, module_name=mod)
 
     with raises(ParameterisationError):
-        a = t.get_parameterised_instances()
+        t.get_parameterised_instances()

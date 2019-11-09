@@ -1,6 +1,6 @@
 from typing import List
 
-from tests.test_suite import testable_test, FORCE_TEST_PATH
+from tests.test_suite import testable_test
 from ward import expect, fixture, test, Scope
 from ward.fixtures import Fixture, FixtureCache
 from ward.testing import Test
@@ -102,7 +102,7 @@ def _(
     cache: FixtureCache = cache,
     module_fixture=module_fixture,
 ):
-    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, FORCE_TEST_PATH)
+    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)
 
     fixture = list(fixtures_at_scope.values())[0]
 
@@ -134,6 +134,7 @@ def _(
 
     expect(fixtures_at_scope).equals({})
 
+
 @test("FixtureCache.teardown_fixtures_for_scope runs teardown for Test fixtures")
 def _(
     cache: FixtureCache = cache,
@@ -149,9 +150,9 @@ def _(
 def _(
     cache: FixtureCache = cache,
 ):
-    cache.teardown_fixtures_for_scope(Scope.Module, FORCE_TEST_PATH)
+    cache.teardown_fixtures_for_scope(Scope.Module, testable_test.path)
 
-    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, FORCE_TEST_PATH)
+    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)
 
     expect(fixtures_at_scope).equals({})
 
@@ -161,7 +162,7 @@ def _(
     cache: FixtureCache = cache,
     events: List = recorded_events,
 ):
-    cache.teardown_fixtures_for_scope(Scope.Module, FORCE_TEST_PATH)
+    cache.teardown_fixtures_for_scope(Scope.Module, testable_test.path)
 
     expect(events).equals(["teardown m"])
 
