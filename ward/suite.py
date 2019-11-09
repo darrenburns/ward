@@ -29,6 +29,7 @@ class Suite:
         for test in self.tests:
             generated_tests = test.get_parameterised_instances()
             for i, generated_test in enumerate(generated_tests):
+                num_tests_per_module[generated_test.path] -= 1
                 marker = generated_test.marker.name if generated_test.marker else None
                 if marker == "SKIP":
                     yield generated_test.get_result(TestOutcome.SKIP)
@@ -50,12 +51,14 @@ class Suite:
                     )
                     yield generated_test.get_result(outcome, e)
                 finally:
-                    num_tests_per_module[generated_test.path] -= 1
-
-                self.cache.teardown_fixtures_for_scope(Scope.Test, generated_test.id)
-
-                # TODO: Check if we've finished running all tests in the
-                #  current module, and if so, teardown fixtures for that scope
-                #  using the module path as the scope key.
+                    self.cache.teardown_fixtures_for_scope(
+                        Scope.Test,
+                        scope_key=generated_test.id,
+                    )
+                    if num_tests_per_module[generated_test.path] == 0:
+                        self.cache.teardown_fixtures_for_scope(
+                            Scope.Module,
+                            scope_key=generated_test.path,
+                        )
 
         self.cache.teardown_global_fixtures()

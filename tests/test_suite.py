@@ -239,6 +239,12 @@ def _():
     def test3(a=a):
         events.append("test3")
 
+    # For testing purposes we need to assign paths ourselves,
+    # since our test functions are all defined at the same path
+    test1.ward_meta.path = "module1"
+    test2.ward_meta.path = "module2"
+    test3.ward_meta.path = "module2"
+
     suite = Suite(
         tests=[
             Test(fn=test1, module_name="module1"),
@@ -260,7 +266,6 @@ def _():
             "teardown",  # Teardown at end of module2
         ]
     )
-    expect(len(suite.cache)).equals(0)
 
 
 @test("Suite.generate_test_runs resolves and tears down global fixtures once only")
@@ -340,6 +345,10 @@ def _():
     def test_3(a=a, b=b, c=c):
         events.append("test3")
 
+    test_1.ward_meta.path = "module1"
+    test_2.ward_meta.path = "module2"
+    test_3.ward_meta.path = "module2"
+
     suite = Suite(
         tests=[
             Test(fn=test_1, module_name="module1"),
@@ -365,11 +374,10 @@ def _():
             "resolve c",  # test fixture resolved at start of test3
             "test3",
             "teardown c",  # test fixture teardown at end of test3
-            "teardown a",  # global fixtures are torn down at the very end
             "teardown b",  # module fixture teardown at end of module2
+            "teardown a",  # global fixtures are torn down at the very end
         ]
     )
-    expect(len(suite.cache)).equals(0)
 
 
 @skip("WIP")

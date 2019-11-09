@@ -99,7 +99,8 @@ class FixtureCache:
         fixtures = list(fixture_dict.values())
         for fixture in fixtures:
             with suppress(RuntimeError, StopIteration):
-                fixture.teardown()
+                if fixture.resolved_val:
+                    fixture.teardown()
             del fixture_dict[fixture.key]
 
     def teardown_global_fixtures(self):
