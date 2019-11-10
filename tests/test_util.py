@@ -1,7 +1,7 @@
 from tests.test_suite import example_test
-from ward import expect, test, using
-from ward.testing import TestOutcome, TestResult
-from ward.util import ExitCode, get_exit_code
+from ward import expect, test, using, fixture
+from ward.testing import TestOutcome, TestResult, each
+from ward.util import ExitCode, get_exit_code, truncate
 
 
 @test(
@@ -37,3 +37,18 @@ def _(example=example_test):
     exit_code = get_exit_code(test_results)
 
     expect(exit_code).equals(ExitCode.FAILED)
+
+
+@fixture
+def s():
+    return "hello world"
+
+
+@test("truncate('{input}', num_chars={num_chars}) returns '{expected}'")
+def _(
+    input=s,
+    num_chars=each(20, 11, 10, 5),
+    expected=each(s, s, "hello w...", "he..."),
+):
+    result = truncate(input, num_chars)
+    expect(result).equals(expected)

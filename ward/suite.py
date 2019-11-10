@@ -40,6 +40,7 @@ class Suite:
 
                 try:
                     resolved_vals = generated_test.resolve_args(self.cache, iteration=i)
+                    generated_test.format_description(resolved_vals)
                     generated_test(**resolved_vals)
                     outcome = (
                         TestOutcome.XPASS if marker == "XFAIL" else TestOutcome.PASS
