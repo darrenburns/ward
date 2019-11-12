@@ -130,7 +130,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         # If we're executing a parameterised test
         param_meta = test_result.test.param_meta
         if param_meta.group_size > 1:
-            iter_indicator = f" [{param_meta.instance_index + 1} of {param_meta.group_size}]"
+            iter_indicator = f" [{param_meta.instance_index + 1}/{param_meta.group_size}]"
         else:
             iter_indicator = ""
 
@@ -269,7 +269,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             output += " ] "
 
         print(output)
-        
+
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
             stderr = colored("standard error", color="red")
