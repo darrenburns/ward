@@ -31,25 +31,37 @@ class TestResultWriterBase:
             f"Ward collected {self.suite.num_tests} tests "
             f"in {time_to_collect:.2f} seconds.\n"
         )
-        for result in test_results_gen:
-            self.output_single_test_result(result)
-            sys.stdout.write(Style.RESET_ALL)
-            all_results.append(result)
-            if result.outcome == TestOutcome.FAIL:
-                failed_test_results.append(result)
+        if not self.suite.num_tests:
+            return all_results
 
-            if len(failed_test_results) == fail_limit:
-                break
+        try:
+            for result in test_results_gen:
+                self.output_single_test_result(result)
+                sys.stdout.write(Style.RESET_ALL)
+                all_results.append(result)
+                if result.outcome == TestOutcome.FAIL:
+                    failed_test_results.append(result)
 
-        print()
-        self.output_test_run_post_failure_summary(test_results=all_results)
-        for failure in failed_test_results:
-            self.output_why_test_failed_header(failure)
-            self.output_why_test_failed(failure)
-            self.output_captured_stderr(failure)
-            self.output_captured_stdout(failure)
+                if len(failed_test_results) == fail_limit:
+                    break
+        except KeyboardInterrupt:
+            cprint("\n[WARD] Run cancelled - "
+                   "results for tests that ran shown below.", color="yellow")
+        finally:
+            print()
+            self.output_test_run_post_failure_summary(test_results=all_results)
+            for failure in failed_test_results:
+                self.print_divider()
+                self.output_why_test_failed_header(failure)
+                self.output_why_test_failed(failure)
+                self.output_captured_stderr(failure)
+                self.output_captured_stdout(failure)
 
-        return all_results
+            self.print_divider()
+            return all_results
+
+    def print_divider(self):
+        print(lightblack(f"{'_' * self.terminal_size.width}\n"))
 
     def output_single_test_result(self, test_result: TestResult):
         """Indicate whether a test passed, failed, was skipped etc."""
@@ -119,7 +131,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         # If we're executing a parameterised test
         param_meta = test_result.test.param_meta
         if param_meta.group_size > 1:
-            iter_indicator = f" [{param_meta.instance_index + 1} of {param_meta.group_size}]"
+            iter_indicator = f" [{param_meta.instance_index + 1}/{param_meta.group_size}]"
         else:
             iter_indicator = ""
 
@@ -203,16 +215,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
         trace = getattr(err, "__traceback__", "")
         if trace:
             trc = traceback.format_exception(None, err, trace)
-            if err.__cause__:
-                cause = err.__cause__.__class__.__name__
-            else:
-                cause = None
             for line in trc:
                 sublines = line.split("\n")
                 for subline in sublines:
                     content = " " * 4 + subline
                     if subline.lstrip().startswith('File "'):
-                        cprint(content, color="yellow")
+                        cprint(content, color="blue")
                     else:
                         print(content)
         else:
@@ -243,28 +251,41 @@ class SimpleTestResultWrite(TestResultWriterBase):
         self, test_results: List[TestResult], time_taken: float
     ):
         outcome_counts = self._get_outcome_counts(test_results)
-        chart = self.generate_chart(
-            num_passed=outcome_counts[TestOutcome.PASS],
-            num_failed=outcome_counts[TestOutcome.FAIL],
-            num_skipped=outcome_counts[TestOutcome.SKIP],
-            num_xfail=outcome_counts[TestOutcome.XFAIL],
-            num_unexp=outcome_counts[TestOutcome.XPASS],
-        )
-        print(chart, "")
+        if test_results:
+            chart = self.generate_chart(
+                num_passed=outcome_counts[TestOutcome.PASS],
+                num_failed=outcome_counts[TestOutcome.FAIL],
+                num_skipped=outcome_counts[TestOutcome.SKIP],
+                num_xfail=outcome_counts[TestOutcome.XFAIL],
+                num_unexp=outcome_counts[TestOutcome.XPASS],
+            )
+            print(chart, "")
 
         exit_code = get_exit_code(test_results)
-        if exit_code == ExitCode.FAILED:
-            result = colored(exit_code.name, color="red")
-        else:
+        if exit_code == ExitCode.SUCCESS:
             result = colored(exit_code.name, color="green")
-        print(
-            f"{result} in {time_taken:.2f} seconds [ "
-            f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
-            f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
-            f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
-            f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
-            f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')} ]"
-        )
+        else:
+            result = colored(exit_code.name, color="red")
+
+        output = f"{result} in {time_taken:.2f} seconds"
+        if test_results:
+            output += " [ "
+
+        if outcome_counts[TestOutcome.FAIL]:
+            output += f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
+        if outcome_counts[TestOutcome.XPASS]:
+            output += f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
+        if outcome_counts[TestOutcome.XFAIL]:
+            output += f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
+        if outcome_counts[TestOutcome.SKIP]:
+            output += f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
+        if outcome_counts[TestOutcome.PASS]:
+            output += f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')}"
+
+        if test_results:
+            output += " ] "
+
+        print(output)
 
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:

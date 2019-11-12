@@ -8,9 +8,13 @@ class ExitCode(Enum):
     SUCCESS = 0
     FAILED = 1
     ERROR = 2
+    NO_TESTS_FOUND = 3
 
 
 def get_exit_code(results: Iterable[TestResult]) -> ExitCode:
+    if not results:
+        return ExitCode.NO_TESTS_FOUND
+
     if any(
         r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results
     ):
