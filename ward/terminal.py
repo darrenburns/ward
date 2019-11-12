@@ -57,10 +57,11 @@ class TestResultWriterBase:
                 self.output_captured_stderr(failure)
                 self.output_captured_stdout(failure)
 
+            self.print_divider()
             return all_results
 
     def print_divider(self):
-        print(lightblack(f"{'_' * get_terminal_size().width}\n"))
+        print(lightblack(f"{'_' * self.terminal_size.width}\n"))
 
     def output_single_test_result(self, test_result: TestResult):
         """Indicate whether a test passed, failed, was skipped etc."""
