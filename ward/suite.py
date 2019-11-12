@@ -65,20 +65,20 @@ class Suite:
 
         self.cache.teardown_global_fixtures()
 
-    def _setup_hypothesis(self, generated_test):
-        if hasattr(generated_test.fn, "hypothesis"):
-            inner_test = generated_test.fn.hypothesis.inner_test
+    def _setup_hypothesis(self, test):
+        if hasattr(test.fn, "hypothesis"):
+            inner_test = test.fn.hypothesis.inner_test
 
-            def executor(*args, **kwargs):
+            def example(*args, **kwargs):
                 try:
                     inner_test(*args, **kwargs)
                 except Exception as e:
-                    generated_test.hypothesis_examples.append(
+                    test.hypothesis_examples.append(
                         HypothesisExample(example=(args, kwargs), did_succeed=False)
                     )
                     raise e
-                generated_test.hypothesis_examples.append(
+                test.hypothesis_examples.append(
                     HypothesisExample(example=(args, kwargs), did_succeed=True)
                 )
 
-            generated_test.fn.hypothesis.inner_test = executor
+            test.fn.hypothesis.inner_test = example
