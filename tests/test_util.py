@@ -25,7 +25,7 @@ def _(example=example_test):
 def _():
     exit_code = get_exit_code([])
 
-    expect(exit_code).equals(ExitCode.SUCCESS)
+    expect(exit_code).equals(ExitCode.NO_TESTS_FOUND)
 
 
 @test("get_exit_code returns ExitCode.FAILED when XPASS in test results")
