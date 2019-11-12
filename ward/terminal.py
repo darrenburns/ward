@@ -202,16 +202,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
         trace = getattr(err, "__traceback__", "")
         if trace:
             trc = traceback.format_exception(None, err, trace)
-            if err.__cause__:
-                cause = err.__cause__.__class__.__name__
-            else:
-                cause = None
             for line in trc:
                 sublines = line.split("\n")
                 for subline in sublines:
                     content = " " * 4 + subline
                     if subline.lstrip().startswith('File "'):
-                        cprint(content, color="yellow")
+                        cprint(content, color="blue")
                     else:
                         print(content)
         else:
@@ -253,15 +249,27 @@ class SimpleTestResultWrite(TestResultWriterBase):
             result = colored(exit_code.name, color="green")
         else:
             result = colored(exit_code.name, color="red")
-        print(
-            f"{result} in {time_taken:.2f} seconds [ "
-            f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
-            f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
-            f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
-            f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
-            f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')} ]"
-        )
 
+        output = f"{result} in {time_taken:.2f} seconds"
+        if test_results:
+            output += " [ "
+
+        if outcome_counts[TestOutcome.FAIL]:
+            output += f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
+        if outcome_counts[TestOutcome.XPASS]:
+            output += f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
+        if outcome_counts[TestOutcome.XFAIL]:
+            output += f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
+        if outcome_counts[TestOutcome.SKIP]:
+            output += f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
+        if outcome_counts[TestOutcome.PASS]:
+            output += f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')}"
+
+        if test_results:
+            output += " ] "
+
+        print(output)
+        
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
             stderr = colored("standard error", color="red")
