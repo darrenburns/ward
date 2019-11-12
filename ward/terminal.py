@@ -34,25 +34,33 @@ class TestResultWriterBase:
         if not self.suite.num_tests:
             return all_results
 
-        for result in test_results_gen:
-            self.output_single_test_result(result)
-            sys.stdout.write(Style.RESET_ALL)
-            all_results.append(result)
-            if result.outcome == TestOutcome.FAIL:
-                failed_test_results.append(result)
+        try:
+            for result in test_results_gen:
+                self.output_single_test_result(result)
+                sys.stdout.write(Style.RESET_ALL)
+                all_results.append(result)
+                if result.outcome == TestOutcome.FAIL:
+                    failed_test_results.append(result)
 
-            if len(failed_test_results) == fail_limit:
-                break
+                if len(failed_test_results) == fail_limit:
+                    break
+        except KeyboardInterrupt:
+            cprint("\n[WARD] Run cancelled - "
+                   "results for tests that ran shown below.", color="yellow")
+        finally:
+            print()
+            self.output_test_run_post_failure_summary(test_results=all_results)
+            for failure in failed_test_results:
+                self.print_divider()
+                self.output_why_test_failed_header(failure)
+                self.output_why_test_failed(failure)
+                self.output_captured_stderr(failure)
+                self.output_captured_stdout(failure)
 
-        print()
-        self.output_test_run_post_failure_summary(test_results=all_results)
-        for failure in failed_test_results:
-            self.output_why_test_failed_header(failure)
-            self.output_why_test_failed(failure)
-            self.output_captured_stderr(failure)
-            self.output_captured_stdout(failure)
+            return all_results
 
-        return all_results
+    def print_divider(self):
+        print(lightblack(f"{'_' * get_terminal_size().width}\n"))
 
     def output_single_test_result(self, test_result: TestResult):
         """Indicate whether a test passed, failed, was skipped etc."""
