@@ -31,6 +31,9 @@ class TestResultWriterBase:
             f"Ward collected {self.suite.num_tests} tests "
             f"in {time_to_collect:.2f} seconds.\n"
         )
+        if not self.suite.num_tests:
+            return all_results
+
         for result in test_results_gen:
             self.output_single_test_result(result)
             sys.stdout.write(Style.RESET_ALL)
@@ -227,20 +230,21 @@ class SimpleTestResultWrite(TestResultWriterBase):
         self, test_results: List[TestResult], time_taken: float
     ):
         outcome_counts = self._get_outcome_counts(test_results)
-        chart = self.generate_chart(
-            num_passed=outcome_counts[TestOutcome.PASS],
-            num_failed=outcome_counts[TestOutcome.FAIL],
-            num_skipped=outcome_counts[TestOutcome.SKIP],
-            num_xfail=outcome_counts[TestOutcome.XFAIL],
-            num_unexp=outcome_counts[TestOutcome.XPASS],
-        )
-        print(chart, "")
+        if test_results:
+            chart = self.generate_chart(
+                num_passed=outcome_counts[TestOutcome.PASS],
+                num_failed=outcome_counts[TestOutcome.FAIL],
+                num_skipped=outcome_counts[TestOutcome.SKIP],
+                num_xfail=outcome_counts[TestOutcome.XFAIL],
+                num_unexp=outcome_counts[TestOutcome.XPASS],
+            )
+            print(chart, "")
 
         exit_code = get_exit_code(test_results)
-        if exit_code == ExitCode.FAILED:
-            result = colored(exit_code.name, color="red")
-        else:
+        if exit_code == ExitCode.SUCCESS:
             result = colored(exit_code.name, color="green")
+        else:
+            result = colored(exit_code.name, color="red")
         print(
             f"{result} in {time_taken:.2f} seconds [ "
             f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
