@@ -57,7 +57,9 @@ class TestResultWriterBase:
                 self.output_captured_stderr(failure)
                 self.output_captured_stdout(failure)
 
-            self.print_divider()
+            if failed_test_results:
+                self.print_divider()
+                
             return all_results
 
     def print_divider(self):
