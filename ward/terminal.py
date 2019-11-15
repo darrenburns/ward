@@ -59,7 +59,7 @@ class TestResultWriterBase:
 
             if failed_test_results:
                 self.print_divider()
-                
+
             return all_results
 
     def print_divider(self):
@@ -271,18 +271,18 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         output = f"{result} in {time_taken:.2f} seconds"
         if test_results:
-            output += " [ "
+            output += " ["
 
         if outcome_counts[TestOutcome.FAIL]:
-            output += f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
+            output += f" {colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}"
         if outcome_counts[TestOutcome.XPASS]:
-            output += f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
+            output += f" {colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}"
         if outcome_counts[TestOutcome.XFAIL]:
-            output += f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
+            output += f" {colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}"
         if outcome_counts[TestOutcome.SKIP]:
-            output += f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
+            output += f" {colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}"
         if outcome_counts[TestOutcome.PASS]:
-            output += f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')}"
+            output += f" {colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')}"
 
         if test_results:
             output += " ] "
