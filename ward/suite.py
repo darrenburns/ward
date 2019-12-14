@@ -53,13 +53,11 @@ class Suite:
                     yield generated_test.get_result(outcome, e)
                 finally:
                     self.cache.teardown_fixtures_for_scope(
-                        Scope.Test,
-                        scope_key=generated_test.id,
+                        Scope.Test, scope_key=generated_test.id
                     )
                     if num_tests_per_module[generated_test.path] == 0:
                         self.cache.teardown_fixtures_for_scope(
-                            Scope.Module,
-                            scope_key=generated_test.path,
+                            Scope.Module, scope_key=generated_test.path
                         )
 
         self.cache.teardown_global_fixtures()

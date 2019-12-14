@@ -7,10 +7,8 @@ from ward.util import ExitCode, get_exit_code, truncate
 @test(
     "get_exit_code returns ExitCode.SUCCESS when PASS, SKIP and XFAIL in test results"
 )
-@using(
-    example=example_test,
-)
-def _(example=example_test):
+@using(example=example_test)
+def _(example):
     test_results = [
         TestResult(test=example, outcome=TestOutcome.PASS),
         TestResult(test=example, outcome=TestOutcome.SKIP),
@@ -46,9 +44,7 @@ def s():
 
 @test("truncate('{input}', num_chars={num_chars}) returns '{expected}'")
 def _(
-    input=s,
-    num_chars=each(20, 11, 10, 5),
-    expected=each(s, s, "hello w...", "he..."),
+    input=s, num_chars=each(20, 11, 10, 5), expected=each(s, s, "hello w...", "he...")
 ):
     result = truncate(input, num_chars)
     expect(result).equals(expected)
