@@ -34,7 +34,6 @@ sys.path.append(".")
 @click.option(
     "--test-output-style",
     type=click.Choice([
-        "auto",
         "test-per-line",
         "dots-global",
         "dots-module",
