@@ -69,26 +69,16 @@ def output_test_per_line(fail_limit, test_results_gen):
 
 
 def output_dots_global(
-    fail_limit,
+    fail_limit: int,
     test_results_gen: Generator[TestResult, None, None],
-):
+) -> List[TestResult]:
     column = 0
     num_failures = 0
     all_results = []
     try:
         for result in test_results_gen:
-            colour = outcome_to_colour(result.outcome)
             all_results.append(result)
-            if result.outcome == TestOutcome.PASS:
-                print_no_break(colored(".", color=colour))
-            elif result.outcome == TestOutcome.FAIL:
-                print_no_break(colored("F", color=colour))
-            elif result.outcome == TestOutcome.XPASS:
-                print_no_break(colored("U", color=colour))
-            elif result.outcome == TestOutcome.XFAIL:
-                print_no_break(colored("x", color=colour))
-            elif result.outcome == TestOutcome.SKIP:
-                print_no_break(colored("s", color=colour))
+            print_dot(result)
             column += 1
             if column == get_terminal_size().width:
                 print()
@@ -105,6 +95,44 @@ def output_dots_global(
         return all_results
 
 
+def print_dot(result):
+    colour = outcome_to_colour(result.outcome)
+    if result.outcome == TestOutcome.PASS:
+        print_no_break(colored(".", color=colour))
+    elif result.outcome == TestOutcome.FAIL:
+        print_no_break(colored("F", color=colour))
+    elif result.outcome == TestOutcome.XPASS:
+        print_no_break(colored("U", color=colour))
+    elif result.outcome == TestOutcome.XFAIL:
+        print_no_break(colored("x", color=colour))
+    elif result.outcome == TestOutcome.SKIP:
+        print_no_break(colored("s", color=colour))
+
+
+def output_dots_module(
+    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+) -> List[TestResult]:
+    current_module = ""
+    num_failures = 0
+    all_results = []
+    try:
+        for result in test_results_gen:
+            all_results.append(result)
+            if result.test.module_name != current_module:
+                print_no_break(f"\n{result.test.module_name}: ")
+                current_module = result.test.module_name
+            print_dot(result)
+            if result.outcome == TestOutcome.FAIL:
+                num_failures += 1
+            if num_failures == fail_limit:
+                break
+            sys.stdout.flush()
+    except KeyboardInterrupt:
+        output_run_cancelled()
+    finally:
+        return all_results
+
+
 def output_run_cancelled():
     cprint("\n[WARD] Run cancelled - "
            "results for tests that ran shown below.", color="yellow")
@@ -114,7 +142,7 @@ class TestResultWriterBase:
     runtime_output_strategies = {
         "test-per-line": output_test_per_line,
         "dots-global": output_dots_global,
-        "dots-module": output_test_per_line,
+        "dots-module": output_dots_module,
     }
 
     def __init__(self, suite: Suite, runtime_output_mode: str):
