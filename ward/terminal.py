@@ -53,6 +53,7 @@ def output_test_result_line(test_result: TestResult):
 def output_test_per_line(fail_limit, test_results_gen):
     num_failures = 0
     all_results = []
+    print()
     try:
         for result in test_results_gen:
             output_test_result_line(result)
@@ -76,6 +77,7 @@ def output_dots_global(
     num_failures = 0
     all_results = []
     try:
+        print()
         for result in test_results_gen:
             all_results.append(result)
             print_dot(result)
@@ -127,6 +129,7 @@ def output_dots_module(
             if num_failures == fail_limit:
                 break
             sys.stdout.flush()
+        print()
     except KeyboardInterrupt:
         output_run_cancelled()
     finally:
@@ -145,9 +148,9 @@ class TestResultWriterBase:
         "dots-module": output_dots_module,
     }
 
-    def __init__(self, suite: Suite, runtime_output_mode: str):
+    def __init__(self, suite: Suite, test_output_style: str):
         self.suite = suite
-        self.runtime_output_mode = runtime_output_mode
+        self.test_output_style = test_output_style
         self.terminal_size = get_terminal_size()
 
     def output_all_test_results(
@@ -158,12 +161,12 @@ class TestResultWriterBase:
     ) -> List[TestResult]:
         print(
             f"Ward collected {self.suite.num_tests} tests "
-            f"in {time_to_collect:.2f} seconds.\n"
+            f"in {time_to_collect:.2f} seconds."
         )
         if not self.suite.num_tests:
             return []
         output_tests = self.runtime_output_strategies.get(
-            self.runtime_output_mode,
+            self.test_output_style,
             output_test_per_line,
         )
         all_results = output_tests(

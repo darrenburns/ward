@@ -32,7 +32,7 @@ sys.path.append(".")
     help="The maximum number of failures that are allowed to occur in a run before it is automatically cancelled.",
 )
 @click.option(
-    "--runtime-output-mode",
+    "--test-output-style",
     type=click.Choice([
         "auto",
         "test-per-line",
@@ -40,7 +40,7 @@ sys.path.append(".")
         "dots-module",
     ], case_sensitive=False)
 )
-def run(path, search, fail_limit, runtime_output_mode):
+def run(path, search, fail_limit, test_output_style):
     start_run = default_timer()
 
     mod_infos = get_info_for_modules(path)
@@ -52,7 +52,7 @@ def run(path, search, fail_limit, runtime_output_mode):
     suite = Suite(tests=list(tests))
     test_results = suite.generate_test_runs()
 
-    writer = SimpleTestResultWrite(suite=suite, runtime_output_mode=runtime_output_mode)
+    writer = SimpleTestResultWrite(suite=suite, test_output_style=test_output_style)
     results = writer.output_all_test_results(
         test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
     )
