@@ -112,15 +112,15 @@ def print_dot(result):
 def output_dots_module(
     fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
-    current_module = ""
+    current_path = ""
     num_failures = 0
     all_results = []
     try:
         for result in test_results_gen:
             all_results.append(result)
-            if result.test.module_name != current_module:
-                print_no_break(f"\n{result.test.module_name}: ")
-                current_module = result.test.module_name
+            if result.test.path != current_path:
+                print_no_break(f"\n{result.test.path.relative_to(os.getcwd())}: ")
+                current_path = result.test.path
             print_dot(result)
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1

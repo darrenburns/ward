@@ -10,7 +10,7 @@ from ward.util import ExitCode, get_exit_code, truncate
 @using(
     example=example_test,
 )
-def _(example=example_test):
+def _(example):
     test_results = [
         TestResult(test=example, outcome=TestOutcome.PASS),
         TestResult(test=example, outcome=TestOutcome.SKIP),

@@ -111,7 +111,7 @@ class Test:
         return self.fn.__name__
 
     @property
-    def path(self):
+    def path(self) -> Path:
         return self.fn.ward_meta.path
 
     @property
@@ -354,7 +354,7 @@ def test(description: str, *args, **kwargs):
         if force_path:
             path = force_path
         else:
-            path = Path(inspect.getfile(func)).absolute()
+            path = Path(inspect.getfile(inspect.unwrap(func))).absolute()
 
         if hasattr(func, "ward_meta"):
             func.ward_meta.description = description
