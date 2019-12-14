@@ -15,8 +15,9 @@ def testable_test(func):
     return test(
         "testable test description",
         _force_path=FORCE_TEST_PATH,
-        _collect_into=defaultdict(list)
+        _collect_into=defaultdict(list),
     )(func)
+
 
 testable_test.path = FORCE_TEST_PATH
 

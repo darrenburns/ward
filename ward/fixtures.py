@@ -76,12 +76,15 @@ class FixtureCache:
 
     The final lookup lets us retrieve the actual fixture given a fixture key.
     """
+
     _scope_cache: ScopeCache = field(default_factory=_scope_cache_factory)
 
     def _get_subcache(self, scope: Scope) -> Dict[str, Any]:
         return self._scope_cache[scope]
 
-    def get_fixtures_at_scope(self, scope: Scope, scope_key: ScopeKey) -> Dict[FixtureKey, Fixture]:
+    def get_fixtures_at_scope(
+        self, scope: Scope, scope_key: ScopeKey
+    ) -> Dict[FixtureKey, Fixture]:
         subcache = self._get_subcache(scope)
         if scope_key not in subcache:
             subcache[scope_key] = {}
@@ -109,7 +112,9 @@ class FixtureCache:
         fixtures = self.get_fixtures_at_scope(scope, scope_key)
         return fixture.key in fixtures
 
-    def get(self, fixture_key: FixtureKey, scope: Scope, scope_key: ScopeKey) -> Fixture:
+    def get(
+        self, fixture_key: FixtureKey, scope: Scope, scope_key: ScopeKey
+    ) -> Fixture:
         fixtures = self.get_fixtures_at_scope(scope, scope_key)
         return fixtures.get(fixture_key)
 
@@ -129,11 +134,7 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
         func.ward_meta.is_fixture = True
         func.ward_meta.path = path
     else:
-        func.ward_meta = WardMeta(
-            is_fixture=True,
-            scope=scope,
-            path=path,
-        )
+        func.ward_meta = WardMeta(is_fixture=True, scope=scope, path=path)
 
     @wraps(func)
     def wrapper(*args, **kwargs):

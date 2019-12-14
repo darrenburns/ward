@@ -29,9 +29,11 @@ def output_test_result_line(test_result: TestResult):
     else:
         iter_indicator = ""
 
-    mod_name = lightblack(f"{test_result.test.module_name}:"
-                          f"{test_result.test.line_number}"
-                          f"{iter_indicator}: ")
+    mod_name = lightblack(
+        f"{test_result.test.module_name}:"
+        f"{test_result.test.line_number}"
+        f"{iter_indicator}: "
+    )
     if (
         test_result.outcome == TestOutcome.SKIP
         or test_result.outcome == TestOutcome.XFAIL
@@ -70,8 +72,7 @@ def output_test_per_line(fail_limit, test_results_gen):
 
 
 def output_dots_global(
-    fail_limit: int,
-    test_results_gen: Generator[TestResult, None, None],
+    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
     column = 0
     num_failures = 0
@@ -137,8 +138,10 @@ def output_dots_module(
 
 
 def output_run_cancelled():
-    cprint("\n[WARD] Run cancelled - "
-           "results for tests that ran shown below.", color="yellow")
+    cprint(
+        "\n[WARD] Run cancelled - " "results for tests that ran shown below.",
+        color="yellow",
+    )
 
 
 class TestResultWriterBase:
@@ -166,13 +169,9 @@ class TestResultWriterBase:
         if not self.suite.num_tests:
             return []
         output_tests = self.runtime_output_strategies.get(
-            self.test_output_style,
-            output_test_per_line,
+            self.test_output_style, output_test_per_line
         )
-        all_results = output_tests(
-            fail_limit,
-            test_results_gen,
-        )
+        all_results = output_tests(fail_limit, test_results_gen)
         self.output_test_run_post_failure_summary(test_results=all_results)
         failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
         for failure in failed_test_results:
@@ -244,7 +243,6 @@ def get_terminal_size() -> TerminalSize:
 
 
 class SimpleTestResultWrite(TestResultWriterBase):
-
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
 

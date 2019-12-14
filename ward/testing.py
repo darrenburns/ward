@@ -216,7 +216,9 @@ class Test:
                 )
             return result
 
-    def _get_default_args(self, func: Optional[Union[Callable, Fixture]] = None) -> Dict[str, Any]:
+    def _get_default_args(
+        self, func: Optional[Union[Callable, Fixture]] = None
+    ) -> Dict[str, Any]:
         """
         Returns a mapping of test argument names to values.
 
@@ -269,9 +271,7 @@ class Test:
         fixture = Fixture(arg)
         if cache.contains(fixture, fixture.scope, self.scope_key_from(fixture.scope)):
             return cache.get(
-                fixture.key,
-                fixture.scope,
-                self.scope_key_from(fixture.scope),
+                fixture.key, fixture.scope, self.scope_key_from(fixture.scope)
             )
 
         has_deps = len(fixture.deps()) > 0
@@ -360,10 +360,7 @@ def test(description: str, *args, **kwargs):
             func.ward_meta.description = description
             func.ward_meta.path = path
         else:
-            func.ward_meta = WardMeta(
-                description=description,
-                path=path,
-            )
+            func.ward_meta = WardMeta(description=description, path=path)
 
         collect_into = kwargs.get("_collect_into")
         if collect_into is not None:

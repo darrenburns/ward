@@ -33,11 +33,9 @@ sys.path.append(".")
 )
 @click.option(
     "--test-output-style",
-    type=click.Choice([
-        "test-per-line",
-        "dots-global",
-        "dots-module",
-    ], case_sensitive=False)
+    type=click.Choice(
+        ["test-per-line", "dots-global", "dots-module"], case_sensitive=False
+    ),
 )
 def run(path, search, fail_limit, test_output_style):
     start_run = default_timer()
