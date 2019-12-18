@@ -1,6 +1,7 @@
 import os
 import traceback
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, Generator, List, Optional, Any
 
 import sys
@@ -115,22 +116,31 @@ def print_dot(result):
 def output_dots_module(
     fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
-    current_path = ""
+    current_path = Path("")
+    rel_path = ""
+    dots_on_line = 0
     num_failures = 0
+    max_dots_per_line = get_terminal_size().width - 40
     all_results = []
     try:
         for result in test_results_gen:
             all_results.append(result)
             if result.test.path != current_path:
+                dots_on_line = 0
                 print()
                 current_path = result.test.path
                 rel_path = str(current_path.relative_to(os.getcwd()))
+                max_dots_per_line = get_terminal_size().width - len(rel_path) - 2  # subtract 2 for ": "
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
                     print_no_break(lightblack(rel_path[:final_slash_idx + 1]) + rel_path[final_slash_idx + 1:] + ": ")
                 else:
                     print_no_break(f"\n{rel_path}: ")
             print_dot(result)
+            dots_on_line += 1
+            if dots_on_line == max_dots_per_line:
+                print_no_break("\n" + " " * (len(rel_path) + 2))
+                dots_on_line = 0
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
             if num_failures == fail_limit:
