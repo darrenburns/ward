@@ -122,8 +122,14 @@ def output_dots_module(
         for result in test_results_gen:
             all_results.append(result)
             if result.test.path != current_path:
-                print_no_break(f"\n{result.test.path.relative_to(os.getcwd())}: ")
+                print()
                 current_path = result.test.path
+                rel_path = str(current_path.relative_to(os.getcwd()))
+                final_slash_idx = rel_path.rfind("/")
+                if final_slash_idx != -1:
+                    print_no_break(lightblack(rel_path[:final_slash_idx + 1]) + rel_path[final_slash_idx + 1:] + ": ")
+                else:
+                    print_no_break(f"\n{rel_path}: ")
             print_dot(result)
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
