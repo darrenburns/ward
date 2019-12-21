@@ -2,6 +2,7 @@ import os
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
+from textwrap import wrap
 from typing import Dict, Generator, List, Optional, Any
 
 import sys
@@ -16,6 +17,17 @@ from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour
 
 def print_no_break(e: Any):
     print(e, end="")
+
+
+def multiline_description(s: str, indent: int, width: int) -> str:
+    wrapped = wrap(s, width)
+    if len(wrapped) == 1:
+        return wrapped[0]
+    rv = wrapped[0]
+    for line in wrapped[1:]:
+        indent_str = " " * indent
+        rv += f"\n{indent_str}{line}"
+    return rv
 
 
 def output_test_result_line(test_result: TestResult):
@@ -33,7 +45,7 @@ def output_test_result_line(test_result: TestResult):
     mod_name = lightblack(
         f"{test_result.test.module_name}:"
         f"{test_result.test.line_number}"
-        f"{iter_indicator}: "
+        f"{iter_indicator}:"
     )
     if (
         test_result.outcome == TestOutcome.SKIP
@@ -46,10 +58,18 @@ def output_test_result_line(test_result: TestResult):
         reason = ""
 
     name_or_desc = test_result.test.description
+    indent = (
+        len(padded_outcome) +
+        len(test_result.test.module_name) +
+        len(str(test_result.test.line_number)) +
+        len(iter_indicator) +
+        4
+    )
+    width = get_terminal_size().width - indent
     print(
         colored(padded_outcome, color="grey", on_color=bg),
-        mod_name + name_or_desc,
-        reason,
+        mod_name,
+        multiline_description(name_or_desc + reason, indent=indent, width=width),
     )
 
 
