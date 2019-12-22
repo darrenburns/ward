@@ -1,6 +1,8 @@
 import os
 import traceback
 from dataclasses import dataclass
+from pathlib import Path
+from textwrap import wrap
 from typing import Dict, Generator, List, Optional, Any
 
 import sys
@@ -15,6 +17,17 @@ from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour
 
 def print_no_break(e: Any):
     print(e, end="")
+
+
+def multiline_description(s: str, indent: int, width: int) -> str:
+    wrapped = wrap(s, width)
+    if len(wrapped) == 1:
+        return wrapped[0]
+    rv = wrapped[0]
+    for line in wrapped[1:]:
+        indent_str = " " * indent
+        rv += f"\n{indent_str}{line}"
+    return rv
 
 
 def output_test_result_line(test_result: TestResult):
@@ -32,7 +45,7 @@ def output_test_result_line(test_result: TestResult):
     mod_name = lightblack(
         f"{test_result.test.module_name}:"
         f"{test_result.test.line_number}"
-        f"{iter_indicator}: "
+        f"{iter_indicator}:"
     )
     if (
         test_result.outcome == TestOutcome.SKIP
@@ -45,10 +58,18 @@ def output_test_result_line(test_result: TestResult):
         reason = ""
 
     name_or_desc = test_result.test.description
+    indent = (
+        len(padded_outcome) +
+        len(test_result.test.module_name) +
+        len(str(test_result.test.line_number)) +
+        len(iter_indicator) +
+        4
+    )
+    width = get_terminal_size().width - indent
     print(
         colored(padded_outcome, color="grey", on_color=bg),
-        mod_name + name_or_desc,
-        reason,
+        mod_name,
+        multiline_description(name_or_desc + reason, indent=indent, width=width),
     )
 
 
@@ -115,16 +136,31 @@ def print_dot(result):
 def output_dots_module(
     fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
-    current_path = ""
+    current_path = Path("")
+    rel_path = ""
+    dots_on_line = 0
     num_failures = 0
+    max_dots_per_line = get_terminal_size().width - 40
     all_results = []
     try:
         for result in test_results_gen:
             all_results.append(result)
             if result.test.path != current_path:
-                print_no_break(f"\n{result.test.path.relative_to(os.getcwd())}: ")
+                dots_on_line = 0
+                print()
                 current_path = result.test.path
+                rel_path = str(current_path.relative_to(os.getcwd()))
+                max_dots_per_line = get_terminal_size().width - len(rel_path) - 2  # subtract 2 for ": "
+                final_slash_idx = rel_path.rfind("/")
+                if final_slash_idx != -1:
+                    print_no_break(lightblack(rel_path[:final_slash_idx + 1]) + rel_path[final_slash_idx + 1:] + ": ")
+                else:
+                    print_no_break(f"\n{rel_path}: ")
             print_dot(result)
+            dots_on_line += 1
+            if dots_on_line == max_dots_per_line:
+                print_no_break("\n" + " " * (len(rel_path) + 2))
+                dots_on_line = 0
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
             if num_failures == fail_limit:
