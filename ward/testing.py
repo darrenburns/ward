@@ -118,7 +118,7 @@ class Test:
         return self.fn.__name__
 
     @property
-    def path(self):
+    def path(self) -> Path:
         return self.fn.ward_meta.path
 
     @property
@@ -223,7 +223,9 @@ class Test:
                 )
             return result
 
-    def _get_default_args(self, func: Optional[Union[Callable, Fixture]] = None) -> Dict[str, Any]:
+    def _get_default_args(
+        self, func: Optional[Union[Callable, Fixture]] = None
+    ) -> Dict[str, Any]:
         """
         Returns a mapping of test argument names to values.
 
@@ -359,7 +361,7 @@ def test(description: str, *args, **kwargs):
         if force_path:
             path = force_path
         else:
-            path = Path(inspect.getfile(func)).absolute()
+            path = Path(inspect.getfile(inspect.unwrap(func))).absolute()
 
         if hasattr(func, "ward_meta"):
             func.ward_meta.description = description

@@ -1,9 +1,8 @@
-import sys
 from timeit import default_timer
 
 import click
+import sys
 from colorama import init
-
 from ward.collect import (
     get_info_for_modules,
     get_tests_in_modules,
@@ -32,7 +31,13 @@ sys.path.append(".")
     type=int,
     help="The maximum number of failures that are allowed to occur in a run before it is automatically cancelled.",
 )
-def run(path, search, fail_limit):
+@click.option(
+    "--test-output-style",
+    type=click.Choice(
+        ["test-per-line", "dots-global", "dots-module"], case_sensitive=False
+    ),
+)
+def run(path, search, fail_limit, test_output_style):
     start_run = default_timer()
 
     mod_infos = get_info_for_modules(path)
@@ -44,7 +49,7 @@ def run(path, search, fail_limit):
     suite = Suite(tests=list(tests))
     test_results = suite.generate_test_runs()
 
-    writer = SimpleTestResultWrite(suite=suite)
+    writer = SimpleTestResultWrite(suite=suite, test_output_style=test_output_style)
     results = writer.output_all_test_results(
         test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
     )
