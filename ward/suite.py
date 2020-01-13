@@ -5,8 +5,7 @@ from typing import Generator, List
 from ward.errors import FixtureError
 from ward.fixtures import FixtureCache
 from ward.models import Scope
-from ward.testing import HypothesisExample
-from ward.testing import Test, TestOutcome, TestResult
+from ward.testing import HypothesisExample, Test, TestOutcome, TestResult
 
 
 @dataclass

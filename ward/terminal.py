@@ -179,13 +179,16 @@ class SimpleTestResultWrite(TestResultWriterBase):
         examples = test_result.test.hypothesis_examples
         if examples:
             print(f"   Hypothesis ran {len(examples)} examples:\n")
+            examples_passed = 0
+            examples_failed = 0
             for example in examples:
-                checkbox = self.result_checkbox(example.did_succeed)
                 if example.did_succeed:
-                    colour = "green"
+                    examples_passed += 1
                 else:
-                    colour = "red"
-                cprint(f"    {checkbox} {example.example}", color=colour)
+                    examples_failed += 1
+
+            cprint(f"    {examples_passed} examples passed", color="green")
+            cprint(f"    {examples_failed} examples failed", color="red")
             print()
 
         if isinstance(err, ExpectationFailed):
