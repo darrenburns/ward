@@ -14,6 +14,7 @@ A modern Python test framework designed to help you find and fix flaws faster.
 def _():
     expect(1 + 2).equals(3)
 ```
+
 **Modular test dependencies:** manage test setup/teardown code using fixtures that rely on Python's import system, not
 name matching.
 ```python
@@ -25,6 +26,9 @@ def user():
 def _(u=user):
     expect(u.name).equals("darren")
 ```
+
+**Fast, minimal overhead:** roughly half the test run overhead of pytest. 
+
 **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
 ```
@@ -41,9 +45,13 @@ def _(
     result = truncate(text, num_chars)
     expect(result).equals(expected)
 ```
+
 **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
+
 **Cross platform:** Tested on Mac OS, Linux, and Windows.
+
 **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
+
 **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
 ![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
 
@@ -57,6 +65,8 @@ Planned features:
 * Code coverage with `--coverage` flag
 * Handling flaky tests with test-specific retries, timeouts
 * Plugin system
+
+Let me know if you'd like to help out with any of these features!
 
 ## Getting Started
 
