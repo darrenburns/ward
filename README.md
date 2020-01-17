@@ -6,22 +6,48 @@ See the full documentation and feature set [here](https://wardpy.com).
 
 A modern Python test framework designed to help you find and fix flaws faster.
 
-![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
-
 ## Features
 
-This project is a work in progress. Some of the features that are currently available in a basic form are listed below.
-
-* **Descriptive test names:** describe what your tests do using strings, not function names.
-* **Modular test dependencies:** manage test setup/teardown code using fixtures that rely on Python's import system, not
+**Descriptive test names:** describe what your tests do using strings, not function names.
+```python
+@test("1 + 2 gives 3")
+def _():
+    expect(1 + 2).equals(3)
+```
+**Modular test dependencies:** manage test setup/teardown code using fixtures that rely on Python's import system, not
 name matching.
+```python
+@fixture
+def user():
+    return User(name="darren")
+    
+@test("the user is called darren")
+def _(u=user):
+    expect(u).equals("darren")
+```
 * **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
+```
+ward --search "Database::get_all_users"
+```
 * **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
+![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
 * **Parameterised testing:** easily parameterise your tests using `each`.
+```python
+@test("truncate('{text}', num_chars={num_chars}) returns '{expected}'")
+def _(
+    text=s,
+    num_chars=each(20, 11, 10, 5),
+    expected=each(s, s, "hello w...", "he..."),
+):
+    result = truncate(text, num_chars)
+    expect(result).equals(expected)
+```
 * **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
 * **Cross platform:** Tested on Mac OS, Linux, and Windows.
 * **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
+
+This project is currently in beta.
 
 Planned features:
 
@@ -34,27 +60,7 @@ Planned features:
 
 ## Getting Started
 
-Install Ward with `pip install ward`.
-
-Write your first test in `test_sum.py` (module name must start with `"test"`):
-
-```python
-from ward import expect, test
-
-@test("1 plus 2 equals 3")
-def _():
-    expect(1 + 2).equals(3)
-```
-
-Now run your test with `ward` (no arguments needed). Ward will output the following:
-
-```
- PASS  test_sum:2: 1 plus 2 equals 3
-```
-
-*You've just wrote your first test with Ward, congrats!*
-
-[See the official documentation for more examples.](https://wardpy.com)
+[Take a look at the "Getting Started" tutorial.](https://wardpy.com/guide/tutorial)
 
 ## How to Contribute
 
