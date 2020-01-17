@@ -61,11 +61,11 @@ def output_test_result_line(test_result: TestResult):
 
     name_or_desc = test_result.test.description
     indent = (
-        len(padded_outcome) +
-        len(test_result.test.module_name) +
-        len(str(test_result.test.line_number)) +
-        len(iter_indicator) +
-        4
+        len(padded_outcome)
+        + len(test_result.test.module_name)
+        + len(str(test_result.test.line_number))
+        + len(iter_indicator)
+        + 4
     )
     width = get_terminal_size().width - indent
     print(
@@ -152,10 +152,16 @@ def output_dots_module(
                 print()
                 current_path = result.test.path
                 rel_path = str(current_path.relative_to(os.getcwd()))
-                max_dots_per_line = get_terminal_size().width - len(rel_path) - 2  # subtract 2 for ": "
+                max_dots_per_line = (
+                    get_terminal_size().width - len(rel_path) - 2
+                )  # subtract 2 for ": "
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
-                    print_no_break(lightblack(rel_path[:final_slash_idx + 1]) + rel_path[final_slash_idx + 1:] + ": ")
+                    print_no_break(
+                        lightblack(rel_path[: final_slash_idx + 1])
+                        + rel_path[final_slash_idx + 1 :]
+                        + ": "
+                    )
                 else:
                     print_no_break(f"\n{rel_path}: ")
             print_dot(result)
