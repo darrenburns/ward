@@ -1,18 +1,20 @@
 import os
+import platform
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import wrap
-from typing import Dict, Generator, List, Optional, Any
+from typing import Any, Dict, Generator, List, Optional
 
 import sys
+import ward
 from colorama import Fore, Style
 from termcolor import colored, cprint
 from ward.diff import make_diff
 from ward.expect import ExpectationFailed, Expected
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
-from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour
+from ward.util import ExitCode, get_exit_code, outcome_to_colour, truncate
 
 
 def print_no_break(e: Any):
@@ -198,8 +200,12 @@ class TestResultWriterBase:
         time_to_collect: float,
         fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
+        ward_version = ward.__version__
+        python_impl = platform.python_implementation()
+        python_version = platform.python_version()
         print(
-            f"Ward collected {self.suite.num_tests} tests "
+            f"Ward {ward_version}, {python_impl} {python_version}\n"
+            f"Collected {self.suite.num_tests} tests "
             f"in {time_to_collect:.2f} seconds."
         )
         if not self.suite.num_tests:

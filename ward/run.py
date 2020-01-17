@@ -37,6 +37,7 @@ sys.path.append(".")
         ["test-per-line", "dots-global", "dots-module"], case_sensitive=False
     ),
 )
+@click.version_option()
 def run(path, search, fail_limit, test_output_style):
     start_run = default_timer()
 

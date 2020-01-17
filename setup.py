@@ -1,9 +1,11 @@
 import platform
 
+import ward
 from setuptools import setup
 
-version = "0.21.0a0"
+version = ward.__version__
 description = "A modern Python 3 test framework for finding and fixing flaws faster."
+
 with open("README.md", "r") as fh:
     if platform.system() != "Windows":
         long_description = fh.read()
