@@ -7,7 +7,7 @@ from textwrap import wrap
 from typing import Any, Dict, Generator, List, Optional
 
 import sys
-from ward._ward_version import version
+from ward._ward_version import __version__
 from colorama import Fore, Style
 from termcolor import colored, cprint
 from ward.diff import make_diff
@@ -206,7 +206,7 @@ class TestResultWriterBase:
         time_to_collect: float,
         fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
-        ward_version = version
+        ward_version = __version__
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
         print(
