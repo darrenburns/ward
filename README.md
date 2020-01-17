@@ -25,14 +25,14 @@ def user():
 def _(u=user):
     expect(u).equals("darren")
 ```
-* **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
+**Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
 ```
 ward --search "Database::get_all_users"
 ```
-* **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
+**Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
 ![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
-* **Parameterised testing:** easily parameterise your tests using `each`.
+**Parameterised testing:** easily parameterise your tests using `each`.
 ```python
 @test("truncate('{text}', num_chars={num_chars}) returns '{expected}'")
 def _(
@@ -43,9 +43,9 @@ def _(
     result = truncate(text, num_chars)
     expect(result).equals(expected)
 ```
-* **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
-* **Cross platform:** Tested on Mac OS, Linux, and Windows.
-* **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
+**Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
+**Cross platform:** Tested on Mac OS, Linux, and Windows.
+**Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
 
 This project is currently in beta.
 
