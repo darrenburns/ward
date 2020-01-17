@@ -7,9 +7,9 @@ from textwrap import wrap
 from typing import Any, Dict, Generator, List, Optional
 
 import sys
-from ward._ward_version import __version__
 from colorama import Fore, Style
 from termcolor import colored, cprint
+from ward._ward_version import __version__
 from ward.diff import make_diff
 from ward.expect import ExpectationFailed, Expected
 from ward.suite import Suite
@@ -159,7 +159,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
+                        + rel_path[final_slash_idx + 1:]
                         + ": "
                     )
                 else:
@@ -206,11 +206,10 @@ class TestResultWriterBase:
         time_to_collect: float,
         fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
-        ward_version = __version__
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
         print(
-            f"Ward {ward_version}, {python_impl} {python_version}\n"
+            f"Ward {__version__}, {python_impl} {python_version}\n"
             f"Collected {self.suite.num_tests} tests "
             f"in {time_to_collect:.2f} seconds."
         )

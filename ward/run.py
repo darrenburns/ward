@@ -12,6 +12,7 @@ from ward.collect import (
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite
 from ward.util import get_exit_code
+from ward._ward_version import __version__
 
 init()
 
@@ -37,7 +38,7 @@ sys.path.append(".")
         ["test-per-line", "dots-global", "dots-module"], case_sensitive=False
     ),
 )
-@click.version_option()
+@click.version_option(version=__version__)
 def run(path, search, fail_limit, test_output_style):
     start_run = default_timer()
 

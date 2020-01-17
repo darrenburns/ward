@@ -2,9 +2,6 @@ import platform
 
 from setuptools import setup
 
-with open("./ward/_ward_version.py") as version_file:
-    version = version_file.read()
-
 description = "A modern Python 3 test framework for finding and fixing flaws faster."
 
 # Work around encoding errors when installing on Windows.
@@ -14,9 +11,11 @@ with open("README.md", "r") as fh:
     else:
         long_description = description
 
+exec(open('ward/_ward_version.py').read())
+
 setup(
     name="ward",
-    version=version,
+    version=__version__,
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
