@@ -28,11 +28,9 @@ def _(u=user):
 **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
 ```
-ward --search "Database::get_all_users"
+ward --search "Database.get_all_users"
 ```
-**Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
-![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
-**Parameterised testing:** easily parameterise your tests using `each`.
+**Parameterised testing:** write a test once, and call it multiple times with different inputs
 ```python
 @test("truncate('{text}', num_chars={num_chars}) returns '{expected}'")
 def _(
@@ -46,6 +44,8 @@ def _(
 **Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
 **Cross platform:** Tested on Mac OS, Linux, and Windows.
 **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
+**Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
+![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
 
 This project is currently in beta.
 
