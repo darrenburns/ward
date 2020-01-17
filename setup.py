@@ -15,7 +15,7 @@ exec(open('ward/_ward_version.py').read())
 
 setup(
     name="ward",
-    version=__version__,
+    version=__version__,  # noqa
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
