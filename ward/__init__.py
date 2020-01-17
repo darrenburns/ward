@@ -1,4 +1,5 @@
+from ._ward_version import __version__
 from .expect import expect, raises
 from .fixtures import fixture, using
-from .testing import each, skip, test, xfail
 from .models import Scope
+from .testing import each, skip, test, xfail

@@ -2,8 +2,12 @@ import platform
 
 from setuptools import setup
 
-version = "0.21.0a0"
+with open("./ward/_ward_version.py") as version_file:
+    version = version_file.read()
+
 description = "A modern Python 3 test framework for finding and fixing flaws faster."
+
+# Work around encoding errors when installing on Windows.
 with open("README.md", "r") as fh:
     if platform.system() != "Windows":
         long_description = fh.read()
@@ -26,7 +30,7 @@ setup(
     install_requires=[
         "colorama==0.4.1",
         "termcolor==1.1.0",
-        "dataclasses==0.6",
+        "dataclasses==0.6; python_version < '3.7'",
         "click==7.0",
     ],
 )
