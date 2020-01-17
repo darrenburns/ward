@@ -23,7 +23,7 @@ def user():
     
 @test("the user is called darren")
 def _(u=user):
-    expect(u).equals("darren")
+    expect(u.name).equals("darren")
 ```
 **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
