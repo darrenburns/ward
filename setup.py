@@ -1,9 +1,7 @@
 import platform
 
 from setuptools import setup
-from ward import VERSION
 
-version = VERSION
 description = "A modern Python 3 test framework for finding and fixing flaws faster."
 
 with open("README.md", "r") as fh:
@@ -14,7 +12,11 @@ with open("README.md", "r") as fh:
 
 setup(
     name="ward",
-    version=version,
+    use_scm_version={
+        "write_to": "_ward_version.py",
+        "write_to_template": 'version = "{version}"\n',
+    },
+    setup_requires=['setuptools_scm'],
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -28,7 +30,7 @@ setup(
     install_requires=[
         "colorama==0.4.1",
         "termcolor==1.1.0",
-        "dataclasses==0.6",
+        "dataclasses==0.6; python_version < '3.7'",
         "click==7.0",
     ],
 )
