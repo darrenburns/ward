@@ -2,8 +2,12 @@ import platform
 
 from setuptools import setup
 
+with open("./ward/_ward_version.py") as version_file:
+    version = version_file.read()
+
 description = "A modern Python 3 test framework for finding and fixing flaws faster."
 
+# Work around encoding errors when installing on Windows.
 with open("README.md", "r") as fh:
     if platform.system() != "Windows":
         long_description = fh.read()
@@ -12,11 +16,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="ward",
-    use_scm_version={
-        "write_to": "ward/_ward_version.py",
-        "write_to_template": 'version = "{version}"\n',
-    },
-    setup_requires=['setuptools_scm'],
+    version=version,
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
