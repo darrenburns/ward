@@ -8,6 +8,7 @@ from typing import Any, Dict, Generator, List, Optional
 
 import sys
 import ward
+from _ward_version import version
 from colorama import Fore, Style
 from termcolor import colored, cprint
 from ward.diff import make_diff
@@ -206,7 +207,7 @@ class TestResultWriterBase:
         time_to_collect: float,
         fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
-        ward_version = ward.__version__
+        ward_version = version
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
         print(
