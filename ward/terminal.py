@@ -7,8 +7,7 @@ from textwrap import wrap
 from typing import Any, Dict, Generator, List, Optional
 
 import sys
-import ward
-from _ward_version import version
+from ward._ward_version import version
 from colorama import Fore, Style
 from termcolor import colored, cprint
 from ward.diff import make_diff

@@ -13,7 +13,7 @@ with open("README.md", "r") as fh:
 setup(
     name="ward",
     use_scm_version={
-        "write_to": "_ward_version.py",
+        "write_to": "ward/_ward_version.py",
         "write_to_template": 'version = "{version}"\n',
     },
     setup_requires=['setuptools_scm'],
