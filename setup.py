@@ -1,9 +1,9 @@
 import platform
 
-import ward
 from setuptools import setup
+from ward import VERSION
 
-version = ward.__version__
+version = VERSION
 description = "A modern Python 3 test framework for finding and fixing flaws faster."
 
 with open("README.md", "r") as fh:
