@@ -1,15 +1,18 @@
 VENV=make-venv
 VENVBIN=$(VENV)/bin
 
-none:
+none: clean dist tidy
+
+help:
 	@echo "make lint	lint (flake8)"
 	@echo "make format	run autoformatter"
 	@echo "make test	test Ward"
-	@echo "make build	build Ward in preparation for PyPI upload"
+	@echo "make dist	build Ward in preparation for PyPI upload"
 	@echo
 	@echo "make venv	create virtual environment"
 	@echo "make tidy	remove cache, pyc files, and eggs"
 	@echo "make clean	clean up build artifacts and automatically created venv"
+.PHONY: help
 
 venv: make-venv
 .PHONY: venv
@@ -32,8 +35,14 @@ test: make-venv
 	$(VENVBIN)/ward --path tests
 .PHONY: test
 
+prep: lint format test tidy
+.PHONY: prep
+
 dist: lint format test
 	$(VENVBIN)/python setup.py sdist bdist_wheel
+
+build: dist
+.PHONE: dist
 
 tidy: make-venv
 	$(VENVBIN)/pycleanup --cache --pyc --egg
