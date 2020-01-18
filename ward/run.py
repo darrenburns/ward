@@ -23,7 +23,12 @@ sys.path.append(".")
 
 @click.command()
 @click.option(
-    "-p", "--path", default=".", type=click.Path(exists=True), help="Path to tests.", multiple=True
+    "-p",
+    "--path",
+    default=".",
+    type=click.Path(exists=True),
+    help="Path to tests.",
+    multiple=True,
 )
 @click.option(
     "--search",

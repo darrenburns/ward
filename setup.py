@@ -11,7 +11,7 @@ with open("README.md", "r") as fh:
     else:
         long_description = description
 
-exec(open('ward/_ward_version.py').read())
+exec(open("ward/_ward_version.py").read())
 
 setup(
     name="ward",
