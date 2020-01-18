@@ -1,8 +1,11 @@
+import sys
+from pathlib import Path
 from timeit import default_timer
 
 import click
-import sys
 from colorama import init
+
+from ward._ward_version import __version__
 from ward.collect import (
     get_info_for_modules,
     get_tests_in_modules,
@@ -12,7 +15,6 @@ from ward.collect import (
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite
 from ward.util import get_exit_code
-from ward._ward_version import __version__
 
 init()
 
@@ -21,7 +23,12 @@ sys.path.append(".")
 
 @click.command()
 @click.option(
-    "-p", "--path", default=".", type=click.Path(exists=True), help="Path to tests."
+    "-p",
+    "--path",
+    default=".",
+    type=click.Path(exists=True),
+    help="Path to tests.",
+    multiple=True,
 )
 @click.option(
     "--search",
@@ -42,7 +49,8 @@ sys.path.append(".")
 def run(path, search, fail_limit, test_output_style):
     start_run = default_timer()
 
-    mod_infos = get_info_for_modules(path)
+    paths = [Path(p) for p in path]
+    mod_infos = get_info_for_modules(paths)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules)
     tests = search_generally(unfiltered_tests, query=search)
