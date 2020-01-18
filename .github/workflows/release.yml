@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Build Python distributon
+    - name: Build Python distribution
       run: |
         python3 -m pip install --user --upgrade setuptools wheel
         python3 "$GITHUB_WORKSPACE/setup.py" sdist bdist_wheel
