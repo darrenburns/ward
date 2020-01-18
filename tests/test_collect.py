@@ -16,31 +16,31 @@ def named_test():
 
 
 @fixture
-def tests_to_search(named_test):
+def tests_to_search(named_test=named_test):
     return [named_test]
 
 
 @test("search_generally matches on qualified test name")
-def _(tests_to_search, named_test):
-    results = search_generally(tests_to_search, query="my_module.named")
-    expect(list(results)).equals([named_test])
+def _(tests=tests_to_search, named=named_test):
+    results = search_generally(tests, query="my_module.named")
+    expect(list(results)).equals([named])
 
 
 @test("search_generally matches on test name alone")
-def _(tests_to_search, named_test):
-    results = search_generally(tests_to_search, query="named")
-    expect(list(results)).equals([named_test])
+def _(tests=tests_to_search, named=named_test):
+    results = search_generally(tests, query="named")
+    expect(list(results)).equals([named])
 
 
 @test("search_generally query='fox' returns tests with 'fox' in the body")
-def _(tests_to_search, named_test):
-    results = search_generally(tests_to_search, query="fox")
-    expect(list(results)).equals([named_test])
+def _(tests=tests_to_search, named=named_test):
+    results = search_generally(tests, query="fox")
+    expect(list(results)).equals([named])
 
 
 @test("search_generally returns an empty generator when no tests match query")
-def _(tests_to_search):
-    results = search_generally(tests_to_search, query="92qj3f9i")
+def _(tests=tests_to_search):
+    results = search_generally(tests, query="92qj3f9i")
     with raises(StopIteration):
         next(results)
 

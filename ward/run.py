@@ -5,18 +5,20 @@ from timeit import default_timer
 import click
 from colorama import init
 
+from ward._ward_version import __version__
 from ward.collect import (
     get_info_for_modules,
     get_tests_in_modules,
     load_modules,
     search_generally,
 )
-from ward.fixtures import fixture_registry
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite
 from ward.util import get_exit_code
 
 init()
+
+sys.path.append(".")
 
 
 @click.command()
@@ -32,7 +34,14 @@ init()
     type=int,
     help="The maximum number of failures that are allowed to occur in a run before it is automatically cancelled.",
 )
-def run(path, search, fail_limit):
+@click.option(
+    "--test-output-style",
+    type=click.Choice(
+        ["test-per-line", "dots-global", "dots-module"], case_sensitive=False
+    ),
+)
+@click.version_option(version=__version__)
+def run(path, search, fail_limit, test_output_style):
     start_run = default_timer()
 
     paths = [Path(p) for p in path]
@@ -42,10 +51,10 @@ def run(path, search, fail_limit):
     tests = search_generally(unfiltered_tests, query=search)
     time_to_collect = default_timer() - start_run
 
-    suite = Suite(tests=list(tests), fixture_registry=fixture_registry)
+    suite = Suite(tests=list(tests))
     test_results = suite.generate_test_runs()
 
-    writer = SimpleTestResultWrite(suite=suite)
+    writer = SimpleTestResultWrite(suite=suite, test_output_style=test_output_style)
     results = writer.output_all_test_results(
         test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
     )

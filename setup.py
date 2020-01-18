@@ -1,14 +1,22 @@
+import platform
+
 from setuptools import setup
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+description = "A modern Python 3 test framework for finding and fixing flaws faster."
 
-version = "0.11.1a0"
+# Work around encoding errors when installing on Windows.
+with open("README.md", "r") as fh:
+    if platform.system() != "Windows":
+        long_description = fh.read()
+    else:
+        long_description = description
+
+exec(open('ward/_ward_version.py').read())
 
 setup(
     name="ward",
-    version=version,
-    description="A Python 3 test framework for finding flaws faster.",
+    version=__version__,  # noqa
+    description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="http://github.com/darrenburns/ward",
@@ -21,7 +29,7 @@ setup(
     install_requires=[
         "colorama==0.4.1",
         "termcolor==1.1.0",
-        "dataclasses==0.6",
+        "dataclasses==0.6; python_version < '3.7'",
         "click==7.0",
     ],
 )

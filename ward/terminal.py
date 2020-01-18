@@ -1,27 +1,203 @@
 import os
-import sys
+import platform
 import traceback
 from dataclasses import dataclass
-from typing import Dict, Generator, List, Optional
+from pathlib import Path
+from textwrap import wrap
+from typing import Any, Dict, Generator, List, Optional
 
+import sys
 from colorama import Fore, Style
 from termcolor import colored, cprint
-
+from ward._ward_version import __version__
 from ward.diff import make_diff
 from ward.expect import ExpectationFailed, Expected
 from ward.suite import Suite
-from ward.test_result import TestOutcome, TestResult
-from ward.util import ExitCode, get_exit_code
+from ward.testing import TestOutcome, TestResult
+from ward.util import ExitCode, get_exit_code, outcome_to_colour, truncate
 
 
-def truncate(s: str, num_chars: int) -> str:
-    suffix = "..." if len(s) > num_chars - 3 else ""
-    return s[:num_chars] + suffix
+def print_no_break(e: Any):
+    print(e, end="")
+
+
+def multiline_description(s: str, indent: int, width: int) -> str:
+    wrapped = wrap(s, width)
+    if len(wrapped) == 1:
+        return wrapped[0]
+    rv = wrapped[0]
+    for line in wrapped[1:]:
+        indent_str = " " * indent
+        rv += f"\n{indent_str}{line}"
+    return rv
+
+
+def output_test_result_line(test_result: TestResult):
+    colour = outcome_to_colour(test_result.outcome)
+    bg = f"on_{colour}"
+    padded_outcome = f" {test_result.outcome.name[:4]} "
+
+    # If we're executing a parameterised test
+    param_meta = test_result.test.param_meta
+    if param_meta.group_size > 1:
+        iter_indicator = f" [{param_meta.instance_index + 1}/{param_meta.group_size}]"
+    else:
+        iter_indicator = ""
+
+    mod_name = lightblack(
+        f"{test_result.test.module_name}:"
+        f"{test_result.test.line_number}"
+        f"{iter_indicator}:"
+    )
+    if (
+        test_result.outcome == TestOutcome.SKIP
+        or test_result.outcome == TestOutcome.XFAIL
+    ):
+        reason = test_result.test.marker.reason or ""
+        if reason:
+            reason = lightblack(f" [{reason}]")
+    else:
+        reason = ""
+
+    name_or_desc = test_result.test.description
+    indent = (
+        len(padded_outcome)
+        + len(test_result.test.module_name)
+        + len(str(test_result.test.line_number))
+        + len(iter_indicator)
+        + 4
+    )
+    width = get_terminal_size().width - indent
+    print(
+        colored(padded_outcome, color="grey", on_color=bg),
+        mod_name,
+        multiline_description(name_or_desc + reason, indent=indent, width=width),
+    )
+
+
+def output_test_per_line(fail_limit, test_results_gen):
+    num_failures = 0
+    all_results = []
+    print()
+    try:
+        for result in test_results_gen:
+            output_test_result_line(result)
+            sys.stdout.write(Style.RESET_ALL)
+            all_results.append(result)
+            if result.outcome == TestOutcome.FAIL:
+                num_failures += 1
+            if num_failures == fail_limit:
+                break
+    except KeyboardInterrupt:
+        output_run_cancelled()
+    finally:
+        return all_results
+
+
+def output_dots_global(
+    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+) -> List[TestResult]:
+    column = 0
+    num_failures = 0
+    all_results = []
+    try:
+        print()
+        for result in test_results_gen:
+            all_results.append(result)
+            print_dot(result)
+            column += 1
+            if column == get_terminal_size().width:
+                print()
+                column = 0
+            if result.outcome == TestOutcome.FAIL:
+                num_failures += 1
+            if num_failures == fail_limit:
+                break
+            sys.stdout.flush()
+        print()
+    except KeyboardInterrupt:
+        output_run_cancelled()
+    finally:
+        return all_results
+
+
+def print_dot(result):
+    colour = outcome_to_colour(result.outcome)
+    if result.outcome == TestOutcome.PASS:
+        print_no_break(colored(".", color=colour))
+    elif result.outcome == TestOutcome.FAIL:
+        print_no_break(colored("F", color=colour))
+    elif result.outcome == TestOutcome.XPASS:
+        print_no_break(colored("U", color=colour))
+    elif result.outcome == TestOutcome.XFAIL:
+        print_no_break(colored("x", color=colour))
+    elif result.outcome == TestOutcome.SKIP:
+        print_no_break(colored("s", color=colour))
+
+
+def output_dots_module(
+    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+) -> List[TestResult]:
+    current_path = Path("")
+    rel_path = ""
+    dots_on_line = 0
+    num_failures = 0
+    max_dots_per_line = get_terminal_size().width - 40
+    all_results = []
+    try:
+        for result in test_results_gen:
+            all_results.append(result)
+            if result.test.path != current_path:
+                dots_on_line = 0
+                print()
+                current_path = result.test.path
+                rel_path = str(current_path.relative_to(os.getcwd()))
+                max_dots_per_line = (
+                    get_terminal_size().width - len(rel_path) - 2
+                )  # subtract 2 for ": "
+                final_slash_idx = rel_path.rfind("/")
+                if final_slash_idx != -1:
+                    print_no_break(
+                        lightblack(rel_path[: final_slash_idx + 1])
+                        + rel_path[final_slash_idx + 1:]
+                        + ": "
+                    )
+                else:
+                    print_no_break(f"\n{rel_path}: ")
+            print_dot(result)
+            dots_on_line += 1
+            if dots_on_line == max_dots_per_line:
+                print_no_break("\n" + " " * (len(rel_path) + 2))
+                dots_on_line = 0
+            if result.outcome == TestOutcome.FAIL:
+                num_failures += 1
+            if num_failures == fail_limit:
+                break
+            sys.stdout.flush()
+        print()
+    except KeyboardInterrupt:
+        output_run_cancelled()
+    finally:
+        return all_results
+
+
+def output_run_cancelled():
+    cprint(
+        "\n[WARD] Run cancelled - " "results for tests that ran shown below.",
+        color="yellow",
+    )
 
 
 class TestResultWriterBase:
-    def __init__(self, suite: Suite):
+    runtime_output_strategies = {
+        "test-per-line": output_test_per_line,
+        "dots-global": output_dots_global,
+        "dots-module": output_dots_module,
+    }
+
+    def __init__(self, suite: Suite, test_output_style: str):
         self.suite = suite
+        self.test_output_style = test_output_style
         self.terminal_size = get_terminal_size()
 
     def output_all_test_results(
@@ -30,31 +206,36 @@ class TestResultWriterBase:
         time_to_collect: float,
         fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
-        all_results = []
-        failed_test_results = []
+        python_impl = platform.python_implementation()
+        python_version = platform.python_version()
         print(
-            f"Ward collected {self.suite.num_tests} tests and {self.suite.num_fixtures} fixtures "
-            f"in {time_to_collect:.2f} seconds.\n"
+            f"Ward {__version__}, {python_impl} {python_version}\n"
+            f"Collected {self.suite.num_tests} tests "
+            f"in {time_to_collect:.2f} seconds."
         )
-        for result in test_results_gen:
-            self.output_single_test_result(result)
-            sys.stdout.write(Style.RESET_ALL)
-            all_results.append(result)
-            if result.outcome == TestOutcome.FAIL:
-                failed_test_results.append(result)
-
-            if len(failed_test_results) == fail_limit:
-                break
-
-        print()
+        if not self.suite.num_tests:
+            return []
+        output_tests = self.runtime_output_strategies.get(
+            self.test_output_style, output_test_per_line
+        )
+        all_results = output_tests(fail_limit, test_results_gen)
         self.output_test_run_post_failure_summary(test_results=all_results)
+        failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
         for failure in failed_test_results:
+            self.print_divider()
             self.output_why_test_failed_header(failure)
             self.output_why_test_failed(failure)
             self.output_captured_stderr(failure)
             self.output_captured_stdout(failure)
 
+        if failed_test_results:
+            self.print_divider()
+        else:
+            print()
         return all_results
+
+    def print_divider(self):
+        print(lightblack(f"{'_' * self.terminal_size.width}\n"))
 
     def output_single_test_result(self, test_result: TestResult):
         """Indicate whether a test passed, failed, was skipped etc."""
@@ -109,49 +290,8 @@ def get_terminal_size() -> TerminalSize:
 
 
 class SimpleTestResultWrite(TestResultWriterBase):
-    def output_single_test_result(self, test_result: TestResult):
-        outcome_to_colour = {
-            TestOutcome.PASS: "green",
-            TestOutcome.SKIP: "blue",
-            TestOutcome.FAIL: "red",
-            TestOutcome.XFAIL: "magenta",
-            TestOutcome.XPASS: "yellow",
-        }
-        colour = outcome_to_colour[test_result.outcome]
-        bg = f"on_{colour}"
-        padded_outcome = f" {test_result.outcome.name[:4]} "
-        if test_result.test.description:
-            sep = f":{test_result.test.line_number}: "
-        else:
-            sep = "."
-        mod_name = lightblack(f"{test_result.test.module_name}{sep}")
-        if (
-            test_result.outcome == TestOutcome.SKIP
-            or test_result.outcome == TestOutcome.XFAIL
-        ):
-            reason = test_result.test.marker.reason or ""
-            if reason:
-                reason = lightblack(f" [{reason}]")
-        else:
-            reason = ""
-
-        if test_result.test.description:
-            name_or_desc = test_result.test.description
-        else:
-            name_or_desc = test_result.test.name
-        print(
-            colored(padded_outcome, color="grey", on_color=bg),
-            mod_name + name_or_desc,
-            reason,
-        )
-
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
-        params_list = ", ".join(lightblack(str(v)) for v in test.deps().keys())
-        if test.has_deps():
-            test_name_suffix = f"({params_list})"
-        else:
-            test_name_suffix = ""
 
         if test.description:
             name_or_desc = (
@@ -164,7 +304,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
             colored(" Failure", color="red"),
             "in",
             colored(name_or_desc, attrs=["bold"]),
-            test_name_suffix,
             "\n",
         )
 
@@ -199,16 +338,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
         trace = getattr(err, "__traceback__", "")
         if trace:
             trc = traceback.format_exception(None, err, trace)
-            if err.__cause__:
-                cause = err.__cause__.__class__.__name__
-            else:
-                cause = None
             for line in trc:
                 sublines = line.split("\n")
                 for subline in sublines:
                     content = " " * 4 + subline
                     if subline.lstrip().startswith('File "'):
-                        cprint(content, color="yellow")
+                        cprint(content, color="blue")
                     else:
                         print(content)
         else:
@@ -235,28 +370,41 @@ class SimpleTestResultWrite(TestResultWriterBase):
         self, test_results: List[TestResult], time_taken: float
     ):
         outcome_counts = self._get_outcome_counts(test_results)
-        chart = self.generate_chart(
-            num_passed=outcome_counts[TestOutcome.PASS],
-            num_failed=outcome_counts[TestOutcome.FAIL],
-            num_skipped=outcome_counts[TestOutcome.SKIP],
-            num_xfail=outcome_counts[TestOutcome.XFAIL],
-            num_unexp=outcome_counts[TestOutcome.XPASS],
-        )
-        print(chart, "")
+        if test_results:
+            chart = self.generate_chart(
+                num_passed=outcome_counts[TestOutcome.PASS],
+                num_failed=outcome_counts[TestOutcome.FAIL],
+                num_skipped=outcome_counts[TestOutcome.SKIP],
+                num_xfail=outcome_counts[TestOutcome.XFAIL],
+                num_unexp=outcome_counts[TestOutcome.XPASS],
+            )
+            print(chart, "")
 
         exit_code = get_exit_code(test_results)
-        if exit_code == ExitCode.FAILED:
-            result = colored(exit_code.name, color="red")
-        else:
+        if exit_code == ExitCode.SUCCESS:
             result = colored(exit_code.name, color="green")
-        print(
-            f"{result} in {time_taken:.2f} seconds [ "
-            f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
-            f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
-            f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
-            f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
-            f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')} ]"
-        )
+        else:
+            result = colored(exit_code.name, color="red")
+
+        output = f"{result} in {time_taken:.2f} seconds"
+        if test_results:
+            output += " [ "
+
+        if outcome_counts[TestOutcome.FAIL]:
+            output += f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
+        if outcome_counts[TestOutcome.XPASS]:
+            output += f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
+        if outcome_counts[TestOutcome.XFAIL]:
+            output += f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
+        if outcome_counts[TestOutcome.SKIP]:
+            output += f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
+        if outcome_counts[TestOutcome.PASS]:
+            output += f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')}"
+
+        if test_results:
+            output += " ] "
+
+        print(output)
 
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
