@@ -355,13 +355,15 @@ def _():
 
     test_1.ward_meta.path = "module1"
     test_2.ward_meta.path = "module2"
-    test_3.ward_meta.path = "module2"
+    test_3.ward_meta.path = "module1"
 
     suite = Suite(
         tests=[
+            # Module ordering is intentionally off here, to ensure correct
+            # interaction between module-scope fixtures and random ordering
             Test(fn=test_1, module_name="module1"),
             Test(fn=test_2, module_name="module2"),
-            Test(fn=test_3, module_name="module2"),
+            Test(fn=test_3, module_name="module1"),
         ]
     )
 
@@ -374,15 +376,15 @@ def _():
             "resolve c",  # test fixture resolved at start of test1
             "test1",
             "teardown c",  # test fixture teardown at start of test1
-            "teardown b",  # module fixture teardown at end of module1
             "resolve b",  # module fixture resolved at start of module2
             "resolve c",  # test fixture resolved at start of test2
             "test2",
             "teardown c",  # test fixture teardown at start of test2
+            "teardown b",  # module fixture teardown at end of module2
             "resolve c",  # test fixture resolved at start of test3
             "test3",
             "teardown c",  # test fixture teardown at end of test3
-            "teardown b",  # module fixture teardown at end of module2
+            "teardown b",  # module fixture teardown at end of module1
             "teardown a",  # global fixtures are torn down at the very end
         ]
     )
