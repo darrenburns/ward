@@ -42,9 +42,9 @@ setup(
         "Topic :: Software Development :: Testing",
     ],
     install_requires=[
-        "colorama==0.4.1",
-        "termcolor==1.1.0",
-        "dataclasses==0.6; python_version < '3.7'",
-        "click==7.0",
+        "colorama>=0.3.3",
+        "termcolor>=1.1.0",
+        "dataclasses>=0.1; python_version < '3.7'",
+        "click>=7.0",
     ],
 )

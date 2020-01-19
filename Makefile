@@ -7,6 +7,8 @@ help:
 	@echo "make lint	lint (flake8)"
 	@echo "make format	run autoformatter"
 	@echo "make test	test Ward"
+	@echo
+	@echo "make prep	lint and test Ward in preparation for a pull request"
 	@echo "make dist	build Ward in preparation for PyPI upload"
 	@echo
 	@echo "make venv	create virtual environment"
