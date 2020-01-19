@@ -5,7 +5,7 @@ from ward import expect, fixture
 from ward.fixtures import Fixture
 from ward.models import Scope, SkipMarker
 from ward.suite import Suite
-from ward.testing import Test, skip, TestOutcome, TestResult, test
+from ward.testing import Test, skip, TestOutcome, TestResult, test, each
 
 NUMBER_OF_TESTS = 5
 FORCE_TEST_PATH = "path/of/test"
@@ -388,9 +388,42 @@ def _():
     )
 
 
-@skip("WIP")
+@skip("TODO: Determine how this should behave")
 @test(
     "Suite.generate_test_runs dependent fixtures of differing scopes behave correctly"
 )
 def _():
     pass
+
+
+@test("Suite.generate_test_runs correctly tears down module scoped parameterised tests")
+def _():
+    events = []
+
+    @fixture(scope=Scope.Module)
+    def a():
+        events.append("resolve a")
+        yield "a"
+        events.append("teardown a")
+
+    @testable_test
+    def test_1(a=each(a, "second", a)):
+        events.append("running test")
+
+    suite = Suite(
+        tests=[
+            Test(fn=test_1, module_name="module1"),
+        ]
+    )
+
+    list(suite.generate_test_runs())
+
+    # Ensure that each parameterised instance of the final test in the
+    # module runs before the module-level teardown occurs.
+    expect(events).equals([
+        "resolve a",
+        "running test",
+        "running test",
+        "running test",
+        "teardown a",
+    ])
