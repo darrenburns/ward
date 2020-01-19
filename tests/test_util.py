@@ -1,7 +1,7 @@
 from tests.test_suite import example_test
 from ward import expect, test, using, fixture
 from ward.testing import TestOutcome, TestResult, each
-from ward.util import ExitCode, get_exit_code, truncate
+from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour
 
 
 @test(
@@ -48,3 +48,11 @@ def _(
 ):
     result = truncate(input, num_chars)
     expect(result).equals(expected)
+
+
+@test("outcome_to_colour({outcome}) returns '{colour}'")
+def _(
+    outcome=each(TestOutcome.PASS, TestOutcome.SKIP, TestOutcome.FAIL, TestOutcome.XFAIL, TestOutcome.XPASS),
+    colour=each("green", "blue", "red", "magenta", "yellow"),
+):
+    expect(outcome_to_colour(outcome)).equals(colour)
