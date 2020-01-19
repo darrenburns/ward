@@ -48,9 +48,7 @@ sys.path.append(".")
 )
 @click.option(
     "--order",
-    type=click.Choice(
-        ["standard", "random"], case_sensitive=False
-    ),
+    type=click.Choice(["standard", "random"], case_sensitive=False),
     default="standard",
     help="Specify the order in which tests should run.",
 )
