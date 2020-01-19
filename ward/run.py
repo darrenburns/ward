@@ -28,12 +28,12 @@ sys.path.append(".")
     "--path",
     default=".",
     type=click.Path(exists=True),
-    help="Path to tests.",
+    help="Path to test directory.",
     multiple=True,
 )
 @click.option(
     "--search",
-    help="Search test names, descriptions and module names for the search query and only run matching tests.",
+    help="Search test names, bodies, descriptions and module names for the search query and only run matching tests.",
 )
 @click.option(
     "--fail-limit",
@@ -52,6 +52,7 @@ sys.path.append(".")
         ["standard", "random"], case_sensitive=False
     ),
     default="standard",
+    help="Specify the order in which tests should run.",
 )
 @click.version_option(version=__version__)
 def run(path, search, fail_limit, test_output_style, order):
