@@ -17,7 +17,7 @@ def is_test_module(module: pkgutil.ModuleInfo) -> bool:
 
 
 def get_info_for_modules(
-    paths: List[Path]
+    paths: List[Path],
 ) -> Generator[pkgutil.ModuleInfo, None, None]:
     # If multiple paths are specified, remove duplicates
     paths = list(set(paths))
