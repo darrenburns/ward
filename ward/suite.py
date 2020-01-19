@@ -28,8 +28,8 @@ class Suite:
         num_tests_per_module = self._test_counts_per_module()
         for test in self.tests:
             generated_tests = test.get_parameterised_instances()
+            num_tests_per_module[test.path] -= 1
             for i, generated_test in enumerate(generated_tests):
-                num_tests_per_module[generated_test.path] -= 1
                 marker = generated_test.marker.name if generated_test.marker else None
                 if marker == "SKIP":
                     yield generated_test.get_result(TestOutcome.SKIP)
@@ -55,9 +55,10 @@ class Suite:
                     self.cache.teardown_fixtures_for_scope(
                         Scope.Test, scope_key=generated_test.id
                     )
-                    if num_tests_per_module[generated_test.path] == 0:
-                        self.cache.teardown_fixtures_for_scope(
-                            Scope.Module, scope_key=generated_test.path
-                        )
+
+            if num_tests_per_module[test.path] == 0:
+                self.cache.teardown_fixtures_for_scope(
+                    Scope.Module, scope_key=str(test.path)
+                )
 
         self.cache.teardown_global_fixtures()
