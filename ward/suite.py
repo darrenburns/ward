@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
+from random import shuffle
 from typing import Generator, List
 
 from ward import Scope
@@ -24,7 +25,9 @@ class Suite:
             counts[path] += 1
         return counts
 
-    def generate_test_runs(self) -> Generator[TestResult, None, None]:
+    def generate_test_runs(self, order="standard") -> Generator[TestResult, None, None]:
+        if order == "random":
+            shuffle(self.tests)
         num_tests_per_module = self._test_counts_per_module()
         for test in self.tests:
             generated_tests = test.get_parameterised_instances()

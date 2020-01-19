@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from random import shuffle
 from timeit import default_timer
 
 import click
@@ -27,12 +28,12 @@ sys.path.append(".")
     "--path",
     default=".",
     type=click.Path(exists=True),
-    help="Path to tests.",
+    help="Path to test directory.",
     multiple=True,
 )
 @click.option(
     "--search",
-    help="Search test names, descriptions and module names for the search query and only run matching tests.",
+    help="Search test names, bodies, descriptions and module names for the search query and only run matching tests.",
 )
 @click.option(
     "--fail-limit",
@@ -45,19 +46,27 @@ sys.path.append(".")
         ["test-per-line", "dots-global", "dots-module"], case_sensitive=False
     ),
 )
+@click.option(
+    "--order",
+    type=click.Choice(
+        ["standard", "random"], case_sensitive=False
+    ),
+    default="standard",
+    help="Specify the order in which tests should run.",
+)
 @click.version_option(version=__version__)
-def run(path, search, fail_limit, test_output_style):
+def run(path, search, fail_limit, test_output_style, order):
     start_run = default_timer()
 
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules)
-    tests = search_generally(unfiltered_tests, query=search)
+    tests = list(search_generally(unfiltered_tests, query=search))
     time_to_collect = default_timer() - start_run
 
-    suite = Suite(tests=list(tests))
-    test_results = suite.generate_test_runs()
+    suite = Suite(tests=tests)
+    test_results = suite.generate_test_runs(order=order)
 
     writer = SimpleTestResultWrite(suite=suite, test_output_style=test_output_style)
     results = writer.output_all_test_results(
