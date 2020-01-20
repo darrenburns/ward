@@ -3,7 +3,7 @@ from pkgutil import ModuleInfo
 
 from ward import test, fixture, expect, raises
 from ward.collect import search_generally, is_test_module
-from ward.testing import Test
+from ward.testing import Test, each
 
 
 def named():
@@ -45,13 +45,10 @@ def _(tests=tests_to_search):
         next(results)
 
 
-@test("is_test_module returns True when module name begins with 'test_'")
-def _():
-    module = ModuleInfo(ModuleFinder(), "test_apples", False)
-    expect(is_test_module(module)).equals(True)
-
-
-@test("is_test_module returns False when module name doesn't begin with 'test_'")
-def _():
-    module = ModuleInfo(ModuleFinder(), "apples_test", False)
-    expect(is_test_module(module)).equals(False)
+@test("is_test_module(<module: '{module_name}'>) returns {rv}")
+def _(
+    module_name=each("test_apples", "apples"),
+    rv=each(True, False),
+):
+    module = ModuleInfo(ModuleFinder(), module_name, False)
+    expect(is_test_module(module)).equals(rv)
