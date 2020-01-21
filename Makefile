@@ -21,8 +21,7 @@ venv: make-venv
 
 make-venv:
 	python3 -m venv make-venv
-	$(VENVBIN)/pip install --upgrade setuptools wheel
-	$(VENVBIN)/pip install flake8 black pycleanup ward
+	$(VENVBIN)/pip install .[dev]
 
 lint: make-venv
 	$(VENVBIN)/flake8 ward --count --select=E9,F63,F7,F82 --show-source --statistics
@@ -41,7 +40,7 @@ prep: lint format test tidy
 .PHONY: prep
 
 dist: lint format test
-	$(VENVBIN)/python setup.py sdist bdist_wheel
+	$(VENVBIN)/flit build
 
 build: dist
 .PHONE: dist
