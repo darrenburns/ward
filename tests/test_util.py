@@ -1,7 +1,9 @@
+from pathlib import Path
+
 from tests.test_suite import example_test
 from ward import expect, test, using, fixture
 from ward.testing import TestOutcome, TestResult, each
-from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour
+from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour, find_project_root
 
 
 @test(
@@ -56,3 +58,8 @@ def _(
     colour=each("green", "blue", "red", "magenta", "yellow"),
 ):
     expect(outcome_to_colour(outcome)).equals(colour)
+
+
+@test("find_project_root returns the root dir if no paths supplied")
+def _():
+    expect(find_project_root([])).equals(Path("/"))
