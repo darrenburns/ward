@@ -39,8 +39,11 @@ def set_defaults_from_config(
 
     # Handle params where multiple=True
     config_paths = config.get("path")
-    if config_paths and not supplied_paths:
-        config["path"] = config_paths
+    if not supplied_paths:
+        if config_paths and isinstance(config_paths, list):
+            config["path"] = config_paths
+        else:
+            config["path"] = [config_paths]
 
     if context.default_map is None:
         context.default_map = {}
