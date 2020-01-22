@@ -1,3 +1,4 @@
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -66,26 +67,38 @@ def _():
     expect(find_project_root([])).equals(Path("/"))
 
 
-@fixture
-def fake_project():
-    paths = [
-        Path("project/a/b/c"),
-        Path("project/a/d"),
-        Path("project/a/"),
-    ]
+def make_project(root_file: str):
     tempdir = Path(tempfile.gettempdir())
+    root_file = tempdir.joinpath(f"project/{root_file}")
+    paths = [
+        tempdir / "project/a/b/c",
+        tempdir / "project/a/d",
+        tempdir / "project/a",
+    ]
     for path in paths:
-        tempdir.joinpath(path).mkdir(parents=True, exist_ok=True)
+        path.mkdir(parents=True, exist_ok=True)
 
-    pyproject = tempdir.joinpath("project/pyproject.toml")
-    with open(pyproject, "a"):
+    with open(root_file, "a"):
         yield tempdir / "project"
-        for path in paths:
-            path.rmdir()
-        pyproject.unlink()
+        shutil.rmtree(tempdir / "project")
 
 
-@test("find_project_root finds common ancestor folder containing pyproject.toml")
-def _(project=fake_project):
-    root = find_project_root([project / "a/b/c"])
+@fixture
+def fake_project_pyproject():
+    yield from make_project("pyproject.toml")
+
+
+@fixture
+def fake_project_git():
+    yield from make_project(".git")
+
+
+@using(
+    root_file=each("pyproject.toml", ".git"),
+    project=each(fake_project_pyproject, fake_project_git),
+)
+@test("find_project_root finds project root with '{root_file}' file")
+def _(root_file, project):
+    root = find_project_root([project / "a/b/c", project / "a/d"])
     expect(root).equals(project.resolve())
+    expect((root / root_file).exists()).equals(True)

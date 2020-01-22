@@ -1,14 +1,15 @@
 import os
 import platform
+import sys
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import wrap
 from typing import Any, Dict, Generator, List, Optional
 
-import sys
 from colorama import Fore, Style
 from termcolor import colored, cprint
+
 from ward._ward_version import __version__
 from ward.diff import make_diff
 from ward.expect import ExpectationFailed, Expected
