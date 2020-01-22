@@ -46,5 +46,6 @@ setup(
         "termcolor>=1.1.0",
         "dataclasses>=0.1; python_version < '3.7'",
         "click>=7.0",
+        "toml>=0.9.4",
     ],
 )

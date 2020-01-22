@@ -1,4 +1,5 @@
 from enum import Enum
+from pathlib import Path
 from typing import Iterable
 
 from ward.testing import TestOutcome, TestResult
@@ -37,3 +38,24 @@ def outcome_to_colour(outcome: TestOutcome) -> str:
         TestOutcome.XFAIL: "magenta",
         TestOutcome.XPASS: "yellow",
     }[outcome]
+
+
+def find_project_root(paths: Iterable[Path]) -> Path:
+    if not paths:
+        return Path("/").resolve()
+
+    common_base = min(path.resolve() for path in paths)
+    if common_base.is_dir():
+        common_base /= "child-of-base"
+
+    # Check this common base and all of its parents for files
+    # indicating the project root
+    for directory in common_base.parents:
+        if (directory / "pyproject.toml").is_file():
+            return directory
+        if (directory / ".git").exists():
+            return directory
+        if (directory / ".hg").is_dir():
+            return directory
+
+    return directory
