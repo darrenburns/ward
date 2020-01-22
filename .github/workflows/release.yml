@@ -13,7 +13,7 @@ jobs:
     - name: Build and publish Python distribution to PyPI
       run: |
         python3 -m pip install --user --upgrade flit
-        flit publish
+        python3 -m flit publish
       working-directory: ${{ github.workspace }}
       env:
         FLIT_USERNAME: __token__
