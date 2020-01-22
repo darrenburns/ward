@@ -1,6 +1,6 @@
 # Ward
 ![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
-[![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 See the full documentation and feature set [here](https://wardpy.com).
 
@@ -90,7 +90,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://darrenburns.net"><img src="https://avatars0.githubusercontent.com/u/5740731?v=4" width="60px;" alt="Darren Burns"/><br /><sub><b>Darren Burns</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=darrenburns" title="Code">💻</a> <a href="https://github.com/darrenburns/ward/commits?author=darrenburns" title="Documentation">📖</a> <a href="#ideas-darrenburns" title="Ideas, Planning, & Feedback">🤔</a> <a href="#review-darrenburns" title="Reviewed Pull Requests">👀</a> <a href="https://github.com/darrenburns/ward/issues?q=author%3Adarrenburns" title="Bug reports">🐛</a> <a href="#example-darrenburns" title="Examples">💡</a></td>
     <td align="center"><a href="https://github.com/khusrokarim"><img src="https://avatars0.githubusercontent.com/u/1615476?v=4" width="60px;" alt="khusrokarim"/><br /><sub><b>khusrokarim</b></sub></a><br /><a href="#ideas-khusrokarim" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/darrenburns/ward/commits?author=khusrokarim" title="Code">💻</a> <a href="https://github.com/darrenburns/ward/issues?q=author%3Akhusrokarim" title="Bug reports">🐛</a></td>
     <td align="center"><a href="https://github.com/AlecJ"><img src="https://avatars2.githubusercontent.com/u/5054790?v=4" width="60px;" alt="Alec Jordan"/><br /><sub><b>Alec Jordan</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=AlecJ" title="Code">💻</a></td>
-    <td align="center"><a href="https://www.indeliblebluepen.com"><img src="https://avatars2.githubusercontent.com/u/7471402?v=4" width="60px;" alt="Jason C. McDonald"/><br /><sub><b>Jason C. McDonald</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=CodeMouse92" title="Code">💻</a></td>
+    <td align="center"><a href="https://www.indeliblebluepen.com"><img src="https://avatars2.githubusercontent.com/u/7471402?v=4" width="60px;" alt="Jason C. McDonald"/><br /><sub><b>Jason C. McDonald</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=CodeMouse92" title="Code">💻</a> <a href="#ideas-CodeMouse92" title="Ideas, Planning, & Feedback">🤔</a></td>
+    <td align="center"><a href="https://github.com/AndydeCleyre"><img src="https://avatars3.githubusercontent.com/u/1787385?v=4" width="60px;" alt="Andy Kluger"/><br /><sub><b>Andy Kluger</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=AndydeCleyre" title="Code">💻</a></td>
   </tr>
 </table>
 
