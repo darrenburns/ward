@@ -1,0 +1,3 @@
+[console_scripts]
+ward = ward.run:run
+

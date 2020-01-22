@@ -28,9 +28,19 @@ CONFIG_FILE = "pyproject.toml"
 def set_defaults_from_config(
     context: click.Context, param: click.Parameter, value: Union[str, int],
 ) -> Path:
-    paths = context.params.get("path")
-    project_root = find_project_root([Path(path) for path in paths])
+    supplied_paths = context.params.get("path")
+
+    search_paths = supplied_paths
+    if not search_paths:
+        search_paths = (".",)
+
+    project_root = find_project_root([Path(path) for path in search_paths])
     config = read_config_toml(project_root, CONFIG_FILE)
+
+    # Handle params where multiple=True
+    config_paths = config.get("path")
+    if config_paths and not supplied_paths:
+        config["path"] = config_paths
 
     if context.default_map is None:
         context.default_map = {}
@@ -64,15 +74,6 @@ def set_defaults_from_config(
 )
 @click.version_option(version=__version__)
 @click.option(
-    "-p",
-    "--path",
-    default=(".",),
-    type=click.Path(exists=True),
-    multiple=True,
-    is_eager=True,
-    help="Look for tests in PATH.",
-)
-@click.option(
     "--config",
     type=click.Path(
         exists=False, file_okay=True, dir_okay=False, readable=True, allow_dash=False
@@ -80,6 +81,14 @@ def set_defaults_from_config(
     callback=set_defaults_from_config,
     help="Read configuration from PATH.",
     is_eager=True,
+)
+@click.option(
+    "-p",
+    "--path",
+    type=click.Path(exists=True),
+    multiple=True,
+    is_eager=True,
+    help="Look for tests in PATH.",
 )
 @click.pass_context
 def run(
