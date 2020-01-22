@@ -99,10 +99,6 @@ class FixtureCache:
     def teardown_fixtures_for_scope(self, scope: Scope, scope_key: ScopeKey):
         fixture_dict = self.get_fixtures_at_scope(scope, scope_key)
         fixtures = list(fixture_dict.values())
-        if "test_config" in str(scope_key):
-            print("teardown scope_key", scope_key)
-            print("teardown fixtures", fixtures)
-            print(self._scope_cache)
         for fixture in fixtures:
             with suppress(RuntimeError, StopIteration):
                 fixture.teardown()
