@@ -14,7 +14,7 @@ jobs:
       run: |
         python3 -m pip install --user --upgrade flit
         flit publish
-      working-directory: "$GITHUB_WORKSPACE"
+      working-directory: ${{ github.workspace }}
       env:
         FLIT_USERNAME: __token__
         FLIT_PASSWORD: ${{ secrets.pypi_api_token }}
