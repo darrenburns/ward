@@ -69,7 +69,6 @@ def _():
 
 def make_project(root_file: str):
     tempdir = Path(tempfile.gettempdir())
-    root_file = tempdir.joinpath(f"project/{root_file}")
     paths = [
         tempdir / "project/a/b/c",
         tempdir / "project/a/d",
@@ -78,7 +77,8 @@ def make_project(root_file: str):
     for path in paths:
         path.mkdir(parents=True, exist_ok=True)
 
-    with open(root_file, "a"):
+    root_file = tempdir / f"project/{root_file}"
+    with open(root_file, "w+", encoding="utf-8"):
         yield tempdir / "project"
         shutil.rmtree(tempdir / "project")
 
