@@ -1,15 +1,18 @@
 import tempfile
 from pathlib import Path
 
-from ward import test, fixture, Scope, expect
+from ward import test, fixture, expect
 from ward.config import read_config_toml
 
 
-@fixture(scope=Scope.Module)
+@fixture
 def temp_config_file():
     conf = """
 [tool.ward]
 path="test_path"
+
+[tool.other]
+ignore="me"
 """
     with tempfile.NamedTemporaryFile() as temp:
         temp.write(bytes(conf, encoding="utf-8"))
