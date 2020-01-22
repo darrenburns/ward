@@ -44,6 +44,15 @@ path="section header is invalid"
     yield from temp_conf(conf)
 
 
+@fixture
+def temp_config_file_hyphens():
+    conf = """
+[tool.ward]
+--some-key="some-value"
+"""
+    yield from temp_conf(conf)
+
+
 @test("read_config_toml reads from only [tool.ward] section")
 def _(tmp=temp_config_file):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
@@ -60,6 +69,12 @@ def _():
 def _(tmp=temp_config_missing):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
     expect(conf).equals({})
+
+
+@test("read_config_toml converts options to click argument names (converts/removes hyphens)")
+def _(tmp=temp_config_file_hyphens):
+    conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
+    expect(conf).equals({"some_key": "some-value"})
 
 
 @test("read_config_toml raises click.FileError if config file syntax invalid")
