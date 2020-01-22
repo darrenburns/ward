@@ -28,6 +28,7 @@ class Suite:
     def generate_test_runs(self, order="standard") -> Generator[TestResult, None, None]:
         if order == "random":
             shuffle(self.tests)
+
         num_tests_per_module = self._test_counts_per_module()
         for test in self.tests:
             generated_tests = test.get_parameterised_instances()
@@ -61,7 +62,7 @@ class Suite:
 
             if num_tests_per_module[test.path] == 0:
                 self.cache.teardown_fixtures_for_scope(
-                    Scope.Module, scope_key=str(test.path)
+                    Scope.Module, scope_key=test.path
                 )
 
         self.cache.teardown_global_fixtures()

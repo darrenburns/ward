@@ -1,16 +1,23 @@
 import tempfile
+from pathlib import Path
 
-from ward import test, fixture, Scope
+from ward import test, fixture, Scope, expect
 from ward.config import read_config_toml
 
 
 @fixture(scope=Scope.Module)
 def temp_config_file():
-    with tempfile.NamedTemporaryFile("r+b") as temp:
+    conf = """
+[tool.ward]
+path="test_path"
+"""
+    with tempfile.NamedTemporaryFile() as temp:
+        temp.write(bytes(conf, encoding="utf-8"))
+        temp.seek(0)
         yield temp
 
 
-@test("read_config_toml reads from toml file [tool.ward] section")
+@test("read_config_toml reads 'path' from [tool.ward] section")
 def _(tmp=temp_config_file):
-    print(tmp)
-    # conf = read_config_toml(tempfile.gettempdir(), )
+    conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
+    expect(conf).equals({"path": "test_path"})
