@@ -10,13 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Build Python distribution
-      run: |
-        python3 -m pip install --user --upgrade setuptools wheel
-        python3 "$GITHUB_WORKSPACE/setup.py" sdist bdist_wheel
-    - name: Publish a Python distribution to PyPI
-      if: success()
-      uses: pypa/gh-action-pypi-publish@66f4ba74
+    - uses: actions/setup-python@v1
       with:
-        user: __token__
-        password: ${{ secrets.pypi_api_token }}
+        python-version: '3.7'
+    - name: Build and publish Python distribution to PyPI
+      run: |
+        python3.7 -m pip install --user --upgrade flit
+        python3.7 -m flit publish
+      working-directory: ${{ github.workspace }}
+      env:
+        FLIT_USERNAME: __token__
+        FLIT_PASSWORD: ${{ secrets.pypi_api_token }}
