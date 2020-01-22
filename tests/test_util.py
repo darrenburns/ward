@@ -1,3 +1,4 @@
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -64,7 +65,7 @@ def _(
 
 @test("find_project_root returns the root dir if no paths supplied")
 def _():
-    expect(find_project_root([])).equals(Path("/"))
+    expect(os.path.dirname(find_project_root([]))).equals("/")
 
 
 def make_project(root_file: str):
