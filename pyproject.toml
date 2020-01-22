@@ -43,4 +43,4 @@ dev = [
 ward = "ward.run:run"
 
 [tool.ward]
-path=["./tests"]
+path = ["tests"]
