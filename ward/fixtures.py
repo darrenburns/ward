@@ -49,8 +49,7 @@ class Fixture:
 
 FixtureKey = str
 TestId = str
-ModulePath = str
-ScopeKey = Union[TestId, ModulePath, Scope]
+ScopeKey = Union[TestId, Path, Scope]
 ScopeCache = Dict[Scope, Dict[ScopeKey, Dict[FixtureKey, Fixture]]]
 
 

@@ -1,7 +1,12 @@
+import os
+import shutil
+import tempfile
+from pathlib import Path
+
 from tests.test_suite import example_test
 from ward import expect, test, using, fixture
 from ward.testing import TestOutcome, TestResult, each
-from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour
+from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour, find_project_root
 
 
 @test(
@@ -56,3 +61,47 @@ def _(
     colour=each("green", "blue", "red", "magenta", "yellow"),
 ):
     expect(outcome_to_colour(outcome)).equals(colour)
+
+
+@test("find_project_root returns the root dir if no paths supplied")
+def _():
+    project_root = find_project_root([])
+    fs_root = os.path.normpath(os.path.abspath(os.sep))
+    expect(project_root).equals(Path(fs_root))
+
+
+def make_project(root_file: str):
+    tempdir = Path(tempfile.gettempdir())
+    paths = [
+        tempdir / "project/a/b/c",
+        tempdir / "project/a/d",
+        tempdir / "project/a",
+    ]
+    for path in paths:
+        path.mkdir(parents=True, exist_ok=True)
+
+    root_file = tempdir / f"project/{root_file}"
+    with open(root_file, "w+", encoding="utf-8"):
+        yield tempdir / "project"
+    shutil.rmtree(tempdir / "project")
+
+
+@fixture
+def fake_project_pyproject():
+    yield from make_project("pyproject.toml")
+
+
+@fixture
+def fake_project_git():
+    yield from make_project(".git")
+
+
+@using(
+    root_file=each("pyproject.toml", ".git"),
+    project=each(fake_project_pyproject, fake_project_git),
+)
+@test("find_project_root finds project root with '{root_file}' file")
+def _(root_file, project):
+    root = find_project_root([project / "a/b/c", project / "a/d"])
+    expect(root.resolve()).equals(project.resolve())
+    expect((root / root_file).exists()).equals(True)

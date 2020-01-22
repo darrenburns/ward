@@ -1,14 +1,15 @@
 import os
 import platform
+import sys
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import wrap
 from typing import Any, Dict, Generator, List, Optional
 
-import sys
 from colorama import Fore, Style
 from termcolor import colored, cprint
+
 from ward._ward_version import __version__
 from ward.diff import make_diff
 from ward.expect import ExpectationFailed, Expected
@@ -361,9 +362,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def result_checkbox(self, expect):
         if expect.success:
-            result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
+            result_marker = f"[ {Fore.GREEN}okay{Style.RESET_ALL} ]{Fore.GREEN}"
         else:
-            result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+            result_marker = f"[ {Fore.RED}fail{Style.RESET_ALL} ]{Fore.RED}"
         return result_marker
 
     def output_test_result_summary(
