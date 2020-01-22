@@ -100,5 +100,5 @@ def fake_project_git():
 @test("find_project_root finds project root with '{root_file}' file")
 def _(root_file, project):
     root = find_project_root([project / "a/b/c", project / "a/d"])
-    expect(root).equals(project.resolve())
+    expect(root.resolve()).equals(project.resolve())
     expect((root / root_file).exists()).equals(True)
