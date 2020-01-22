@@ -1,4 +1,2 @@
 [tool.ward]
 path="tests"
-test_output_style="test-per-line"
-search="scope"
