@@ -65,7 +65,9 @@ def _(
 
 @test("find_project_root returns the root dir if no paths supplied")
 def _():
-    expect(os.path.dirname(find_project_root([]))).equals("/")
+    project_root = find_project_root([])
+    fs_root = os.path.normpath(os.path.abspath(os.sep))
+    expect(project_root).equals(Path(fs_root))
 
 
 def make_project(root_file: str):
