@@ -362,9 +362,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def result_checkbox(self, expect):
         if expect.success:
-            result_marker = f"[ {Fore.GREEN}✓{Style.RESET_ALL} ]{Fore.GREEN}"
+            result_marker = f"[ {Fore.GREEN}okay{Style.RESET_ALL} ]{Fore.GREEN}"
         else:
-            result_marker = f"[ {Fore.RED}✗{Style.RESET_ALL} ]{Fore.RED}"
+            result_marker = f"[ {Fore.RED}fail{Style.RESET_ALL} ]{Fore.RED}"
         return result_marker
 
     def output_test_result_summary(

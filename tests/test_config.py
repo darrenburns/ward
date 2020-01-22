@@ -8,7 +8,7 @@ from ward.config import read_config_toml
 
 
 def temp_conf(conf: str) -> tempfile._TemporaryFileWrapper:
-    with tempfile.NamedTemporaryFile() as temp:
+    with tempfile.NamedTemporaryFile(delete=False) as temp:
         temp.write(bytes(conf, encoding="utf-8"))
         temp.seek(0)
         yield temp

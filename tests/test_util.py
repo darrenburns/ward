@@ -80,7 +80,7 @@ def make_project(root_file: str):
     root_file = tempdir / f"project/{root_file}"
     with open(root_file, "w+", encoding="utf-8"):
         yield tempdir / "project"
-        shutil.rmtree(tempdir / "project")
+    shutil.rmtree(tempdir / "project")
 
 
 @fixture
