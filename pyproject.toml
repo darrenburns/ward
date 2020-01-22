@@ -1,0 +1,43 @@
+[build-system]
+requires = ["flit_core >=2,<3"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "ward"
+author = "Darren Burns"
+author-email = "darrenb900@gmail.com"
+home-page = "https://github.com/darrenburns/ward"
+description-file = "README.md"
+requires-python = ">=3.6"
+requires = [
+    "colorama>=0.3.3",
+    "termcolor>=1.1.0",
+    "dataclasses>=0.1; python_version < '3.7'",
+    "click>=7.0",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+]
+
+[tool.flit.metadata.requires-extra]
+dev = [
+    "black>=19.10b0",
+    "flake8>=3.7.9",
+    "flit>=2.2.0",
+    "pycleanup>=0.0.1",
+]
+
+[tool.flit.scripts]
+ward = "ward.run:run"

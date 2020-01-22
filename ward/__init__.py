@@ -1,3 +1,4 @@
+"""A modern Python 3 test framework for finding and fixing flaws faster."""
 from ._ward_version import __version__
 from .expect import expect, raises
 from .fixtures import fixture, using
