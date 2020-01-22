@@ -5,6 +5,13 @@ from ward import test, fixture, expect
 from ward.config import read_config_toml
 
 
+def temp_conf(conf: str) -> tempfile._TemporaryFileWrapper:
+    with tempfile.NamedTemporaryFile() as temp:
+        temp.write(bytes(conf, encoding="utf-8"))
+        temp.seek(0)
+        yield temp
+
+
 @fixture
 def temp_config_file():
     conf = """
@@ -14,13 +21,40 @@ path="test_path"
 [tool.other]
 ignore="me"
 """
-    with tempfile.NamedTemporaryFile() as temp:
-        temp.write(bytes(conf, encoding="utf-8"))
-        temp.seek(0)
-        yield temp
+    yield from temp_conf(conf)
 
 
-@test("read_config_toml reads 'path' from [tool.ward] section")
+@fixture
+def temp_config_missing():
+    conf = """
+[tool.other]
+hello="world"
+"""
+    yield from temp_conf(conf)
+
+
+@fixture
+def temp_config_invalid():
+    conf = """
+[tool.ward
+path="section header is invalid"    
+"""
+    yield from temp_conf(conf)
+
+
+@test("read_config_toml reads from only [tool.ward] section")
 def _(tmp=temp_config_file):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
     expect(conf).equals({"path": "test_path"})
+
+
+@test("read_config_toml returns {} if config file doesnt exist")
+def _():
+    conf = read_config_toml(Path(tempfile.gettempdir()), "doesnt_exist.toml")
+    expect(conf).equals({})
+
+
+@test("read_config_toml returns {} when [tool.ward] not present")
+def _(tmp=temp_config_missing):
+    conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
+    expect(conf).equals({})
