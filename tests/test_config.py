@@ -1,7 +1,9 @@
 import tempfile
 from pathlib import Path
 
-from ward import test, fixture, expect
+import click
+
+from ward import test, fixture, expect, raises
 from ward.config import read_config_toml
 
 
@@ -58,3 +60,9 @@ def _():
 def _(tmp=temp_config_missing):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
     expect(conf).equals({})
+
+
+@test("read_config_toml raises click.FileError if config file syntax invalid")
+def _(tmp=temp_config_invalid):
+    with raises(click.FileError):
+        read_config_toml(Path(tempfile.gettempdir()), tmp.name)
