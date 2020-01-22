@@ -1,3 +1,4 @@
+import tempfile
 from pathlib import Path
 
 from tests.test_suite import example_test
@@ -63,3 +64,28 @@ def _(
 @test("find_project_root returns the root dir if no paths supplied")
 def _():
     expect(find_project_root([])).equals(Path("/"))
+
+
+@fixture
+def fake_project():
+    paths = [
+        Path("project/a/b/c"),
+        Path("project/a/d"),
+        Path("project/a/"),
+    ]
+    tempdir = Path(tempfile.gettempdir())
+    for path in paths:
+        tempdir.joinpath(path).mkdir(parents=True, exist_ok=True)
+
+    pyproject = tempdir.joinpath("project/pyproject.toml")
+    with open(pyproject, "a"):
+        yield tempdir / "project"
+        for path in paths:
+            path.rmdir()
+        pyproject.unlink()
+
+
+@test("find_project_root finds common ancestor folder containing pyproject.toml")
+def _(project=fake_project):
+    root = find_project_root([project / "a/b/c"])
+    expect(root).equals(project.resolve())
