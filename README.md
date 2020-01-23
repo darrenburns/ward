@@ -50,7 +50,7 @@ def _(
 
 **Cross platform:** Tested on Mac OS, Linux, and Windows.
 
-**Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started.
+**Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started. Can be configured using `pyproject.toml` or the command line if required.
 
 **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
 ![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
