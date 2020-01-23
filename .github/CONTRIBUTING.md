@@ -2,6 +2,8 @@
 
 Contributions to Ward are encouraged and very welcome!
 
+You can install Ward for local development using `flit install -s`.
+
 Contributions can come in many forms: documentation enhancements, features, bug fixes, creating issues, and participating in the community.
 
 If you're interested in helping out, you might find some inspiration in [Issues](https://github.com/darrenburns/ward/issues). If you have an idea, but don't see it there, don't hesitate to create a new issue.
@@ -16,7 +18,7 @@ Please also take time to review the [Code of Conduct](https://github.com/darrenb
 
 When creating a PR:
 
-* Code is formatted using `black .` (`Makefile` coming soon)
+* Code is formatted using `make format`
 * Ensure `README.md` is updated if necessary.
 * Tests written cover new code, and running `ward` results in a pass.
 
