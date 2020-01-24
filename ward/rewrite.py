@@ -40,16 +40,19 @@ def rewrite_assertions_in_tests(tests: Iterable[Test]):
 
 def assert_equal(lhs_val, rhs_val, assert_msg):
     if lhs_val != rhs_val:
-        raise ExpectationFailed("%r != %r" % (lhs_val, rhs_val), [
-            Expected(
-                this=lhs_val,
-                op="equals",
-                that=rhs_val,
-                success=False,
-                op_args=(),
-                op_kwargs={},
-            )
-        ])
+        raise ExpectationFailed(
+            "%r != %r" % (lhs_val, rhs_val),
+            [
+                Expected(
+                    this=lhs_val,
+                    op="equals",
+                    that=rhs_val,
+                    success=False,
+                    op_args=(),
+                    op_kwargs={},
+                )
+            ],
+        )
 
 
 def rewrite_assertion(test: Test) -> Test:
@@ -76,18 +79,13 @@ def rewrite_assertion(test: Test) -> Test:
         if isinstance(const, types.CodeType):
             new_test_func = types.FunctionType(
                 const,
-                {
-                    "assert_equal": assert_equal,
-                    **test.fn.__globals__,
-                    **clo_glob
-                },
+                {"assert_equal": assert_equal, **test.fn.__globals__, **clo_glob},
                 test.fn.__name__,
                 test.fn.__defaults__,
             )
             new_test_func.ward_meta = test.fn.ward_meta
             return Test(
-                **{k: vars(test)[k] for k in vars(test) if k != "fn"},
-                fn=new_test_func,
+                **{k: vars(test)[k] for k in vars(test) if k != "fn"}, fn=new_test_func,
             )
 
     return test
