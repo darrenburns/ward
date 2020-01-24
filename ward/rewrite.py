@@ -18,11 +18,10 @@ class RewriteAssert(ast.NodeTransformer):
             if node.msg and isinstance(node.msg, ast.Str):
                 msg = node.msg.s
             else:
-                msg = None
-            print(msg)
+                msg = ""
             call = ast.Call(
                 func=ast.Name(id="assert_equal", ctx=ast.Load()),
-                args=[node.test.left, node.test.comparators[0], msg],
+                args=[node.test.left, node.test.comparators[0], ast.Str(s=msg)],
                 keywords=[],
             )
 

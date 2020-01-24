@@ -16,4 +16,4 @@ def _(name):
 def _(name=darren):
     a = {"darren": "burns"}
     b = "aaaaa aaa abc"
-    assert "aaaaa bbb abc" == b, "hello world!"
+    assert "aaaaa aaa abc" == b, "hello world!"
