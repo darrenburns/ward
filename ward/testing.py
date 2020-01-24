@@ -98,9 +98,10 @@ class Test:
     id: str = field(default_factory=generate_id)
     marker: Optional[Marker] = None
     description: Optional[str] = None
-    param_meta: Optional[ParamMeta] = ParamMeta()
+    param_meta: Optional[ParamMeta] = field(default_factory=ParamMeta)
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)
+    ward_meta: WardMeta = field(default_factory=WardMeta)
 
     def __call__(self, *args, **kwargs):
         with redirect_stdout(self.sout), redirect_stderr(self.serr):

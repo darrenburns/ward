@@ -19,6 +19,7 @@ class Suite:
         return len(self.tests)
 
     def _test_counts_per_module(self):
+        print(self.tests)
         module_paths = [test.path for test in self.tests]
         counts = defaultdict(int)
         for path in module_paths:
