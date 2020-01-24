@@ -53,6 +53,8 @@ def rewrite_assertion(test: Test) -> Test:
 
     # Rewrite the AST of the code
     tree = ast.parse(code)
+    line_no = inspect.getsourcelines(test.fn)[1]
+    ast.increment_lineno(tree, line_no - 1)
 
     new_tree = RewriteAssert().visit(tree)
 
