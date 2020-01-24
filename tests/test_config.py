@@ -56,25 +56,25 @@ def temp_config_file_hyphens():
 @test("read_config_toml reads from only [tool.ward] section")
 def _(tmp=temp_config_file):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
-    expect(conf).equals({"path": "test_path"})
+    assert conf == {"path": "test_path"}
 
 
 @test("read_config_toml returns {} if config file doesnt exist")
 def _():
     conf = read_config_toml(Path(tempfile.gettempdir()), "doesnt_exist.toml")
-    expect(conf).equals({})
+    assert conf == {}
 
 
 @test("read_config_toml returns {} when [tool.ward] not present")
 def _(tmp=temp_config_missing):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
-    expect(conf).equals({})
+    assert conf == {}
 
 
 @test("read_config_toml converts options to click argument names (converts/removes hyphens)")
 def _(tmp=temp_config_file_hyphens):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
-    expect(conf).equals({"some_key": "some-value"})
+    assert conf == {"some_key": "some-value"}
 
 
 @test("read_config_toml raises click.FileError if config file syntax invalid")
