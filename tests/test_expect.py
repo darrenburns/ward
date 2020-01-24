@@ -37,7 +37,7 @@ def _():
 @test("equals should raise an ExpectationFailed when args aren't equal")
 def _():
     with raises(ExpectationFailed):
-        expect(1).equals(2)
+        assert 1 == 2
 
 
 @test("satisfies should record history when arg satisfies predicate")
