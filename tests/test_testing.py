@@ -2,14 +2,14 @@ from unittest import mock
 from unittest.mock import Mock
 
 from tests.test_suite import testable_test
-from ward import expect, raises, Scope
+from ward import raises, Scope
 from ward.errors import ParameterisationError
 from ward.fixtures import fixture
 from ward.testing import Test, test, each, ParamMeta
 
 
 def f():
-    expect(1).equals(1)
+    assert 1 == 1
 
 
 mod = "my_module"
@@ -20,7 +20,7 @@ t = Test(fn=f, module_name=mod)
 def anonymous_test():
     @testable_test
     def _():
-        expect(1).equals(1)
+        assert 1 == 1
 
     return Test(fn=_, module_name=mod)
 
@@ -31,45 +31,45 @@ def dependent_test():
         return 1
 
     def _(a=x):
-        expect(1).equals(1)
+        assert 1 == 1
 
     return Test(fn=_, module_name=mod)
 
 
 @test("Test.name should return the name of the function it wraps")
 def _(anonymous_test=anonymous_test):
-    expect(anonymous_test.name).equals("_")
+    assert anonymous_test.name == "_"
 
 
 @test("Test.qualified_name should return `module_name.function_name`")
 def _():
-    expect(t.qualified_name).equals(f"{mod}.{f.__name__}")
+    assert t.qualified_name == f"{mod}.{f.__name__}"
 
 
 @test("Test.qualified_name should return `module_name._` when test name is _")
 def _(anonymous_test=anonymous_test):
-    expect(anonymous_test.qualified_name).equals(f"{mod}._")
+    assert anonymous_test.qualified_name == f"{mod}._"
 
 
 @test("Test.deps should return {} when test uses no fixtures")
 def _(anonymous_test=anonymous_test):
-    expect(anonymous_test.deps()).equals({})
+    assert anonymous_test.deps() == {}
 
 
 @test("Test.deps should return correct params when test uses fixtures")
 def _(dependent_test=dependent_test):
     deps = dependent_test.deps()
-    expect(deps).contains("a")
+    assert "a" in deps
 
 
 @test("Test.has_deps should return True when test uses fixtures")
 def _(dependent_test=dependent_test):
-    expect(dependent_test.has_deps).equals(True)
+    assert dependent_test.has_deps
 
 
 @test("Test.has_deps should return False when test doesn't use fixtures")
 def _(anonymous_test=anonymous_test):
-    expect(anonymous_test.has_deps).equals(False)
+    assert not anonymous_test.has_deps
 
 
 @test("Test.__call__ should delegate to the function it wraps")
@@ -77,7 +77,7 @@ def _():
     mock = Mock()
     t = Test(fn=mock, module_name=mod)
     t(1, 2, key="val")
-    expect(mock).called_once_with(1, 2, key="val")
+    mock.assert_called_once_with(1, 2, key="val")
 
 
 @test("Test.is_parameterised should return True for parameterised test")
@@ -87,7 +87,7 @@ def _():
 
     t = Test(fn=parameterised_test, module_name=mod)
 
-    expect(t.is_parameterised).equals(True)
+    assert t.is_parameterised == True
 
 
 @test("Test.is_parameterised should return False for standard tests")
@@ -97,28 +97,28 @@ def _():
 
     t = Test(fn=test, module_name=mod)
 
-    expect(t.is_parameterised).equals(False)
+    assert not t.is_parameterised
 
 
 @test("Test.scope_key_from(Scope.Test) returns the test ID")
 def _(t: Test = anonymous_test):
     scope_key = t.scope_key_from(Scope.Test)
 
-    expect(scope_key).equals(t.id)
+    assert scope_key == t.id
 
 
 @test("Test.scope_key_from(Scope.Module) returns the path of the test module")
 def _(t: Test = anonymous_test):
     scope_key = t.scope_key_from(Scope.Module)
 
-    expect(scope_key).equals(testable_test.path)
+    assert scope_key == testable_test.path
 
 
 @test("Test.scope_key_from(Scope.Global) returns Scope.Global")
 def _(t: Test = anonymous_test):
     scope_key = t.scope_key_from(Scope.Global)
 
-    expect(scope_key).equals(Scope.Global)
+    assert scope_key == Scope.Global
 
 
 @test("Test.get_parameterised_instances returns [self] if not parameterised")
@@ -128,7 +128,7 @@ def _():
 
     t = Test(fn=test, module_name=mod)
 
-    expect(t.get_parameterised_instances()).equals([t])
+    assert t.get_parameterised_instances() == [t]
 
 
 @test("Test.get_parameterised_instances returns correct number of test instances")
@@ -137,26 +137,24 @@ def _():
         pass
 
     t = Test(fn=test, module_name=mod)
-    expect(t.get_parameterised_instances()).equals(
-        [
-            Test(
-                id=mock.ANY,
-                fn=t.fn,
-                module_name=t.module_name,
-                param_meta=ParamMeta(0, 2),
-                sout=mock.ANY,
-                serr=mock.ANY,
-            ),
-            Test(
-                id=mock.ANY,
-                fn=t.fn,
-                module_name=t.module_name,
-                param_meta=ParamMeta(1, 2),
-                sout=mock.ANY,
-                serr=mock.ANY,
-            ),
-        ]
-    )
+    assert t.get_parameterised_instances() == [
+        Test(
+            id=mock.ANY,
+            fn=t.fn,
+            module_name=t.module_name,
+            param_meta=ParamMeta(0, 2),
+            sout=mock.ANY,
+            serr=mock.ANY,
+        ),
+        Test(
+            id=mock.ANY,
+            fn=t.fn,
+            module_name=t.module_name,
+            param_meta=ParamMeta(1, 2),
+            sout=mock.ANY,
+            serr=mock.ANY,
+        ),
+    ]
 
 
 @test("Test.get_parameterised_instances raises exception for arg count mismatch")

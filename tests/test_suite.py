@@ -1,7 +1,7 @@
 from collections import defaultdict
 from unittest import mock
 
-from ward import expect, fixture
+from ward import fixture
 from ward.fixtures import Fixture
 from ward.models import Scope, SkipMarker
 from ward.suite import Suite
@@ -65,7 +65,7 @@ def example_test(module=module, fixtures=fixtures):
 def skipped_test(module=module):
     @testable_test
     def t():
-        expect(1).equals(1)
+        assert 1 == 1
 
     return Test(fn=t, module_name=module, marker=SkipMarker())
 
@@ -79,7 +79,7 @@ def suite(example_test=example_test):
     f"Suite.num_tests returns {NUMBER_OF_TESTS}, when the suite has {NUMBER_OF_TESTS} tests"
 )
 def _(suite=suite):
-    expect(suite.num_tests).equals(NUMBER_OF_TESTS)
+    assert suite.num_tests == NUMBER_OF_TESTS
 
 
 @test(
@@ -88,7 +88,7 @@ def _(suite=suite):
 def _(suite=suite):
     runs = suite.generate_test_runs()
 
-    expect(list(runs)).has_length(NUMBER_OF_TESTS)
+    assert len(list(runs)) == NUMBER_OF_TESTS
 
 
 @test("Suite.generate_test_runs generates yields the expected test results")
@@ -98,7 +98,7 @@ def _(suite=suite):
         TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
         for test in suite.tests
     ]
-    expect(results).equals(expected)
+    assert results == expected
 
 
 @test("Suite.generate_test_runs yields a FAIL TestResult on `assert False`")
@@ -116,13 +116,11 @@ def _(module=module):
     expected_result = TestResult(
         test=t, outcome=TestOutcome.FAIL, error=mock.ANY, message=""
     )
-    expect(result).equals(expected_result)
-    expect(result.error).instance_of(AssertionError)
+    assert result == expected_result
+    assert isinstance(result.error, AssertionError)
 
 
-@test(
-    "Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator "
-)
+@test("Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator ")
 def _(skipped=skipped_test, example=example_test):
     suite = Suite(tests=[example, skipped])
 
@@ -132,7 +130,7 @@ def _(skipped=skipped_test, example=example_test):
         TestResult(skipped, TestOutcome.SKIP, None, ""),
     ]
 
-    expect(test_runs).equals(expected_runs)
+    assert test_runs == expected_runs
 
 
 @test("Suite.generate_test_runs fixture teardown code is ran in the expected order")
@@ -152,15 +150,15 @@ def _(module=module):
 
     @testable_test
     def my_test(fix_a=fix_a, fix_b=fix_b):
-        expect(fix_a).equals("a")
-        expect(fix_b).equals("b")
+        assert fix_a == "a"
+        assert fix_b == "b"
 
     suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
 
-    expect(events).equals([1, 2, 3])
+    assert events == [1, 2, 3]
 
 
 @test("Suite.generate_test_runs tears down deep fixtures")
@@ -186,15 +184,15 @@ def _(module=module):
 
     @testable_test
     def my_test(fix_a=fix_a, fix_c=fix_c):
-        expect(fix_a).equals("a")
-        expect(fix_c).equals("c")
+        assert fix_a == "a"
+        assert fix_c == "c"
 
     suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
     list(suite.generate_test_runs())
 
-    expect(events).equals([1, 2, 3, 4, 5])
+    assert events == [1, 2, 3, 4, 5]
 
 
 @test("Suite.generate_test_runs cached fixture isn't executed again")
@@ -222,7 +220,7 @@ def _(module=module):
 
     list(suite.generate_test_runs())
 
-    expect(events).equals([1, 2, 3])
+    assert events == [1, 2, 3]
 
 
 @test("Suite.generate_test_runs correctly tears down module scoped fixtures")
@@ -263,17 +261,15 @@ def _():
 
     list(suite.generate_test_runs())
 
-    expect(events).equals(
-        [
-            "resolve",  # Resolve at start of module1
-            "test1",
-            "teardown",  # Teardown at end of module1
-            "resolve",  # Resolve at start of module2
-            "test2",
-            "test3",
-            "teardown",  # Teardown at end of module2
-        ]
-    )
+    assert events == [
+        "resolve",  # Resolve at start of module1
+        "test1",
+        "teardown",  # Teardown at end of module1
+        "resolve",  # Resolve at start of module2
+        "test2",
+        "test3",
+        "teardown",  # Teardown at end of module2
+    ]
 
 
 @test("Suite.generate_test_runs resolves and tears down global fixtures once only")
@@ -308,15 +304,13 @@ def _():
 
     list(suite.generate_test_runs())
 
-    expect(events).equals(
-        [
-            "resolve",  # Resolve at start of run only
-            "test1",
-            "test2",
-            "test3",
-            "teardown",  # Teardown only at end of run
-        ]
-    )
+    assert events == [
+        "resolve",  # Resolve at start of run only
+        "test1",
+        "test2",
+        "test3",
+        "teardown",  # Teardown only at end of run
+    ]
 
 
 @test("Suite.generate_test_runs resolves mixed scope fixtures correctly")
@@ -369,25 +363,23 @@ def _():
 
     list(suite.generate_test_runs())
 
-    expect(events).equals(
-        [
-            "resolve a",  # global fixture so resolved at start
-            "resolve b",  # module fixture resolved at start of module1
-            "resolve c",  # test fixture resolved at start of test1
-            "test1",
-            "teardown c",  # test fixture teardown at start of test1
-            "resolve b",  # module fixture resolved at start of module2
-            "resolve c",  # test fixture resolved at start of test2
-            "test2",
-            "teardown c",  # test fixture teardown at start of test2
-            "teardown b",  # module fixture teardown at end of module2
-            "resolve c",  # test fixture resolved at start of test3
-            "test3",
-            "teardown c",  # test fixture teardown at end of test3
-            "teardown b",  # module fixture teardown at end of module1
-            "teardown a",  # global fixtures are torn down at the very end
-        ]
-    )
+    assert events == [
+        "resolve a",  # global fixture so resolved at start
+        "resolve b",  # module fixture resolved at start of module1
+        "resolve c",  # test fixture resolved at start of test1
+        "test1",
+        "teardown c",  # test fixture teardown at start of test1
+        "resolve b",  # module fixture resolved at start of module2
+        "resolve c",  # test fixture resolved at start of test2
+        "test2",
+        "teardown c",  # test fixture teardown at start of test2
+        "teardown b",  # module fixture teardown at end of module2
+        "resolve c",  # test fixture resolved at start of test3
+        "test3",
+        "teardown c",  # test fixture teardown at end of test3
+        "teardown b",  # module fixture teardown at end of module1
+        "teardown a",  # global fixtures are torn down at the very end
+    ]
 
 
 @skip("TODO: Determine how this should behave")
@@ -422,10 +414,10 @@ def _():
 
     # Ensure that each parameterised instance of the final test in the
     # module runs before the module-level teardown occurs.
-    expect(events).equals([
+    assert events == [
         "resolve a",
         "running test",
         "running test",
         "running test",
         "teardown a",
-    ])
+    ]
