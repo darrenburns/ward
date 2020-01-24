@@ -9,14 +9,19 @@ from ward.testing import Test
 
 class RewriteAssert(ast.NodeTransformer):
     def visit_Assert(self, node):
+        # Handle `assert x == y`
         if (
             isinstance(node.test, ast.Compare)
             and len(node.test.ops) == 1
             and isinstance(node.test.ops[0], ast.Eq)
         ):
+            if node.msg and isinstance(node.msg, ast.Str):
+                msg = node.msg.s
+            else:
+                msg = ""
             call = ast.Call(
                 func=ast.Name(id="assert_equal", ctx=ast.Load()),
-                args=[node.test.left, node.test.comparators[0]],
+                args=[node.test.left, node.test.comparators[0], ast.Str(s=msg)],
                 keywords=[],
             )
 
@@ -32,18 +37,21 @@ def rewrite_assertions_in_tests(tests: Iterable[Test]):
     return [rewrite_assertion(test) for test in tests]
 
 
-def assert_equal(a, b):
-    if a != b:
-        raise ExpectationFailed("%r != %r" % (a, b), [
-            Expected(
-                this=a,
-                op="equals",
-                that=b,
-                success=False,
-                op_args=(),
-                op_kwargs={},
-            )
-        ])
+def assert_equal(lhs_val, rhs_val, assert_msg):
+    if lhs_val != rhs_val:
+        raise ExpectationFailed(
+            "%r != %r" % (lhs_val, rhs_val),
+            [
+                Expected(
+                    this=lhs_val,
+                    op="equals",
+                    that=rhs_val,
+                    success=False,
+                    op_args=(),
+                    op_kwargs={},
+                )
+            ],
+        )
 
 
 def rewrite_assertion(test: Test) -> Test:
@@ -53,13 +61,15 @@ def rewrite_assertion(test: Test) -> Test:
 
     # Rewrite the AST of the code
     tree = ast.parse(code)
+    line_no = inspect.getsourcelines(test.fn)[1]
+    ast.increment_lineno(tree, line_no - 1)
 
     new_tree = RewriteAssert().visit(tree)
 
     # Reconstruct the test function
     new_mod_code_obj = compile(new_tree, code_obj.co_filename, "exec")
 
-    # TODO: Should we add the global namespace of all closures?
+    # TODO: This probably isn't correct for nested closures
     clo_glob = {}
     if test.fn.__closure__:
         clo_glob = test.fn.__closure__[0].cell_contents.__globals__
@@ -74,8 +84,7 @@ def rewrite_assertion(test: Test) -> Test:
             )
             new_test_func.ward_meta = test.fn.ward_meta
             return Test(
-                **{k: vars(test)[k] for k in vars(test) if k != "fn"},
-                fn=new_test_func,
+                **{k: vars(test)[k] for k in vars(test) if k != "fn"}, fn=new_test_func,
             )
 
     return test
