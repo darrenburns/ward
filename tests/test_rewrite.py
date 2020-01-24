@@ -14,4 +14,6 @@ def _(name):
 
 @test("assert statements give full diff without @using")
 def _(name=darren):
-    assert "darren" == name
+    a = {"darren": "burns"}
+    b = "aaaaa aaa abc"
+    assert "aaaaa bbb abc" == b, "hello world!"

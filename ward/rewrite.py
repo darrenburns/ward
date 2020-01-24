@@ -9,14 +9,20 @@ from ward.testing import Test
 
 class RewriteAssert(ast.NodeTransformer):
     def visit_Assert(self, node):
+        # Handle `assert x == y`
         if (
             isinstance(node.test, ast.Compare)
             and len(node.test.ops) == 1
             and isinstance(node.test.ops[0], ast.Eq)
         ):
+            if node.msg and isinstance(node.msg, ast.Str):
+                msg = node.msg.s
+            else:
+                msg = None
+            print(msg)
             call = ast.Call(
                 func=ast.Name(id="assert_equal", ctx=ast.Load()),
-                args=[node.test.left, node.test.comparators[0]],
+                args=[node.test.left, node.test.comparators[0], msg],
                 keywords=[],
             )
 
@@ -32,13 +38,13 @@ def rewrite_assertions_in_tests(tests: Iterable[Test]):
     return [rewrite_assertion(test) for test in tests]
 
 
-def assert_equal(a, b):
-    if a != b:
-        raise ExpectationFailed("%r != %r" % (a, b), [
+def assert_equal(lhs_val, rhs_val, assert_msg):
+    if lhs_val != rhs_val:
+        raise ExpectationFailed("%r != %r" % (lhs_val, rhs_val), [
             Expected(
-                this=a,
+                this=lhs_val,
                 op="equals",
-                that=b,
+                that=rhs_val,
                 success=False,
                 op_args=(),
                 op_kwargs={},
@@ -61,7 +67,7 @@ def rewrite_assertion(test: Test) -> Test:
     # Reconstruct the test function
     new_mod_code_obj = compile(new_tree, code_obj.co_filename, "exec")
 
-    # TODO: Should we add the global namespace of all closures?
+    # TODO: This probably isn't correct for nested closures
     clo_glob = {}
     if test.fn.__closure__:
         clo_glob = test.fn.__closure__[0].cell_contents.__globals__
@@ -70,7 +76,11 @@ def rewrite_assertion(test: Test) -> Test:
         if isinstance(const, types.CodeType):
             new_test_func = types.FunctionType(
                 const,
-                {"assert_equal": assert_equal, **test.fn.__globals__, **clo_glob},
+                {
+                    "assert_equal": assert_equal,
+                    **test.fn.__globals__,
+                    **clo_glob
+                },
                 test.fn.__name__,
                 test.fn.__defaults__,
             )
