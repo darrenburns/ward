@@ -1,11 +1,17 @@
-from ward import test
+from ward import test, using, fixture
 
 
-@test("[assert]")
-def _():
-    assert 1 == 2
+@fixture
+def darren():
+    return "darren"
 
 
-@test("another")
-def _():
-    assert 5 == 9
+@using(name=darren)
+@test("assert statements give full diff with @using")
+def _(name):
+    assert "darren" == name
+
+
+@test("assert statements give full diff without @using")
+def _(name=darren):
+    assert "darren" == name
