@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 
 from tests.test_suite import example_test
-from ward import expect, test, using, fixture
+from ward import test, using, fixture
 from ward.testing import TestOutcome, TestResult, each
 from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour, find_project_root
 
