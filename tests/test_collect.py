@@ -23,19 +23,19 @@ def tests_to_search(named_test=named_test):
 @test("search_generally matches on qualified test name")
 def _(tests=tests_to_search, named=named_test):
     results = search_generally(tests, query="my_module.named")
-    expect(list(results)).equals([named])
+    assert list(results) == [named]
 
 
 @test("search_generally matches on test name alone")
 def _(tests=tests_to_search, named=named_test):
     results = search_generally(tests, query="named")
-    expect(list(results)).equals([named])
+    assert list(results) == [named]
 
 
 @test("search_generally query='fox' returns tests with 'fox' in the body")
 def _(tests=tests_to_search, named=named_test):
     results = search_generally(tests, query="fox")
-    expect(list(results)).equals([named])
+    assert list(results) == [named]
 
 
 @test("search_generally returns an empty generator when no tests match query")
@@ -51,4 +51,4 @@ def _(
     rv=each(True, False),
 ):
     module = ModuleInfo(ModuleFinder(), module_name, False)
-    expect(is_test_module(module)).equals(rv)
+    assert is_test_module(module) == rv
