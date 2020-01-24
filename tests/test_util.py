@@ -21,14 +21,14 @@ def _(example):
     ]
     exit_code = get_exit_code(test_results)
 
-    expect(exit_code).equals(ExitCode.SUCCESS)
+    assert exit_code == ExitCode.SUCCESS
 
 
 @test("get_exit_code returns ExitCode.SUCCESS when no test results")
 def _():
     exit_code = get_exit_code([])
 
-    expect(exit_code).equals(ExitCode.NO_TESTS_FOUND)
+    assert exit_code == ExitCode.NO_TESTS_FOUND
 
 
 @test("get_exit_code returns ExitCode.FAILED when XPASS in test results")
@@ -39,7 +39,7 @@ def _(example=example_test):
     ]
     exit_code = get_exit_code(test_results)
 
-    expect(exit_code).equals(ExitCode.FAILED)
+    assert exit_code == ExitCode.FAILED
 
 
 @fixture
@@ -52,7 +52,7 @@ def _(
     input=s, num_chars=each(20, 11, 10, 5), expected=each(s, s, "hello w...", "he...")
 ):
     result = truncate(input, num_chars)
-    expect(result).equals(expected)
+    assert result == expected
 
 
 @test("outcome_to_colour({outcome}) returns '{colour}'")
@@ -60,14 +60,14 @@ def _(
     outcome=each(TestOutcome.PASS, TestOutcome.SKIP, TestOutcome.FAIL, TestOutcome.XFAIL, TestOutcome.XPASS),
     colour=each("green", "blue", "red", "magenta", "yellow"),
 ):
-    expect(outcome_to_colour(outcome)).equals(colour)
+    assert outcome_to_colour(outcome) == colour
 
 
 @test("find_project_root returns the root dir if no paths supplied")
 def _():
     project_root = find_project_root([])
     fs_root = os.path.normpath(os.path.abspath(os.sep))
-    expect(project_root).equals(Path(fs_root))
+    assert project_root == Path(fs_root)
 
 
 def make_project(root_file: str):
@@ -103,5 +103,5 @@ def fake_project_git():
 @test("find_project_root finds project root with '{root_file}' file")
 def _(root_file, project):
     root = find_project_root([project / "a/b/c", project / "a/d"])
-    expect(root.resolve()).equals(project.resolve())
-    expect((root / root_file).exists()).equals(True)
+    assert root.resolve() == project.resolve()
+    assert (root / root_file).exists() == True
