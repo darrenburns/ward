@@ -1,3 +1,4 @@
+import inspect
 import os
 import platform
 import sys
@@ -8,6 +9,9 @@ from textwrap import wrap
 from typing import Any, Dict, Generator, List, Optional
 
 from colorama import Fore, Style
+from pygments import highlight
+from pygments.formatters.terminal import TerminalFormatter
+from pygments.lexers.python import PythonLexer
 from termcolor import colored, cprint
 
 from ward._ward_version import __version__
@@ -160,7 +164,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
+                        + rel_path[final_slash_idx + 1:]
                         + ": "
                     )
                 else:
@@ -311,15 +315,15 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
         if isinstance(err, ExpectationFailed):
-            print(
-                f"   Given {truncate(repr(err.history[0].this), num_chars=self.terminal_size.width - 24)}\n"
-            )
-
-            for expect in err.history:
-                self.print_expect_chain_item(expect)
-
             last_check = err.history[-1].op  # the check that failed
             if last_check == "equals":
+                print(
+                    highlight(
+                        inspect.getsource(test_result.test.fn),
+                        PythonLexer(),
+                        TerminalFormatter(),
+                    )
+                )
                 self.print_failure_equals(err)
         else:
             self.print_traceback(err)
