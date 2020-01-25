@@ -1,13 +1,13 @@
 from modulefinder import ModuleFinder
 from pkgutil import ModuleInfo
 
-from ward import test, fixture, expect, raises
+from ward import test, fixture, raises
 from ward.collect import search_generally, is_test_module
 from ward.testing import Test, each
 
 
 def named():
-    expect("fox").equals("fox")
+    assert "fox" == "fox"
 
 
 @fixture
