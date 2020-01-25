@@ -2,7 +2,7 @@ import ast
 
 from tests.test_suite import testable_test
 from ward import test, fixture, raises
-from ward.expect import TestFailure, assert_equal
+from ward.expect import TestFailure, assert_equal, assert_not_equal
 from ward.rewrite import rewrite_assertions_in_tests, RewriteAssert
 from ward.testing import Test, each
 
@@ -31,15 +31,23 @@ def failing():
     )
 
 
-@test("assert_equal doesnt raise if lhs == rhs")
-def _():
-    assert_equal(1, 1, "")
+@test("{func.__name__}({lhs}, {rhs}) is None")
+def _(
+    func=each(assert_equal, assert_not_equal),
+    lhs=each(1, 1),
+    rhs=each(1, 2),
+):
+    assert func(lhs, rhs, "") is None
 
 
-@test("assert_equal raises TestFailure if lhs != rhs")
-def _():
+@test("{func.__name__}({lhs}, {rhs}) raises TestFailure")
+def _(
+    func=each(assert_equal, assert_not_equal),
+    lhs=each(1, 1),
+    rhs=each(2, 1),
+):
     with raises(TestFailure):
-        assert_equal(1, 2, "")
+        func(lhs, rhs, "")
 
 
 @test("rewrite_assertions_in_tests returns all tests, keeping metadata")
