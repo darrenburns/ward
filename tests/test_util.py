@@ -6,7 +6,13 @@ from pathlib import Path
 from tests.test_suite import example_test
 from ward import test, using, fixture
 from ward.testing import TestOutcome, TestResult, each
-from ward.util import ExitCode, get_exit_code, truncate, outcome_to_colour, find_project_root
+from ward.util import (
+    ExitCode,
+    get_exit_code,
+    truncate,
+    outcome_to_colour,
+    find_project_root,
+)
 
 
 @test(
@@ -57,7 +63,13 @@ def _(
 
 @test("outcome_to_colour({outcome}) returns '{colour}'")
 def _(
-    outcome=each(TestOutcome.PASS, TestOutcome.SKIP, TestOutcome.FAIL, TestOutcome.XFAIL, TestOutcome.XPASS),
+    outcome=each(
+        TestOutcome.PASS,
+        TestOutcome.SKIP,
+        TestOutcome.FAIL,
+        TestOutcome.XFAIL,
+        TestOutcome.XPASS,
+    ),
     colour=each("green", "blue", "red", "magenta", "yellow"),
 ):
     assert outcome_to_colour(outcome) == colour

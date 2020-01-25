@@ -47,8 +47,7 @@ def _(tests=tests_to_search):
 
 @test("is_test_module(<module: '{module_name}'>) returns {rv}")
 def _(
-    module_name=each("test_apples", "apples"),
-    rv=each(True, False),
+    module_name=each("test_apples", "apples"), rv=each(True, False),
 ):
     module = ModuleInfo(ModuleFinder(), module_name, False)
     assert is_test_module(module) == rv

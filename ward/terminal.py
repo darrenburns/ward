@@ -166,7 +166,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1:]
+                        + rel_path[final_slash_idx + 1 :]
                         + ": "
                     )
                 else:
@@ -335,7 +335,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
             if err.operator == Operator.Equals:
                 src = "".join(src_lines)
-                src = highlight(src, PythonLexer(), TerminalFormatter(), )
+                src = highlight(src, PythonLexer(), TerminalFormatter(),)
                 src = f"".join(
                     [gutter(i) + l for i, l in enumerate(src.splitlines(keepends=True))]
                 )

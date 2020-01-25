@@ -71,7 +71,9 @@ def _(tmp=temp_config_missing):
     assert conf == {}
 
 
-@test("read_config_toml converts options to click argument names (converts/removes hyphens)")
+@test(
+    "read_config_toml converts options to click argument names (converts/removes hyphens)"
+)
 def _(tmp=temp_config_file_hyphens):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
     assert conf == {"some_key": "some-value"}

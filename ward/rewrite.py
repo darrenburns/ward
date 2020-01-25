@@ -1,7 +1,7 @@
 import ast
 import inspect
 import types
-from typing import Iterable
+from typing import Iterable, List
 
 from ward.expect import TestFailure, Operator
 from ward.testing import Test
@@ -33,7 +33,7 @@ class RewriteAssert(ast.NodeTransformer):
         return node
 
 
-def rewrite_assertions_in_tests(tests: Iterable[Test]):
+def rewrite_assertions_in_tests(tests: Iterable[Test]) -> List[Test]:
     return [rewrite_assertion(test) for test in tests]
 
 

@@ -120,7 +120,9 @@ def _(module=module):
     assert isinstance(result.error, AssertionError)
 
 
-@test("Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator ")
+@test(
+    "Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator "
+)
 def _(skipped=skipped_test, example=example_test):
     suite = Suite(tests=[example, skipped])
 
@@ -404,11 +406,7 @@ def _():
     def test_1(a=each(a, "second", a)):
         events.append("running test")
 
-    suite = Suite(
-        tests=[
-            Test(fn=test_1, module_name="module1"),
-        ]
-    )
+    suite = Suite(tests=[Test(fn=test_1, module_name="module1"),])
 
     list(suite.generate_test_runs())
 
