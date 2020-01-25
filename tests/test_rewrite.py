@@ -55,7 +55,7 @@ def _(p=passing, f=failing):
     assert [meta(test) for test in in_tests] == [meta(test) for test in out_tests]
 
 
-@test("RewriteAssert.visit_Assert doesn't touch `{src}`")
+@test("RewriteAssert.visit_Assert doesn't transform `{src}`")
 def _(
     src=each(
         "assert x",
@@ -84,7 +84,7 @@ def _(src="assert 1 == 2"):
     assert out_tree.value.func.id == "assert_equal"
     assert out_tree.value.args[0].n == 1
     assert out_tree.value.args[1].n == 2
-    assert out_tree.value.args[2].s == ''
+    assert out_tree.value.args[2].s == ""
 
 
 @test("RewriteAssert.visit_Assert transforms `{src}`")
@@ -92,4 +92,4 @@ def _(src="assert 1 == 2, 'msg'"):
     in_tree = ast.parse(src).body[0]
     pprint(in_tree)
     out_tree = RewriteAssert().visit(in_tree)
-    assert out_tree.value.args[2].s == 'msg'
+    assert out_tree.value.args[2].s == "msg"
