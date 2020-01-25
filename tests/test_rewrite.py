@@ -56,7 +56,17 @@ def _(p=passing, f=failing):
 
 
 @test("RewriteAssert.visit_Assert doesn't touch `{src}`")
-def _(src=each("assert x", "assert x in y", "assert x is y")):
+def _(
+    src=each(
+        "assert x",
+        "assert x in y",
+        "assert x is y",
+        "assert f(x)",
+        "assert x + y + z",
+        "print(x)",
+        "yield",
+    )
+):
     in_tree = ast.parse(src).body[0]
     out_tree = RewriteAssert().visit(in_tree)
     assert in_tree == out_tree
