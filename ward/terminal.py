@@ -16,7 +16,7 @@ from termcolor import colored, cprint
 
 from ward._ward_version import __version__
 from ward.diff import make_diff
-from ward.expect import TestFailure, Operator
+from ward.expect import TestFailure, Comparison
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
 from ward.util import ExitCode, get_exit_code, outcome_to_colour
@@ -166,7 +166,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
+                        + rel_path[final_slash_idx + 1:]
                         + ": "
                     )
                 else:
@@ -333,14 +333,16 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 else:
                     return lightblack(f"{rv} | ")
 
-            if err.operator == Operator.Equals:
+            if err.operator in Comparison:
                 src = "".join(src_lines)
-                src = highlight(src, PythonLexer(), TerminalFormatter(),)
+                src = highlight(src, PythonLexer(), TerminalFormatter(), )
                 src = f"".join(
                     [gutter(i) + l for i, l in enumerate(src.splitlines(keepends=True))]
                 )
                 print(indent(src, " " * CODE_INDENT))
-                self.print_failure_equals(err.lhs, err.rhs)
+
+                if err.operator == Comparison.Equals:
+                    self.print_failure_equals(err.lhs, err.rhs)
         else:
             self.print_traceback(err)
 

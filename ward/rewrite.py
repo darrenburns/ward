@@ -3,32 +3,51 @@ import inspect
 import types
 from typing import Iterable, List
 
-from ward.expect import assert_equal
+from ward.expect import assert_equal, assert_not_equal
 from ward.testing import Test
+
+assert_func_namespace = {
+    "assert_equal": assert_equal,
+    "assert_not_equal": assert_not_equal,
+}
+
+
+def get_assertion_msg(node: ast.expr) -> str:
+    if node.msg and isinstance(node.msg, ast.Str):
+        msg = node.msg.s
+    else:
+        msg = ""
+    return msg
+
+
+def make_call_node(node: ast.expr, func_name: str) -> ast.Expr:
+    msg = get_assertion_msg(node)
+    call = ast.Call(
+        func=ast.Name(id=func_name, ctx=ast.Load()),
+        args=[node.test.left, node.test.comparators[0], ast.Str(s=msg)],
+        keywords=[],
+    )
+    new_node = ast.Expr(value=call)
+    ast.copy_location(new_node, node)
+    ast.fix_missing_locations(new_node)
+    return new_node
+
+
+def is_comparison(node: ast.expr) -> bool:
+    return isinstance(node.test, ast.Compare) and len(node.test.ops) == 1
+
+
+def is_comparison_type(node: ast.expr, type) -> bool:
+    return isinstance(node.test.ops[0], type)
 
 
 class RewriteAssert(ast.NodeTransformer):
     def visit_Assert(self, node):
-        # Handle `assert x == y`
-        if (
-            isinstance(node.test, ast.Compare)
-            and len(node.test.ops) == 1
-            and isinstance(node.test.ops[0], ast.Eq)
-        ):
-            if node.msg and isinstance(node.msg, ast.Str):
-                msg = node.msg.s
-            else:
-                msg = ""
-            call = ast.Call(
-                func=ast.Name(id="assert_equal", ctx=ast.Load()),
-                args=[node.test.left, node.test.comparators[0], ast.Str(s=msg)],
-                keywords=[],
-            )
-
-            new_node = ast.Expr(value=call)
-            ast.copy_location(new_node, node)
-            ast.fix_missing_locations(new_node)
-            return new_node
+        if is_comparison(node):
+            if is_comparison_type(node, ast.Eq):
+                return make_call_node(node, assert_equal.__name__)
+            elif is_comparison_type(node, ast.NotEq):
+                return make_call_node(node, assert_not_equal.__name__)
 
         return node
 
@@ -61,7 +80,7 @@ def rewrite_assertion(test: Test) -> Test:
         if isinstance(const, types.CodeType):
             new_test_func = types.FunctionType(
                 const,
-                {"assert_equal": assert_equal, **test.fn.__globals__, **clo_glob},
+                {**assert_func_namespace, **test.fn.__globals__, **clo_glob},
                 test.fn.__name__,
                 test.fn.__defaults__,
             )

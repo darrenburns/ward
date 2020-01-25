@@ -18,8 +18,9 @@ class raises:
         return True
 
 
-class Operator(Enum):
+class Comparison(Enum):
     Equals = "=="
+    NotEquals = "!="
     In = "in"
 
 
@@ -30,7 +31,7 @@ class TestFailure(Exception):
         lhs: Any,
         rhs: Any,
         error_line: int,
-        operator: Operator,
+        operator: Comparison,
         assert_msg: str,
     ):
         self.lhs = lhs
@@ -49,6 +50,19 @@ def assert_equal(lhs_val, rhs_val, assert_msg):
             lhs=lhs_val,
             rhs=rhs_val,
             error_line=error_line_no,
-            operator=Operator.Equals,
+            operator=Comparison.Equals,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_not_equal(lhs_val, rhs_val, assert_msg):
+    if lhs_val == rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} == {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.NotEquals,
             assert_msg=assert_msg,
         )
