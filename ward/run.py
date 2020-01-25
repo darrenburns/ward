@@ -40,7 +40,7 @@ def set_defaults_from_config(
     config = read_config_toml(project_root, CONFIG_FILE)
 
     # Handle params where multiple=True
-    config_paths = config.get("path")
+    config_paths = config.get("path", ".")
     if not supplied_paths:
         if config_paths and isinstance(config_paths, list):
             config["path"] = config_paths
