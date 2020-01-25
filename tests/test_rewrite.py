@@ -65,7 +65,6 @@ def _(p=passing, f=failing):
 def _(
     src=each(
         "assert x",
-        "assert x in y",
         "assert x is y",
         "assert f(x)",
         "assert x + y + z",
@@ -83,8 +82,8 @@ def _(
 
 @test("RewriteAssert.visit_Assert transforms `{src}` correctly")
 def _(
-    src=each("assert 1 == 2", "assert 1 != 2"),
-    fn=each("assert_equal", "assert_not_equal"),
+    src=each("assert x == y", "assert x != y", "assert x in y"),
+    fn=each("assert_equal", "assert_not_equal", "assert_in"),
 ):
     in_tree = ast.parse(src).body[0]
     out_tree = RewriteAssert().visit(in_tree)
@@ -94,8 +93,8 @@ def _(
     assert out_tree.value.lineno == in_tree.lineno
     assert out_tree.value.col_offset == in_tree.col_offset
     assert out_tree.value.func.id == fn
-    assert out_tree.value.args[0].n == 1
-    assert out_tree.value.args[1].n == 2
+    assert out_tree.value.args[0].id == "x"
+    assert out_tree.value.args[1].id == "y"
     assert out_tree.value.args[2].s == ""
 
 

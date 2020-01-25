@@ -66,3 +66,16 @@ def assert_not_equal(lhs_val, rhs_val, assert_msg):
             operator=Comparison.NotEquals,
             assert_msg=assert_msg,
         )
+
+
+def assert_in(lhs_val, rhs_val, assert_msg):
+    if lhs_val not in rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} is not in {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.In,
+            assert_msg=assert_msg,
+        )
