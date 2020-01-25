@@ -3,7 +3,7 @@ import inspect
 import types
 from typing import Iterable, List
 
-from ward.expect import TestFailure, Operator
+from ward.expect import assert_equal
 from ward.testing import Test
 
 
@@ -35,19 +35,6 @@ class RewriteAssert(ast.NodeTransformer):
 
 def rewrite_assertions_in_tests(tests: Iterable[Test]) -> List[Test]:
     return [rewrite_assertion(test) for test in tests]
-
-
-def assert_equal(lhs_val, rhs_val, assert_msg):
-    if lhs_val != rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
-        raise TestFailure(
-            f"{lhs_val} != {rhs_val}",
-            lhs=lhs_val,
-            rhs=rhs_val,
-            error_line=error_line_no,
-            operator=Operator.Equals,
-            assert_msg=assert_msg,
-        )
 
 
 def rewrite_assertion(test: Test) -> Test:

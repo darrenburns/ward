@@ -1,3 +1,4 @@
+import inspect
 from enum import Enum
 from typing import Type, Any
 
@@ -38,3 +39,16 @@ class TestFailure(Exception):
         self.error_line = error_line
         self.operator = operator
         self.assert_msg = assert_msg
+
+
+def assert_equal(lhs_val, rhs_val, assert_msg):
+    if lhs_val != rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} != {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Operator.Equals,
+            assert_msg=assert_msg,
+        )

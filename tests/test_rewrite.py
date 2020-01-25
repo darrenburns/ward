@@ -2,8 +2,8 @@ import ast
 
 from tests.test_suite import testable_test
 from ward import test, fixture, raises
-from ward.expect import TestFailure
-from ward.rewrite import assert_equal, rewrite_assertions_in_tests, RewriteAssert
+from ward.expect import TestFailure, assert_equal
+from ward.rewrite import rewrite_assertions_in_tests, RewriteAssert
 from ward.testing import Test, each
 
 
