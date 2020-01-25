@@ -1,7 +1,5 @@
 import ast
 
-from astpretty import pprint
-
 from tests.test_suite import testable_test
 from ward import test, fixture, raises
 from ward.expect import TestFailure
@@ -90,6 +88,5 @@ def _(src="assert 1 == 2"):
 @test("RewriteAssert.visit_Assert transforms `{src}`")
 def _(src="assert 1 == 2, 'msg'"):
     in_tree = ast.parse(src).body[0]
-    pprint(in_tree)
     out_tree = RewriteAssert().visit(in_tree)
     assert out_tree.value.args[2].s == "msg"
