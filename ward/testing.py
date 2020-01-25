@@ -349,25 +349,26 @@ anonymous_tests: Dict[str, List[Callable]] = defaultdict(list)
 
 def test(description: str, *args, **kwargs):
     def decorator_test(func):
-        mod_name = func.__module__
+        unwrapped = inspect.unwrap(func)
+        mod_name = unwrapped.__module__
 
         force_path = kwargs.get("_force_path")
         if force_path:
             path = force_path
         else:
-            path = Path(inspect.getfile(inspect.unwrap(func))).absolute()
+            path = Path(inspect.getfile(unwrapped)).absolute()
 
-        if hasattr(func, "ward_meta"):
-            func.ward_meta.description = description
-            func.ward_meta.path = path
+        if hasattr(unwrapped, "ward_meta"):
+            unwrapped.ward_meta.description = description
+            unwrapped.ward_meta.path = path
         else:
-            func.ward_meta = WardMeta(description=description, path=path)
+            unwrapped.ward_meta = WardMeta(description=description, path=path)
 
         collect_into = kwargs.get("_collect_into")
         if collect_into is not None:
-            collect_into[mod_name].append(func)
+            collect_into[mod_name].append(unwrapped)
         else:
-            anonymous_tests[mod_name].append(func)
+            anonymous_tests[mod_name].append(unwrapped)
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

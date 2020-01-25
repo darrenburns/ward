@@ -5,7 +5,7 @@ import sys
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
-from textwrap import wrap
+from textwrap import wrap, indent
 from typing import Any, Dict, Generator, List, Optional
 
 from colorama import Fore, Style
@@ -16,10 +16,12 @@ from termcolor import colored, cprint
 
 from ward._ward_version import __version__
 from ward.diff import make_diff
-from ward.expect import ExpectationFailed, Expected
+from ward.expect import TestFailure, Operator
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
-from ward.util import ExitCode, get_exit_code, outcome_to_colour, truncate
+from ward.util import ExitCode, get_exit_code, outcome_to_colour
+
+CODE_INDENT = 3
 
 
 def print_no_break(e: Any):
@@ -314,29 +316,36 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
-        if isinstance(err, ExpectationFailed):
-            last_check = err.history[-1].op  # the check that failed
-            if last_check == "equals":
-                print(
-                    highlight(
-                        inspect.getsource(test_result.test.fn),
-                        PythonLexer(),
-                        TerminalFormatter(),
-                    )
+        if isinstance(err, TestFailure):
+            src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
+
+            if src_lines[-1].strip() == "":
+                src_lines = src_lines[:-1]
+
+            gutter_width = len(str(len(src_lines) + line_num))
+
+            def gutter(i):
+                return lightblack(f"{str(i + line_num):>{gutter_width}} | ")
+
+            if err.operator == Operator.Equals:
+                src = "".join(src_lines)
+                src = highlight(src, PythonLexer(), TerminalFormatter(), )
+                src = f"".join(
+                    [gutter(i) + l for i, l in enumerate(src.splitlines(keepends=True))]
                 )
-                self.print_failure_equals(err)
+                print(indent(src, " " * CODE_INDENT))
+                self.print_failure_equals(err.lhs, err.rhs)
         else:
             self.print_traceback(err)
 
         print(Style.RESET_ALL)
 
-    def print_failure_equals(self, err):
-        expect = err.history[-1]
+    def print_failure_equals(self, lhs, rhs):
         print(
-            f"\n   Showing diff of {colored('expected value', color='green')}"
-            f" vs {colored('actual value', color='red')}:\n"
+            f"   Showing diff of {colored('LHS', color='green')}"
+            f" vs {colored('RHS', color='red')}:\n"
         )
-        diff = make_diff(expect.that, expect.this, width=self.terminal_size.width - 24)
+        diff = make_diff(lhs, rhs, width=self.terminal_size.width - 24)
         print(diff)
 
     def print_traceback(self, err):
@@ -353,16 +362,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
                         print(content)
         else:
             print(str(err))
-
-    def print_expect_chain_item(self, expect: Expected):
-        checkbox = self.result_checkbox(expect)
-        that_width = self.terminal_size.width - 32
-        if expect.op == "satisfies" and hasattr(expect.that, "__name__"):
-            expect_that = truncate(expect.that.__name__, num_chars=that_width)
-        else:
-            that = repr(expect.that) if expect.that else ""
-            expect_that = truncate(that, num_chars=that_width)
-        print(f"    {checkbox} it {expect.op} {expect_that}{Style.RESET_ALL}")
 
     def result_checkbox(self, expect):
         if expect.success:

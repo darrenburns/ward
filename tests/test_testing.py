@@ -41,6 +41,14 @@ def _(anonymous_test=anonymous_test):
     assert anonymous_test.name == "_"
 
 
+@test("dict comparison")
+def _():
+    left = {"brand": "Ford", "model": "Mustang", "year": 1964}
+    right = {"brand": "Toyota", "model": "Mustang", "year": 2001}
+
+    assert left == right
+
+
 @test("Test.qualified_name should return `module_name.function_name`")
 def _():
     assert t.qualified_name == f"{mod}.{f.__name__}"

@@ -1,4 +1,3 @@
-import ast
 import importlib
 import importlib.util
 import inspect
@@ -10,7 +9,6 @@ from pathlib import Path
 from typing import Any, Callable, Generator, Iterable, List, Set
 
 from ward.models import WardMeta
-from ward.rewrite import RewriteAssert
 from ward.testing import Test, anonymous_tests
 
 
