@@ -10,9 +10,9 @@ A modern Python test framework designed to help you find and fix flaws faster.
 
 **Descriptive test names:** describe what your tests do using strings, not function names.
 ```python
-@test("1 + 2 gives 3")
+@test("1 + 2 == 3")
 def _():
-    expect(1 + 2).equals(3)
+    assert 1 + 2 == 3
 ```
 
 **Modular test dependencies:** manage test setup/teardown code using fixtures that rely on Python's import system, not
@@ -24,10 +24,10 @@ def user():
     
 @test("the user is called darren")
 def _(u=user):
-    expect(u.name).equals("darren")
+    assert u.name == "darren"
 ```
 
-**Fast, minimal overhead:** roughly half the test run overhead of pytest. 
+
 
 **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
@@ -43,10 +43,8 @@ def _(
     expected=each(s, s, "hello w...", "he..."),
 ):
     result = truncate(text, num_chars)
-    expect(result).equals(expected)
+    assert result == expected
 ```
-
-**Expect API:** A simple but powerful assertion API inspired by [Jest](https://jestjs.io).
 
 **Cross platform:** Tested on Mac OS, Linux, and Windows.
 

@@ -1,3 +1,4 @@
+import dis
 import sys
 from pathlib import Path
 from timeit import default_timer
@@ -14,6 +15,7 @@ from ward.collect import (
     search_generally,
 )
 from ward.config import read_config_toml
+from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite
 from ward.util import get_exit_code, find_project_root
@@ -109,6 +111,10 @@ def run(
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules)
     tests = list(search_generally(unfiltered_tests, query=search))
+
+    # Rewrite assertions in each test
+    tests = rewrite_assertions_in_tests(tests)
+
     time_to_collect = default_timer() - start_run
 
     suite = Suite(tests=tests)

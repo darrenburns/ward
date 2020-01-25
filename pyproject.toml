@@ -15,6 +15,7 @@ requires = [
     "dataclasses>=0.1; python_version < '3.7'",
     "click>=7.0",
     "toml>=0.9.4",
+    "pygments>=2.4.2",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

@@ -1,7 +1,7 @@
 from typing import List
 
 from tests.test_suite import testable_test
-from ward import expect, fixture, test, Scope
+from ward import fixture, test, Scope
 from ward.fixtures import Fixture, FixtureCache, using
 from ward.testing import Test
 
@@ -20,7 +20,7 @@ def _(f=exception_raising_fixture):
     cache = FixtureCache()
     cache.cache_fixture(f, "test_id")
 
-    expect(cache.get(f.key, Scope.Test, "test_id")).equals(f)
+    assert cache.get(f.key, Scope.Test, "test_id") == f
 
 
 @fixture
@@ -87,8 +87,8 @@ def _(cache: FixtureCache = cache, t: Test = my_test, default_fixture=default_fi
 
     fixture = list(fixtures_at_scope.values())[0]
 
-    expect(fixtures_at_scope).has_length(1)
-    expect(fixture.fn).equals(default_fixture)
+    assert len(fixtures_at_scope) == 1
+    assert fixture.fn == default_fixture
 
 
 @test("FixtureCache.get_fixtures_at_scope correct for Scope.Module")
@@ -97,8 +97,8 @@ def _(cache: FixtureCache = cache, module_fixture=module_fixture):
 
     fixture = list(fixtures_at_scope.values())[0]
 
-    expect(fixtures_at_scope).has_length(1)
-    expect(fixture.fn).equals(module_fixture)
+    assert len(fixtures_at_scope) == 1
+    assert fixture.fn == module_fixture
 
 
 @test("FixtureCache.get_fixtures_at_scope correct for Scope.Global")
@@ -107,8 +107,8 @@ def _(cache: FixtureCache = cache, global_fixture=global_fixture):
 
     fixture = list(fixtures_at_scope.values())[0]
 
-    expect(fixtures_at_scope).has_length(1)
-    expect(fixture.fn).equals(global_fixture)
+    assert len(fixtures_at_scope) == 1
+    assert fixture.fn == global_fixture
 
 
 @test("FixtureCache.teardown_fixtures_for_scope removes Test fixtures from cache")
@@ -117,14 +117,14 @@ def _(cache: FixtureCache = cache, t: Test = my_test):
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Test, t.id)
 
-    expect(fixtures_at_scope).equals({})
+    assert fixtures_at_scope == {}
 
 
 @test("FixtureCache.teardown_fixtures_for_scope runs teardown for Test fixtures")
 def _(cache: FixtureCache = cache, t: Test = my_test, events: List = recorded_events):
     cache.teardown_fixtures_for_scope(Scope.Test, t.id)
 
-    expect(events).equals(["teardown t"])
+    assert events == ["teardown t"]
 
 
 @test("FixtureCache.teardown_fixtures_for_scope removes Module fixtures from cache")
@@ -133,14 +133,14 @@ def _(cache: FixtureCache = cache,):
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)
 
-    expect(fixtures_at_scope).equals({})
+    assert fixtures_at_scope == {}
 
 
 @test("FixtureCache.teardown_fixtures_for_scope runs teardown for Module fixtures")
 def _(cache: FixtureCache = cache, events: List = recorded_events):
     cache.teardown_fixtures_for_scope(Scope.Module, testable_test.path)
 
-    expect(events).equals(["teardown m"])
+    assert events == ["teardown m"]
 
 
 @test("FixtureCache.teardown_global_fixtures removes Global fixtures from cache")
@@ -149,14 +149,14 @@ def _(cache: FixtureCache = cache,):
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Global, Scope.Global)
 
-    expect(fixtures_at_scope).equals({})
+    assert fixtures_at_scope == {}
 
 
 @test("FixtureCache.teardown_global_fixtures runs teardown of all Global fixtures")
 def _(cache: FixtureCache = cache, events: List = recorded_events):
     cache.teardown_global_fixtures()
 
-    expect(events).equals(["teardown g"])
+    assert events == ["teardown g"]
 
 
 @test("using decorator sets bound args correctly")
@@ -173,4 +173,4 @@ def _():
     bound_args = t.ward_meta.bound_args
     expected = {"a": fixture_a, "b": "val"}
 
-    expect(bound_args.arguments).equals(expected)
+    assert bound_args.arguments == expected
