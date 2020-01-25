@@ -166,7 +166,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
+                        + rel_path[final_slash_idx + 1:]
                         + ": "
                     )
                 else:
@@ -315,21 +315,27 @@ class SimpleTestResultWrite(TestResultWriterBase):
         )
 
     def output_why_test_failed(self, test_result: TestResult):
-        err = test_result.error
-        if isinstance(err, TestFailure):
+        if isinstance(test_result.error, TestFailure):
+            err = test_result.error
             src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
 
+            # TODO: Only include lines up to where the failure occurs
             if src_lines[-1].strip() == "":
                 src_lines = src_lines[:-1]
 
             gutter_width = len(str(len(src_lines) + line_num))
 
             def gutter(i):
-                return lightblack(f"{str(i + line_num):>{gutter_width}} | ")
+                offset_line_num = i + line_num
+                rv = f"{str(offset_line_num):>{gutter_width}}"
+                if offset_line_num == err.error_line:
+                    return colored(f"{rv} ! ", color="red")
+                else:
+                    return lightblack(f"{rv} | ")
 
             if err.operator == Operator.Equals:
                 src = "".join(src_lines)
-                src = highlight(src, PythonLexer(), TerminalFormatter(),)
+                src = highlight(src, PythonLexer(), TerminalFormatter(), )
                 src = f"".join(
                     [gutter(i) + l for i, l in enumerate(src.splitlines(keepends=True))]
                 )
