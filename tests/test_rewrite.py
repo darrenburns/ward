@@ -61,6 +61,9 @@ def _(
         "assert x is y",
         "assert f(x)",
         "assert x + y + z",
+        "assert 2 > 1",
+        "assert 1 < 2 < 3",
+        "assert 1 == 1 == 3",
         "print(x)",
         "yield",
     )
@@ -70,7 +73,7 @@ def _(
     assert in_tree == out_tree
 
 
-@test("RewriteAssert.visit_Assert transforms `{src}`")
+@test("RewriteAssert.visit_Assert transforms `{src}` correctly")
 def _(src="assert 1 == 2"):
     in_tree = ast.parse(src).body[0]
     out_tree = RewriteAssert().visit(in_tree)
