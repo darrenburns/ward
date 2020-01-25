@@ -46,9 +46,11 @@ def _():
 def _(p=passing, f=failing):
     in_tests = [p, f]
     out_tests = rewrite_assertions_in_tests(in_tests)
-    assert [(test.description, test.id, test.module_name) for test in in_tests] == [
-        (test.description, test.id, test.module_name) for test in out_tests
-    ]
+
+    def meta(test):
+        return (test.description, test.id, test.module_name, test.fn.ward_meta)
+
+    assert [meta(test) for test in in_tests] == [meta(test) for test in out_tests]
 
 
 @test("RewriteAssert.visit_Assert doesn't touch `assert x`")
