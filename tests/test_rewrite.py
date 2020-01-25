@@ -1,5 +1,6 @@
 from tests.test_suite import testable_test
-from ward import test, fixture
+from ward import test, fixture, raises
+from ward.expect import TestFailure
 from ward.rewrite import assert_equal
 from ward.testing import Test
 
@@ -21,3 +22,9 @@ def passing():
 @test("assert_equal doesnt raise if lhs == rhs")
 def _():
     assert_equal(1, 1, "")
+
+
+@test("assert_equal raises TestFailure if lhs != rhs")
+def _():
+    with raises(TestFailure):
+        assert_equal(1, 2, "")
