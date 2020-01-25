@@ -1,19 +1,23 @@
-from ward import test, using, fixture
+from tests.test_suite import testable_test
+from ward import test, fixture
+from ward.rewrite import assert_equal
+from ward.testing import Test
+
+
+@testable_test
+def passing_fn():
+    assert 1 == 1
 
 
 @fixture
-def darren():
-    return "darren"
+def passing():
+    yield Test(
+        fn=passing_fn,
+        module_name="m",
+        id="id",
+    )
 
 
-@using(name=darren)
-@test("assert statements give full diff with @using")
-def _(name):
-    assert "darren" == name
-
-
-@test("assert statements give full diff without @using")
-def _(name=darren):
-    a = {"darren": "burns"}
-    b = "aaaaa aaa abc"
-    assert "aaaaa aaa abc" == b, "hello world!"
+@test("assert_equal doesnt raise if lhs == rhs")
+def _():
+    assert_equal(1, 1, "")

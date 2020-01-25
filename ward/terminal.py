@@ -1,13 +1,13 @@
 import inspect
 import os
 import platform
-import sys
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import wrap, indent
 from typing import Any, Dict, Generator, List, Optional
 
+import sys
 from colorama import Fore, Style
 from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
@@ -315,8 +315,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
         )
 
     def output_why_test_failed(self, test_result: TestResult):
-        if isinstance(test_result.error, TestFailure):
-            err = test_result.error
+        err = test_result.error
+        if isinstance(err, TestFailure):
             src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
 
             # TODO: Only include lines up to where the failure occurs
