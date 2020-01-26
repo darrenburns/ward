@@ -352,7 +352,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def print_failure_equals(self, err: TestFailure):
         diff_msg = (
-            f"{colored('Difference:', color='cyan', attrs=['bold'])} {colored('LHS', color='green')}"
+            f"{colored('Comparison:', color='cyan', attrs=['bold'])} {colored('LHS', color='green')}"
             f" vs {colored('RHS', color='red')} shown below\n"
         )
         print(indent(diff_msg, INDENT))
