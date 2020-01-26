@@ -3,7 +3,7 @@ import inspect
 import types
 from typing import Iterable, List
 
-from ward.expect import assert_equal, assert_not_equal, assert_in, assert_not_in
+from ward.expect import assert_equal, assert_not_equal, assert_in, assert_not_in, assert_is, assert_is_not
 from ward.testing import Test
 
 assert_func_namespace = {
@@ -11,6 +11,8 @@ assert_func_namespace = {
     assert_not_equal.__name__: assert_not_equal,
     assert_in.__name__: assert_in,
     assert_not_in.__name__: assert_not_in,
+    assert_is.__name__: assert_is,
+    assert_is_not.__name__: assert_is_not,
 }
 
 
@@ -54,6 +56,10 @@ class RewriteAssert(ast.NodeTransformer):
                 return make_call_node(node, assert_in.__name__)
             elif is_comparison_type(node, ast.NotIn):
                 return make_call_node(node, assert_not_in.__name__)
+            elif is_comparison_type(node, ast.Is):
+                return make_call_node(node, assert_is.__name__)
+            elif is_comparison_type(node, ast.IsNot):
+                return make_call_node(node, assert_is_not.__name__)
 
         return node
 

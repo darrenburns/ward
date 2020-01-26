@@ -1,12 +1,19 @@
 from ward import test, each
-from ward.expect import assert_not_equal, TestFailure, raises, assert_equal, assert_in, assert_not_in
+from ward.expect import (
+    assert_not_equal,
+    TestFailure,
+    raises,
+    assert_equal,
+    assert_in,
+    assert_not_in,
+    assert_is_not, assert_is)
 
 
 @test("{func.__name__}({lhs}, {rhs}) is None")
 def _(
-    func=each(assert_equal, assert_not_equal, assert_in, assert_not_in),
-    lhs=each(1, 1, "a", "a"),
-    rhs=each(1, 2, "a", "b"),
+    func=each(assert_equal, assert_not_equal, assert_in, assert_not_in, assert_is, assert_is_not),
+    lhs=each(1, 1, "a", "a", ..., ...),
+    rhs=each(1, 2, "a", "b", ..., None),
 ):
     assert func(lhs, rhs, "") is None
 

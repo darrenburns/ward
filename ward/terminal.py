@@ -167,7 +167,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1:]
+                        + rel_path[final_slash_idx + 1 :]
                         + ": "
                     )
                 else:
@@ -311,7 +311,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
             name_or_desc = test.qualified_name
 
         name_or_desc = colored(name_or_desc)
-        failure_heading = colored("Failure: ", color="cyan", attrs=["bold"]) + name_or_desc + "\n"
+        failure_heading = (
+            colored("Failure: ", color="cyan", attrs=["bold"]) + name_or_desc + "\n"
+        )
         print(indent(failure_heading, INDENT))
 
     def output_why_test_failed(self, test_result: TestResult):
@@ -335,7 +337,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
             if err.operator in Comparison:
                 src = "".join(src_lines)
-                src = highlight(src, PythonLexer(), TerminalFormatter(), )
+                src = highlight(src, PythonLexer(), TerminalFormatter())
                 src = f"".join(
                     [gutter(i) + l for i, l in enumerate(src.splitlines(keepends=True))]
                 )
@@ -354,8 +356,10 @@ class SimpleTestResultWrite(TestResultWriterBase):
         print(indent(f"{reason} {err.message}", INDENT))
 
     def print_failure_equals(self, err: TestFailure):
-        diff_msg = f"{colored('Difference:', color='cyan', attrs=['bold'])} {colored('LHS', color='green')}" \
-                   f" vs {colored('RHS', color='red')} shown below\n"
+        diff_msg = (
+            f"{colored('Difference:', color='cyan', attrs=['bold'])} {colored('LHS', color='green')}"
+            f" vs {colored('RHS', color='red')} shown below\n"
+        )
         print(indent(diff_msg, INDENT))
         diff = make_diff(err.lhs, err.rhs, width=self.terminal_size.width - 24)
         print(indent(diff, DOUBLE_INDENT))
@@ -425,7 +429,11 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
             captured_stderr_lines = test_result.captured_stderr.split("\n")
-            print(indent(colored(f"Captured stderr:\n", color="cyan", attrs=["bold"]), INDENT))
+            print(
+                indent(
+                    colored(f"Captured stderr:\n", color="cyan", attrs=["bold"]), INDENT
+                )
+            )
             for line in captured_stderr_lines:
                 print(indent(line, DOUBLE_INDENT))
             print()
@@ -433,7 +441,11 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
             captured_stdout_lines = test_result.captured_stdout.split("\n")
-            print(indent(colored(f"Captured stdout:\n", color="cyan", attrs=["bold"]), INDENT))
+            print(
+                indent(
+                    colored(f"Captured stdout:\n", color="cyan", attrs=["bold"]), INDENT
+                )
+            )
             for line in captured_stdout_lines:
                 print(indent(line, DOUBLE_INDENT))
 
