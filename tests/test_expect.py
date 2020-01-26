@@ -10,6 +10,8 @@ from ward.expect import (
     assert_is,
     assert_less_than,
     assert_less_than_equal_to,
+    assert_greater_than_equal_to,
+    assert_greater_than,
 )
 
 
@@ -25,9 +27,12 @@ def _(
         assert_less_than,
         assert_less_than_equal_to,
         assert_less_than_equal_to,
+        assert_greater_than,
+        assert_greater_than_equal_to,
+        assert_greater_than_equal_to,
     ),
-    lhs=each(1, 1, "a", "a", ..., True, 1, 1, 1),
-    rhs=each(1, 2, "a", "b", ..., None, 2, 2, 1),
+    lhs=each(1, 1, "a", "a", ..., True, 1, 1, 1, 2, 2, 1),
+    rhs=each(1, 2, "a", "b", ..., None, 2, 2, 1, 1, 1, 1),
 ):
     assert func(lhs, rhs, "") is None
 
@@ -41,9 +46,11 @@ def _(
         assert_not_in,
         assert_less_than,
         assert_less_than_equal_to,
+        assert_greater_than,
+        assert_greater_than_equal_to,
     ),
-    lhs=each(1, 1, "a", "a", 2, 2),
-    rhs=each(2, 1, "b", "a", 1, 1),
+    lhs=each(1, 1, "a", "a", 2, 2, 1, 1),
+    rhs=each(2, 1, "b", "a", 1, 1, 2, 2),
 ):
     with raises(TestFailure):
         func(lhs, rhs, "")

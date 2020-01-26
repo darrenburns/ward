@@ -501,10 +501,11 @@ class SimpleTestResultWrite(TestResultWriterBase):
         )
 
     def output_test_failed_location(self, test_result: TestResult):
-        print(
-            indent(colored("Location:", color="cyan", attrs=["bold"]), INDENT),
-            f"{test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}",
-        )
+        if isinstance(test_result.error, TestFailure):
+            print(
+                indent(colored("Location:", color="cyan", attrs=["bold"]), INDENT),
+                f"{test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}",
+            )
 
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
         pass
