@@ -1,10 +1,9 @@
-import dis
-import sys
 from pathlib import Path
 from timeit import default_timer
 from typing import Optional, Tuple, Union
 
 import click
+import sys
 from colorama import init
 
 from ward._ward_version import __version__
