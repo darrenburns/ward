@@ -2,7 +2,12 @@ import ast
 
 from tests.test_suite import testable_test
 from ward import test, fixture
-from ward.rewrite import rewrite_assertions_in_tests, RewriteAssert, get_assertion_msg
+from ward.rewrite import (
+    rewrite_assertions_in_tests,
+    RewriteAssert,
+    get_assertion_msg,
+    make_call_node,
+)
 from ward.testing import Test, each
 
 
@@ -112,3 +117,28 @@ def _(
 ):
     in_tree = ast.parse(src).body[0]
     assert msg == get_assertion_msg(in_tree)
+
+
+@test("make_call_node converts `{src}` to correct function call node`")
+def _(
+    src=each(
+        "assert x == y",
+        "assert x == y, 'message'",
+        "assert x < y",
+        "assert x in y",
+        "assert x is y",
+        "assert x is not y",
+    ),
+    func="my_assert",
+):
+    assert_node = ast.parse(src).body[0]
+    call = make_call_node(assert_node, func)
+
+    # check that `assert x OP y` becomes `my_assert(x, y, '')`
+    lhs = assert_node.test.left.id
+    rhs = assert_node.test.comparators[0].id
+    msg = assert_node.msg.s if assert_node.msg else ""
+
+    assert call.value.args[0].id == lhs
+    assert call.value.args[1].id == rhs
+    assert call.value.args[2].s == msg
