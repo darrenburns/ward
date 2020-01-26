@@ -22,6 +22,7 @@ class Comparison(Enum):
     Equals = "=="
     NotEquals = "!="
     In = "in"
+    NotIn = "not in"
 
 
 class TestFailure(Exception):
@@ -77,5 +78,18 @@ def assert_in(lhs_val, rhs_val, assert_msg):
             rhs=rhs_val,
             error_line=error_line_no,
             operator=Comparison.In,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_not_in(lhs_val, rhs_val, assert_msg):
+    if lhs_val in rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} is in {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.NotIn,
             assert_msg=assert_msg,
         )

@@ -82,8 +82,8 @@ def _(
 
 @test("RewriteAssert.visit_Assert transforms `{src}` correctly")
 def _(
-    src=each("assert x == y", "assert x != y", "assert x in y"),
-    fn=each("assert_equal", "assert_not_equal", "assert_in"),
+    src=each("assert x == y", "assert x != y", "assert x in y", "assert x not in y"),
+    fn=each("assert_equal", "assert_not_equal", "assert_in", "assert_not_in"),
 ):
     in_tree = ast.parse(src).body[0]
     out_tree = RewriteAssert().visit(in_tree)
