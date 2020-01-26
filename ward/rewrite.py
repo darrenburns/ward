@@ -12,7 +12,9 @@ from ward.expect import (
     assert_is_not,
     assert_less_than_equal_to,
     assert_less_than,
-    assert_greater_than_equal_to, assert_greater_than)
+    assert_greater_than_equal_to,
+    assert_greater_than,
+)
 from ward.testing import Test
 
 assert_func_namespace = {
