@@ -3,7 +3,14 @@ import inspect
 import types
 from typing import Iterable, List
 
-from ward.expect import assert_equal, assert_not_equal, assert_in, assert_not_in, assert_is, assert_is_not
+from ward.expect import (
+    assert_equal,
+    assert_not_equal,
+    assert_in,
+    assert_not_in,
+    assert_is,
+    assert_is_not,
+)
 from ward.testing import Test
 
 assert_func_namespace = {

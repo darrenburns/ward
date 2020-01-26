@@ -6,23 +6,44 @@ from ward.expect import (
     assert_equal,
     assert_in,
     assert_not_in,
-    assert_is_not, assert_is)
+    assert_is_not,
+    assert_is,
+    assert_less_than,
+    assert_less_than_equal_to,
+)
 
 
 @test("{func.__name__}({lhs}, {rhs}) is None")
 def _(
-    func=each(assert_equal, assert_not_equal, assert_in, assert_not_in, assert_is, assert_is_not),
-    lhs=each(1, 1, "a", "a", ..., ...),
-    rhs=each(1, 2, "a", "b", ..., None),
+    func=each(
+        assert_equal,
+        assert_not_equal,
+        assert_in,
+        assert_not_in,
+        assert_is,
+        assert_is_not,
+        assert_less_than,
+        assert_less_than_equal_to,
+        assert_less_than_equal_to,
+    ),
+    lhs=each(1, 1, "a", "a", ..., True, 1, 1, 1),
+    rhs=each(1, 2, "a", "b", ..., None, 2, 2, 1),
 ):
     assert func(lhs, rhs, "") is None
 
 
 @test("{func.__name__}({lhs}, {rhs}) raises TestFailure")
 def _(
-    func=each(assert_equal, assert_not_equal, assert_in, assert_not_in),
-    lhs=each(1, 1, "a", "a"),
-    rhs=each(2, 1, "b", "a"),
+    func=each(
+        assert_equal,
+        assert_not_equal,
+        assert_in,
+        assert_not_in,
+        assert_less_than,
+        assert_less_than_equal_to,
+    ),
+    lhs=each(1, 1, "a", "a", 2, 2),
+    rhs=each(2, 1, "b", "a", 1, 1),
 ):
     with raises(TestFailure):
         func(lhs, rhs, "")

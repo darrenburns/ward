@@ -25,6 +25,8 @@ class Comparison(Enum):
     NotIn = "not in"
     Is = "is"
     IsNot = "is not"
+    LessThan = "<"
+    LessThanEqualTo = "<="
 
 
 class TestFailure(Exception):
@@ -119,5 +121,31 @@ def assert_is_not(lhs_val, rhs_val, assert_msg):
             rhs=rhs_val,
             error_line=error_line_no,
             operator=Comparison.IsNot,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_less_than(lhs_val, rhs_val, assert_msg):
+    if lhs_val >= rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} >= {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.LessThan,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_less_than_equal_to(lhs_val, rhs_val, assert_msg):
+    if lhs_val > rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} > {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.LessThanEqualTo,
             assert_msg=assert_msg,
         )
