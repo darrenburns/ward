@@ -48,7 +48,7 @@ def make_call_node(node: ast.expr, func_name: str) -> ast.Expr:
     return new_node
 
 
-def is_comparison(node: ast.expr) -> bool:
+def is_binary_comparison(node: ast.expr) -> bool:
     return isinstance(node.test, ast.Compare) and len(node.test.ops) == 1
 
 
@@ -58,7 +58,7 @@ def is_comparison_type(node: ast.expr, type) -> bool:
 
 class RewriteAssert(ast.NodeTransformer):
     def visit_Assert(self, node):
-        if is_comparison(node):
+        if is_binary_comparison(node):
             if is_comparison_type(node, ast.Eq):
                 return make_call_node(node, assert_equal.__name__)
             elif is_comparison_type(node, ast.NotEq):
