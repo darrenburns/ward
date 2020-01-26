@@ -167,7 +167,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
+                        + rel_path[final_slash_idx + 1:]
                         + ": "
                     )
                 else:
@@ -343,17 +343,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 )
                 print(indent(src, DOUBLE_INDENT))
 
-                self.print_failure_reason(err)
                 if err.operator == Comparison.Equals:
                     self.print_failure_equals(err)
         else:
             self.print_traceback(err)
 
         print(Style.RESET_ALL)
-
-    def print_failure_reason(self, err: TestFailure):
-        reason = colored("Reason:", color="cyan", attrs=["bold"])
-        print(indent(f"{reason} {err.message}", INDENT))
 
     def print_failure_equals(self, err: TestFailure):
         diff_msg = (
