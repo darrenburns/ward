@@ -2,7 +2,7 @@ import ast
 
 from tests.test_suite import testable_test
 from ward import test, fixture
-from ward.rewrite import rewrite_assertions_in_tests, RewriteAssert
+from ward.rewrite import rewrite_assertions_in_tests, RewriteAssert, get_assertion_msg
 from ward.testing import Test, each
 
 
@@ -103,3 +103,12 @@ def _(src="assert 1 == 2, 'msg'"):
     in_tree = ast.parse(src).body[0]
     out_tree = RewriteAssert().visit(in_tree)
     assert out_tree.value.args[2].s == "msg"
+
+
+@test("get_assertion_message({src}) returns '{msg}'")
+def _(
+    src=each("assert 1 == 2, 'msg'", "assert 1 == 2", "assert 1 == 2, 1"),
+    msg=each("msg", "", ""),
+):
+    in_tree = ast.parse(src).body[0]
+    assert msg == get_assertion_msg(in_tree)
