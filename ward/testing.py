@@ -13,6 +13,7 @@ from typing import Callable, Dict, List, Optional, Any, Tuple, Union
 from ward.errors import FixtureError, ParameterisationError
 from ward.fixtures import Fixture, FixtureCache, ScopeKey
 from ward.models import Marker, SkipMarker, XfailMarker, WardMeta, Scope
+from ward.util import get_absolute_path
 
 
 @dataclass
@@ -344,19 +345,19 @@ class Test:
 # They cannot be retrieved directly from the module due to name
 # clashes. When we're later looking for tests inside the module,
 # we can retrieve any anonymous tests from this dict.
-anonymous_tests: Dict[str, List[Callable]] = defaultdict(list)
+# Map of module absolute Path to list of tests in the module
+anonymous_tests: Dict[Path, List[Callable]] = defaultdict(list)
 
 
 def test(description: str, *args, **kwargs):
     def decorator_test(func):
         unwrapped = inspect.unwrap(func)
-        mod_name = unwrapped.__module__
 
         force_path = kwargs.get("_force_path")
         if force_path:
-            path = force_path
+            path = force_path.absolute()
         else:
-            path = Path(inspect.getfile(unwrapped)).absolute()
+            path = get_absolute_path(unwrapped)
 
         if hasattr(unwrapped, "ward_meta"):
             unwrapped.ward_meta.description = description
@@ -366,9 +367,9 @@ def test(description: str, *args, **kwargs):
 
         collect_into = kwargs.get("_collect_into")
         if collect_into is not None:
-            collect_into[mod_name].append(unwrapped)
+            collect_into[path].append(unwrapped)
         else:
-            anonymous_tests[mod_name].append(unwrapped)
+            anonymous_tests[path].append(unwrapped)
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

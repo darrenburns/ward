@@ -1,10 +1,9 @@
-import dis
-import sys
 from pathlib import Path
 from timeit import default_timer
 from typing import Optional, Tuple, Union
 
 import click
+import sys
 from colorama import init
 
 from ward._ward_version import __version__
@@ -17,8 +16,8 @@ from ward.collect import (
 from ward.config import read_config_toml
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
-from ward.terminal import SimpleTestResultWrite
-from ward.util import get_exit_code, find_project_root
+from ward.terminal import SimpleTestResultWrite, get_exit_code
+from ward.util import find_project_root
 
 init()
 
