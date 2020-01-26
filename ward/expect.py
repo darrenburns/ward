@@ -18,9 +18,17 @@ class raises:
         return True
 
 
-class Operator(Enum):
+class Comparison(Enum):
     Equals = "=="
+    NotEquals = "!="
     In = "in"
+    NotIn = "not in"
+    Is = "is"
+    IsNot = "is not"
+    LessThan = "<"
+    LessThanEqualTo = "<="
+    GreaterThan = ">"
+    GreaterThanEqualTo = ">="
 
 
 class TestFailure(Exception):
@@ -30,7 +38,7 @@ class TestFailure(Exception):
         lhs: Any,
         rhs: Any,
         error_line: int,
-        operator: Operator,
+        operator: Comparison,
         assert_msg: str,
     ):
         self.lhs = lhs
@@ -45,10 +53,127 @@ def assert_equal(lhs_val, rhs_val, assert_msg):
     if lhs_val != rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
-            f"{lhs_val} != {rhs_val}",
+            f"{lhs_val} does not equal {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
             error_line=error_line_no,
-            operator=Operator.Equals,
+            operator=Comparison.Equals,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_not_equal(lhs_val, rhs_val, assert_msg):
+    if lhs_val == rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} does equal {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.NotEquals,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_in(lhs_val, rhs_val, assert_msg):
+    if lhs_val not in rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} is not in {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.In,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_not_in(lhs_val, rhs_val, assert_msg):
+    if lhs_val in rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} is in {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.NotIn,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_is(lhs_val, rhs_val, assert_msg):
+    if lhs_val is not rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} is not {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.Is,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_is_not(lhs_val, rhs_val, assert_msg):
+    if lhs_val is rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} is {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.IsNot,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_less_than(lhs_val, rhs_val, assert_msg):
+    if lhs_val >= rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} >= {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.LessThan,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_less_than_equal_to(lhs_val, rhs_val, assert_msg):
+    if lhs_val > rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} > {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.LessThanEqualTo,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_greater_than(lhs_val, rhs_val, assert_msg):
+    if lhs_val <= rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} <= {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.GreaterThan,
+            assert_msg=assert_msg,
+        )
+
+
+def assert_greater_than_equal_to(lhs_val, rhs_val, assert_msg):
+    if lhs_val < rhs_val:
+        error_line_no = inspect.currentframe().f_back.f_lineno
+        raise TestFailure(
+            f"{lhs_val} < {rhs_val}",
+            lhs=lhs_val,
+            rhs=rhs_val,
+            error_line=error_line_no,
+            operator=Comparison.GreaterThanEqualTo,
             assert_msg=assert_msg,
         )

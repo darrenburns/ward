@@ -16,12 +16,13 @@ from termcolor import colored, cprint
 
 from ward._ward_version import __version__
 from ward.diff import make_diff
-from ward.expect import TestFailure, Operator
+from ward.expect import TestFailure, Comparison
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
 from ward.util import ExitCode, get_exit_code, outcome_to_colour
 
-CODE_INDENT = 3
+INDENT = " " * 2
+DOUBLE_INDENT = INDENT * 2
 
 
 def print_no_break(e: Any):
@@ -166,7 +167,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
+                        + rel_path[final_slash_idx + 1:]
                         + ": "
                     )
                 else:
@@ -234,6 +235,7 @@ class TestResultWriterBase:
             self.output_why_test_failed(failure)
             self.output_captured_stderr(failure)
             self.output_captured_stdout(failure)
+            self.output_test_failed_location(failure)
 
         if failed_test_results:
             self.print_divider()
@@ -275,6 +277,9 @@ class TestResultWriterBase:
     def output_captured_stdout(self, test_result: TestResult):
         raise NotImplementedError()
 
+    def output_test_failed_location(self, test_result: TestResult):
+        raise NotImplementedError()
+
 
 def lightblack(s: str) -> str:
     return f"{Fore.LIGHTBLACK_EX}{s}{Style.RESET_ALL}"
@@ -301,18 +306,15 @@ class SimpleTestResultWrite(TestResultWriterBase):
         test = test_result.test
 
         if test.description:
-            name_or_desc = (
-                f"{test.module_name}, line {test.line_number}: {test.description}"
-            )
+            name_or_desc = test.description
         else:
             name_or_desc = test.qualified_name
 
-        print(
-            colored(" Failure", color="red"),
-            "in",
-            colored(name_or_desc, attrs=["bold"]),
-            "\n",
+        name_or_desc = colored(name_or_desc)
+        failure_heading = (
+            colored("Failure: ", color="cyan", attrs=["bold"]) + name_or_desc + "\n"
         )
+        print(indent(failure_heading, INDENT))
 
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
@@ -333,26 +335,29 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 else:
                     return lightblack(f"{rv} | ")
 
-            if err.operator == Operator.Equals:
+            if err.operator in Comparison:
                 src = "".join(src_lines)
-                src = highlight(src, PythonLexer(), TerminalFormatter(),)
+                src = highlight(src, PythonLexer(), TerminalFormatter())
                 src = f"".join(
                     [gutter(i) + l for i, l in enumerate(src.splitlines(keepends=True))]
                 )
-                print(indent(src, " " * CODE_INDENT))
-                self.print_failure_equals(err.lhs, err.rhs)
+                print(indent(src, DOUBLE_INDENT))
+
+                if err.operator == Comparison.Equals:
+                    self.print_failure_equals(err)
         else:
             self.print_traceback(err)
 
         print(Style.RESET_ALL)
 
-    def print_failure_equals(self, lhs, rhs):
-        print(
-            f"   Showing diff of {colored('LHS', color='green')}"
-            f" vs {colored('RHS', color='red')}:\n"
+    def print_failure_equals(self, err: TestFailure):
+        diff_msg = (
+            f"{colored('Comparison:', color='cyan', attrs=['bold'])} {colored('LHS', color='green')}"
+            f" vs {colored('RHS', color='red')} shown below\n"
         )
-        diff = make_diff(lhs, rhs, width=self.terminal_size.width - 24)
-        print(diff)
+        print(indent(diff_msg, INDENT))
+        diff = make_diff(err.lhs, err.rhs, width=self.terminal_size.width - 24)
+        print(indent(diff, DOUBLE_INDENT))
 
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
@@ -418,20 +423,26 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
-            stderr = colored("standard error", color="red")
             captured_stderr_lines = test_result.captured_stderr.split("\n")
-            print(f"   Captured {stderr} during test run:\n")
+            print(
+                indent(
+                    colored(f"Captured stderr:\n", color="cyan", attrs=["bold"]), INDENT
+                )
+            )
             for line in captured_stderr_lines:
-                print("    " + line)
+                print(indent(line, DOUBLE_INDENT))
             print()
 
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
-            stdout = colored("standard output", color="blue")
             captured_stdout_lines = test_result.captured_stdout.split("\n")
-            print(f"   Captured {stdout} during test run:\n")
+            print(
+                indent(
+                    colored(f"Captured stdout:\n", color="cyan", attrs=["bold"]), INDENT
+                )
+            )
             for line in captured_stdout_lines:
-                print("    " + line)
+                print(indent(line, DOUBLE_INDENT))
 
     def generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp):
         num_tests = num_passed + num_failed + num_skipped + num_xfail + num_unexp
@@ -483,6 +494,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
             + colored("s" * num_blue_bars, color="blue", on_color="on_blue")
             + colored("." * num_green_bars, color="green", on_color="on_green")
         )
+
+    def output_test_failed_location(self, test_result: TestResult):
+        if isinstance(test_result.error, TestFailure):
+            print(
+                indent(colored("Location:", color="cyan", attrs=["bold"]), INDENT),
+                f"{test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}",
+            )
 
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
         pass

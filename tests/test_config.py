@@ -3,7 +3,7 @@ from pathlib import Path
 
 import click
 
-from ward import test, fixture, expect, raises
+from ward import test, fixture, raises
 from ward.config import read_config_toml
 
 

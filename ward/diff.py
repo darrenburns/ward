@@ -28,7 +28,7 @@ def bright_green(s: str) -> str:
     return f"{Fore.LIGHTGREEN_EX}{s}{Style.RESET_ALL}"
 
 
-def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
+def build_unified_diff(lhs_repr, rhs_repr) -> str:
     differ = difflib.Differ()
     lines_lhs = lhs_repr.splitlines()
     lines_rhs = rhs_repr.splitlines()
@@ -100,4 +100,4 @@ def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
             output_lines.append(line[2:])
         prev_marker = line[0]
 
-    return " " * margin_left + f"\n{' ' * margin_left}".join(output_lines)
+    return "\n".join(output_lines)
