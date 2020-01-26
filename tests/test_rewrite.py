@@ -7,7 +7,7 @@ from ward.rewrite import (
     RewriteAssert,
     get_assertion_msg,
     make_call_node,
-)
+    is_comparison)
 from ward.testing import Test, each
 
 
@@ -142,3 +142,19 @@ def _(
     assert call.value.args[0].id == lhs
     assert call.value.args[1].id == rhs
     assert call.value.args[2].s == msg
+
+
+@test("is_comparison returns True for assert binary comparisons")
+def _(
+    src=each("assert x == y", "assert x is y", "assert x < y", "assert x is not y")
+):
+    assert_node = ast.parse(src).body[0]
+    assert is_comparison(assert_node)
+
+
+@test("is_comparison returns False for assert unary/non-binary comparisons")
+def _(
+    src=each("assert True", "assert x < y < z", "assert not False")
+):
+    assert_node = ast.parse(src).body[0]
+    assert not is_comparison(assert_node)
