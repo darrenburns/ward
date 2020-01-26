@@ -68,6 +68,8 @@ def _(
         "assert x not in y",
         "assert x is y",
         "assert x is not y",
+        "assert x < y",
+        "assert x <= y",
     ),
     fn=each(
         "assert_equal",
@@ -76,6 +78,8 @@ def _(
         "assert_not_in",
         "assert_is",
         "assert_is_not",
+        "assert_less_than",
+        "assert_less_than_equal_to",
     ),
 ):
     in_tree = ast.parse(src).body[0]

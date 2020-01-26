@@ -10,6 +10,8 @@ from ward.expect import (
     assert_not_in,
     assert_is,
     assert_is_not,
+    assert_less_than_equal_to,
+    assert_less_than,
 )
 from ward.testing import Test
 
@@ -67,6 +69,10 @@ class RewriteAssert(ast.NodeTransformer):
                 return make_call_node(node, assert_is.__name__)
             elif is_comparison_type(node, ast.IsNot):
                 return make_call_node(node, assert_is_not.__name__)
+            elif is_comparison_type(node, ast.Lt):
+                return make_call_node(node, assert_less_than.__name__)
+            elif is_comparison_type(node, ast.LtE):
+                return make_call_node(node, assert_less_than_equal_to.__name__)
 
         return node
 
