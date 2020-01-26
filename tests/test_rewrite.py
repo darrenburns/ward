@@ -7,7 +7,9 @@ from ward.rewrite import (
     RewriteAssert,
     get_assertion_msg,
     make_call_node,
-    is_binary_comparison)
+    is_binary_comparison,
+    is_comparison_type,
+)
 from ward.testing import Test, each
 
 
@@ -41,7 +43,7 @@ def _(p=passing, f=failing):
     out_tests = rewrite_assertions_in_tests(in_tests)
 
     def meta(test):
-        return (test.description, test.id, test.module_name, test.fn.ward_meta)
+        return test.description, test.id, test.module_name, test.fn.ward_meta
 
     assert [meta(test) for test in in_tests] == [meta(test) for test in out_tests]
 
@@ -145,21 +147,30 @@ def _(
 
 
 @test("is_binary_comparison returns True for assert binary comparisons")
-def _(
-    src=each("assert x == y", "assert x is y", "assert x < y", "assert x is not y")
-):
+def _(src=each("assert x == y", "assert x is y", "assert x < y", "assert x is not y")):
     assert_node = ast.parse(src).body[0]
     assert is_binary_comparison(assert_node)
 
 
 @test("is_binary_comparison('{src}') is False")
-def _(
-    src=each("assert True", "assert x < y < z", "assert not False")
-):
+def _(src=each("assert True", "assert x < y < z", "assert not False")):
     assert_node = ast.parse(src).body[0]
     assert not is_binary_comparison(assert_node)
 
 
 @test("is_comparison_type returns True if node is of given type")
-def _():
-    pass
+def _(
+    src=each("assert x == y", "assert x is y", "assert x < y", "assert x is not y"),
+    node_type=each(ast.Eq, ast.Is, ast.Lt, ast.IsNot),
+):
+    assert_node = ast.parse(src).body[0]
+    assert is_comparison_type(assert_node, node_type)
+
+
+@test("is_comparison_type returns False if node is not of given type")
+def _(
+    src=each("assert x == y", "assert x is y", "assert x < y", "assert x is not y"),
+    node_type=each(ast.Add, ast.Add, ast.Add, ast.Add),
+):
+    assert_node = ast.parse(src).body[0]
+    assert not is_comparison_type(assert_node, node_type)
