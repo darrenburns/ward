@@ -47,7 +47,6 @@ def _(
         "assert x",
         "assert f(x)",
         "assert x + y + z",
-        "assert 2 > 1",
         "assert 1 < 2 < 3",
         "assert 1 == 1 == 3",
         "print(x)",
@@ -70,6 +69,8 @@ def _(
         "assert x is not y",
         "assert x < y",
         "assert x <= y",
+        "assert x > y",
+        "assert x >= y",
     ),
     fn=each(
         "assert_equal",
@@ -80,6 +81,8 @@ def _(
         "assert_is_not",
         "assert_less_than",
         "assert_less_than_equal_to",
+        "assert_greater_than",
+        "assert_greater_than_equal_to",
     ),
 ):
     in_tree = ast.parse(src).body[0]
