@@ -78,7 +78,7 @@ def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
                         current_span = ""
                     current_span += line_to_rewrite[
                         index - 2
-                    ]  # Subtract 2 to account for code at start of line
+                        ]  # Subtract 2 to account for code at start of line
                 prev_char = char
                 index += 1
 
@@ -100,4 +100,4 @@ def build_unified_diff(lhs_repr, rhs_repr, margin_left=4) -> str:
             output_lines.append(line[2:])
         prev_marker = line[0]
 
-    return " " * margin_left + f"\n{' ' * margin_left}".join(output_lines)
+    return "\n".join(output_lines)

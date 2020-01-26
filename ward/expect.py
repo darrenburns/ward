@@ -46,7 +46,7 @@ def assert_equal(lhs_val, rhs_val, assert_msg):
     if lhs_val != rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
-            f"{lhs_val} != {rhs_val}",
+            f"{lhs_val} does not equal {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
             error_line=error_line_no,
@@ -59,7 +59,7 @@ def assert_not_equal(lhs_val, rhs_val, assert_msg):
     if lhs_val == rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
-            f"{lhs_val} == {rhs_val}",
+            f"{lhs_val} does equal {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
             error_line=error_line_no,
