@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from inspect import BoundArguments
+from pathlib import Path
 from typing import Optional
 
 from ward.errors import FixtureError
@@ -43,4 +44,4 @@ class WardMeta:
     is_fixture: bool = False
     scope: Scope = Scope.Test
     bound_args: Optional[BoundArguments] = None
-    path: Optional[str] = None
+    path: Optional[Path] = None

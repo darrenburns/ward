@@ -3,9 +3,10 @@ import os
 import platform
 import traceback
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from textwrap import wrap, indent
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Dict, Generator, List, Optional, Iterable
 
 import sys
 from colorama import Fore, Style
@@ -19,7 +20,6 @@ from ward.diff import make_diff
 from ward.expect import TestFailure, Comparison
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
-from ward.util import ExitCode, get_exit_code, outcome_to_colour
 
 INDENT = " " * 2
 DOUBLE_INDENT = INDENT * 2
@@ -525,3 +525,33 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 [r for r in test_results if r.outcome == TestOutcome.XPASS]
             ),
         }
+
+
+def outcome_to_colour(outcome: TestOutcome) -> str:
+    return {
+        TestOutcome.PASS: "green",
+        TestOutcome.SKIP: "blue",
+        TestOutcome.FAIL: "red",
+        TestOutcome.XFAIL: "magenta",
+        TestOutcome.XPASS: "yellow",
+    }[outcome]
+
+
+class ExitCode(Enum):
+    SUCCESS = 0
+    FAILED = 1
+    ERROR = 2
+    NO_TESTS_FOUND = 3
+
+
+def get_exit_code(results: Iterable[TestResult]) -> ExitCode:
+    if not results:
+        return ExitCode.NO_TESTS_FOUND
+
+    if any(
+        r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results
+    ):
+        exit_code = ExitCode.FAILED
+    else:
+        exit_code = ExitCode.SUCCESS
+    return exit_code

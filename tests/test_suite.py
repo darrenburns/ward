@@ -1,4 +1,5 @@
 from collections import defaultdict
+from pathlib import Path
 from unittest import mock
 
 from ward import fixture
@@ -8,7 +9,7 @@ from ward.suite import Suite
 from ward.testing import Test, skip, TestOutcome, TestResult, test, each
 
 NUMBER_OF_TESTS = 5
-FORCE_TEST_PATH = "path/of/test"
+FORCE_TEST_PATH = Path("path/of/test").absolute()
 
 
 def testable_test(func):
@@ -406,7 +407,7 @@ def _():
     def test_1(a=each(a, "second", a)):
         events.append("running test")
 
-    suite = Suite(tests=[Test(fn=test_1, module_name="module1"),])
+    suite = Suite(tests=[Test(fn=test_1, module_name="module1"), ])
 
     list(suite.generate_test_runs())
 
