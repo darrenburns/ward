@@ -53,7 +53,9 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
             yield mod
 
 
-def get_tests_in_modules(modules: Iterable) -> Generator[Test, None, None]:
+def get_tests_in_modules(
+    modules: Iterable, capture_output: bool = True
+) -> Generator[Test, None, None]:
     for mod in modules:
         mod_name = mod.__name__
         mod_path = get_absolute_path(mod)
@@ -66,6 +68,7 @@ def get_tests_in_modules(modules: Iterable) -> Generator[Test, None, None]:
                     module_name=mod_name,
                     marker=meta.marker,
                     description=meta.description or "",
+                    capture_output=capture_output,
                 )
 
 
