@@ -6,6 +6,8 @@ See the full documentation and feature set [here](https://wardpy.com).
 
 A modern Python test framework designed to help you find and fix flaws faster.
 
+![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
+
 ## Features
 
 **Descriptive test names:** describe what your tests do using strings, not function names.
@@ -26,8 +28,6 @@ def user():
 def _(u=user):
     assert u.name == "darren"
 ```
-
-
 
 **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
@@ -51,7 +51,6 @@ def _(
 **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started. Can be configured using `pyproject.toml` or the command line if required.
 
 **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
-![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
 
 This project is currently in beta.
 
@@ -59,7 +58,6 @@ Planned features:
 
 * Smart test execution order designed to surface failures faster (using various heuristics)
 * Multi-process mode to improve performance
-* Highly configurable output modes
 * Code coverage with `--coverage` flag
 * Handling flaky tests with test-specific retries, timeouts
 * Plugin system
