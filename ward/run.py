@@ -76,6 +76,11 @@ def set_defaults_from_config(
     default="standard",
     help="Specify the order in which tests should run.",
 )
+@click.option(
+    "--capture-output/--no-capture-output",
+    default=True,
+    help="Enable or disable output capturing.",
+)
 @click.version_option(version=__version__)
 @click.option(
     "--config",
@@ -102,13 +107,14 @@ def run(
     fail_limit: Optional[int],
     test_output_style: str,
     order: str,
+    capture_output: bool,
     config: str,
 ):
     start_run = default_timer()
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths)
     modules = list(load_modules(mod_infos))
-    unfiltered_tests = get_tests_in_modules(modules)
+    unfiltered_tests = get_tests_in_modules(modules, capture_output)
     tests = list(search_generally(unfiltered_tests, query=search))
 
     # Rewrite assertions in each test

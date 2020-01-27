@@ -100,13 +100,16 @@ class Test:
     marker: Optional[Marker] = None
     description: Optional[str] = None
     param_meta: Optional[ParamMeta] = field(default_factory=ParamMeta)
+    capture_output: bool = True
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)
     ward_meta: WardMeta = field(default_factory=WardMeta)
 
     def __call__(self, *args, **kwargs):
-        with redirect_stdout(self.sout), redirect_stderr(self.serr):
-            return self.fn(*args, **kwargs)
+        if self.capture_output:
+            with redirect_stdout(self.sout), redirect_stderr(self.serr):
+                return self.fn(*args, **kwargs)
+        return self.fn(*args, **kwargs)
 
     @property
     def name(self):
@@ -186,23 +189,27 @@ class Test:
         Resolved values will be stored in fixture_cache, accessible
         using the fixture cache key (See `Fixture.key`).
         """
-        with redirect_stdout(self.sout), redirect_stderr(self.serr):
-            if not self.has_deps:
-                return {}
+        if self.capture_output:
+            with redirect_stdout(self.sout), redirect_stderr(self.serr):
+                return self._resolve_args(cache, iteration)
+        return self._resolve_args(cache, iteration)
 
-            default_args = self._get_default_args()
-            resolved_args: Dict[str, Any] = {}
-            for name, arg in default_args.items():
-                # In the case of parameterised testing, grab the arg corresponding
-                # to the current iteration of the parameterised group of tests.
-                if isinstance(arg, Each):
-                    arg = arg[iteration]
-                if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
-                    resolved = self._resolve_single_arg(arg, cache)
-                else:
-                    resolved = arg
-                resolved_args[name] = resolved
-            return self._unpack_resolved(resolved_args)
+    def _resolve_args(self, cache, iteration):
+        if not self.has_deps:
+            return {}
+        default_args = self._get_default_args()
+        resolved_args: Dict[str, Any] = {}
+        for name, arg in default_args.items():
+            # In the case of parameterised testing, grab the arg corresponding
+            # to the current iteration of the parameterised group of tests.
+            if isinstance(arg, Each):
+                arg = arg[iteration]
+            if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
+                resolved = self._resolve_single_arg(arg, cache)
+            else:
+                resolved = arg
+            resolved_args[name] = resolved
+        return self._unpack_resolved(resolved_args)
 
     def get_result(self, outcome, exception=None):
         with closing(self.sout), closing(self.serr):

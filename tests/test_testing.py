@@ -1,6 +1,8 @@
 from unittest import mock
 from unittest.mock import Mock
 
+import sys
+
 from tests.test_suite import testable_test
 from ward import raises, Scope
 from ward.errors import ParameterisationError
@@ -166,3 +168,25 @@ def _():
 
     with raises(ParameterisationError):
         t.get_parameterised_instances()
+
+
+@testable_test
+def i_print_something():
+    print("out")
+    sys.stderr.write("err")
+
+
+@test("stdout/stderr are captured by default when a test is called")
+def _():
+    t = Test(fn=i_print_something, module_name="")
+    t()
+    assert t.sout.getvalue() == "out\n"
+    assert t.serr.getvalue() == "err"
+
+
+@test("stdout/stderr are not captured when Test.capture_output = False")
+def _():
+    t = Test(fn=i_print_something, module_name="", capture_output=False)
+    t()
+    assert t.sout.getvalue() == ""
+    assert t.serr.getvalue() == ""
