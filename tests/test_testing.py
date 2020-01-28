@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import sys
 
-from tests.test_suite import testable_test
+from tests.utilities import testable_test
 from ward import raises, Scope
 from ward.errors import ParameterisationError
 from ward.fixtures import fixture

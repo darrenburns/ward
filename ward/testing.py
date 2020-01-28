@@ -112,7 +112,7 @@ class Test:
         return self.fn(*args, **kwargs)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.fn.__name__
 
     @property
@@ -120,12 +120,12 @@ class Test:
         return self.fn.ward_meta.path
 
     @property
-    def qualified_name(self):
+    def qualified_name(self) -> str:
         name = self.name or ""
         return f"{self.module_name}.{name}"
 
     @property
-    def line_number(self):
+    def line_number(self) -> int:
         return inspect.getsourcelines(self.fn)[1]
 
     @property
@@ -194,7 +194,7 @@ class Test:
                 return self._resolve_args(cache, iteration)
         return self._resolve_args(cache, iteration)
 
-    def _resolve_args(self, cache, iteration):
+    def _resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
         if not self.has_deps:
             return {}
         default_args = self._get_default_args()
@@ -372,11 +372,8 @@ def test(description: str, *args, **kwargs):
         else:
             unwrapped.ward_meta = WardMeta(description=description, path=path)
 
-        collect_into = kwargs.get("_collect_into")
-        if collect_into is not None:
-            collect_into[path].append(unwrapped)
-        else:
-            anonymous_tests[path].append(unwrapped)
+        collect_into = kwargs.get("_collect_into", anonymous_tests)
+        collect_into[path].append(unwrapped)
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
