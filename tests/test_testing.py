@@ -249,3 +249,21 @@ def _(func=example_test):
     path = Path("p")
     test("test", _collect_into=dest, _force_path=path)(func)
     assert dest[path.absolute()] == [func]
+
+
+@test("@test doesn't collect items from non-test modules")
+def _(func=example_test):
+    func.__module__ = "run"
+    dest = defaultdict(list)
+    path = Path("p")
+    test("test", _collect_into=dest, _force_path=path)(func)
+    assert len(dest) == 0
+
+
+@test("@test doesn't tests imported from another test module")
+def _(func=example_test):
+    func.__module__ = "test_contains.dot_test"
+    dest = defaultdict(list)
+    path = Path("p")
+    test("test", _collect_into=dest, _force_path=path)(func)
+    assert len(dest) == 0
