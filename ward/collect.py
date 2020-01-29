@@ -9,12 +9,12 @@ from pathlib import Path
 from typing import Any, Callable, Generator, Iterable, List, Set
 
 from ward.models import WardMeta
-from ward.testing import Test, anonymous_tests
+from ward.testing import Test, anonymous_tests, is_test_module_name
 from ward.util import get_absolute_path
 
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:
-    return module.name.startswith("test_")
+    return is_test_module_name(module.name)
 
 
 def get_info_for_modules(

@@ -347,6 +347,10 @@ class Test:
         return self.description
 
 
+def is_test_module_name(module_name: str) -> bool:
+    return module_name.startswith("test_") or module_name.endswith("_test")
+
+
 # Tests declared with the name _, and with the @test decorator
 # have to be stored in here, so that they can later be retrieved.
 # They cannot be retrieved directly from the module due to name
@@ -359,27 +363,31 @@ anonymous_tests: Dict[Path, List[Callable]] = defaultdict(list)
 def test(description: str, *args, **kwargs):
     def decorator_test(func):
         unwrapped = inspect.unwrap(func)
+        module_name: str = unwrapped.__module__
+        is_home_module: bool = "." not in module_name
+        if is_test_module_name(module_name) and is_home_module:
+            force_path: Path = kwargs.get("_force_path")
+            if force_path:
+                path = force_path.absolute()
+            else:
+                path = get_absolute_path(unwrapped)
 
-        force_path = kwargs.get("_force_path")
-        if force_path:
-            path = force_path.absolute()
-        else:
-            path = get_absolute_path(unwrapped)
+            if hasattr(unwrapped, "ward_meta"):
+                unwrapped.ward_meta.description = description
+                unwrapped.ward_meta.path = path
+            else:
+                unwrapped.ward_meta = WardMeta(description=description, path=path)
 
-        if hasattr(unwrapped, "ward_meta"):
-            unwrapped.ward_meta.description = description
-            unwrapped.ward_meta.path = path
-        else:
-            unwrapped.ward_meta = WardMeta(description=description, path=path)
+            collect_into = kwargs.get("_collect_into", anonymous_tests)
+            collect_into[path].append(unwrapped)
 
-        collect_into = kwargs.get("_collect_into", anonymous_tests)
-        collect_into[path].append(unwrapped)
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
 
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
+            return wrapper
 
-        return wrapper
+        return func
 
     return decorator_test
 

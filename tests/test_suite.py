@@ -7,7 +7,6 @@ from ward.suite import Suite
 from ward.testing import Test, skip, TestOutcome, TestResult, test, each
 
 
-
 @fixture
 def skipped_test(module=module):
     @testable_test
