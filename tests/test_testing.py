@@ -1,3 +1,5 @@
+from collections import defaultdict
+from pathlib import Path
 from unittest import mock
 from unittest.mock import Mock
 
@@ -197,11 +199,12 @@ def _():
 def example_test():
     def func():
         assert 1 < 2
+
     return func
+
 
 @test("@test attaches correct WardMeta to test function it wraps")
 def _(func=example_test):
-
     out_func = testable_test(func)
 
     assert out_func.ward_meta == WardMeta(
@@ -238,3 +241,11 @@ def _(func=example_test):
     out_func = test("test")(func)
 
     assert not hasattr(out_func, "ward_meta")
+
+
+@test("@test collects tests into specified data structure")
+def _(func=example_test):
+    dest = defaultdict(list)
+    path = Path("p")
+    test("test", _collect_into=dest, _force_path=path)(func)
+    assert dest[path.absolute()] == [func]
