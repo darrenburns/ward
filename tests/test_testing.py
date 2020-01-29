@@ -3,10 +3,11 @@ from unittest.mock import Mock
 
 import sys
 
-from tests.utilities import testable_test
+from tests.utilities import testable_test, FORCE_TEST_PATH
 from ward import raises, Scope
 from ward.errors import ParameterisationError
 from ward.fixtures import fixture
+from ward.models import WardMeta
 from ward.testing import Test, test, each, ParamMeta
 
 
@@ -190,3 +191,42 @@ def _():
     t()
     assert t.sout.getvalue() == ""
     assert t.serr.getvalue() == ""
+
+
+@test("@test attaches correct WardMeta to test function it wraps")
+def _():
+    def in_func():
+        assert 1 < 2
+
+    out_func = testable_test(in_func)
+
+    assert out_func.ward_meta == WardMeta(
+        marker=None,
+        description="testable test description",
+        is_fixture=False,
+        scope=Scope.Test,
+        bound_args=None,
+        path=FORCE_TEST_PATH,
+    )
+
+
+@test("@test doesn't attach WardMeta to functions in non-test modules")
+def _():
+    def in_func():
+        assert 1 < 2
+
+    in_func.__module__ = "blah"
+
+    out_func = test('test')(in_func)
+
+    assert not hasattr(out_func, "ward_meta")
+
+@test("@test attaches WardMeta to functions in modules ending in '_test'")
+def _():
+    def in_func():
+        assert 1 < 2
+
+    in_func.__module__ = "its_a_test"
+    out_func = test('test')(in_func)
+
+    assert hasattr(out_func, "ward_meta")
