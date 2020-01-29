@@ -1,12 +1,15 @@
+from collections import defaultdict
+from pathlib import Path
 from unittest import mock
 from unittest.mock import Mock
 
 import sys
 
-from tests.test_suite import testable_test
+from tests.utilities import testable_test, FORCE_TEST_PATH
 from ward import raises, Scope
 from ward.errors import ParameterisationError
 from ward.fixtures import fixture
+from ward.models import WardMeta
 from ward.testing import Test, test, each, ParamMeta
 
 
@@ -190,3 +193,77 @@ def _():
     t()
     assert t.sout.getvalue() == ""
     assert t.serr.getvalue() == ""
+
+
+@fixture
+def example_test():
+    def func():
+        assert 1 < 2
+
+    return func
+
+
+@test("@test attaches correct WardMeta to test function it wraps")
+def _(func=example_test):
+    out_func = testable_test(func)
+
+    assert out_func.ward_meta == WardMeta(
+        marker=None,
+        description="testable test description",
+        is_fixture=False,
+        scope=Scope.Test,
+        bound_args=None,
+        path=FORCE_TEST_PATH,
+    )
+
+
+@test("@test doesn't attach WardMeta to functions in non-test modules")
+def _(func=example_test):
+    func.__module__ = "blah"
+    out_func = test("test")(func)
+
+    assert not hasattr(out_func, "ward_meta")
+
+
+@test("@test attaches WardMeta to functions in modules ending in '_test'")
+def _(func=example_test):
+    func.__module__ = "its_a_test"
+    out_func = test("test")(func)
+
+    assert hasattr(out_func, "ward_meta")
+
+
+@test("@test doesn't attach WardMeta to tests from imported modules")
+def _(func=example_test):
+    # There is an underlying assumption here that a test from an
+    # imported module will always have a __module__ containing a "."
+    func.__module__ = "test_contains.dot_test"
+    out_func = test("test")(func)
+
+    assert not hasattr(out_func, "ward_meta")
+
+
+@test("@test collects tests into specified data structure")
+def _(func=example_test):
+    dest = defaultdict(list)
+    path = Path("p")
+    test("test", _collect_into=dest, _force_path=path)(func)
+    assert dest[path.absolute()] == [func]
+
+
+@test("@test doesn't collect items from non-test modules")
+def _(func=example_test):
+    func.__module__ = "run"
+    dest = defaultdict(list)
+    path = Path("p")
+    test("test", _collect_into=dest, _force_path=path)(func)
+    assert len(dest) == 0
+
+
+@test("@test doesn't tests imported from another test module")
+def _(func=example_test):
+    func.__module__ = "test_contains.dot_test"
+    dest = defaultdict(list)
+    path = Path("p")
+    test("test", _collect_into=dest, _force_path=path)(func)
+    assert len(dest) == 0
