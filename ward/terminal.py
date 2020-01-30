@@ -48,7 +48,10 @@ def output_test_result_line(test_result: TestResult):
     # If we're executing a parameterised test
     param_meta = test_result.test.param_meta
     if param_meta.group_size > 1:
-        iter_indicator = f" [{param_meta.instance_index + 1}/{param_meta.group_size}]"
+        pad = len(str(param_meta.group_size))
+        iter_indicator = (
+            f" [{param_meta.instance_index + 1:>{pad}}/{param_meta.group_size}]"
+        )
     else:
         iter_indicator = ""
 
