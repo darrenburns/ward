@@ -1,12 +1,12 @@
 import importlib
 import importlib.util
 import inspect
-import os
 import pkgutil
+from collections import defaultdict
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterable, List, Set
+from typing import Any, Callable, Dict, Generator, Iterable, List
 
 from ward.models import WardMeta
 from ward.testing import Test, anonymous_tests, is_test_module_name
@@ -20,27 +20,33 @@ def is_test_module(module: pkgutil.ModuleInfo) -> bool:
 def get_info_for_modules(
     paths: List[Path],
 ) -> Generator[pkgutil.ModuleInfo, None, None]:
+    # iter_modules does not work on normal files, so if passed a file, we iterate over its parent
+    # directory and match against its name
+
     # If multiple paths are specified, remove duplicates
     paths = list(set(paths))
 
-    checked_dirs: Set[Path] = set(p for p in paths)
-
-    # Check for modules at the root of the specified path (or paths)
-    for module in pkgutil.iter_modules([str(p) for p in paths]):
-        if is_test_module(module):
-            yield module
-
-    # Now check for modules in every subdirectory
+    # Split files from directories. Files are stored with their parent directory, so we don't
+    # iterate over them multiple times.
+    files: Dict[Path, List[str]] = defaultdict(list)
+    dirs = []
     for p in paths:
-        for root, dirs, _ in os.walk(str(p)):
-            for dir_name in dirs:
-                dir_path = Path(root, dir_name)
-                # if we have seen this directory before, skip it
-                if dir_path not in checked_dirs:
-                    checked_dirs.add(dir_path)
-                    for module in pkgutil.iter_modules([str(dir_path)]):
-                        if is_test_module(module):
-                            yield module
+        if p.is_file():
+            files[p.parent].append(p.stem)
+        elif p.is_dir():
+            dirs.append(p)
+
+    # Handle normal files
+    for parent, files_ in files.items():
+        for module in pkgutil.iter_modules([str(parent)]):
+            if module.name in files_ and is_test_module(module):
+                yield module
+
+    # Handle directories
+    for module in pkgutil.walk_packages(path=[str(d) for d in dirs]):
+        if is_test_module(module):
+            print(module)
+            yield module
 
 
 def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, None]:
