@@ -2,7 +2,12 @@ from pathlib import Path
 from timeit import default_timer
 from typing import Tuple, Optional, List
 
-from ward.collect import get_info_for_modules, load_modules, get_tests_in_modules, search_generally
+from ward.collect import (
+    get_info_for_modules,
+    load_modules,
+    get_tests_in_modules,
+    search_generally,
+)
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite

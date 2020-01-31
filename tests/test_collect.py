@@ -45,7 +45,6 @@ def _(tests=tests_to_search):
         next(results)
 
 
-
 @test("is_test_module(<module: '{module_name}'>) returns {rv}")
 def _(
     module_name=each("test_apples", "apples"), rv=each(True, False),

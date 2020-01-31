@@ -28,6 +28,9 @@ class WatchModeChangeHandler(FileSystemEventHandler):
 
 
 def enter_watch_mode(context: click.Context, param: click.Parameter, value: str):
+    if not value or context.resilient_parsing:
+        return
+
     observer = PollingObserver()
     event_handler = WatchModeChangeHandler()
     observer.schedule(event_handler, value, recursive=True)
