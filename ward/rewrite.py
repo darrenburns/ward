@@ -24,6 +24,10 @@ assert_func_namespace = {
     assert_not_in.__name__: assert_not_in,
     assert_is.__name__: assert_is,
     assert_is_not.__name__: assert_is_not,
+    assert_less_than_equal_to.__name__: assert_less_than_equal_to,
+    assert_less_than.__name__: assert_less_than,
+    assert_greater_than_equal_to.__name__: assert_greater_than_equal_to,
+    assert_greater_than.__name__: assert_greater_than,
 }
 
 
