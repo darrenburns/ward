@@ -34,7 +34,7 @@ def _(suite=suite):
 def _(suite=suite):
     runs = suite.generate_test_runs()
 
-    assert len(list(runs)) == NUMBER_OF_TESTS
+    assert len(list(runs)) == 5
 
 
 @test("Suite.generate_test_runs generates yields the expected test results")
@@ -352,7 +352,7 @@ def _():
     def test_1(a=each(a, "second", a)):
         events.append("running test")
 
-    suite = Suite(tests=[Test(fn=test_1, module_name="module1"),])
+    suite = Suite(tests=[Test(fn=test_1, module_name="module1"), ])
 
     list(suite.generate_test_runs())
 

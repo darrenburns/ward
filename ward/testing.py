@@ -392,6 +392,10 @@ def test(description: str, *args, **kwargs):
     return decorator_test
 
 
+def clear_cached_tests():
+    anonymous_tests.clear()
+
+
 class TestOutcome(Enum):
     PASS = auto()
     FAIL = auto()

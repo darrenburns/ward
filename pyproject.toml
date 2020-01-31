@@ -16,6 +16,7 @@ requires = [
     "click>=7.0",
     "toml>=0.9.4",
     "pygments>=2.4.2",
+    "watchdog>=0.10.0",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -42,7 +43,7 @@ dev = [
 ]
 
 [tool.flit.scripts]
-ward = "ward.run:run"
+ward = "ward.cli:run"
 
 [tool.ward]
 path = ["tests"]
