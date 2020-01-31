@@ -45,7 +45,6 @@ def get_info_for_modules(
     # Handle directories
     for module in pkgutil.walk_packages(path=[str(d) for d in dirs]):
         if is_test_module(module):
-            print(module)
             yield module
 
 
