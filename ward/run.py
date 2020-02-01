@@ -14,6 +14,7 @@ from ward.collect import (
     search_generally,
 )
 from ward.config import set_defaults_from_config
+from ward.debug import breakpointhook
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite, get_exit_code
@@ -21,6 +22,13 @@ from ward.terminal import SimpleTestResultWrite, get_exit_code
 init()
 
 sys.path.append(".")
+
+try:
+    breakpoint
+    sys.breakpointhook = breakpointhook
+except NameError:
+    import pdb
+    pdb.set_trace = breakpointhook
 
 
 @click.command()
