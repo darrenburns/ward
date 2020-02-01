@@ -81,6 +81,12 @@ def set_defaults_from_config(
     default=True,
     help="Enable or disable output capturing.",
 )
+@click.option(
+    "--exclude",
+    type=click.STRING,
+    multiple=True,
+    help="Paths to ignore while searching for tests. Accepts glob patterns.",
+)
 @click.version_option(version=__version__)
 @click.option(
     "--config",
@@ -90,12 +96,6 @@ def set_defaults_from_config(
     callback=set_defaults_from_config,
     help="Read configuration from PATH.",
     is_eager=True,
-)
-@click.option(
-    "--exclude",
-    type=click.STRING,
-    multiple=True,
-    help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
 @click.option(
     "-p",
@@ -117,6 +117,7 @@ def run(
     capture_output: bool,
     config: str,
 ):
+    print(capture_output)
     start_run = default_timer()
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
