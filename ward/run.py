@@ -77,15 +77,15 @@ def set_defaults_from_config(
     help="Specify the order in which tests should run.",
 )
 @click.option(
-    "--capture-output/--no-capture-output",
-    default=True,
-    help="Enable or disable output capturing.",
-)
-@click.option(
     "--exclude",
     type=click.STRING,
     multiple=True,
     help="Paths to ignore while searching for tests. Accepts glob patterns.",
+)
+@click.option(
+    "--capture-output/--no-capture-output",
+    default=True,
+    help="Enable or disable output capturing.",
 )
 @click.version_option(version=__version__)
 @click.option(
@@ -117,7 +117,6 @@ def run(
     capture_output: bool,
     config: str,
 ):
-    print(capture_output)
     start_run = default_timer()
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)

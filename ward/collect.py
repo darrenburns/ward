@@ -41,13 +41,15 @@ def remove_excluded_paths(
 
 def handled_elsewhere(module_path: Path, search_paths: Iterable[Path]) -> bool:
     """
-    Return True if module_path is contained within any of the search paths. False otherwise.
+    Return True if the module path starts with any of the search paths,
+    that is, if any module is contained within any of the search paths
     """
-    return any(
-        dir_path.resolve() in module_path.resolve().parents
-        for dir_path in search_paths
-        if dir_path.is_dir()
-    )
+
+    for search_path in search_paths:
+        if search_path.is_dir():
+            if search_path in module_path.parents:
+                return True
+    return False
 
 
 def get_info_for_modules(
