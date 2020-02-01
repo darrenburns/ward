@@ -117,10 +117,21 @@ def project():
     yield from make_project("module.py")
 
 
-@test("handled_elsewhere() is True")
+@test("handled_elsewhere({mod}, {search}) is True")
 def _(
     root: Path = project,
-    search=each("", "a", "a/b", "a/b/c"),
+    search=each("", "/", "a", "a/b", "a/b/c"),
+    mod="a/b/c/d/e.py",
 ):
-    module_path = root / "a/b/c/d/e.py"
+    module_path = root / mod
     assert handled_elsewhere(module_path, [root / search])
+
+
+@test("handled_elsewhere({mod}, {search}) is False")
+def _(
+    root: Path = project,
+    search=each("x/y/z", "a.py", "a/b.py", "a/b/c/d/e.py"),
+    mod="a/b/c/d/e.py",
+):
+    module_path = root / mod
+    assert not handled_elsewhere(module_path, [root / search])
