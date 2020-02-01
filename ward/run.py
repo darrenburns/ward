@@ -92,6 +92,12 @@ def set_defaults_from_config(
     is_eager=True,
 )
 @click.option(
+    "--exclude",
+    type=click.STRING,
+    multiple=True,
+    help="Paths to ignore while searching for tests. Accepts glob patterns.",
+)
+@click.option(
     "-p",
     "--path",
     type=click.Path(exists=True),
@@ -103,6 +109,7 @@ def set_defaults_from_config(
 def run(
     ctx: click.Context,
     path: Tuple[str],
+    exclude: Tuple[str],
     search: Optional[str],
     fail_limit: Optional[int],
     test_output_style: str,
@@ -112,7 +119,7 @@ def run(
 ):
     start_run = default_timer()
     paths = [Path(p) for p in path]
-    mod_infos = get_info_for_modules(paths)
+    mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
     tests = list(search_generally(unfiltered_tests, query=search))

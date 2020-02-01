@@ -6,50 +6,85 @@ import pkgutil
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterable, List, Set
+from typing import Any, Callable, Generator, Iterable, List, Set, Tuple
 
+from ward.errors import CollectionError
 from ward.models import WardMeta
 from ward.testing import Test, anonymous_tests, is_test_module_name
 from ward.util import get_absolute_path
+
+Glob = str
 
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:
     return is_test_module_name(module.name)
 
 
+def get_module_path(module: pkgutil.ModuleInfo) -> Path:
+    return Path(module.module_finder.find_module(module.name).path)
+
+
+def is_excluded_module(module: pkgutil.ModuleInfo, exclusions: Iterable[Glob]) -> bool:
+    return excluded(get_module_path(module), exclusions)
+
+
+def excluded(path: Path, exclusions: Iterable[Glob]) -> bool:
+    """Return True if path matches any of the glob patterns in exclusions. False otherwise."""
+    return any(path.match(pattern) for pattern in exclusions)
+
+
+def remove_excluded_paths(
+    paths: Iterable[Path], exclusions: Iterable[Glob]
+) -> List[Path]:
+    return [p for p in paths if not excluded(p, exclusions)]
+
+
+def handled_elsewhere(module_path: Path, search_paths: Iterable[Path]) -> bool:
+    """
+    Return True if module_path is contained within any of the search paths. False otherwise.
+    """
+    return any(
+        dir_path.resolve() in module_path.resolve().parents
+        for dir_path in search_paths
+        if dir_path.is_dir()
+    )
+
+
 def get_info_for_modules(
-    paths: List[Path],
+    paths: List[Path], exclude: Tuple[Glob],
 ) -> Generator[pkgutil.ModuleInfo, None, None]:
-    # If multiple paths are specified, remove duplicates
-    paths = list(set(paths))
+    paths = remove_excluded_paths(set(paths), exclude)
 
     # Handle case where path points directly to modules
     for path in paths:
-        if path.is_file():
-            # Ensure we only yield a module once if it's specified directly
-            # and also is part of a specified directory.
-            if not any(dir_path in path.parents for dir_path in paths if dir_path.is_dir()):
-                spec = importlib.util.spec_from_file_location(path.stem, path)
-                module = importlib.util.module_from_spec(spec)
-                yield module
+        if path.is_file() and not handled_elsewhere(path, paths):
+            spec = importlib.util.spec_from_file_location(path.stem, path)
+            try:
+                mod = importlib.util.module_from_spec(spec)
+            except AttributeError as e:
+                msg = f"Path {str(path)} is not a valid Python module."
+                raise CollectionError(msg) from e
+            yield mod
 
     # Check for modules at the root of the specified path (or paths)
-    for module in pkgutil.iter_modules([str(p) for p in paths if p.is_dir()]):
-        if is_test_module(module):
-            yield module
+    for mod in pkgutil.iter_modules([str(p) for p in paths if p.is_dir()]):
+        if is_test_module(mod) and not is_excluded_module(mod, exclude):
+            yield mod
 
     # Now check for modules in every subdirectory
     checked_dirs: Set[Path] = set(p for p in paths)
     for p in paths:
         for root, dirs, _ in os.walk(str(p)):
+            if excluded(Path(root), exclude):
+                continue
             for dir_name in dirs:
                 dir_path = Path(root, dir_name)
                 # if we have seen this path before, skip it
-                if dir_path not in checked_dirs:
+                if dir_path not in checked_dirs and not excluded(dir_path, exclude):
                     checked_dirs.add(dir_path)
-                    for module in pkgutil.iter_modules([str(dir_path)]):
-                        if is_test_module(module):
-                            yield module
+                    for mod in pkgutil.iter_modules([str(dir_path)]):
+                        if is_test_module(mod) and not is_excluded_module(mod, exclude):
+                            yield mod
 
 
 def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, None]:
