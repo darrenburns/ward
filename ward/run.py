@@ -1,6 +1,6 @@
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 import click
 import sys
@@ -13,44 +13,14 @@ from ward.collect import (
     load_modules,
     search_generally,
 )
-from ward.config import read_config_toml
+from ward.config import set_defaults_from_config
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite, get_exit_code
-from ward.util import find_project_root
 
 init()
 
 sys.path.append(".")
-
-CONFIG_FILE = "pyproject.toml"
-
-
-def set_defaults_from_config(
-    context: click.Context, param: click.Parameter, value: Union[str, int],
-) -> Path:
-    supplied_paths = context.params.get("path")
-
-    search_paths = supplied_paths
-    if not search_paths:
-        search_paths = (".",)
-
-    project_root = find_project_root([Path(path) for path in search_paths])
-    config = read_config_toml(project_root, CONFIG_FILE)
-
-    # Handle params where multiple=True
-    config_paths = config.get("path", ".")
-    if not supplied_paths:
-        if config_paths and isinstance(config_paths, list):
-            config["path"] = config_paths
-        else:
-            config["path"] = [config_paths]
-
-    if context.default_map is None:
-        context.default_map = {}
-
-    context.default_map.update(config)
-    return project_root
 
 
 @click.command()
@@ -75,6 +45,12 @@ def set_defaults_from_config(
     type=click.Choice(["standard", "random"], case_sensitive=False),
     default="standard",
     help="Specify the order in which tests should run.",
+)
+@click.option(
+    "--exclude",
+    type=click.STRING,
+    multiple=True,
+    help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
 @click.option(
     "--capture-output/--no-capture-output",
@@ -103,6 +79,7 @@ def set_defaults_from_config(
 def run(
     ctx: click.Context,
     path: Tuple[str],
+    exclude: Tuple[str],
     search: Optional[str],
     fail_limit: Optional[int],
     test_output_style: str,
@@ -112,7 +89,7 @@ def run(
 ):
     start_run = default_timer()
     paths = [Path(p) for p in path]
-    mod_infos = get_info_for_modules(paths)
+    mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
     tests = list(search_generally(unfiltered_tests, query=search))

@@ -4,3 +4,7 @@ class FixtureError(Exception):
 
 class ParameterisationError(Exception):
     pass
+
+
+class CollectionError(Exception):
+    pass
