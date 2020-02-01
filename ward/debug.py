@@ -42,7 +42,10 @@ def breakpointhook(*args, **kwargs):
 
     if capture_enabled and capture_active:
         sys.stdout = original_stdout
-        cprint(f"[WARD] Entering {modname} - output capturing temporarily cancelled.", color="yellow")
+        cprint(
+            f"[WARD] Entering {modname} - output capturing temporarily cancelled.",
+            color="yellow",
+        )
         return hook(*args, **kwargs)
     return hook(*args, **kwargs)
 
