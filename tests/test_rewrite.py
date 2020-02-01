@@ -174,3 +174,15 @@ def _(
 ):
     assert_node = ast.parse(src).body[0]
     assert not is_comparison_type(assert_node, node_type)
+
+
+if True:
+    @test("test with indentation level of 1")
+    def _():
+        assert 1 + 2 == 3
+
+
+    if True:
+        @test("test with indentation level of 2")
+        def _():
+            assert 2 + 3 == 5
