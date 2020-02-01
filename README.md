@@ -1,7 +1,7 @@
 # Ward
 ![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
-[![Gitter](https://badges.gitter.im/python-ward/community.svg)](https://gitter.im/python-ward/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![Gitter](https://badges.gitter.im/python-ward/community.svg)](https://gitter.im/python-ward/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 See the full documentation and feature set [here](https://wardpy.com).
 
@@ -90,6 +90,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://www.indeliblebluepen.com"><img src="https://avatars2.githubusercontent.com/u/7471402?v=4" width="60px;" alt="Jason C. McDonald"/><br /><sub><b>Jason C. McDonald</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=CodeMouse92" title="Code">💻</a> <a href="#ideas-CodeMouse92" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://github.com/AndydeCleyre"><img src="https://avatars3.githubusercontent.com/u/1787385?v=4" width="60px;" alt="Andy Kluger"/><br /><sub><b>Andy Kluger</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=AndydeCleyre" title="Code">💻</a> <a href="#ideas-AndydeCleyre" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://forum.thebigmunch.me"><img src="https://avatars0.githubusercontent.com/u/118418?v=4" width="60px;" alt="thebigmunch"/><br /><sub><b>thebigmunch</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=thebigmunch" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/onlyanegg"><img src="https://avatars0.githubusercontent.com/u/7731128?v=4" width="60px;" alt="Tyler Couto"/><br /><sub><b>Tyler Couto</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=onlyanegg" title="Code">💻</a></td>
   </tr>
 </table>
 

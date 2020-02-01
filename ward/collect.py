@@ -23,28 +23,30 @@ def get_info_for_modules(
     # If multiple paths are specified, remove duplicates
     paths = list(set(paths))
 
-    # Handle case where paths are modules themselves
+    # Handle case where path points directly to modules
     for path in paths:
         if path.is_file():
-            spec = importlib.util.spec_from_file_location(path.stem, path)
-            module = importlib.util.module_from_spec(spec)
-            yield module
+            # Ensure we only yield a module once if it's specified directly
+            # and also is part of a specified directory.
+            if not any(dir_path in path.parents for dir_path in paths if dir_path.is_dir()):
+                spec = importlib.util.spec_from_file_location(path.stem, path)
+                module = importlib.util.module_from_spec(spec)
+                yield module
 
     # Check for modules at the root of the specified path (or paths)
     for module in pkgutil.iter_modules([str(p) for p in paths if p.is_dir()]):
         if is_test_module(module):
             yield module
 
-    checked_paths: Set[Path] = set(p for p in paths)
-
     # Now check for modules in every subdirectory
+    checked_dirs: Set[Path] = set(p for p in paths)
     for p in paths:
         for root, dirs, _ in os.walk(str(p)):
             for dir_name in dirs:
                 dir_path = Path(root, dir_name)
-                # if we have seen this directory before, skip it
-                if dir_path not in checked_paths:
-                    checked_paths.add(dir_path)
+                # if we have seen this path before, skip it
+                if dir_path not in checked_dirs:
+                    checked_dirs.add(dir_path)
                     for module in pkgutil.iter_modules([str(dir_path)]):
                         if is_test_module(module):
                             yield module
@@ -56,7 +58,7 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
             file_finder: FileFinder = m.module_finder
             spec: ModuleSpec = file_finder.find_spec(m.name)
             m = importlib.util.module_from_spec(spec)
-        if m.__name__.startswith("test_"):
+        if is_test_module_name(m.__name__):
             m.__loader__.exec_module(m)
             yield m
 
