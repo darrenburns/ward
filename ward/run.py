@@ -1,18 +1,13 @@
+import sys
 from pathlib import Path
 from timeit import default_timer
 from typing import Optional, Tuple
 
 import click
-import sys
 from colorama import init
-
 from ward._ward_version import __version__
-from ward.collect import (
-    get_info_for_modules,
-    get_tests_in_modules,
-    load_modules,
-    search_generally,
-)
+from ward.collect import (get_info_for_modules, get_tests_in_modules,
+                          load_modules, search_generally)
 from ward.config import set_defaults_from_config
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
@@ -75,6 +70,13 @@ sys.path.append(".")
     is_eager=True,
     help="Look for tests in PATH.",
 )
+@click.option(
+    "-d",
+    "--duration",
+    type=int,
+    help="Record and display duration of n longest running tests",
+    default=0,
+)
 @click.pass_context
 def run(
     ctx: click.Context,
@@ -86,12 +88,13 @@ def run(
     order: str,
     capture_output: bool,
     config: str,
+    duration: int,
 ):
     start_run = default_timer()
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
-    unfiltered_tests = get_tests_in_modules(modules, capture_output)
+    unfiltered_tests = get_tests_in_modules(modules, capture_output, duration)
     tests = list(search_generally(unfiltered_tests, query=search))
 
     # Rewrite assertions in each test
@@ -106,6 +109,8 @@ def run(
     results = writer.output_all_test_results(
         test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
     )
+    if duration:
+        writer.output_longest_durations(results, duration)
     time_taken = default_timer() - start_run
     writer.output_test_result_summary(results, time_taken)
 

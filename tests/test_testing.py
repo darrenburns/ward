@@ -1,16 +1,16 @@
+import sys
 from collections import defaultdict
 from pathlib import Path
 from unittest import mock
 from unittest.mock import Mock
 
-import sys
-
-from tests.utilities import testable_test, FORCE_TEST_PATH
-from ward import raises, Scope
+from ward import Scope, raises
 from ward.errors import ParameterisationError
 from ward.fixtures import fixture
 from ward.models import WardMeta
-from ward.testing import Test, test, each, ParamMeta
+from ward.testing import ParamMeta, Test, each, test
+
+from tests.utilities import FORCE_TEST_PATH, testable_test
 
 
 def f():
@@ -179,22 +179,27 @@ def _():
 def i_print_something():
     print("out")
     sys.stderr.write("err")
+    raise Exception
 
 
 @test("stdout/stderr are captured by default when a test is called")
 def _():
     t = Test(fn=i_print_something, module_name="")
     t()
-    assert t.sout.getvalue() == "out\n"
-    assert t.serr.getvalue() == "err"
+    assert t.result.captured_stdout == "out\n"
+    assert t.result.captured_stderr == "err"
+    # assert t.sout.getvalue() == "out\n"
+    # assert t.serr.getvalue() == "err"
 
 
 @test("stdout/stderr are not captured when Test.capture_output = False")
 def _():
     t = Test(fn=i_print_something, module_name="", capture_output=False)
     t()
-    assert t.sout.getvalue() == ""
-    assert t.serr.getvalue() == ""
+    assert t.result.captured_stdout == ""
+    assert t.result.captured_stderr == ""
+    # assert t.sout.getvalue() == ""
+    # assert t.serr.getvalue() == ""
 
 
 @fixture

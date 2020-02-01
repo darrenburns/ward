@@ -1,23 +1,22 @@
 import inspect
 import os
 import platform
+import sys
 import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from textwrap import wrap, indent
-from typing import Any, Dict, Generator, List, Optional, Iterable
+from textwrap import indent, wrap
+from typing import Any, Dict, Generator, Iterable, List, Optional
 
-import sys
 from colorama import Fore, Style
 from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.python import PythonLexer
 from termcolor import colored, cprint
-
 from ward._ward_version import __version__
 from ward.diff import make_diff
-from ward.expect import TestFailure, Comparison
+from ward.expect import Comparison, TestFailure
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
 
@@ -423,6 +422,16 @@ class SimpleTestResultWrite(TestResultWriterBase):
             output += " ] "
 
         print(output)
+
+    def output_longest_durations(self, test_results: List[TestResult], num_tests: int):
+        test_results = sorted(
+            test_results, key=lambda r: r.test.timer.duration, reverse=True
+        )
+        print(f"{num_tests} Longest Running Tests:")
+        for result in test_results[:num_tests]:
+            print(
+                f"{result.test.timer.duration:.2f} sec - {result.test.description} - {result.test.module_name}:{result.test.line_number}"
+            )
 
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:

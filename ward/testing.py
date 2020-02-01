@@ -2,17 +2,18 @@ import functools
 import inspect
 import uuid
 from collections import defaultdict
-from contextlib import closing, redirect_stderr, redirect_stdout
+from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
-from enum import auto, Enum
+from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
+from time import time
 from types import MappingProxyType
-from typing import Callable, Dict, List, Optional, Any, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from ward.errors import FixtureError, ParameterisationError
 from ward.fixtures import Fixture, FixtureCache, ScopeKey
-from ward.models import Marker, SkipMarker, XfailMarker, WardMeta, Scope
+from ward.models import Marker, Scope, SkipMarker, WardMeta, XfailMarker
 from ward.util import get_absolute_path
 
 
@@ -104,12 +105,56 @@ class Test:
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)
     ward_meta: WardMeta = field(default_factory=WardMeta)
+    record_duration: bool = True
+    timer: Optional["Timer"] = None
+    result: Optional["TestResult"] = None
 
     def __call__(self, *args, **kwargs):
-        if self.capture_output:
-            with redirect_stdout(self.sout), redirect_stderr(self.serr):
-                return self.fn(*args, **kwargs)
-        return self.fn(*args, **kwargs)
+        with ExitStack() as stack:
+            if self.capture_output:
+                stack.enter_context(redirect_stdout(self.sout))
+                stack.enter_context(redirect_stderr(self.serr))
+            if self.record_duration:
+                self.timer = stack.enter_context(Timer())
+
+            if isinstance(self.marker, SkipMarker):
+                # TODO: Do sout and serr need to be part of the class? If they weren't we could have
+                # the ExitStack close them
+                with closing(self.sout), closing(self.serr):
+                    self.result = TestResult(self, TestOutcome.SKIP)
+                return
+
+            try:
+                self.fn(*args, **kwargs)
+            except FixtureError as e:
+                outcome = TestOutcome.FAIL
+                error = e
+            except Exception as e:
+                outcome = (
+                    TestOutcome.XFAIL
+                    if isinstance(self.marker, XfailMarker)
+                    else TestOutcome.FAIL
+                )
+                error = e
+            else:
+                outcome = (
+                    TestOutcome.XPASS
+                    if isinstance(self.marker, XfailMarker)
+                    else TestOutcome.PASS
+                )
+                error = None
+
+        with closing(self.sout), closing(self.serr):
+            if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
+                self.result = TestResult(self, outcome)
+            else:
+                self.result = TestResult(
+                    self,
+                    outcome,
+                    error,
+                    captured_stdout=self.sout.getvalue(),
+                    captured_stderr=self.serr.getvalue(),
+                )
 
     @property
     def name(self) -> str:
@@ -409,3 +454,16 @@ class TestResult:
     message: str = ""
     captured_stdout: str = ""
     captured_stderr: str = ""
+
+
+class Timer:
+    def __init__(self):
+        self._start_time = None
+        self.duration = None
+
+    def __enter__(self):
+        self._start_time = time()
+        return self
+
+    def __exit__(self, *args):
+        self.duration = time() - self._start_time
