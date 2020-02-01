@@ -1,6 +1,6 @@
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 import click
 import sys
@@ -13,44 +13,14 @@ from ward.collect import (
     load_modules,
     search_generally,
 )
-from ward.config import read_config_toml
+from ward.config import set_defaults_from_config
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
 from ward.terminal import SimpleTestResultWrite, get_exit_code
-from ward.util import find_project_root
 
 init()
 
 sys.path.append(".")
-
-CONFIG_FILE = "pyproject.toml"
-
-
-def set_defaults_from_config(
-    context: click.Context, param: click.Parameter, value: Union[str, int],
-) -> Path:
-    supplied_paths = context.params.get("path")
-
-    search_paths = supplied_paths
-    if not search_paths:
-        search_paths = (".",)
-
-    project_root = find_project_root([Path(path) for path in search_paths])
-    config = read_config_toml(project_root, CONFIG_FILE)
-
-    # Handle params where multiple=True
-    config_paths = config.get("path", ".")
-    if not supplied_paths:
-        if config_paths and isinstance(config_paths, list):
-            config["path"] = config_paths
-        else:
-            config["path"] = [config_paths]
-
-    if context.default_map is None:
-        context.default_map = {}
-
-    context.default_map.update(config)
-    return project_root
 
 
 @click.command()

@@ -10,7 +10,9 @@ from ward.collect import (
     is_test_module,
     get_module_path,
     is_excluded_module,
-    remove_excluded_paths, handled_elsewhere)
+    remove_excluded_paths,
+    handled_elsewhere,
+)
 from ward.testing import Test, each
 
 
@@ -95,10 +97,7 @@ def _(
 
 
 @test("is_excluded_module({mod.name}) is False for {excludes}")
-def _(
-    mod=test_module,
-    excludes=each("abc", str(PATH.parent))
-):
+def _(mod=test_module, excludes=each("abc", str(PATH.parent))):
     assert not is_excluded_module(mod, [excludes])
 
 
@@ -119,9 +118,7 @@ def project():
 
 @test("handled_elsewhere({mod}, {search}) is True")
 def _(
-    root: Path = project,
-    search=each("", "/", "a", "a/b", "a/b/c"),
-    mod="a/b/c/d/e.py",
+    root: Path = project, search=each("", "/", "a", "a/b", "a/b/c"), mod="a/b/c/d/e.py",
 ):
     module_path = root / mod
     assert handled_elsewhere(module_path, [root / search])
