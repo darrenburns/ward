@@ -39,12 +39,11 @@ def remove_excluded_paths(
     return [p for p in paths if not excluded(p, exclusions)]
 
 
-def handled_elsewhere(module_path: Path, search_paths: Iterable[Path]) -> bool:
+def handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
     """
     Return True if the module path starts with any of the search paths,
     that is, if any module is contained within any of the search paths
     """
-
     for search_path in search_paths:
         if search_path.is_dir():
             if search_path in module_path.parents:
@@ -59,7 +58,7 @@ def get_info_for_modules(
 
     # Handle case where path points directly to modules
     for path in paths:
-        if path.is_file() and not handled_elsewhere(path, paths):
+        if path.is_file() and not handled_within(path, paths):
             spec = importlib.util.spec_from_file_location(path.stem, path)
             try:
                 mod = importlib.util.module_from_spec(spec)

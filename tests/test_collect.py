@@ -11,7 +11,7 @@ from ward.collect import (
     get_module_path,
     is_excluded_module,
     remove_excluded_paths,
-    handled_elsewhere,
+    handled_within,
 )
 from ward.testing import Test, each
 
@@ -116,19 +116,19 @@ def project():
     yield from make_project("module.py")
 
 
-@test("handled_elsewhere({mod}, {search}) is True")
+@test("handled_within({mod}, {search}) is True")
 def _(
     root: Path = project, search=each("", "/", "a", "a/b", "a/b/c"), mod="a/b/c/d/e.py",
 ):
     module_path = root / mod
-    assert handled_elsewhere(module_path, [root / search])
+    assert handled_within(module_path, [root / search])
 
 
-@test("handled_elsewhere({mod}, {search}) is False")
+@test("handled_within({mod}, {search}) is False")
 def _(
     root: Path = project,
     search=each("x/y/z", "a.py", "a/b.py", "a/b/c/d/e.py"),
     mod="a/b/c/d/e.py",
 ):
     module_path = root / mod
-    assert not handled_elsewhere(module_path, [root / search])
+    assert not handled_within(module_path, [root / search])

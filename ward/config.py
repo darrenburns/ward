@@ -9,6 +9,8 @@ from ward.util import find_project_root
 ConfigValue = Union[int, str, bool, Iterable[str]]
 Config = Dict[str, ConfigValue]
 
+CONFIG_FILE = "pyproject.toml"
+
 
 def read_config_toml(project_root: Path, config_file: str) -> Config:
     path = project_root / config_file
@@ -79,6 +81,3 @@ def set_defaults_from_config(
 
     context.default_map.update(file_config)
     return project_root
-
-
-CONFIG_FILE = "pyproject.toml"
