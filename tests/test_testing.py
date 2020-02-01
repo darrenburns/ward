@@ -141,7 +141,7 @@ def _():
     def test(a=each(1, 2), b=each(3, 4)):
         pass
 
-    t = Test(fn=test, module_name=mod)
+    t = Test(fn=test, module_name=mod, capture_output=False)
     assert t.get_parameterised_instances() == [
         Test(
             id=mock.ANY,
@@ -150,6 +150,7 @@ def _():
             param_meta=ParamMeta(0, 2),
             sout=mock.ANY,
             serr=mock.ANY,
+            capture_output=False,
         ),
         Test(
             id=mock.ANY,
@@ -158,6 +159,7 @@ def _():
             param_meta=ParamMeta(1, 2),
             sout=mock.ANY,
             serr=mock.ANY,
+            capture_output=False,
         ),
     ]
 

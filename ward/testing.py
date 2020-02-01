@@ -175,6 +175,7 @@ class Test:
                     param_meta=ParamMeta(
                         instance_index=instance_index, group_size=number_of_instances
                     ),
+                    capture_output=self.capture_output,
                 )
             )
         return generated_tests
