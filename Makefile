@@ -21,6 +21,7 @@ venv: make-venv
 
 make-venv:
 	python3 -m venv make-venv
+	$(VENVBIN)/pip install --upgrade pip
 	$(VENVBIN)/pip install .[dev]
 
 lint: make-venv
