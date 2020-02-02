@@ -40,7 +40,7 @@ test: $(VENV)/.install-self
 
 $(VENV)/.install-self: make-venv $(SOURCES)
 	$(VENVBIN)/pip install .
-	@touch $(VENV)/.install-self
+	@touch $@
 
 prep: lint format test tidy
 .PHONY: prep
