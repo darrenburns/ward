@@ -110,7 +110,7 @@ def rewrite_assertion(test: Test) -> Test:
     # We dedented the code so that it was a valid tree, now re-apply the indent
     for child in ast.walk(new_tree):
         if hasattr(child, "col_offset"):
-            child.col_offset = getattr(child, 'col_offset', 0) + col_offset
+            child.col_offset = getattr(child, "col_offset", 0) + col_offset
 
     # Reconstruct the test function
     new_mod_code_obj = compile(new_tree, code_obj.co_filename, "exec")
