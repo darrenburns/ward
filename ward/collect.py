@@ -100,7 +100,7 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
 
 
 def get_tests_in_modules(
-    modules: Iterable, capture_output: bool = True, duration: int = 0
+    modules: Iterable, capture_output: bool = True
 ) -> Generator[Test, None, None]:
     for mod in modules:
         mod_name = mod.__name__
@@ -115,7 +115,6 @@ def get_tests_in_modules(
                     marker=meta.marker,
                     description=meta.description or "",
                     capture_output=capture_output,
-                    record_duration=bool(duration),
                 )
 
 

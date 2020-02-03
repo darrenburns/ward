@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
-from time import time
+from timeit import default_timer
 from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -105,30 +105,36 @@ class Test:
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)
     ward_meta: WardMeta = field(default_factory=WardMeta)
-    record_duration: bool = True
     timer: Optional["Timer"] = None
-    result: Optional["TestResult"] = None
+    args: Optional[Dict[str, Any]] = None
 
-    def __call__(self, *args, **kwargs):
+    def run(self, cache: FixtureCache, idx: int = 0) -> "TestResult":
+        if self.args is None:
+            raise RuntimeError()
+
         with ExitStack() as stack:
+            self.timer = stack.enter_context(Timer())
             if self.capture_output:
                 stack.enter_context(redirect_stdout(self.sout))
                 stack.enter_context(redirect_stderr(self.serr))
-            if self.record_duration:
-                self.timer = stack.enter_context(Timer())
 
             if isinstance(self.marker, SkipMarker):
-                # TODO: Do sout and serr need to be part of the class? If they weren't we could have
+                # TODO:onlyanegg: Do sout and serr need to be part of the class? If they weren't we could have
                 # the ExitStack close them
                 with closing(self.sout), closing(self.serr):
-                    self.result = TestResult(self, TestOutcome.SKIP)
-                return
+                    result = TestResult(self, TestOutcome.SKIP)
+                return result
 
             try:
-                self.fn(*args, **kwargs)
+                # TODO:onlyanegg: I don't love this. We're setting up the
+                # fixture within the testing module, but cleaning it up in the
+                # suite module.
+                self.resolve_args(cache, iteration=idx)
+                self.format_description()
+                self.fn(**self.args)
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
-                error = e
+                error: Optional[Exception] = e
             except Exception as e:
                 outcome = (
                     TestOutcome.XFAIL
@@ -146,15 +152,17 @@ class Test:
 
         with closing(self.sout), closing(self.serr):
             if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
-                self.result = TestResult(self, outcome)
+                result = TestResult(self, outcome)
             else:
-                self.result = TestResult(
+                result = TestResult(
                     self,
                     outcome,
                     error,
                     captured_stdout=self.sout.getvalue(),
                     captured_stderr=self.serr.getvalue(),
                 )
+
+        return result
 
     @property
     def name(self) -> str:
@@ -211,24 +219,23 @@ class Test:
 
         generated_tests = []
         for instance_index in range(number_of_instances):
-            generated_tests.append(
-                Test(
-                    fn=self.fn,
-                    module_name=self.module_name,
-                    marker=self.marker,
-                    description=self.description,
-                    param_meta=ParamMeta(
-                        instance_index=instance_index, group_size=number_of_instances
-                    ),
-                    capture_output=self.capture_output,
-                )
+            test = Test(
+                fn=self.fn,
+                module_name=self.module_name,
+                marker=self.marker,
+                description=self.description,
+                param_meta=ParamMeta(
+                    instance_index=instance_index, group_size=number_of_instances
+                ),
+                capture_output=self.capture_output,
             )
+            generated_tests.append(test)
         return generated_tests
 
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
-    def resolve_args(self, cache: FixtureCache, iteration: int = 0) -> Dict[str, Any]:
+    def resolve_args(self, cache: FixtureCache, iteration: int = 0) -> None:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         If the argument is not a fixture, the raw argument will be used.
@@ -237,8 +244,9 @@ class Test:
         """
         if self.capture_output:
             with redirect_stdout(self.sout), redirect_stderr(self.serr):
-                return self._resolve_args(cache, iteration)
-        return self._resolve_args(cache, iteration)
+                self.args = self._resolve_args(cache, iteration)
+        else:
+            self.args = self._resolve_args(cache, iteration)
 
     def _resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
         if not self.has_deps:
@@ -320,6 +328,13 @@ class Test:
     def _resolve_single_arg(
         self, arg: Callable, cache: FixtureCache
     ) -> Union[Any, Fixture]:
+        """
+        Get the fixture return value
+
+        If the fixture has been cached, return the value from the cache.
+        Otherwise, call the fixture function and return the value.
+        """
+
         if not hasattr(arg, "ward_meta"):
             return arg
 
@@ -372,7 +387,7 @@ class Test:
                 resolved_vals[k] = arg
         return resolved_vals
 
-    def format_description(self, arg_map: Dict[str, Any]) -> str:
+    def format_description(self) -> str:
         """
         Applies any necessary string formatting to the description,
         given a dictionary `arg_map` of values that will be injected
@@ -381,7 +396,10 @@ class Test:
         This method will mutate the Test by updating the description.
         Returns the newly updated description.
         """
-        format_dict = FormatDict(**arg_map)
+        if self.args is None:
+            raise RuntimeError()
+
+        format_dict = FormatDict(**self.args)
         if not self.description:
             self.description = ""
 
@@ -462,8 +480,8 @@ class Timer:
         self.duration = None
 
     def __enter__(self):
-        self._start_time = time()
+        self._start_time = default_timer()
         return self
 
     def __exit__(self, *args):
-        self.duration = time() - self._start_time
+        self.duration = default_timer() - self._start_time

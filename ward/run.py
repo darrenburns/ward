@@ -94,7 +94,7 @@ def run(
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
-    unfiltered_tests = get_tests_in_modules(modules, capture_output, duration)
+    unfiltered_tests = get_tests_in_modules(modules, capture_output)
     tests = list(search_generally(unfiltered_tests, query=search))
 
     # Rewrite assertions in each test
@@ -109,10 +109,8 @@ def run(
     results = writer.output_all_test_results(
         test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
     )
-    if duration:
-        writer.output_longest_durations(results, duration)
     time_taken = default_timer() - start_run
-    writer.output_test_result_summary(results, time_taken)
+    writer.output_test_result_summary(results, time_taken, duration)
 
     exit_code = get_exit_code(results)
 

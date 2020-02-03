@@ -4,9 +4,8 @@ from random import shuffle
 from typing import Generator, List
 
 from ward import Scope
-from ward.errors import FixtureError
 from ward.fixtures import FixtureCache
-from ward.testing import Test, TestOutcome, TestResult
+from ward.testing import Test, TestResult
 
 
 @dataclass
@@ -26,6 +25,12 @@ class Suite:
         return counts
 
     def generate_test_runs(self, order="standard") -> Generator[TestResult, None, None]:
+        """
+        Run tests
+
+        Returns a generator which yields test results
+        """
+
         if order == "random":
             shuffle(self.tests)
 
@@ -33,11 +38,8 @@ class Suite:
         for test in self.tests:
             generated_tests = test.get_parameterised_instances()
             num_tests_per_module[test.path] -= 1
-            for i, generated_test in enumerate(generated_tests):
-                resolved_vals = generated_test.resolve_args(self.cache, iteration=i)
-                generated_test.format_description(resolved_vals)
-                generated_test(**resolved_vals)
-                yield generated_test.result
+            for idx, generated_test in enumerate(generated_tests):
+                yield generated_test.run(self.cache, idx)
                 self.cache.teardown_fixtures_for_scope(
                     Scope.Test, scope_key=generated_test.id
                 )

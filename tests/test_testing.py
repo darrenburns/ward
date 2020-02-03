@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from ward import Scope, raises
 from ward.errors import ParameterisationError
-from ward.fixtures import fixture
+from ward.fixtures import FixtureCache, fixture
 from ward.models import WardMeta
 from ward.testing import ParamMeta, Test, each, test
 
@@ -39,6 +39,11 @@ def dependent_test():
         assert 1 == 1
 
     return Test(fn=_, module_name=mod)
+
+
+@fixture()
+def cache():
+    return FixtureCache()
 
 
 @test("Test.name should return the name of the function it wraps")
@@ -77,12 +82,12 @@ def _(anonymous_test=anonymous_test):
     assert not anonymous_test.has_deps
 
 
-@test("Test.__call__ should delegate to the function it wraps")
-def _():
+@test("Test.run should delegate to the function it wraps")
+def _(cache: FixtureCache = cache):
     mock = Mock()
-    t = Test(fn=mock, module_name=mod)
-    t(1, 2, key="val")
-    mock.assert_called_once_with(1, 2, key="val")
+    t = Test(fn=mock, module_name=mod, args={"key": "val"})
+    t.run(cache)
+    mock.assert_called_once_with(key="val")
 
 
 @test("Test.is_parameterised should return True for parameterised test")
@@ -183,23 +188,19 @@ def i_print_something():
 
 
 @test("stdout/stderr are captured by default when a test is called")
-def _():
+def _(cache: FixtureCache = cache):
     t = Test(fn=i_print_something, module_name="")
-    t()
-    assert t.result.captured_stdout == "out\n"
-    assert t.result.captured_stderr == "err"
-    # assert t.sout.getvalue() == "out\n"
-    # assert t.serr.getvalue() == "err"
+    result = t.run(cache)
+    assert result.captured_stdout == "out\n"
+    assert result.captured_stderr == "err"
 
 
 @test("stdout/stderr are not captured when Test.capture_output = False")
-def _():
+def _(cache: FixtureCache = cache):
     t = Test(fn=i_print_something, module_name="", capture_output=False)
-    t()
-    assert t.result.captured_stdout == ""
-    assert t.result.captured_stderr == ""
-    # assert t.sout.getvalue() == ""
-    # assert t.serr.getvalue() == ""
+    result = t.run(cache)
+    assert result.captured_stdout == ""
+    assert result.captured_stderr == ""
 
 
 @fixture
