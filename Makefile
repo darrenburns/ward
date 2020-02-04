@@ -1,5 +1,6 @@
-VENV=make-venv
-VENVBIN=$(VENV)/bin
+VENV := make-venv
+VENVBIN := $(VENV)/bin
+SOURCES := $(shell find ward -name "*.py")
 
 none: clean dist tidy
 
@@ -21,6 +22,7 @@ venv: make-venv
 
 make-venv:
 	python3 -m venv make-venv
+	$(VENVBIN)/pip install --upgrade pip
 	$(VENVBIN)/pip install .[dev]
 
 lint: make-venv
@@ -32,9 +34,13 @@ format: make-venv
 	$(VENVBIN)/black ward
 .PHONY: format
 
-test: make-venv
+test: $(VENV)/.install-self
 	$(VENVBIN)/ward --path tests
 .PHONY: test
+
+$(VENV)/.install-self: make-venv $(SOURCES)
+	$(VENVBIN)/pip install .
+	@touch $@
 
 prep: lint format test tidy
 .PHONY: prep

@@ -54,3 +54,53 @@ def _(
 ):
     with raises(TestFailure):
         func(lhs, rhs, "")
+
+
+@test("ward.raises raises AssertionError if the expected error is not raised")
+def _():
+    with raises(AssertionError):
+        with raises(ValueError):
+            raise RuntimeError
+
+
+@test("ward.raises doesn't raise if the expected error is raised")
+def _():
+    with raises(ValueError):
+        raise ValueError
+
+
+@test("ward.raises gives access to the raised error afterwards")
+def _():
+    err = ValueError("x")
+    with raises(ValueError) as ctx:
+        raise err
+    assert ctx.raised is err
+
+
+@test("ward.raises allows to easily check the error message")
+def _():
+    with raises(ValueError) as ctx:
+        raise ValueError("xyz")
+    assert "y" in str(ctx.raised)
+
+
+@test("ward.raises.raised and try/except include a similar traceback")
+def _():
+    import traceback
+
+    def raising():
+        raise ValueError
+
+    def dangerous():
+        raising()
+
+    try:
+        dangerous()
+    except ValueError as err:
+        try_tb = traceback.extract_tb(err.__traceback__)
+
+    with raises(ValueError) as ctx:
+        dangerous()
+    raises_tb = traceback.extract_tb(ctx.raised.__traceback__)
+
+    assert try_tb[1:] == raises_tb[1:]
