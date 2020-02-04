@@ -84,10 +84,18 @@ def _(anonymous_test=anonymous_test):
 
 @test("Test.run should delegate to the function it wraps")
 def _(cache: FixtureCache = cache):
-    mock = Mock()
-    t = Test(fn=mock, module_name=mod, args={"key": "val"})
+    called_with = None
+    call_kwargs = (), {}
+
+    def func(key="val", **kwargs):
+        nonlocal called_with, call_kwargs
+        called_with = key
+        call_kwargs = kwargs
+
+    t = Test(fn=func, module_name=mod)
     t.run(cache)
-    mock.assert_called_once_with(key="val")
+    assert called_with == "val"
+    assert call_kwargs == {'kwargs': {}}
 
 
 @test("Test.is_parameterised should return True for parameterised test")
