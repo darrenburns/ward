@@ -408,7 +408,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_test_result_summary(
         self, test_results: List[TestResult], time_taken: float, duration: int
     ):
-        self._output_longest_durations(test_results, duration)
+        if duration:
+            self._output_longest_durations(test_results, duration)
         outcome_counts = self._get_outcome_counts(test_results)
         if test_results:
             chart = self.generate_chart(

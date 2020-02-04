@@ -109,8 +109,6 @@ class Test:
     args: Optional[Dict[str, Any]] = None
 
     def run(self, cache: FixtureCache, idx: int = 0) -> "TestResult":
-        if self.args is None:
-            raise RuntimeError()
 
         with ExitStack() as stack:
             self.timer = stack.enter_context(Timer())
@@ -396,8 +394,6 @@ class Test:
         This method will mutate the Test by updating the description.
         Returns the newly updated description.
         """
-        if self.args is None:
-            raise RuntimeError()
 
         format_dict = FormatDict(**self.args)
         if not self.description:
