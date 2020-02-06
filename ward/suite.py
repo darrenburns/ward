@@ -38,8 +38,8 @@ class Suite:
         for test in self.tests:
             generated_tests = test.get_parameterised_instances()
             num_tests_per_module[test.path] -= 1
-            for idx, generated_test in enumerate(generated_tests):
-                yield generated_test.run(self.cache, idx)
+            for generated_test in generated_tests:
+                yield generated_test.run(self.cache)
                 self.cache.teardown_fixtures_for_scope(
                     Scope.Test, scope_key=generated_test.id
                 )

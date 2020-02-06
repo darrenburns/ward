@@ -6,8 +6,12 @@ from typing import Optional, Tuple
 import click
 from colorama import init
 from ward._ward_version import __version__
-from ward.collect import (get_info_for_modules, get_tests_in_modules,
-                          load_modules, search_generally)
+from ward.collect import (
+    get_info_for_modules,
+    get_tests_in_modules,
+    load_modules,
+    search_generally,
+)
 from ward.config import set_defaults_from_config
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
@@ -71,8 +75,7 @@ sys.path.append(".")
     help="Look for tests in PATH.",
 )
 @click.option(
-    "-d",
-    "--duration",
+    "--show-slowest",
     type=int,
     help="Record and display duration of n longest running tests",
     default=0,
@@ -88,7 +91,7 @@ def run(
     order: str,
     capture_output: bool,
     config: str,
-    duration: int,
+    show_slowest: int,
 ):
     start_run = default_timer()
     paths = [Path(p) for p in path]
@@ -110,7 +113,7 @@ def run(
         test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
     )
     time_taken = default_timer() - start_run
-    writer.output_test_result_summary(results, time_taken, duration)
+    writer.output_test_result_summary(results, time_taken, show_slowest)
 
     exit_code = get_exit_code(results)
 

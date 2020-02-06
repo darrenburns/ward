@@ -106,7 +106,6 @@ class Test:
     serr: StringIO = field(default_factory=StringIO)
     ward_meta: WardMeta = field(default_factory=WardMeta)
     timer: Optional["Timer"] = None
-    args: Optional[Dict[str, Any]] = None
 
     def run(self, cache: FixtureCache, idx: int = 0) -> "TestResult":
 
@@ -117,8 +116,6 @@ class Test:
                 stack.enter_context(redirect_stderr(self.serr))
 
             if isinstance(self.marker, SkipMarker):
-                # TODO:onlyanegg: Do sout and serr need to be part of the class? If they weren't we could have
-                # the ExitStack close them
                 with closing(self.sout), closing(self.serr):
                     result = TestResult(self, TestOutcome.SKIP)
                 return result
@@ -127,9 +124,11 @@ class Test:
                 # TODO:onlyanegg: I don't love this. We're setting up the
                 # fixture within the testing module, but cleaning it up in the
                 # suite module.
-                self.resolve_args(cache, iteration=idx)
-                self.format_description()
-                self.fn(**self.args)
+                resolved_args = self.resolve_args(
+                    cache, iteration=self.param_meta.instance_index
+                )
+                self.format_description(resolved_args)
+                self.fn(**resolved_args)
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
                 error: Optional[Exception] = e
@@ -233,7 +232,7 @@ class Test:
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
-    def resolve_args(self, cache: FixtureCache, iteration: int = 0) -> None:
+    def resolve_args(self, cache: FixtureCache, iteration: int = 0) -> Dict[str, Any]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         If the argument is not a fixture, the raw argument will be used.
@@ -242,9 +241,9 @@ class Test:
         """
         if self.capture_output:
             with redirect_stdout(self.sout), redirect_stderr(self.serr):
-                self.args = self._resolve_args(cache, iteration)
+                return self._resolve_args(cache, iteration)
         else:
-            self.args = self._resolve_args(cache, iteration)
+            return self._resolve_args(cache, iteration)
 
     def _resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
         if not self.has_deps:
@@ -385,7 +384,7 @@ class Test:
                 resolved_vals[k] = arg
         return resolved_vals
 
-    def format_description(self) -> str:
+    def format_description(self, args: Dict[str, Any]) -> str:
         """
         Applies any necessary string formatting to the description,
         given a dictionary `arg_map` of values that will be injected
@@ -395,7 +394,7 @@ class Test:
         Returns the newly updated description.
         """
 
-        format_dict = FormatDict(**self.args)
+        format_dict = FormatDict(**args)
         if not self.description:
             self.description = ""
 

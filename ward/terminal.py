@@ -52,15 +52,10 @@ def format_test_id(test_result: TestResult) -> (str, str):
 
 
 def format_test_location(test_result: TestResult) -> str:
-    """
-    """
-
     return f"{test_result.test.module_name}:{test_result.test.line_number}"
 
 
 def format_test_case_number(test_result: TestResult) -> str:
-    """
-    """
     # If we're executing a parameterised test
     param_meta = test_result.test.param_meta
     if param_meta.group_size > 1:
@@ -406,10 +401,10 @@ class SimpleTestResultWrite(TestResultWriterBase):
         return result_marker
 
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float, duration: int
+        self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
-        if duration:
-            self._output_longest_durations(test_results, duration)
+        if show_slowest:
+            self._output_slowest_tests(test_results, show_slowest)
         outcome_counts = self._get_outcome_counts(test_results)
         if test_results:
             chart = self.generate_chart(
@@ -447,16 +442,17 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         print(output)
 
-    def _output_longest_durations(self, test_results: List[TestResult], num_tests: int):
+    def _output_slowest_tests(self, test_results: List[TestResult], num_tests: int):
         test_results = sorted(
             test_results, key=lambda r: r.test.timer.duration, reverse=True
         )
-        print("Longest Running Tests\n")
+        self.print_divider()
+        heading = f"{colored('Longest Running Tests:', color='cyan', attrs=['bold'])}\n"
+        print(indent(heading, INDENT))
         for result in test_results[:num_tests]:
             test_id = format_test_id(result)
-            print(
-                f"{result.test.timer.duration:.2f} sec {test_id} {result.test.description} "
-            )
+            message = f"{result.test.timer.duration:.2f} sec {test_id} {result.test.description} "
+            print(indent(message, DOUBLE_INDENT))
         print()
 
     def output_captured_stderr(self, test_result: TestResult):
