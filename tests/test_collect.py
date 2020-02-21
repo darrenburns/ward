@@ -3,17 +3,13 @@ from modulefinder import ModuleFinder
 from pathlib import Path
 from pkgutil import ModuleInfo
 
-from tests.test_util import make_project
-from ward import test, fixture, raises
-from ward.collect import (
-    search_generally,
-    is_test_module,
-    get_module_path,
-    is_excluded_module,
-    remove_excluded_paths,
-    handled_within,
-)
+from ward import fixture, raises, test
+from ward.collect import (get_module_path, handled_within, is_excluded_module,
+                          is_test_module, remove_excluded_paths,
+                          search_generally)
 from ward.testing import Test, each
+
+from tests.test_util import make_project
 
 
 def named():

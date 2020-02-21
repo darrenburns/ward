@@ -1,23 +1,22 @@
 import inspect
 import os
 import platform
+import sys
 import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from textwrap import wrap, indent
-from typing import Any, Dict, Generator, List, Optional, Iterable
+from textwrap import indent, wrap
+from typing import Any, Dict, Generator, Iterable, List, Optional
 
-import sys
 from colorama import Fore, Style
 from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.python import PythonLexer
 from termcolor import colored, cprint
-
 from ward._ward_version import __version__
 from ward.diff import make_diff
-from ward.expect import TestFailure, Comparison
+from ward.expect import Comparison, TestFailure
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
 
@@ -40,11 +39,23 @@ def multiline_description(s: str, indent: int, width: int) -> str:
     return rv
 
 
-def output_test_result_line(test_result: TestResult):
-    colour = outcome_to_colour(test_result.outcome)
-    bg = f"on_{colour}"
-    padded_outcome = f" {test_result.outcome.name[:4]} "
+def format_test_id(test_result: TestResult) -> (str, str):
+    """
+    Format module name, line number, and test case number
+    """
 
+    test_id = lightblack(
+        f"{format_test_location(test_result)}{format_test_case_number(test_result)}:"
+    )
+
+    return test_id
+
+
+def format_test_location(test_result: TestResult) -> str:
+    return f"{test_result.test.module_name}:{test_result.test.line_number}"
+
+
+def format_test_case_number(test_result: TestResult) -> str:
     # If we're executing a parameterised test
     param_meta = test_result.test.param_meta
     if param_meta.group_size > 1:
@@ -55,11 +66,16 @@ def output_test_result_line(test_result: TestResult):
     else:
         iter_indicator = ""
 
-    mod_name = lightblack(
-        f"{test_result.test.module_name}:"
-        f"{test_result.test.line_number}"
-        f"{iter_indicator}:"
-    )
+    return iter_indicator
+
+
+def output_test_result_line(test_result: TestResult):
+    colour = outcome_to_colour(test_result.outcome)
+    bg = f"on_{colour}"
+    padded_outcome = f" {test_result.outcome.name[:4]} "
+
+    iter_indicator = format_test_case_number(test_result)
+    mod_name = format_test_id(test_result)
     if (
         test_result.outcome == TestOutcome.SKIP
         or test_result.outcome == TestOutcome.XFAIL
@@ -260,7 +276,7 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float
+        self, test_results: List[TestResult], time_taken: float, duration: int
     ):
         raise NotImplementedError()
 
@@ -385,8 +401,10 @@ class SimpleTestResultWrite(TestResultWriterBase):
         return result_marker
 
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float
+        self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
+        if show_slowest:
+            self._output_slowest_tests(test_results, show_slowest)
         outcome_counts = self._get_outcome_counts(test_results)
         if test_results:
             chart = self.generate_chart(
@@ -423,6 +441,19 @@ class SimpleTestResultWrite(TestResultWriterBase):
             output += " ] "
 
         print(output)
+
+    def _output_slowest_tests(self, test_results: List[TestResult], num_tests: int):
+        test_results = sorted(
+            test_results, key=lambda r: r.test.timer.duration, reverse=True
+        )
+        self.print_divider()
+        heading = f"{colored('Longest Running Tests:', color='cyan', attrs=['bold'])}\n"
+        print(indent(heading, INDENT))
+        for result in test_results[:num_tests]:
+            test_id = format_test_id(result)
+            message = f"{result.test.timer.duration:.2f} sec {test_id} {result.test.description} "
+            print(indent(message, DOUBLE_INDENT))
+        print()
 
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:

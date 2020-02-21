@@ -2,17 +2,18 @@ import functools
 import inspect
 import uuid
 from collections import defaultdict
-from contextlib import closing, redirect_stderr, redirect_stdout
+from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
-from enum import auto, Enum
+from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
+from timeit import default_timer
 from types import MappingProxyType
-from typing import Callable, Dict, List, Optional, Any, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from ward.errors import FixtureError, ParameterisationError
 from ward.fixtures import Fixture, FixtureCache, ScopeKey
-from ward.models import Marker, SkipMarker, XfailMarker, WardMeta, Scope
+from ward.models import Marker, Scope, SkipMarker, WardMeta, XfailMarker
 from ward.util import get_absolute_path
 
 
@@ -104,12 +105,61 @@ class Test:
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)
     ward_meta: WardMeta = field(default_factory=WardMeta)
+    timer: Optional["Timer"] = None
 
-    def __call__(self, *args, **kwargs):
-        if self.capture_output:
-            with redirect_stdout(self.sout), redirect_stderr(self.serr):
-                return self.fn(*args, **kwargs)
-        return self.fn(*args, **kwargs)
+    def run(self, cache: FixtureCache, idx: int = 0) -> "TestResult":
+
+        with ExitStack() as stack:
+            self.timer = stack.enter_context(Timer())
+            if self.capture_output:
+                stack.enter_context(redirect_stdout(self.sout))
+                stack.enter_context(redirect_stderr(self.serr))
+
+            if isinstance(self.marker, SkipMarker):
+                with closing(self.sout), closing(self.serr):
+                    result = TestResult(self, TestOutcome.SKIP)
+                return result
+
+            try:
+                # TODO:onlyanegg: I don't love this. We're setting up the
+                # fixture within the testing module, but cleaning it up in the
+                # suite module.
+                resolved_args = self.resolve_args(
+                    cache, iteration=self.param_meta.instance_index
+                )
+                self.format_description(resolved_args)
+                self.fn(**resolved_args)
+            except FixtureError as e:
+                outcome = TestOutcome.FAIL
+                error: Optional[Exception] = e
+            except Exception as e:
+                outcome = (
+                    TestOutcome.XFAIL
+                    if isinstance(self.marker, XfailMarker)
+                    else TestOutcome.FAIL
+                )
+                error = e
+            else:
+                outcome = (
+                    TestOutcome.XPASS
+                    if isinstance(self.marker, XfailMarker)
+                    else TestOutcome.PASS
+                )
+                error = None
+
+        with closing(self.sout), closing(self.serr):
+            if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
+                result = TestResult(self, outcome)
+            else:
+                result = TestResult(
+                    self,
+                    outcome,
+                    error,
+                    captured_stdout=self.sout.getvalue(),
+                    captured_stderr=self.serr.getvalue(),
+                )
+
+        return result
 
     @property
     def name(self) -> str:
@@ -166,18 +216,17 @@ class Test:
 
         generated_tests = []
         for instance_index in range(number_of_instances):
-            generated_tests.append(
-                Test(
-                    fn=self.fn,
-                    module_name=self.module_name,
-                    marker=self.marker,
-                    description=self.description,
-                    param_meta=ParamMeta(
-                        instance_index=instance_index, group_size=number_of_instances
-                    ),
-                    capture_output=self.capture_output,
-                )
+            test = Test(
+                fn=self.fn,
+                module_name=self.module_name,
+                marker=self.marker,
+                description=self.description,
+                param_meta=ParamMeta(
+                    instance_index=instance_index, group_size=number_of_instances
+                ),
+                capture_output=self.capture_output,
             )
+            generated_tests.append(test)
         return generated_tests
 
     def deps(self) -> MappingProxyType:
@@ -193,7 +242,8 @@ class Test:
         if self.capture_output:
             with redirect_stdout(self.sout), redirect_stderr(self.serr):
                 return self._resolve_args(cache, iteration)
-        return self._resolve_args(cache, iteration)
+        else:
+            return self._resolve_args(cache, iteration)
 
     def _resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
         if not self.has_deps:
@@ -275,6 +325,13 @@ class Test:
     def _resolve_single_arg(
         self, arg: Callable, cache: FixtureCache
     ) -> Union[Any, Fixture]:
+        """
+        Get the fixture return value
+
+        If the fixture has been cached, return the value from the cache.
+        Otherwise, call the fixture function and return the value.
+        """
+
         if not hasattr(arg, "ward_meta"):
             return arg
 
@@ -327,7 +384,7 @@ class Test:
                 resolved_vals[k] = arg
         return resolved_vals
 
-    def format_description(self, arg_map: Dict[str, Any]) -> str:
+    def format_description(self, args: Dict[str, Any]) -> str:
         """
         Applies any necessary string formatting to the description,
         given a dictionary `arg_map` of values that will be injected
@@ -336,7 +393,8 @@ class Test:
         This method will mutate the Test by updating the description.
         Returns the newly updated description.
         """
-        format_dict = FormatDict(**arg_map)
+
+        format_dict = FormatDict(**args)
         if not self.description:
             self.description = ""
 
@@ -409,3 +467,16 @@ class TestResult:
     message: str = ""
     captured_stdout: str = ""
     captured_stderr: str = ""
+
+
+class Timer:
+    def __init__(self):
+        self._start_time = None
+        self.duration = None
+
+    def __enter__(self):
+        self._start_time = default_timer()
+        return self
+
+    def __exit__(self, *args):
+        self.duration = default_timer() - self._start_time
