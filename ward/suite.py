@@ -24,7 +24,9 @@ class Suite:
             counts[path] += 1
         return counts
 
-    def generate_test_runs(self, order="standard") -> Generator[TestResult, None, None]:
+    def generate_test_runs(
+        self, order="standard", dry_run=False
+    ) -> Generator[TestResult, None, None]:
         """
         Run tests
 
@@ -39,7 +41,7 @@ class Suite:
             generated_tests = test.get_parameterised_instances()
             num_tests_per_module[test.path] -= 1
             for generated_test in generated_tests:
-                yield generated_test.run(self.cache)
+                yield generated_test.run(self.cache, dry_run=dry_run)
                 self.cache.teardown_fixtures_for_scope(
                     Scope.Test, scope_key=generated_test.id
                 )
