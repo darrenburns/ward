@@ -90,6 +90,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "DorianCzichotzki",
+      "name": "Dorian Czichotzki",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/10177001?v=4",
+      "profile": "https://github.com/DorianCzichotzki",
+      "contributions": [
+        "code",
+        "ideas"
+      ]
     }
   ],
   "contributorsPerLine": 7

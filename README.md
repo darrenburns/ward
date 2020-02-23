@@ -1,7 +1,7 @@
 # Ward
 ![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
-[![Gitter](https://badges.gitter.im/python-ward/community.svg)](https://gitter.im/python-ward/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![Gitter](https://badges.gitter.im/python-ward/community.svg)](https://gitter.im/python-ward/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 See the full documentation and feature set [here](https://wardpy.com).
 
@@ -94,6 +94,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   </tr>
   <tr>
     <td align="center"><a href="https://github.com/thilp"><img src="https://avatars2.githubusercontent.com/u/968838?v=4" width="60px;" alt="Thibaut Le Page"/><br /><sub><b>Thibaut Le Page</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=thilp" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/DorianCzichotzki"><img src="https://avatars1.githubusercontent.com/u/10177001?v=4" width="60px;" alt="Dorian Czichotzki"/><br /><sub><b>Dorian Czichotzki</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=DorianCzichotzki" title="Code">💻</a> <a href="#ideas-DorianCzichotzki" title="Ideas, Planning, & Feedback">🤔</a></td>
   </tr>
 </table>
 
