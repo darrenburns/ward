@@ -126,11 +126,16 @@ async def two():
     return 2
 
 
-@xfail
-@test("async/await smoke test")
+@xfail("intentional failure")
+@test("async/await failing test")
 async def _(one=one, two=two):
     await asyncio.sleep(0.0001)
     assert one + two == 2
+
+
+@test("async/await passing test")
+async def _(one=one, two=two):
+    assert one + two == 3
 
 
 @test("Test.is_parameterised should return True for parameterised test")
