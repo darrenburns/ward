@@ -1,3 +1,4 @@
+import asyncio
 import functools
 import inspect
 import uuid
@@ -107,7 +108,7 @@ class Test:
     ward_meta: WardMeta = field(default_factory=WardMeta)
     timer: Optional["Timer"] = None
 
-    def run(self, cache: FixtureCache, idx: int = 0) -> "TestResult":
+    def run(self, cache: FixtureCache) -> "TestResult":
 
         with ExitStack() as stack:
             self.timer = stack.enter_context(Timer())
@@ -128,7 +129,11 @@ class Test:
                     cache, iteration=self.param_meta.instance_index
                 )
                 self.format_description(resolved_args)
-                self.fn(**resolved_args)
+                if inspect.iscoroutinefunction(self.fn):
+                    coro = self.fn(**resolved_args)
+                    asyncio.get_event_loop().run_until_complete(coro)
+                else:
+                    self.fn(**resolved_args)
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
                 error: Optional[Exception] = e
