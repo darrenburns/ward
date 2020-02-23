@@ -364,9 +364,13 @@ class Test:
                 elif fixture.is_async_generator_fixture:
                     fixture.gen = arg()
                     awaitable = fixture.gen.__anext__()
-                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(awaitable)
+                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                        awaitable
+                    )
                 elif fixture.is_coroutine_fixture:
-                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(arg())
+                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                        arg()
+                    )
                 else:
                     fixture.resolved_val = arg()
             except Exception as e:
@@ -389,9 +393,13 @@ class Test:
             elif fixture.is_async_generator_fixture:
                 fixture.gen = arg(**args_to_inject)
                 awaitable = fixture.gen.__anext__()
-                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(awaitable)
+                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                    awaitable
+                )
             elif fixture.is_coroutine_fixture:
-                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(arg(**args_to_inject))
+                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                    arg(**args_to_inject)
+                )
             else:
                 fixture.resolved_val = arg(**args_to_inject)
         except Exception as e:
