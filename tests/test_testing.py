@@ -120,22 +120,27 @@ async def one():
     yield 1
 
 
-@fixture
+@fixture(scope="module")
 async def two():
     await asyncio.sleep(0.00001)
     return 2
+
+
+@fixture
+def three():
+    return 3
 
 
 @xfail("intentional failure")
 @test("async/await failing test")
 async def _(one=one, two=two):
     await asyncio.sleep(0.0001)
-    assert one + two == 2
+    assert one + two == 999
 
 
 @test("async/await passing test")
-async def _(one=one, two=two):
-    assert one + two == 3
+async def _(one=one, two=two, three=three):
+    assert one + two == three
 
 
 @test("Test.is_parameterised should return True for parameterised test")
