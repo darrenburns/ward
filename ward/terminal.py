@@ -413,7 +413,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 num_skipped=outcome_counts[TestOutcome.SKIP],
                 num_xfail=outcome_counts[TestOutcome.XFAIL],
                 num_unexp=outcome_counts[TestOutcome.XPASS],
-                num_printed=outcome_counts[TestOutcome.DRYRUN],
+                num_dryrun=outcome_counts[TestOutcome.DRYRUN],
             )
             print(chart, "")
 
@@ -482,19 +482,19 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 print(indent(line, DOUBLE_INDENT))
 
     def generate_chart(
-        self, num_passed, num_failed, num_skipped, num_xfail, num_unexp, num_printed
+        self, num_passed, num_failed, num_skipped, num_xfail, num_unexp, num_dryrun
     ):
         num_tests = (
-            num_passed + num_failed + num_skipped + num_xfail + num_unexp + num_printed
+            num_passed + num_failed + num_skipped + num_xfail + num_unexp + num_dryrun
         )
         pass_pct = num_passed / max(num_tests, 1)
         fail_pct = num_failed / max(num_tests, 1)
         xfail_pct = num_xfail / max(num_tests, 1)
         unexp_pct = num_unexp / max(num_tests, 1)
-        printed_pct = num_printed / max(num_tests, 1)
-        skip_pct = 1.0 - pass_pct - fail_pct - xfail_pct - unexp_pct - printed_pct
+        dryrun_pct = num_dryrun / max(num_tests, 1)
+        skip_pct = 1.0 - pass_pct - fail_pct - xfail_pct - unexp_pct - dryrun_pct
 
-        num_green_bars = int((pass_pct + printed_pct) * self.terminal_size.width)
+        num_green_bars = int((pass_pct + dryrun_pct) * self.terminal_size.width)
         num_red_bars = int(fail_pct * self.terminal_size.width)
         num_blue_bars = int(skip_pct * self.terminal_size.width)
         num_yellow_bars = int(unexp_pct * self.terminal_size.width)
