@@ -134,7 +134,7 @@ class Test:
                     cache, iteration=self.param_meta.instance_index
                 )
                 self.format_description(resolved_args)
-                if inspect.iscoroutinefunction(inspect.unwrap(self.fn)):
+                if self.is_async_test:
                     coro = self.fn(**resolved_args)
                     asyncio.get_event_loop().run_until_complete(coro)
                 else:
@@ -183,6 +183,10 @@ class Test:
     def qualified_name(self) -> str:
         name = self.name or ""
         return f"{self.module_name}.{name}"
+
+    @property
+    def is_async_test(self) -> bool:
+        return inspect.iscoroutinefunction(inspect.unwrap(self.fn))
 
     @property
     def line_number(self) -> int:
