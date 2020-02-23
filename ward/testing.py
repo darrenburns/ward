@@ -107,7 +107,7 @@ class Test:
     ward_meta: WardMeta = field(default_factory=WardMeta)
     timer: Optional["Timer"] = None
 
-    def run(self, cache: FixtureCache, idx: int = 0) -> "TestResult":
+    def run(self, cache: FixtureCache, idx: int = 0, dry_run=False) -> "TestResult":
 
         with ExitStack() as stack:
             self.timer = stack.enter_context(Timer())
@@ -128,6 +128,10 @@ class Test:
                     cache, iteration=self.param_meta.instance_index
                 )
                 self.format_description(resolved_args)
+                if dry_run:
+                    with closing(self.sout), closing(self.serr):
+                        result = TestResult(self, TestOutcome.DRYRUN)
+                    return result
                 self.fn(**resolved_args)
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
@@ -457,6 +461,7 @@ class TestOutcome(Enum):
     SKIP = auto()
     XFAIL = auto()  # expected fail
     XPASS = auto()  # unexpected pass
+    DRYRUN = auto()
 
 
 @dataclass

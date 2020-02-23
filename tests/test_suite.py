@@ -80,6 +80,19 @@ def _(skipped=skipped_test, example=example_test):
 
     assert test_runs == expected_runs
 
+@test("Suite.generate_test_runs yields a DRYRUN TestResult when dry_run is True")
+def _(skipped=skipped_test, example=example_test):
+    suite = Suite(tests=[example, skipped])
+
+    test_runs = list(suite.generate_test_runs(dry_run=True))
+
+    expected_runs = [
+        TestResult(example, TestOutcome.DRYRUN, None, ""),
+        TestResult(skipped, TestOutcome.SKIP, None, ""),
+    ]
+
+    assert test_runs == expected_runs
+
 
 @test("Suite.generate_test_runs fixture teardown code is ran in the expected order")
 def _(module=module):
