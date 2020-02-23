@@ -80,6 +80,7 @@ def _(skipped=skipped_test, example=example_test):
 
     assert test_runs == expected_runs
 
+
 @test("Suite.generate_test_runs yields a DRYRUN TestResult when dry_run is True")
 def _(skipped=skipped_test, example=example_test):
     suite = Suite(tests=[example, skipped])
@@ -343,6 +344,75 @@ def _():
     ]
 
 
+@test("Suite.generate_test_runs resolves mixed scope async fixtures correctly")
+def _():
+    events = []
+
+    @fixture(scope=Scope.Global)
+    async def a():
+        events.append("resolve a")
+        yield "a"
+        events.append("teardown a")
+
+    @fixture(scope=Scope.Module)
+    async def b():
+        events.append("resolve b")
+        yield "b"
+        events.append("teardown b")
+
+    @fixture(scope=Scope.Test)
+    async def c():
+        events.append("resolve c")
+        yield "c"
+        events.append("teardown c")
+
+    @testable_test
+    async def test_1(a=a, b=b, c=c):
+        events.append("test1")
+
+    @testable_test
+    async def test_2(a=a, b=b, c=c):
+        events.append("test2")
+
+    @testable_test
+    async def test_3(a=a, b=b, c=c):
+        events.append("test3")
+
+    test_1.ward_meta.path = "module1"
+    test_2.ward_meta.path = "module2"
+    test_3.ward_meta.path = "module1"
+
+    suite = Suite(
+        tests=[
+            # Module ordering is intentionally off here, to ensure correct
+            # interaction between module-scope fixtures and random ordering
+            Test(fn=test_1, module_name="module1"),
+            Test(fn=test_2, module_name="module2"),
+            Test(fn=test_3, module_name="module1"),
+        ]
+    )
+
+    list(suite.generate_test_runs())
+
+    assert events == [
+        "resolve a",  # global fixture so resolved at start
+        "resolve b",  # module fixture resolved at start of module1
+        "resolve c",  # test fixture resolved at start of test1
+        "test1",
+        "teardown c",  # test fixture teardown at start of test1
+        "resolve b",  # module fixture resolved at start of module2
+        "resolve c",  # test fixture resolved at start of test2
+        "test2",
+        "teardown c",  # test fixture teardown at start of test2
+        "teardown b",  # module fixture teardown at end of module2
+        "resolve c",  # test fixture resolved at start of test3
+        "test3",
+        "teardown c",  # test fixture teardown at end of test3
+        "teardown b",  # module fixture teardown at end of module1
+        "teardown a",  # global fixtures are torn down at the very end
+    ]
+
+
 @skip("TODO: Determine how this should behave")
 @test(
     "Suite.generate_test_runs dependent fixtures of differing scopes behave correctly"
@@ -365,7 +435,7 @@ def _():
     def test_1(a=each(a, "second", a)):
         events.append("running test")
 
-    suite = Suite(tests=[Test(fn=test_1, module_name="module1"),])
+    suite = Suite(tests=[Test(fn=test_1, module_name="module1"), ])
 
     list(suite.generate_test_runs())
 

@@ -134,7 +134,7 @@ class Test:
                     cache, iteration=self.param_meta.instance_index
                 )
                 self.format_description(resolved_args)
-                if inspect.iscoroutinefunction(self.fn):
+                if inspect.iscoroutinefunction(inspect.unwrap(self.fn)):
                     coro = self.fn(**resolved_args)
                     asyncio.get_event_loop().run_until_complete(coro)
                 else:
