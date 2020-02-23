@@ -120,6 +120,11 @@ class Test:
                     result = TestResult(self, TestOutcome.SKIP)
                 return result
 
+            if dry_run:
+                with closing(self.sout), closing(self.serr):
+                    result = TestResult(self, TestOutcome.DRYRUN)
+                return result
+
             try:
                 # TODO:onlyanegg: I don't love this. We're setting up the
                 # fixture within the testing module, but cleaning it up in the
@@ -128,10 +133,6 @@ class Test:
                     cache, iteration=self.param_meta.instance_index
                 )
                 self.format_description(resolved_args)
-                if dry_run:
-                    with closing(self.sout), closing(self.serr):
-                        result = TestResult(self, TestOutcome.DRYRUN)
-                    return result
                 self.fn(**resolved_args)
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
