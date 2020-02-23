@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 from contextlib import suppress
 from functools import partial, wraps
@@ -51,9 +52,12 @@ class Fixture:
     def teardown(self):
         # Suppress because we can't know whether there's more code
         # to execute below the yield.
-        with suppress(StopIteration, RuntimeError):
+        with suppress(RuntimeError, StopIteration, StopAsyncIteration):
             if self.is_generator_fixture and self.gen:
                 next(self.gen)
+            elif self.is_async_generator_fixture and self.gen:
+                awaitable = self.gen.__anext__()
+                asyncio.get_event_loop().run_until_complete(awaitable)
 
 
 FixtureKey = str
