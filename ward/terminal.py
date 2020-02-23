@@ -1,19 +1,20 @@
 import inspect
 import os
 import platform
-import sys
 import traceback
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from textwrap import indent, wrap
 from typing import Any, Dict, Generator, Iterable, List, Optional
 
+import sys
 from colorama import Fore, Style
+from dataclasses import dataclass
 from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.python import PythonLexer
 from termcolor import colored, cprint
+
 from ward._ward_version import __version__
 from ward.diff import make_diff
 from ward.expect import Comparison, TestFailure
@@ -186,7 +187,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
+                        + rel_path[final_slash_idx + 1:]
                         + ": "
                     )
                 else:
@@ -500,6 +501,17 @@ class SimpleTestResultWrite(TestResultWriterBase):
         num_yellow_bars = int(unexp_pct * self.terminal_size.width)
         num_magenta_bars = int(xfail_pct * self.terminal_size.width)
 
+        if pass_pct + dryrun_pct > 0:
+            num_green_bars = max(1, num_green_bars)
+        if fail_pct > 0:
+            num_red_bars = max(1, num_red_bars)
+        if skip_pct > 0:
+            num_blue_bars = max(1, num_blue_bars)
+        if unexp_pct > 0:
+            num_yellow_bars = max(1, num_yellow_bars)
+        if xfail_pct > 0:
+            num_magenta_bars = max(1, num_magenta_bars)
+
         # Rounding to integers could leave us a few bars short
         num_bars_remaining = (
             self.terminal_size.width
@@ -509,6 +521,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             - num_yellow_bars
             - num_magenta_bars
         )
+        
         if num_bars_remaining and num_green_bars:
             num_green_bars += 1
             num_bars_remaining -= 1

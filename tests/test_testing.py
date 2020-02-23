@@ -1,16 +1,16 @@
-import sys
+import asyncio
 from collections import defaultdict
 from pathlib import Path
 from unittest import mock
-from unittest.mock import Mock
 
+import sys
+
+from tests.utilities import FORCE_TEST_PATH, testable_test
 from ward import Scope, raises
 from ward.errors import ParameterisationError
 from ward.fixtures import FixtureCache, fixture
 from ward.models import WardMeta
-from ward.testing import ParamMeta, Test, each, test
-
-from tests.utilities import FORCE_TEST_PATH, testable_test
+from ward.testing import ParamMeta, Test, each, test, xfail
 
 
 def f():
@@ -95,7 +95,52 @@ def _(cache: FixtureCache = cache):
     t = Test(fn=func, module_name=mod)
     t.run(cache)
     assert called_with == "val"
-    assert call_kwargs == {'kwargs': {}}
+    assert call_kwargs == {"kwargs": {}}
+
+
+@test("Test.run should delegate to coroutine function it wraps")
+def _(cache: FixtureCache = cache):
+    called_with = None
+    call_kwargs = (), {}
+
+    async def func(key="val", **kwargs):
+        nonlocal called_with, call_kwargs
+        called_with = key
+        call_kwargs = kwargs
+
+    t = Test(fn=func, module_name=mod)
+    t.run(cache)
+    assert called_with == "val"
+    assert call_kwargs == {"kwargs": {}}
+
+
+@fixture
+async def one():
+    await asyncio.sleep(0.00001)
+    yield 1
+
+
+@fixture(scope="module")
+async def two():
+    await asyncio.sleep(0.00001)
+    return 2
+
+
+@fixture
+def three():
+    return 3
+
+
+@xfail("intentional failure")
+@test("async/await failing test")
+async def _(one=one, two=two):
+    await asyncio.sleep(0.0001)
+    assert one + two == 999
+
+
+@test("async/await passing test")
+async def _(one=one, two=two, three=three):
+    assert one + two == three
 
 
 @test("Test.is_parameterised should return True for parameterised test")

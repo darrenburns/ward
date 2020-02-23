@@ -30,6 +30,20 @@ def _(u=user):
     assert u.name == "darren"
 ```
 
+**Support for asyncio**: define your tests and fixtures with `async def` and call asynchronous code within them.
+
+```python
+@fixture
+async def user():
+    u = await create_user()
+    return await u.login()
+
+@test("the logged in user has a last session date")
+async def _(user=user):
+    last_session = await get_last_session_date(user.id)
+    assert is_recent(last_session, get_last_session_date)
+```
+
 **Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
 contained in the body of the test.
 ```

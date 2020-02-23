@@ -1,15 +1,17 @@
+import asyncio
 import functools
 import inspect
 import uuid
 from collections import defaultdict
 from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
-from dataclasses import dataclass, field
 from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
 from timeit import default_timer
 from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+from dataclasses import dataclass, field
 
 from ward.errors import FixtureError, ParameterisationError
 from ward.fixtures import Fixture, FixtureCache, ScopeKey
@@ -107,8 +109,7 @@ class Test:
     ward_meta: WardMeta = field(default_factory=WardMeta)
     timer: Optional["Timer"] = None
 
-    def run(self, cache: FixtureCache, idx: int = 0, dry_run=False) -> "TestResult":
-
+    def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
         with ExitStack() as stack:
             self.timer = stack.enter_context(Timer())
             if self.capture_output:
@@ -133,7 +134,11 @@ class Test:
                     cache, iteration=self.param_meta.instance_index
                 )
                 self.format_description(resolved_args)
-                self.fn(**resolved_args)
+                if self.is_async_test:
+                    coro = self.fn(**resolved_args)
+                    asyncio.get_event_loop().run_until_complete(coro)
+                else:
+                    self.fn(**resolved_args)
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
                 error: Optional[Exception] = e
@@ -178,6 +183,10 @@ class Test:
     def qualified_name(self) -> str:
         name = self.name or ""
         return f"{self.module_name}.{name}"
+
+    @property
+    def is_async_test(self) -> bool:
+        return inspect.iscoroutinefunction(inspect.unwrap(self.fn))
 
     @property
     def line_number(self) -> int:
@@ -347,12 +356,21 @@ class Test:
             )
 
         has_deps = len(fixture.deps()) > 0
-        is_generator = fixture.is_generator_fixture
         if not has_deps:
             try:
-                if is_generator:
+                if fixture.is_generator_fixture:
                     fixture.gen = arg()
                     fixture.resolved_val = next(fixture.gen)
+                elif fixture.is_async_generator_fixture:
+                    fixture.gen = arg()
+                    awaitable = fixture.gen.__anext__()
+                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                        awaitable
+                    )
+                elif fixture.is_coroutine_fixture:
+                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                        arg()
+                    )
                 else:
                     fixture.resolved_val = arg()
             except Exception as e:
@@ -369,9 +387,19 @@ class Test:
 
         try:
             args_to_inject = self._unpack_resolved(children_resolved)
-            if is_generator:
+            if fixture.is_generator_fixture:
                 fixture.gen = arg(**args_to_inject)
                 fixture.resolved_val = next(fixture.gen)
+            elif fixture.is_async_generator_fixture:
+                fixture.gen = arg(**args_to_inject)
+                awaitable = fixture.gen.__anext__()
+                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                    awaitable
+                )
+            elif fixture.is_coroutine_fixture:
+                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                    arg(**args_to_inject)
+                )
             else:
                 fixture.resolved_val = arg(**args_to_inject)
         except Exception as e:
