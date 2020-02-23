@@ -80,6 +80,11 @@ sys.path.append(".")
     help="Record and display duration of n longest running tests",
     default=0,
 )
+@click.option(
+    "--dry-run/--no-dry-run",
+    help="Print all tests without executing them",
+    default=False,
+)
 @click.pass_context
 def run(
     ctx: click.Context,
@@ -92,6 +97,7 @@ def run(
     capture_output: bool,
     config: str,
     show_slowest: int,
+    dry_run: bool,
 ):
     start_run = default_timer()
     paths = [Path(p) for p in path]
@@ -106,7 +112,7 @@ def run(
     time_to_collect = default_timer() - start_run
 
     suite = Suite(tests=tests)
-    test_results = suite.generate_test_runs(order=order)
+    test_results = suite.generate_test_runs(order=order, dry_run=dry_run)
 
     writer = SimpleTestResultWrite(suite=suite, test_output_style=test_output_style)
     results = writer.output_all_test_results(

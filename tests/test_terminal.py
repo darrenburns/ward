@@ -45,7 +45,8 @@ def _(
         TestOutcome.FAIL,
         TestOutcome.XFAIL,
         TestOutcome.XPASS,
+        TestOutcome.DRYRUN,
     ),
-    colour=each("green", "blue", "red", "magenta", "yellow"),
+    colour=each("green", "blue", "red", "magenta", "yellow", "green"),
 ):
     assert outcome_to_colour(outcome) == colour

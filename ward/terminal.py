@@ -413,6 +413,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 num_skipped=outcome_counts[TestOutcome.SKIP],
                 num_xfail=outcome_counts[TestOutcome.XFAIL],
                 num_unexp=outcome_counts[TestOutcome.XPASS],
+                num_dryrun=outcome_counts[TestOutcome.DRYRUN],
             )
             print(chart, "")
 
@@ -436,6 +437,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
             output += f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
         if outcome_counts[TestOutcome.PASS]:
             output += f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')}"
+        if outcome_counts[TestOutcome.DRYRUN]:
+            output += f"{colored(str(outcome_counts[TestOutcome.DRYRUN]) + ' printed', color='green')}"
 
         if test_results:
             output += " ] "
@@ -478,15 +481,20 @@ class SimpleTestResultWrite(TestResultWriterBase):
             for line in captured_stdout_lines:
                 print(indent(line, DOUBLE_INDENT))
 
-    def generate_chart(self, num_passed, num_failed, num_skipped, num_xfail, num_unexp):
-        num_tests = num_passed + num_failed + num_skipped + num_xfail + num_unexp
+    def generate_chart(
+        self, num_passed, num_failed, num_skipped, num_xfail, num_unexp, num_dryrun
+    ):
+        num_tests = (
+            num_passed + num_failed + num_skipped + num_xfail + num_unexp + num_dryrun
+        )
         pass_pct = num_passed / max(num_tests, 1)
         fail_pct = num_failed / max(num_tests, 1)
         xfail_pct = num_xfail / max(num_tests, 1)
         unexp_pct = num_unexp / max(num_tests, 1)
-        skip_pct = 1.0 - pass_pct - fail_pct - xfail_pct - unexp_pct
+        dryrun_pct = num_dryrun / max(num_tests, 1)
+        skip_pct = 1.0 - pass_pct - fail_pct - xfail_pct - unexp_pct - dryrun_pct
 
-        num_green_bars = int(pass_pct * self.terminal_size.width)
+        num_green_bars = int((pass_pct + dryrun_pct) * self.terminal_size.width)
         num_red_bars = int(fail_pct * self.terminal_size.width)
         num_blue_bars = int(skip_pct * self.terminal_size.width)
         num_yellow_bars = int(unexp_pct * self.terminal_size.width)
@@ -558,6 +566,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
             TestOutcome.XPASS: len(
                 [r for r in test_results if r.outcome == TestOutcome.XPASS]
             ),
+            TestOutcome.DRYRUN: len(
+                [r for r in test_results if r.outcome == TestOutcome.DRYRUN]
+            ),
         }
 
 
@@ -568,6 +579,7 @@ def outcome_to_colour(outcome: TestOutcome) -> str:
         TestOutcome.FAIL: "red",
         TestOutcome.XFAIL: "magenta",
         TestOutcome.XPASS: "yellow",
+        TestOutcome.DRYRUN: "green",
     }[outcome]
 
 

@@ -107,7 +107,7 @@ class Test:
     ward_meta: WardMeta = field(default_factory=WardMeta)
     timer: Optional["Timer"] = None
 
-    def run(self, cache: FixtureCache, idx: int = 0) -> "TestResult":
+    def run(self, cache: FixtureCache, idx: int = 0, dry_run=False) -> "TestResult":
 
         with ExitStack() as stack:
             self.timer = stack.enter_context(Timer())
@@ -118,6 +118,11 @@ class Test:
             if isinstance(self.marker, SkipMarker):
                 with closing(self.sout), closing(self.serr):
                     result = TestResult(self, TestOutcome.SKIP)
+                return result
+
+            if dry_run:
+                with closing(self.sout), closing(self.serr):
+                    result = TestResult(self, TestOutcome.DRYRUN)
                 return result
 
             try:
@@ -457,6 +462,7 @@ class TestOutcome(Enum):
     SKIP = auto()
     XFAIL = auto()  # expected fail
     XPASS = auto()  # unexpected pass
+    DRYRUN = auto()
 
 
 @dataclass
