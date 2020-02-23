@@ -1,16 +1,16 @@
-import sys
+import asyncio
 from collections import defaultdict
 from pathlib import Path
 from unittest import mock
-from unittest.mock import Mock
 
+import sys
+
+from tests.utilities import FORCE_TEST_PATH, testable_test
 from ward import Scope, raises
 from ward.errors import ParameterisationError
 from ward.fixtures import FixtureCache, fixture
 from ward.models import WardMeta
 from ward.testing import ParamMeta, Test, each, test
-
-from tests.utilities import FORCE_TEST_PATH, testable_test
 
 
 def f():
@@ -95,7 +95,29 @@ def _(cache: FixtureCache = cache):
     t = Test(fn=func, module_name=mod)
     t.run(cache)
     assert called_with == "val"
-    assert call_kwargs == {'kwargs': {}}
+    assert call_kwargs == {"kwargs": {}}
+
+
+@test("Test.run should delegate to coroutine function it wraps")
+def _(cache: FixtureCache = cache):
+    called_with = None
+    call_kwargs = (), {}
+
+    async def func(key="val", **kwargs):
+        nonlocal called_with, call_kwargs
+        called_with = key
+        call_kwargs = kwargs
+
+    t = Test(fn=func, module_name=mod)
+    t.run(cache)
+    assert called_with == "val"
+    assert call_kwargs == {"kwargs": {}}
+
+
+@test("async/await smoke test")
+async def _():
+    await asyncio.sleep(0.0001)
+    assert True
 
 
 @test("Test.is_parameterised should return True for parameterised test")
