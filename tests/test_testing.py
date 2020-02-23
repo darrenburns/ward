@@ -10,7 +10,7 @@ from ward import Scope, raises
 from ward.errors import ParameterisationError
 from ward.fixtures import FixtureCache, fixture
 from ward.models import WardMeta
-from ward.testing import ParamMeta, Test, each, test
+from ward.testing import ParamMeta, Test, each, test, xfail
 
 
 def f():
@@ -114,10 +114,23 @@ def _(cache: FixtureCache = cache):
     assert call_kwargs == {"kwargs": {}}
 
 
+@fixture
+async def one():
+    await asyncio.sleep(0.00001)
+    yield 1
+
+
+@fixture
+async def two():
+    await asyncio.sleep(0.00001)
+    return 2
+
+
+@xfail
 @test("async/await smoke test")
-async def _():
+async def _(one=one, two=two):
     await asyncio.sleep(0.0001)
-    assert True
+    assert one + two == 2
 
 
 @test("Test.is_parameterised should return True for parameterised test")

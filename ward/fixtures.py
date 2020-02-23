@@ -1,9 +1,10 @@
 import inspect
 from contextlib import suppress
-from dataclasses import dataclass, field
 from functools import partial, wraps
 from pathlib import Path
-from typing import Callable, Dict, Union, Optional, Any, Generator
+from typing import Callable, Dict, Union, Optional, Any, Generator, AsyncGenerator
+
+from dataclasses import dataclass, field
 
 from ward.models import WardMeta, Scope
 
@@ -11,7 +12,7 @@ from ward.models import WardMeta, Scope
 @dataclass
 class Fixture:
     fn: Callable
-    gen: Generator = None
+    gen: Union[Generator, AsyncGenerator] = None
     resolved_val: Any = None
 
     @property
@@ -35,6 +36,14 @@ class Fixture:
     @property
     def is_generator_fixture(self):
         return inspect.isgeneratorfunction(inspect.unwrap(self.fn))
+
+    @property
+    def is_async_generator_fixture(self):
+        return inspect.isasyncgenfunction(inspect.unwrap(self.fn))
+
+    @property
+    def is_coroutine_fixture(self):
+        return inspect.iscoroutinefunction(inspect.unwrap(self.fn))
 
     def deps(self):
         return inspect.signature(self.fn).parameters
