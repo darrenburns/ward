@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.python import PythonLexer
+from rich.console import Console
+from rich.theme import Theme, Style as S
 from termcolor import colored, cprint
 
 from ward._ward_version import __version__
@@ -23,6 +25,16 @@ from ward.testing import TestOutcome, TestResult
 
 INDENT = " " * 2
 DOUBLE_INDENT = INDENT * 2
+
+theme = Theme({
+    "pass-tag": S.parse("white on green"),
+    "fail-tag": S.parse("white on red"),
+    "skip-tag": S.parse("white on blue"),
+    "xfail-tag": S.parse("white on magenta"),
+    "xpass-tag": S.parse("white on yellow"),
+    "test-location": S.parse("dim white"),
+})
+console = Console(theme=theme)
 
 
 def print_no_break(e: Any):
@@ -521,7 +533,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             - num_yellow_bars
             - num_magenta_bars
         )
-        
+
         if num_bars_remaining and num_green_bars:
             num_green_bars += 1
             num_bars_remaining -= 1
