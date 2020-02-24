@@ -1,6 +1,6 @@
 from tests.utilities import example_test
 from ward import using
-from ward.terminal import outcome_to_colour, get_exit_code, ExitCode
+from ward.terminal import outcome_to_theme, get_exit_code, ExitCode
 from ward.testing import TestOutcome, each, test, TestResult
 
 
@@ -37,7 +37,7 @@ def _(example=example_test):
     assert exit_code == ExitCode.FAILED
 
 
-@test("outcome_to_colour({outcome}) returns '{colour}'")
+@test("outcome_to_theme({outcome}) returns '{style}'")
 def _(
     outcome=each(
         TestOutcome.PASS,
@@ -47,6 +47,6 @@ def _(
         TestOutcome.XPASS,
         TestOutcome.DRYRUN,
     ),
-    colour=each("green", "blue", "red", "magenta", "yellow", "green"),
+    style=each("pass-tag", "skip-tag", "fail-tag", "xfail-tag", "xpass-tag", "dryrun-tag"),
 ):
-    assert outcome_to_colour(outcome) == colour
+    assert outcome_to_theme(outcome) == style

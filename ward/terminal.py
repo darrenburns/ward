@@ -14,7 +14,9 @@ from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.python import PythonLexer
 from rich.console import Console
-from rich.theme import Theme, Style as S
+from rich.table import Table
+from rich.text import Text
+from rich.theme import Style as St
 from termcolor import colored, cprint
 
 from ward._ward_version import __version__
@@ -26,15 +28,17 @@ from ward.testing import TestOutcome, TestResult
 INDENT = " " * 2
 DOUBLE_INDENT = INDENT * 2
 
-theme = Theme({
-    "pass-tag": S.parse("white on green"),
-    "fail-tag": S.parse("white on red"),
-    "skip-tag": S.parse("white on blue"),
-    "xfail-tag": S.parse("white on magenta"),
-    "xpass-tag": S.parse("white on yellow"),
-    "test-location": S.parse("dim white"),
+console = Console()
+console.push_styles({
+    "pass-tag": St.parse("black on green bold"),
+    "fail-tag": St.parse("black on red bold"),
+    "skip-tag": St.parse("black on blue bold"),
+    "xfail-tag": St.parse("grey85 on magenta bold"),
+    "xpass-tag": St.parse("black on yellow bold"),
+    "dryrun-tag": St.parse("black on green bold"),
+    "test-location": St.parse("grey39"),
+    "skip-reason": St.parse("italic grey35")
 })
-console = Console(theme=theme)
 
 
 def print_no_break(e: Any):
@@ -56,26 +60,20 @@ def format_test_id(test_result: TestResult) -> (str, str):
     """
     Format module name, line number, and test case number
     """
-
-    test_id = lightblack(
-        f"{format_test_location(test_result)}{format_test_case_number(test_result)}:"
-    )
-
-    return test_id
+    iter_tag = get_iter_tag(test_result)
+    return f"{format_test_location(test_result)}{iter_tag}: "
 
 
 def format_test_location(test_result: TestResult) -> str:
-    return f"{test_result.test.module_name}:{test_result.test.line_number}"
+    return f" {test_result.test.module_name}:{test_result.test.line_number}"
 
 
-def format_test_case_number(test_result: TestResult) -> str:
+def get_iter_tag(test_result: TestResult) -> str:
     # If we're executing a parameterised test
     param_meta = test_result.test.param_meta
     if param_meta.group_size > 1:
         pad = len(str(param_meta.group_size))
-        iter_indicator = (
-            f" [{param_meta.instance_index + 1:>{pad}}/{param_meta.group_size}]"
-        )
+        iter_indicator = f" [{param_meta.instance_index + 1:>{pad}}/{param_meta.group_size}]"
     else:
         iter_indicator = ""
 
@@ -83,36 +81,26 @@ def format_test_case_number(test_result: TestResult) -> str:
 
 
 def output_test_result_line(test_result: TestResult):
-    colour = outcome_to_colour(test_result.outcome)
-    bg = f"on_{colour}"
-    padded_outcome = f" {test_result.outcome.name[:4]} "
+    theme = outcome_to_theme(test_result.outcome)
+    outcome = f"{test_result.outcome.name[:4]}"
+    description = test_result.test.description
+    location = format_test_id(test_result)
+    reason = ""
 
-    iter_indicator = format_test_case_number(test_result)
-    mod_name = format_test_id(test_result)
-    if (
-        test_result.outcome == TestOutcome.SKIP
-        or test_result.outcome == TestOutcome.XFAIL
-    ):
+    if test_result.outcome in (TestOutcome.SKIP, TestOutcome.XFAIL):
         reason = test_result.test.marker.reason or ""
         if reason:
-            reason = lightblack(f" [{reason}]")
-    else:
-        reason = ""
+            reason = f"       \u2514 reason = {reason}"
 
-    name_or_desc = test_result.test.description
-    indent = (
-        len(padded_outcome)
-        + len(test_result.test.module_name)
-        + len(str(test_result.test.line_number))
-        + len(iter_indicator)
-        + 4
-    )
-    width = get_terminal_size().width - indent
-    print(
-        colored(padded_outcome, color="grey", on_color=bg),
-        mod_name,
-        multiline_description(name_or_desc + reason, indent=indent, width=width),
-    )
+    table = Table(show_header=False, padding=0, show_edge=False, box=0)
+    table.add_column("outcome", style=theme, width=6, justify="center")
+    table.add_column("location", style="test-location", no_wrap=True)
+    table.add_column("description")
+
+    table.add_row(outcome, Text(location), Text(f"{description} "))
+    console.print(table, highlight=False)
+    if reason:
+        console.print(Text(reason), style="skip-reason", highlight=False)
 
 
 def output_test_per_line(fail_limit, test_results_gen):
@@ -162,7 +150,7 @@ def output_dots_global(
 
 
 def print_dot(result):
-    colour = outcome_to_colour(result.outcome)
+    colour = outcome_to_theme(result.outcome)
     if result.outcome == TestOutcome.PASS:
         print_no_break(colored(".", color=colour))
     elif result.outcome == TestOutcome.FAIL:
@@ -597,14 +585,14 @@ class SimpleTestResultWrite(TestResultWriterBase):
         }
 
 
-def outcome_to_colour(outcome: TestOutcome) -> str:
+def outcome_to_theme(outcome: TestOutcome) -> str:
     return {
-        TestOutcome.PASS: "green",
-        TestOutcome.SKIP: "blue",
-        TestOutcome.FAIL: "red",
-        TestOutcome.XFAIL: "magenta",
-        TestOutcome.XPASS: "yellow",
-        TestOutcome.DRYRUN: "green",
+        TestOutcome.PASS: "pass-tag",
+        TestOutcome.SKIP: "skip-tag",
+        TestOutcome.FAIL: "fail-tag",
+        TestOutcome.XFAIL: "xfail-tag",
+        TestOutcome.XPASS: "xpass-tag",
+        TestOutcome.DRYRUN: "dryrun-tag",
     }[outcome]
 
 
