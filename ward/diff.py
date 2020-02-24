@@ -1,6 +1,6 @@
 import difflib
-import pprint
 
+import pprintpp
 from colorama import Style, Fore
 from termcolor import colored
 
@@ -10,12 +10,12 @@ def make_diff(lhs, rhs, width=60) -> str:
     if isinstance(lhs, str):
         lhs_repr = lhs
     else:
-        lhs_repr = pprint.pformat(lhs, width=width)
+        lhs_repr = pprintpp.pformat(lhs, width=width)
 
     if isinstance(rhs, str):
         rhs_repr = rhs
     else:
-        rhs_repr = pprint.pformat(rhs, width=width)
+        rhs_repr = pprintpp.pformat(rhs, width=width)
 
     return build_unified_diff(lhs_repr, rhs_repr)
 
@@ -78,7 +78,7 @@ def build_unified_diff(lhs_repr, rhs_repr) -> str:
                         current_span = ""
                     current_span += line_to_rewrite[
                         index - 2
-                    ]  # Subtract 2 to account for code at start of line
+                        ]  # Subtract 2 to account for code at start of line
                 prev_char = char
                 index += 1
 
