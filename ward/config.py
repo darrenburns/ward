@@ -29,6 +29,7 @@ def read_config_toml(project_root: Path, config_file: str) -> Config:
         return {}
 
     config = {k.replace("--", "").replace("-", "_"): v for k, v in config.items()}
+    config["toml"] = str(path)
     return config
 
 
@@ -51,6 +52,9 @@ def apply_multi_defaults(file_config: Config, cli_config: Config,) -> Config:
     file_config_only = {}
     if conf_file_paths and not cli_paths:
         file_config_only["path"] = as_list(conf_file_paths)
+
+    if "toml" in file_config:
+        file_config_only["toml"] = file_config["toml"]
 
     # TODO: Can we retrieve the list below programmatically?
     multiple_options = ("exclude",)

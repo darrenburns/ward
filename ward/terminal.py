@@ -223,10 +223,12 @@ class TestResultWriterBase:
         "dots-module": output_dots_module,
     }
 
-    def __init__(self, suite: Suite, test_output_style: str):
+    def __init__(self, suite: Suite, test_output_style: str, ctx: dict = None):
         self.suite = suite
         self.test_output_style = test_output_style
         self.terminal_size = get_terminal_size()
+        if ctx:
+            self.ctx = ctx
 
     def output_all_test_results(
         self,
@@ -236,6 +238,9 @@ class TestResultWriterBase:
     ) -> List[TestResult]:
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
+        if "toml" in self.ctx.default_map:
+            print(f"Using {self.ctx.default_map['toml']}\n")
+
         print(
             f"Ward {__version__}, {python_impl} {python_version}\n"
             f"Collected {self.suite.num_tests} tests "
