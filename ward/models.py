@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from inspect import BoundArguments
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from ward.errors import FixtureError
 
@@ -41,6 +41,7 @@ class XfailMarker(Marker):
 class WardMeta:
     marker: Optional[Marker] = None
     description: Optional[str] = None
+    tags: Optional[List[str]] = None
     is_fixture: bool = False
     scope: Scope = Scope.Test
     bound_args: Optional[BoundArguments] = None

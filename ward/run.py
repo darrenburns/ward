@@ -1,10 +1,12 @@
 import sys
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import click
 from colorama import init
+from cucumber_tag_expressions import parse as parse_tags
+from cucumber_tag_expressions.model import Expression
 from ward._ward_version import __version__
 from ward.collect import (
     get_info_for_modules,
@@ -22,10 +24,16 @@ init()
 sys.path.append(".")
 
 
-@click.command()
+@click.command(context_settings={'max_content_width': 100})
 @click.option(
     "--search",
     help="Search test names, bodies, descriptions and module names for the search query and only run matching tests.",
+)
+@click.option(
+    "--tags",
+    help="Run tests matching tag expression (e.g. 'unit and not slow').\n",
+    metavar="TAG_EXPRESSION",
+    type=parse_tags,
 )
 @click.option(
     "--fail-limit",
@@ -91,6 +99,7 @@ def run(
     path: Tuple[str],
     exclude: Tuple[str],
     search: Optional[str],
+    tags: Optional[Expression],
     fail_limit: Optional[int],
     test_output_style: str,
     order: str,
@@ -105,7 +114,13 @@ def run(
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    tests = list(search_generally(unfiltered_tests, query=search))
+    tests = list(
+        search_generally(
+            unfiltered_tests,
+            query=search,
+            tags=tags,
+        )
+    )
 
     # Rewrite assertions in each test
     tests = rewrite_assertions_in_tests(tests)

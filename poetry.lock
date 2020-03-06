@@ -58,6 +58,17 @@ version = "0.3.9"
 
 [[package]]
 category = "main"
+description = "Provides tag-expression parser for cucumber/behave"
+name = "cucumber-tag-expressions"
+optional = false
+python-versions = ">=2.7"
+version = "2.0.4"
+
+[package.extras]
+develop = ["coverage", "pytest (>=3.2)", "pytest-html (>=1.19.0)", "tox (>=2.9)", "invoke", "path.py", "pylint"]
+
+[[package]]
+category = "main"
 description = "A backport of the dataclasses module for Python 3.6"
 marker = "python_version == \"3.6\""
 name = "dataclasses"
@@ -168,7 +179,7 @@ python-versions = "*"
 version = "1.4.1"
 
 [metadata]
-content-hash = "8adac35093c2e7b304c3f56c8448d72b153d8bd818f150936320bb66ff546729"
+content-hash = "592c887b2b8ed2c3967a9aabfbc62566efc266170f3aff6404190c8a439530f2"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -191,6 +202,9 @@ click = [
 colorama = [
     {file = "colorama-0.3.9-py2.py3-none-any.whl", hash = "sha256:463f8483208e921368c9f306094eb6f725c6ca42b0f97e313cb5d5512459feda"},
     {file = "colorama-0.3.9.tar.gz", hash = "sha256:48eb22f4f8461b1df5734a074b57042430fb06e1d61bd1e11b078c0fe6d7a1f1"},
+]
+cucumber-tag-expressions = [
+    {file = "cucumber-tag-expressions-2.0.4.tar.gz", hash = "sha256:72197b9330c023ce2643847fd6659c5c000f7f286f5b42cbcfd19adb3be92d30"},
 ]
 dataclasses = [
     {file = "dataclasses-0.7-py3-none-any.whl", hash = "sha256:3459118f7ede7c8bea0fe795bff7c6c2ce287d01dd226202f7c9ebc0610a7836"},
