@@ -1,6 +1,6 @@
 from unittest import mock
 
-from tests.utilities import NUMBER_OF_TESTS, testable_test, example_test, module
+from ward.tests.utilities import NUMBER_OF_TESTS, testable_test, example_test, module
 from ward import fixture
 from ward.models import Scope, SkipMarker
 from ward.suite import Suite

@@ -14,7 +14,7 @@ from ward.collect import (
 )
 from ward.testing import Test, each
 
-from tests.test_util import make_project
+from ward.tests.utilities import make_project
 
 
 def named():

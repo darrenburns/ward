@@ -211,7 +211,7 @@ def output_dots_module(
 
 def output_run_cancelled():
     cprint(
-        "\n[WARD] Run cancelled - " "results for tests that ran shown below.",
+        "\n[WARD] Run cancelled - results for tests that ran shown below.",
         color="yellow",
     )
 
@@ -223,9 +223,10 @@ class TestResultWriterBase:
         "dots-module": output_dots_module,
     }
 
-    def __init__(self, suite: Suite, test_output_style: str):
+    def __init__(self, suite: Suite, test_output_style: str, config_path: Optional[Path]):
         self.suite = suite
         self.test_output_style = test_output_style
+        self.config_path = config_path
         self.terminal_size = get_terminal_size()
 
     def output_all_test_results(
@@ -237,7 +238,15 @@ class TestResultWriterBase:
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
         print(
-            f"Ward {__version__}, {python_impl} {python_version}\n"
+            f"Ward {__version__}, {python_impl} {python_version}"
+        )
+        if self.config_path:
+            try:
+                path = self.config_path.relative_to(Path.cwd())
+            except ValueError:
+                path = self.config_path.name
+            print(f"Using config from {path}")
+        print(
             f"Collected {self.suite.num_tests} tests "
             f"in {time_to_collect:.2f} seconds."
         )
