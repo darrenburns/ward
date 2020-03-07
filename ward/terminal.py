@@ -37,7 +37,8 @@ console.push_styles({
     "xpass-tag": St.parse("black on yellow bold"),
     "dryrun-tag": St.parse("black on green bold"),
     "test-location": St.parse("grey39"),
-    "skip-reason": St.parse("italic grey35")
+    "skip-reason": St.parse("italic grey35"),
+    "ward-header": St.parse("bold"),
 })
 
 
@@ -139,17 +140,16 @@ def output_dots_global(
 
 
 def print_dot(result):
-    colour = outcome_to_theme(result.outcome)
     if result.outcome == TestOutcome.PASS:
-        print_no_break(colored(".", color=colour))
+        console.print(".", end="", style="green")
     elif result.outcome == TestOutcome.FAIL:
-        print_no_break(colored("F", color=colour))
+        console.print(Text("F", style="red", end=""), end="")
     elif result.outcome == TestOutcome.XPASS:
-        print_no_break(colored("U", color=colour))
+        console.print(Text("U", style="magenta"), end="")
     elif result.outcome == TestOutcome.XFAIL:
-        print_no_break(colored("x", color=colour))
+        console.print(Text("x", style="yellow"), end="")
     elif result.outcome == TestOutcome.SKIP:
-        print_no_break(colored("s", color=colour))
+        console.print(Text("s", style="blue"), end="")
 
 
 def output_dots_module(
@@ -166,7 +166,7 @@ def output_dots_module(
             all_results.append(result)
             if result.test.path != current_path:
                 dots_on_line = 0
-                print()
+                # console.print()
                 current_path = result.test.path
                 rel_path = str(current_path.relative_to(os.getcwd()))
                 max_dots_per_line = (
@@ -174,24 +174,22 @@ def output_dots_module(
                 )  # subtract 2 for ": "
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
-                    print_no_break(
-                        lightblack(rel_path[: final_slash_idx + 1])
+                    console.print(
+                        rel_path[: final_slash_idx + 1]
                         + rel_path[final_slash_idx + 1:]
-                        + ": "
+                        + ": ", end=""
                     )
                 else:
-                    print_no_break(f"\n{rel_path}: ")
+                    console.print(f"\n{rel_path}: ")
             print_dot(result)
             dots_on_line += 1
             if dots_on_line == max_dots_per_line:
-                print_no_break("\n" + " " * (len(rel_path) + 2))
+                console.print("\n" + " " * (len(rel_path) + 2))
                 dots_on_line = 0
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
             if num_failures == fail_limit:
                 break
-            sys.stdout.flush()
-        print()
     except KeyboardInterrupt:
         output_run_cancelled()
     finally:
@@ -225,8 +223,8 @@ class TestResultWriterBase:
     ) -> List[TestResult]:
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
-        print(
-            f"Ward {__version__}, {python_impl} {python_version}\n"
+        console.print(
+            Text(f"Ward {__version__}, {python_impl} {python_version}\n", style="ward-header"),
             f"Collected {self.suite.num_tests} tests "
             f"in {time_to_collect:.2f} seconds."
         )
