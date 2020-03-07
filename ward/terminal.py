@@ -560,7 +560,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
         )
 
     def output_test_failed_location(self, test_result: TestResult):
-        if isinstance(test_result.error, TestFailure):
+        if isinstance(test_result.error, TestFailure) or isinstance(
+            test_result.error, AssertionError
+        ):
             print(
                 indent(colored("Location:", color="cyan", attrs=["bold"]), INDENT),
                 f"{test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}",
