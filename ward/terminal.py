@@ -187,7 +187,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1:]
+                        + rel_path[final_slash_idx + 1 :]
                         + ": "
                     )
                 else:
@@ -223,7 +223,9 @@ class TestResultWriterBase:
         "dots-module": output_dots_module,
     }
 
-    def __init__(self, suite: Suite, test_output_style: str, config_path: Optional[Path]):
+    def __init__(
+        self, suite: Suite, test_output_style: str, config_path: Optional[Path]
+    ):
         self.suite = suite
         self.test_output_style = test_output_style
         self.config_path = config_path
@@ -237,9 +239,7 @@ class TestResultWriterBase:
     ) -> List[TestResult]:
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
-        print(
-            f"Ward {__version__}, {python_impl} {python_version}"
-        )
+        print(f"Ward {__version__}, {python_impl} {python_version}")
         if self.config_path:
             try:
                 path = self.config_path.relative_to(Path.cwd())
@@ -530,7 +530,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             - num_yellow_bars
             - num_magenta_bars
         )
-        
+
         if num_bars_remaining and num_green_bars:
             num_green_bars += 1
             num_bars_remaining -= 1

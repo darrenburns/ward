@@ -116,9 +116,7 @@ def run(
     test_results = suite.generate_test_runs(order=order, dry_run=dry_run)
 
     writer = SimpleTestResultWrite(
-        suite=suite,
-        test_output_style=test_output_style,
-        config_path=config_path,
+        suite=suite, test_output_style=test_output_style, config_path=config_path,
     )
     results = writer.output_all_test_results(
         test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
