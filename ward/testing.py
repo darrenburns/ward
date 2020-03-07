@@ -1,6 +1,8 @@
 import asyncio
 import functools
 import inspect
+import sys
+import traceback
 import uuid
 from collections import defaultdict
 from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
@@ -281,6 +283,11 @@ class Test:
             if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
                 result = TestResult(self, outcome)
             else:
+                if isinstance(exception, AssertionError):
+                    exception.error_line = traceback.extract_tb(
+                        exception.__traceback__, limit=-1
+                    )[0].lineno
+
                 result = TestResult(
                     self,
                     outcome,
