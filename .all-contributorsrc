@@ -109,6 +109,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "mandarvaze",
+      "name": "Mandar Vaze",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/46438?v=4",
+      "profile": "https://mandarvaze.bitbucket.io/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7
