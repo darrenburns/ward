@@ -5,7 +5,7 @@ from unittest import mock
 
 import sys
 
-from tests.utilities import FORCE_TEST_PATH, testable_test
+from ward.tests.utilities import FORCE_TEST_PATH, testable_test
 from ward import Scope, raises
 from ward.errors import ParameterisationError
 from ward.fixtures import FixtureCache, fixture

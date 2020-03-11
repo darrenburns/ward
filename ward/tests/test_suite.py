@@ -1,6 +1,6 @@
 from unittest import mock
 
-from tests.utilities import NUMBER_OF_TESTS, testable_test, example_test, module
+from ward.tests.utilities import NUMBER_OF_TESTS, testable_test, example_test, module
 from ward import fixture
 from ward.models import Scope, SkipMarker
 from ward.suite import Suite
@@ -435,7 +435,7 @@ def _():
     def test_1(a=each(a, "second", a)):
         events.append("running test")
 
-    suite = Suite(tests=[Test(fn=test_1, module_name="module1"), ])
+    suite = Suite(tests=[Test(fn=test_1, module_name="module1"),])
 
     list(suite.generate_test_runs())
 

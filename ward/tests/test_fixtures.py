@@ -1,6 +1,6 @@
 from typing import List
 
-from tests.utilities import testable_test
+from ward.tests.utilities import testable_test
 from ward import fixture, test, Scope
 from ward.fixtures import Fixture, FixtureCache, using
 from ward.testing import Test

@@ -78,7 +78,7 @@ def build_unified_diff(lhs_repr, rhs_repr) -> str:
                         current_span = ""
                     current_span += line_to_rewrite[
                         index - 2
-                        ]  # Subtract 2 to account for code at start of line
+                    ]  # Subtract 2 to account for code at start of line
                 prev_char = char
                 index += 1
 

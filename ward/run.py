@@ -96,6 +96,7 @@ def run(
     order: str,
     capture_output: bool,
     config: str,
+    config_path: Optional[Path],
     show_slowest: int,
     dry_run: bool,
 ):
@@ -114,7 +115,9 @@ def run(
     suite = Suite(tests=tests)
     test_results = suite.generate_test_runs(order=order, dry_run=dry_run)
 
-    writer = SimpleTestResultWrite(suite=suite, test_output_style=test_output_style)
+    writer = SimpleTestResultWrite(
+        suite=suite, test_output_style=test_output_style, config_path=config_path,
+    )
     results = writer.output_all_test_results(
         test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
     )
