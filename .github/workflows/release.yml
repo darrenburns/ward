@@ -10,10 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Build and publish to PyPI with Poetry
-      uses: abatilo/actions-poetry@v1.5.0
+    - uses: actions/setup-python@v1
+    - uses: dschep/install-poetry-action@v1.3
       with:
-        poetry_version: 1.0.3
-        python_version: 3.8
-        args: publish --build
+        version: 1.0.3
+    - name: Publish to PyPI
+      run: |
+        poetry publish --build
       working-directory: ${{ github.workspace }}

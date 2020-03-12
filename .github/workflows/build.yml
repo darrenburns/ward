@@ -23,13 +23,12 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: "Install Poetry and dependencies"
+    - uses: dschep/install-poetry-action@v1.3
+      with:
+        version: 1.0.3
+    - name: Run tests with Ward
       run: |
-        python${{ matrix.python-version }} -m pip install --user --upgrade poetry
-        python${{ matrix.python-version }} -m poetry install
-    - name: Dogfood test with ward
-      run: |
-        python${{ matrix.python-version }} -m poetry run ward
+        poetry run ward
 
 # TODO: Update to use the Makefile and actually enforce this.
 #    - name: Lint with flake8 (CONFIG OUTDATED)
