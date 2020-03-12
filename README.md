@@ -49,6 +49,11 @@ contained in the body of the test.
 ```
 ward --search "Database.get_all_users"
 ```
+Or use tag expressions for more powerful filtering.
+```
+ward --tags "(unit or integration) and not slow"
+```
+
 **Parameterised testing:** write a test once, and call it multiple times with different inputs
 ```python
 @test("truncate('{text}', num_chars={num_chars}) returns '{expected}'")
