@@ -1,5 +1,5 @@
 # Ward
-![](https://github.com/darrenburns/ward/workflows/Ward%20CI/badge.svg)
+![Build](https://github.com/darrenburns/ward/workflows/Build/badge.svg)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
 [![Gitter](https://badges.gitter.im/python-ward/community.svg)](https://gitter.im/python-ward/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
