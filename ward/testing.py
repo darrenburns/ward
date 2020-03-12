@@ -109,6 +109,7 @@ class Test:
     serr: StringIO = field(default_factory=StringIO)
     ward_meta: WardMeta = field(default_factory=WardMeta)
     timer: Optional["Timer"] = None
+    tags: List[str] = field(default_factory=list)
 
     def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
         with ExitStack() as stack:
@@ -443,7 +444,7 @@ def is_test_module_name(module_name: str) -> bool:
 anonymous_tests: Dict[Path, List[Callable]] = defaultdict(list)
 
 
-def test(description: str, *args, **kwargs):
+def test(description: str, *args, tags=None, **kwargs):
     def decorator_test(func):
         unwrapped = inspect.unwrap(func)
         module_name: str = unwrapped.__module__
@@ -457,9 +458,12 @@ def test(description: str, *args, **kwargs):
 
             if hasattr(unwrapped, "ward_meta"):
                 unwrapped.ward_meta.description = description
+                unwrapped.ward_meta.tags = tags
                 unwrapped.ward_meta.path = path
             else:
-                unwrapped.ward_meta = WardMeta(description=description, path=path)
+                unwrapped.ward_meta = WardMeta(
+                    description=description, tags=tags, path=path,
+                )
 
             collect_into = kwargs.get("_collect_into", anonymous_tests)
             collect_into[path].append(unwrapped)

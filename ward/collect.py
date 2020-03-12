@@ -6,7 +6,18 @@ import pkgutil
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterable, List, Set, Tuple
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+)
+
+from cucumber_tag_expressions.model import Expression
 
 from ward.errors import CollectionError
 from ward.models import WardMeta
@@ -115,21 +126,28 @@ def get_tests_in_modules(
                     marker=meta.marker,
                     description=meta.description or "",
                     capture_output=capture_output,
+                    tags=meta.tags or [],
                 )
 
 
 def search_generally(
-    tests: Iterable[Test], query: str = ""
+    tests: Iterable[Test], query: str = "", tag_expr: Optional[Expression] = None,
 ) -> Generator[Test, None, None]:
-    if not query:
+    if not query and not tag_expr:
         yield from tests
 
     for test in tests:
         description = test.description or ""
-        if (
-            query in description
+
+        matches_query = (
+            not query
+            or query in description
             or query in f"{test.module_name}."
             or query in inspect.getsource(test.fn)
             or query in test.qualified_name
-        ):
+        )
+
+        matches_tags = not tag_expr or tag_expr.evaluate(test.tags)
+
+        if matches_query and matches_tags:
             yield test
