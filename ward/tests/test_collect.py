@@ -1,7 +1,9 @@
-from dataclasses import dataclass
 from modulefinder import ModuleFinder
 from pathlib import Path
 from pkgutil import ModuleInfo
+
+from cucumber_tag_expressions import parse
+from dataclasses import dataclass
 
 from ward import fixture, raises, test
 from ward.collect import (
@@ -13,7 +15,6 @@ from ward.collect import (
     search_generally,
 )
 from ward.testing import Test, each
-
 from ward.tests.utilities import make_project
 
 
@@ -54,6 +55,60 @@ def _(tests=tests_to_search):
     results = search_generally(tests, query="92qj3f9i")
     with raises(StopIteration):
         next(results)
+
+
+@test("search_generally when tags match simple tag expression")
+def _():
+    apples = Test(fn=named, module_name="", tags=["apples"])
+    bananas = Test(fn=named, module_name="", tags=["bananas"])
+    results = list(search_generally([apples, bananas], tag_expr=parse("apples")))
+    assert results == [apples]
+
+
+@test("search_generally when tags match complex tag expression")
+def _():
+    one = Test(fn=named, module_name="", tags=["apples", "bananas"])
+    two = Test(fn=named, module_name="", tags=["bananas", "carrots"])
+    three = Test(fn=named, module_name="", tags=["bananas"])
+    tag_expr = parse("apples or bananas and not carrots")
+    results = list(search_generally([one, two, three], tag_expr=tag_expr))
+    assert results == [one, three]
+
+
+@test("search_generally when both query and tag expression match a test")
+def _():
+    one = Test(fn=named, module_name="one", tags=["apples"])
+    two = Test(fn=named, module_name="two", tags=["apples"])
+    tag_expr = parse("apples")
+    results = list(search_generally([one, two], query="two", tag_expr=tag_expr))
+    # Both tests match the tag expression, but only two matches the search query
+    # because the query matches the module name for the test.
+    assert results == [two]
+
+
+@test("search_generally when a test is defined with an empty tag list doesnt match")
+def _():
+    t = Test(fn=named, module_name="", tags=[])
+    tag_expr = parse("apples")
+    results = list(search_generally([t], tag_expr=tag_expr))
+    assert results == []
+
+
+@test("search_generally matches all tags when a tag expression is an empty string")
+def _():
+    t = Test(fn=named, module_name="", tags=["apples"])
+    tag_expr = parse("")
+    results = list(search_generally([t], tag_expr=tag_expr))
+    assert results == [t]
+
+
+@test("search_generally returns [] when the tag expression matches no tests")
+def _():
+    one = Test(fn=named, module_name="one", tags=["apples"])
+    two = Test(fn=named, module_name="two", tags=["bananas"])
+    tag_expr = parse("carrots")
+    results = list(search_generally([one, two], tag_expr=tag_expr))
+    assert results == []
 
 
 @test("is_test_module(<module: '{module_name}'>) returns {rv}")

@@ -131,11 +131,9 @@ def get_tests_in_modules(
 
 
 def search_generally(
-    tests: Iterable[Test],
-    query: str = "",
-    tags: Optional[Expression] = None,
+    tests: Iterable[Test], query: str = "", tag_expr: Optional[Expression] = None,
 ) -> Generator[Test, None, None]:
-    if not query and not tags:
+    if not query and not tag_expr:
         yield from tests
 
     for test in tests:
@@ -149,10 +147,7 @@ def search_generally(
             or query in test.qualified_name
         )
 
-        matches_tags = (
-            not tags
-            or tags.evaluate(test.tags)
-        )
+        matches_tags = not tag_expr or tag_expr.evaluate(test.tags)
 
         if matches_query and matches_tags:
             yield test

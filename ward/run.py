@@ -24,7 +24,7 @@ init()
 sys.path.append(".")
 
 
-@click.command(context_settings={'max_content_width': 100})
+@click.command(context_settings={"max_content_width": 100})
 @click.option(
     "--search",
     help="Search test names, bodies, descriptions and module names for the search query and only run matching tests.",
@@ -114,13 +114,7 @@ def run(
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    tests = list(
-        search_generally(
-            unfiltered_tests,
-            query=search,
-            tags=tags,
-        )
-    )
+    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags,))
 
     # Rewrite assertions in each test
     tests = rewrite_assertions_in_tests(tests)

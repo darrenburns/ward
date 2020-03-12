@@ -462,9 +462,7 @@ def test(description: str, *args, tags=None, **kwargs):
                 unwrapped.ward_meta.path = path
             else:
                 unwrapped.ward_meta = WardMeta(
-                    description=description,
-                    tags=tags,
-                    path=path,
+                    description=description, tags=tags, path=path,
                 )
 
             collect_into = kwargs.get("_collect_into", anonymous_tests)
