@@ -1,4 +1,4 @@
-name: Ward CI
+name: Build
 
 on:
   push:
@@ -23,14 +23,18 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Lint with flake8
+    - name: "Install Poetry and dependencies"
       run: |
-        pip install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+        python3.7 -m pip install --user --upgrade poetry
+        python3.7 -m poetry install
     - name: Dogfood test with ward
       run: |
-        pip install .
-        ward
+        python3.7 -m poetry run ward
+
+# TODO: Update to use the Makefile and actually enforce this.
+#    - name: Lint with flake8 (CONFIG OUTDATED)
+#      run: |
+#        # stop the build if there are Python syntax errors or undefined names
+#        python3.7 -m poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+#        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+#        python3.7 -m poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics

@@ -13,11 +13,11 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.7'
-    - name: Build and publish Python distribution to PyPI
+    - name: "Install Poetry"
       run: |
-        python3.7 -m pip install --user --upgrade flit
-        python3.7 -m flit publish
+        python3.7 -m pip install --user --upgrade poetry
+    - name: "Build & publish to PyPI using Poetry"
+      run: |
+        python3.7 -m poetry build
+        python3.7 -m poetry publish -u __token__ -p ${{ secrets.pypi_api_token }}
       working-directory: ${{ github.workspace }}
-      env:
-        FLIT_USERNAME: __token__
-        FLIT_PASSWORD: ${{ secrets.pypi_api_token }}
