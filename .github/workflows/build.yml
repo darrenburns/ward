@@ -25,11 +25,11 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: "Install Poetry and dependencies"
       run: |
-        python3.7 -m pip install --user --upgrade poetry
-        python3.7 -m poetry install
+        python${{ matrix.python-version }} -m pip install --user --upgrade poetry
+        python${{ matrix.python-version }} -m poetry install
     - name: Dogfood test with ward
       run: |
-        python3.7 -m poetry run ward
+        python${{ matrix.python-version }} -m poetry run ward
 
 # TODO: Update to use the Makefile and actually enforce this.
 #    - name: Lint with flake8 (CONFIG OUTDATED)
