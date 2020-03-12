@@ -17,5 +17,5 @@ jobs:
         create_virtualenvs: true
     - name: Publish to PyPI
       run: |
-        poetry publish --build
+        poetry publish --build --username __token__ --password ${{ secrets.pypi_api_token }}
       working-directory: ${{ github.workspace }}
