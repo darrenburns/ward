@@ -162,6 +162,10 @@ class Test:
             if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
                 result = TestResult(self, outcome)
             else:
+                if isinstance(error, AssertionError):
+                    error.error_line = traceback.extract_tb(
+                        error.__traceback__, limit=-1
+                    )[0].lineno
                 result = TestResult(
                     self,
                     outcome,
@@ -276,25 +280,6 @@ class Test:
                 resolved = arg
             resolved_args[name] = resolved
         return self._unpack_resolved(resolved_args)
-
-    def get_result(self, outcome, exception=None):
-        with closing(self.sout), closing(self.serr):
-            if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
-                result = TestResult(self, outcome)
-            else:
-                if isinstance(exception, AssertionError):
-                    exception.error_line = traceback.extract_tb(
-                        exception.__traceback__, limit=-1
-                    )[0].lineno
-
-                result = TestResult(
-                    self,
-                    outcome,
-                    exception,
-                    captured_stdout=self.sout.getvalue(),
-                    captured_stderr=self.serr.getvalue(),
-                )
-            return result
 
     def _get_default_args(
         self, func: Optional[Union[Callable, Fixture]] = None
