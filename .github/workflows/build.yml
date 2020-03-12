@@ -19,12 +19,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Run tests with Ward
-      uses: abatilo/actions-poetry@v1.5.0
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
       with:
-        poetry_version: 1.0.3
-        python_version: ${{ matrix.python-version }}
-        args: run ward
+        python-version: ${{ matrix.python-version }}
+    - name: "Install Poetry and dependencies"
+      run: |
+        python${{ matrix.python-version }} -m pip install --user --upgrade poetry
+        python${{ matrix.python-version }} -m poetry install
+    - name: Dogfood test with ward
+      run: |
+        python${{ matrix.python-version }} -m poetry run ward
 
 # TODO: Update to use the Makefile and actually enforce this.
 #    - name: Lint with flake8 (CONFIG OUTDATED)
