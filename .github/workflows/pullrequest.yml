@@ -21,8 +21,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: "Install Poetry and dependencies"
       run: |
-        python${{ matrix.python-version }} -m pip install --user --upgrade poetry
-        python${{ matrix.python-version }} -m poetry install
+        pip install --user --upgrade poetry
+        poetry install
     - name: Run tests with Ward
       run: |
-        python${{ matrix.python-version }} -m poetry run ward
+        poetry run which python
+        poetry run ward
