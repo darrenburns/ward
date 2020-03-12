@@ -25,6 +25,5 @@ jobs:
         create_virtualenvs: true
     - name: Run tests with Ward
       run: |
-        poetry run which python
         poetry install
         poetry run ward
