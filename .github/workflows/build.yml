@@ -28,6 +28,7 @@ jobs:
         version: 1.0.3
     - name: Run tests with Ward
       run: |
+        poetry install
         poetry run ward
 
 # TODO: Update to use the Makefile and actually enforce this.
