@@ -416,16 +416,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
         if show_slowest:
             self._output_slowest_tests(test_results, show_slowest)
         outcome_counts = self._get_outcome_counts(test_results)
-        if test_results:
-            chart = self.generate_chart(
-                num_passed=outcome_counts[TestOutcome.PASS],
-                num_failed=outcome_counts[TestOutcome.FAIL],
-                num_skipped=outcome_counts[TestOutcome.SKIP],
-                num_xfail=outcome_counts[TestOutcome.XFAIL],
-                num_unexp=outcome_counts[TestOutcome.XPASS],
-                num_dryrun=outcome_counts[TestOutcome.DRYRUN],
-            )
-            print(chart, "")
 
         exit_code = get_exit_code(test_results)
         if exit_code == ExitCode.SUCCESS:
@@ -490,74 +480,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
             )
             for line in captured_stdout_lines:
                 print(indent(line, DOUBLE_INDENT))
-
-    def generate_chart(
-        self, num_passed, num_failed, num_skipped, num_xfail, num_unexp, num_dryrun
-    ):
-        num_tests = (
-            num_passed + num_failed + num_skipped + num_xfail + num_unexp + num_dryrun
-        )
-        pass_pct = num_passed / max(num_tests, 1)
-        fail_pct = num_failed / max(num_tests, 1)
-        xfail_pct = num_xfail / max(num_tests, 1)
-        unexp_pct = num_unexp / max(num_tests, 1)
-        dryrun_pct = num_dryrun / max(num_tests, 1)
-        skip_pct = 1.0 - pass_pct - fail_pct - xfail_pct - unexp_pct - dryrun_pct
-
-        num_green_bars = int((pass_pct + dryrun_pct) * self.terminal_size.width)
-        num_red_bars = int(fail_pct * self.terminal_size.width)
-        num_blue_bars = int(skip_pct * self.terminal_size.width)
-        num_yellow_bars = int(unexp_pct * self.terminal_size.width)
-        num_magenta_bars = int(xfail_pct * self.terminal_size.width)
-
-        if pass_pct + dryrun_pct > 0:
-            num_green_bars = max(1, num_green_bars)
-        if fail_pct > 0:
-            num_red_bars = max(1, num_red_bars)
-        if skip_pct > 0:
-            num_blue_bars = max(1, num_blue_bars)
-        if unexp_pct > 0:
-            num_yellow_bars = max(1, num_yellow_bars)
-        if xfail_pct > 0:
-            num_magenta_bars = max(1, num_magenta_bars)
-
-        # Rounding to integers could leave us a few bars short
-        num_bars_remaining = (
-            self.terminal_size.width
-            - num_green_bars
-            - num_red_bars
-            - num_blue_bars
-            - num_yellow_bars
-            - num_magenta_bars
-        )
-
-        if num_bars_remaining and num_green_bars:
-            num_green_bars += 1
-            num_bars_remaining -= 1
-
-        if num_bars_remaining and num_red_bars:
-            num_red_bars += 1
-            num_bars_remaining -= 1
-
-        if num_bars_remaining and num_blue_bars:
-            num_blue_bars += 1
-            num_bars_remaining -= 1
-
-        if num_bars_remaining and num_yellow_bars:
-            num_yellow_bars += 1
-            num_bars_remaining -= 1
-
-        if num_bars_remaining and num_magenta_bars:
-            num_magenta_bars += 1
-            num_bars_remaining -= 1
-
-        return (
-            colored("F" * num_red_bars, color="red", on_color="on_red")
-            + colored("U" * num_yellow_bars, color="yellow", on_color="on_yellow")
-            + colored("x" * num_magenta_bars, color="magenta", on_color="on_magenta")
-            + colored("s" * num_blue_bars, color="blue", on_color="on_blue")
-            + colored("." * num_green_bars, color="green", on_color="on_green")
-        )
 
     def output_test_failed_location(self, test_result: TestResult):
         if isinstance(test_result.error, TestFailure) or isinstance(
