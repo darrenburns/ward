@@ -32,7 +32,7 @@ sys.path.append(".")
 @click.option(
     "--tags",
     help="Run tests matching tag expression (e.g. 'unit and not slow').\n",
-    metavar="TAG_EXPRESSION",
+    metavar="EXPR",
     type=parse_tags,
 )
 @click.option(
