@@ -24,7 +24,11 @@ test:
 	poetry run ward
 .PHONY: test
 
-prep: format test
+update:
+	poetry update
+.PHONY: update
+
+prep: update format test
 .PHONY: prep
 
 clean:
