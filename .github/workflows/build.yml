@@ -26,6 +26,7 @@ jobs:
     - uses: dschep/install-poetry-action@v1.3
       with:
         version: 1.0.3
+        create_virtualenvs: true
     - name: Run tests with Ward
       run: |
         poetry install
