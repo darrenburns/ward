@@ -224,11 +224,16 @@ class TestResultWriterBase:
     }
 
     def __init__(
-        self, suite: Suite, test_output_style: str, config_path: Optional[Path]
+        self,
+        suite: Suite,
+        test_output_style: str,
+        config_path: Optional[Path],
+        show_diff_symbols: bool = False,
     ):
         self.suite = suite
         self.test_output_style = test_output_style
         self.config_path = config_path
+        self.show_diff_symbols = show_diff_symbols
         self.terminal_size = get_terminal_size()
 
     def output_all_test_results(
@@ -385,7 +390,12 @@ class SimpleTestResultWrite(TestResultWriterBase):
             f" vs {colored('RHS', color='red')} shown below\n"
         )
         print(indent(diff_msg, INDENT))
-        diff = make_diff(err.lhs, err.rhs, width=self.terminal_size.width - 24)
+        diff = make_diff(
+            err.lhs,
+            err.rhs,
+            width=self.terminal_size.width - 24,
+            show_symbols=self.show_diff_symbols,
+        )
         print(indent(diff, DOUBLE_INDENT))
 
     def print_traceback(self, err):
