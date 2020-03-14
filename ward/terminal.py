@@ -325,6 +325,32 @@ def get_terminal_size() -> TerminalSize:
             continue
     return TerminalSize(height=24, width=80)
 
+class ParallelTestResultWriter(ResultWriter):
+
+    def output_single_test_result(self, test_result: TestResult):
+        print(test_result)
+
+    def output_why_test_failed_header(self, test_result: TestResult):
+        pass
+
+    def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
+        pass
+
+    def output_why_test_failed(self, test_result: TestResult):
+        pass
+
+    def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
+        pass
+
+    def output_captured_stderr(self, test_result: TestResult):
+        pass
+
+    def output_captured_stdout(self, test_result: TestResult):
+        pass
+
+    def output_test_failed_location(self, test_result: TestResult):
+        pass
+
 
 class SequentialResultWriter(ResultWriter):
     def output_why_test_failed_header(self, test_result: TestResult):
@@ -407,7 +433,7 @@ class SequentialResultWriter(ResultWriter):
         return result_marker
 
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: int,
+        self, test_results: List[TestResult], time_taken: float,
     ):
         if self.config.show_slowest:
             self._output_slowest_tests(test_results, self.config.show_slowest)

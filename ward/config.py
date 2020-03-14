@@ -100,6 +100,7 @@ class Config:
     fail_limit: Optional[int]
     test_output_style: str
     order: str
+    workers: int
     capture_output: bool
     config: str
     config_path: Optional[Path]

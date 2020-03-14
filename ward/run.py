@@ -18,7 +18,7 @@ from ward.collect import (
 from ward.config import set_defaults_from_config, Config, CollectionStats
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
-from ward.terminal import get_exit_code, SequentialResultWriter
+from ward.terminal import get_exit_code, SequentialResultWriter, ParallelTestResultWriter
 from ward.testing import TestResult
 
 init()
@@ -39,6 +39,29 @@ class SequentialTestRunner:
             order=self.config.order, dry_run=self.config.dry_run
         )
         writer = SequentialResultWriter(
+            collection_stats=self.collection_stats, config=self.config,
+        )
+        results = writer.output_all_test_results(
+            result_generator, fail_limit=self.config.fail_limit
+        )
+        overall_time_taken = default_timer() - self.collection_stats.run_start
+        writer.output_test_result_summary(results, time_taken=overall_time_taken)
+        return results
+
+
+class ParallelTestRunner:
+    def __init__(
+        self, suite: Suite, config: Config, collection_stats: CollectionStats
+    ):
+        self.suite = suite
+        self.config = config
+        self.collection_stats = collection_stats
+
+    def run_all(self) -> List[TestResult]:
+        result_generator = self.suite.result_generator(
+            order=self.config.order, dry_run=self.config.dry_run
+        )
+        writer = ParallelTestResultWriter(
             collection_stats=self.collection_stats, config=self.config,
         )
         results = writer.output_all_test_results(
@@ -85,6 +108,13 @@ class SequentialTestRunner:
     help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
 @click.option(
+    "--workers",
+    type=click.INT,
+    default=1,
+    metavar="NUM_WORKERS",
+    help="Number of workers to run tests on.",
+)
+@click.option(
     "--capture-output/--no-capture-output",
     default=True,
     help="Enable or disable output capturing.",
@@ -128,6 +158,7 @@ def run(
     fail_limit: Optional[int],
     test_output_style: str,
     order: str,
+    workers: int,
     capture_output: bool,
     config: str,
     config_path: Optional[Path],
@@ -139,7 +170,7 @@ def run(
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags,))
+    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags, ))
     tests = rewrite_assertions_in_tests(tests)
 
     conf = Config(
@@ -150,6 +181,7 @@ def run(
         fail_limit=fail_limit,
         test_output_style=test_output_style,
         order=order,
+        workers=workers,
         capture_output=capture_output,
         config=config,
         config_path=config_path,
@@ -158,11 +190,13 @@ def run(
     )
     suite = Suite(tests=tests)
     time_taken = default_timer() - run_start_time
-
     collection_stats = CollectionStats(
         run_start_time, time_taken, number_of_tests=suite.num_tests,
     )
-    runner = SequentialTestRunner(suite, conf, collection_stats)
+    if workers == 1:
+        runner = SequentialTestRunner(suite, conf, collection_stats)
+    else:
+        runner = ParallelTestRunner(suite, conf, collection_stats)
     results = runner.run_all()
 
     exit_code = get_exit_code(results)
