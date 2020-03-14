@@ -18,7 +18,11 @@ from ward.collect import (
 from ward.config import set_defaults_from_config, Config, CollectionStats
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
-from ward.terminal import get_exit_code, SequentialResultWriter, ParallelTestResultWriter
+from ward.terminal import (
+    get_exit_code,
+    SequentialResultWriter,
+    ParallelTestResultWriter,
+)
 from ward.testing import TestResult
 
 init()
@@ -50,9 +54,7 @@ class SequentialTestRunner:
 
 
 class ParallelTestRunner:
-    def __init__(
-        self, suite: Suite, config: Config, collection_stats: CollectionStats
-    ):
+    def __init__(self, suite: Suite, config: Config, collection_stats: CollectionStats):
         self.suite = suite
         self.config = config
         self.collection_stats = collection_stats
@@ -170,7 +172,7 @@ def run(
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags, ))
+    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags,))
     tests = rewrite_assertions_in_tests(tests)
 
     conf = Config(

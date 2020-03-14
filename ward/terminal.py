@@ -325,15 +325,17 @@ def get_terminal_size() -> TerminalSize:
             continue
     return TerminalSize(height=24, width=80)
 
-class ParallelTestResultWriter(ResultWriter):
 
+class ParallelTestResultWriter(ResultWriter):
     def output_single_test_result(self, test_result: TestResult):
         print(test_result)
 
     def output_why_test_failed_header(self, test_result: TestResult):
         pass
 
-    def output_test_result_summary(self, test_results: List[TestResult], time_taken: float):
+    def output_test_result_summary(
+        self, test_results: List[TestResult], time_taken: float
+    ):
         pass
 
     def output_why_test_failed(self, test_result: TestResult):
