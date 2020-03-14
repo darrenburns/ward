@@ -15,7 +15,7 @@ from ward.collect import (
     load_modules,
     search_generally,
 )
-from ward.config import set_defaults_from_config, WardConfig, CollectionStats
+from ward.config import set_defaults_from_config, Config, CollectionStats
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
 from ward.terminal import get_exit_code, SequentialResultWriter
@@ -28,20 +28,18 @@ sys.path.append(".")
 
 class SequentialTestRunner:
     def __init__(
-        self,
-        suite: Suite,
-        config: WardConfig,
-        collection_stats: CollectionStats,
+        self, suite: Suite, config: Config, collection_stats: CollectionStats,
     ):
         self.suite = suite
         self.config = config
         self.collection_stats = collection_stats
 
     def run_all(self) -> List[TestResult]:
-        result_generator = self.suite.result_generator(order=self.config.order, dry_run=self.config.dry_run)
+        result_generator = self.suite.result_generator(
+            order=self.config.order, dry_run=self.config.dry_run
+        )
         writer = SequentialResultWriter(
-            collection_stats=self.collection_stats,
-            config=self.config,
+            collection_stats=self.collection_stats, config=self.config,
         )
         results = writer.output_all_test_results(
             result_generator, fail_limit=self.config.fail_limit
@@ -141,10 +139,10 @@ def run(
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags, ))
+    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags,))
     tests = rewrite_assertions_in_tests(tests)
 
-    conf = WardConfig(
+    conf = Config(
         path=path,
         exclude=exclude,
         search=search,
@@ -162,9 +160,7 @@ def run(
     time_taken = default_timer() - run_start_time
 
     collection_stats = CollectionStats(
-        run_start_time,
-        time_taken,
-        number_of_tests=suite.num_tests,
+        run_start_time, time_taken, number_of_tests=suite.num_tests,
     )
     runner = SequentialTestRunner(suite, conf, collection_stats)
     results = runner.run_all()

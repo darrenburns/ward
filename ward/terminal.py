@@ -16,7 +16,7 @@ from termcolor import colored, cprint
 from typing import Any, Dict, Generator, Iterable, List, Optional
 
 from ward._ward_version import __version__
-from ward.config import WardConfig, CollectionStats
+from ward.config import Config, CollectionStats
 from ward.diff import make_diff
 from ward.expect import Comparison, TestFailure
 from ward.testing import TestOutcome, TestResult
@@ -187,7 +187,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1:]
+                        + rel_path[final_slash_idx + 1 :]
                         + ": "
                     )
                 else:
@@ -223,7 +223,7 @@ class ResultWriter:
         "dots-module": output_dots_module,
     }
 
-    def __init__(self, collection_stats: CollectionStats, config: WardConfig):
+    def __init__(self, collection_stats: CollectionStats, config: Config):
         self.collection_stats = collection_stats
         self.config = config
         self.terminal_size = get_terminal_size()

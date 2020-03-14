@@ -66,9 +66,7 @@ def _(module=module):
     assert isinstance(result.error, AssertionError)
 
 
-@test(
-    "Suite.result_generator yields a SKIP TestResult when test has @skip decorator "
-)
+@test("Suite.result_generator yields a SKIP TestResult when test has @skip decorator ")
 def _(skipped=skipped_test, example=example_test):
     suite = Suite(tests=[example, skipped])
 
@@ -414,9 +412,7 @@ def _():
 
 
 @skip("TODO: Determine how this should behave")
-@test(
-    "Suite.result_generator dependent fixtures of differing scopes behave correctly"
-)
+@test("Suite.result_generator dependent fixtures of differing scopes behave correctly")
 def _():
     pass
 
