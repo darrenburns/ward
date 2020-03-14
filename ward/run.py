@@ -1,12 +1,13 @@
-import sys
-from pathlib import Path
 from timeit import default_timer
-from typing import List, Optional, Tuple
 
 import click
+import sys
 from colorama import init
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
+from pathlib import Path
+from typing import List, Optional, Tuple
+
 from ward._ward_version import __version__
 from ward.collect import (
     get_info_for_modules,
@@ -14,14 +15,40 @@ from ward.collect import (
     load_modules,
     search_generally,
 )
-from ward.config import set_defaults_from_config
+from ward.config import set_defaults_from_config, WardConfig, CollectionStats
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
-from ward.terminal import SimpleTestResultWrite, get_exit_code
+from ward.terminal import get_exit_code, SequentialResultWriter
+from ward.testing import TestResult
 
 init()
 
 sys.path.append(".")
+
+
+class SequentialTestRunner:
+    def __init__(
+        self,
+        suite: Suite,
+        config: WardConfig,
+        collection_stats: CollectionStats,
+    ):
+        self.suite = suite
+        self.config = config
+        self.collection_stats = collection_stats
+
+    def run_all(self) -> List[TestResult]:
+        result_generator = self.suite.result_generator(order=self.config.order, dry_run=self.config.dry_run)
+        writer = SequentialResultWriter(
+            collection_stats=self.collection_stats,
+            config=self.config,
+        )
+        results = writer.output_all_test_results(
+            result_generator, fail_limit=self.config.fail_limit
+        )
+        overall_time_taken = default_timer() - self.collection_stats.run_start
+        writer.output_test_result_summary(results, time_taken=overall_time_taken)
+        return results
 
 
 @click.command(context_settings={"max_content_width": 100})
@@ -109,29 +136,38 @@ def run(
     show_slowest: int,
     dry_run: bool,
 ):
-    start_run = default_timer()
+    run_start_time = default_timer()
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags,))
-
-    # Rewrite assertions in each test
+    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags, ))
     tests = rewrite_assertions_in_tests(tests)
 
-    time_to_collect = default_timer() - start_run
-
+    conf = WardConfig(
+        path=path,
+        exclude=exclude,
+        search=search,
+        tag_expression=tags,
+        fail_limit=fail_limit,
+        test_output_style=test_output_style,
+        order=order,
+        capture_output=capture_output,
+        config=config,
+        config_path=config_path,
+        show_slowest=show_slowest,
+        dry_run=dry_run,
+    )
     suite = Suite(tests=tests)
-    test_results = suite.generate_test_runs(order=order, dry_run=dry_run)
+    time_taken = default_timer() - run_start_time
 
-    writer = SimpleTestResultWrite(
-        suite=suite, test_output_style=test_output_style, config_path=config_path,
+    collection_stats = CollectionStats(
+        run_start_time,
+        time_taken,
+        number_of_tests=suite.num_tests,
     )
-    results = writer.output_all_test_results(
-        test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
-    )
-    time_taken = default_timer() - start_run
-    writer.output_test_result_summary(results, time_taken, show_slowest)
+    runner = SequentialTestRunner(suite, conf, collection_stats)
+    results = runner.run_all()
 
     exit_code = get_exit_code(results)
 

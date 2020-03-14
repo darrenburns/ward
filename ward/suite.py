@@ -24,7 +24,7 @@ class Suite:
             counts[path] += 1
         return counts
 
-    def generate_test_runs(
+    def result_generator(
         self, order="standard", dry_run=False
     ) -> Generator[TestResult, None, None]:
         """

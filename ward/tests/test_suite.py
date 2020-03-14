@@ -29,17 +29,17 @@ def _(suite=suite):
 
 
 @test(
-    f"Suite.generate_test_runs generates {NUMBER_OF_TESTS} when suite has {NUMBER_OF_TESTS} tests"
+    f"Suite.result_generator generates {NUMBER_OF_TESTS} when suite has {NUMBER_OF_TESTS} tests"
 )
 def _(suite=suite):
-    runs = suite.generate_test_runs()
+    runs = suite.result_generator()
 
     assert len(list(runs)) == NUMBER_OF_TESTS
 
 
-@test("Suite.generate_test_runs generates yields the expected test results")
+@test("Suite.result_generator generates yields the expected test results")
 def _(suite=suite):
-    results = list(suite.generate_test_runs())
+    results = list(suite.result_generator())
     expected = [
         TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
         for test in suite.tests
@@ -47,7 +47,7 @@ def _(suite=suite):
     assert results == expected
 
 
-@test("Suite.generate_test_runs yields a FAIL TestResult on `assert False`")
+@test("Suite.result_generator yields a FAIL TestResult on `assert False`")
 def _(module=module):
     @testable_test
     def _():
@@ -56,7 +56,7 @@ def _(module=module):
     t = Test(fn=_, module_name=module)
     failing_suite = Suite(tests=[t])
 
-    results = failing_suite.generate_test_runs()
+    results = failing_suite.result_generator()
     result = next(results)
 
     expected_result = TestResult(
@@ -67,12 +67,12 @@ def _(module=module):
 
 
 @test(
-    "Suite.generate_test_runs yields a SKIP TestResult when test has @skip decorator "
+    "Suite.result_generator yields a SKIP TestResult when test has @skip decorator "
 )
 def _(skipped=skipped_test, example=example_test):
     suite = Suite(tests=[example, skipped])
 
-    test_runs = list(suite.generate_test_runs())
+    test_runs = list(suite.result_generator())
     expected_runs = [
         TestResult(example, TestOutcome.PASS, None, ""),
         TestResult(skipped, TestOutcome.SKIP, None, ""),
@@ -81,11 +81,11 @@ def _(skipped=skipped_test, example=example_test):
     assert test_runs == expected_runs
 
 
-@test("Suite.generate_test_runs yields a DRYRUN TestResult when dry_run is True")
+@test("Suite.result_generator yields a DRYRUN TestResult when dry_run is True")
 def _(skipped=skipped_test, example=example_test):
     suite = Suite(tests=[example, skipped])
 
-    test_runs = list(suite.generate_test_runs(dry_run=True))
+    test_runs = list(suite.result_generator(dry_run=True))
 
     expected_runs = [
         TestResult(example, TestOutcome.DRYRUN, None, ""),
@@ -95,7 +95,7 @@ def _(skipped=skipped_test, example=example_test):
     assert test_runs == expected_runs
 
 
-@test("Suite.generate_test_runs fixture teardown code is ran in the expected order")
+@test("Suite.result_generator fixture teardown code is ran in the expected order")
 def _(module=module):
     events = []
 
@@ -118,12 +118,12 @@ def _(module=module):
     suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
-    list(suite.generate_test_runs())
+    list(suite.result_generator())
 
     assert events == [1, 2, 3]
 
 
-@test("Suite.generate_test_runs tears down deep fixtures")
+@test("Suite.result_generator tears down deep fixtures")
 def _(module=module):
     events = []
 
@@ -152,12 +152,12 @@ def _(module=module):
     suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
-    list(suite.generate_test_runs())
+    list(suite.result_generator())
 
     assert events == [1, 2, 3, 4, 5]
 
 
-@test("Suite.generate_test_runs cached fixture isn't executed again")
+@test("Suite.result_generator cached fixture isn't executed again")
 def _(module=module):
     events = []
 
@@ -180,12 +180,12 @@ def _(module=module):
 
     suite = Suite(tests=[Test(fn=test, module_name=module)])
 
-    list(suite.generate_test_runs())
+    list(suite.result_generator())
 
     assert events == [1, 2, 3]
 
 
-@test("Suite.generate_test_runs correctly tears down module scoped fixtures")
+@test("Suite.result_generator correctly tears down module scoped fixtures")
 def _():
     events = []
 
@@ -221,7 +221,7 @@ def _():
         ]
     )
 
-    list(suite.generate_test_runs())
+    list(suite.result_generator())
 
     assert events == [
         "resolve",  # Resolve at start of module1
@@ -234,7 +234,7 @@ def _():
     ]
 
 
-@test("Suite.generate_test_runs resolves and tears down global fixtures once only")
+@test("Suite.result_generator resolves and tears down global fixtures once only")
 def _():
     events = []
 
@@ -264,7 +264,7 @@ def _():
         ]
     )
 
-    list(suite.generate_test_runs())
+    list(suite.result_generator())
 
     assert events == [
         "resolve",  # Resolve at start of run only
@@ -275,7 +275,7 @@ def _():
     ]
 
 
-@test("Suite.generate_test_runs resolves mixed scope fixtures correctly")
+@test("Suite.result_generator resolves mixed scope fixtures correctly")
 def _():
     events = []
 
@@ -323,7 +323,7 @@ def _():
         ]
     )
 
-    list(suite.generate_test_runs())
+    list(suite.result_generator())
 
     assert events == [
         "resolve a",  # global fixture so resolved at start
@@ -344,7 +344,7 @@ def _():
     ]
 
 
-@test("Suite.generate_test_runs resolves mixed scope async fixtures correctly")
+@test("Suite.result_generator resolves mixed scope async fixtures correctly")
 def _():
     events = []
 
@@ -392,7 +392,7 @@ def _():
         ]
     )
 
-    list(suite.generate_test_runs())
+    list(suite.result_generator())
 
     assert events == [
         "resolve a",  # global fixture so resolved at start
@@ -415,13 +415,13 @@ def _():
 
 @skip("TODO: Determine how this should behave")
 @test(
-    "Suite.generate_test_runs dependent fixtures of differing scopes behave correctly"
+    "Suite.result_generator dependent fixtures of differing scopes behave correctly"
 )
 def _():
     pass
 
 
-@test("Suite.generate_test_runs correctly tears down module scoped parameterised tests")
+@test("Suite.result_generator correctly tears down module scoped parameterised tests")
 def _():
     events = []
 
@@ -437,7 +437,7 @@ def _():
 
     suite = Suite(tests=[Test(fn=test_1, module_name="module1"),])
 
-    list(suite.generate_test_runs())
+    list(suite.result_generator())
 
     # Ensure that each parameterised instance of the final test in the
     # module runs before the module-level teardown occurs.

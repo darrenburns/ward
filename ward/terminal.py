@@ -3,22 +3,22 @@ import os
 import platform
 import traceback
 from enum import Enum
-from pathlib import Path
 from textwrap import indent, wrap
-from typing import Any, Dict, Generator, Iterable, List, Optional
 
 import sys
 from colorama import Fore, Style
 from dataclasses import dataclass
+from pathlib import Path
 from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.python import PythonLexer
 from termcolor import colored, cprint
+from typing import Any, Dict, Generator, Iterable, List, Optional
 
 from ward._ward_version import __version__
+from ward.config import WardConfig, CollectionStats
 from ward.diff import make_diff
 from ward.expect import Comparison, TestFailure
-from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
 
 INDENT = " " * 2
@@ -187,7 +187,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
+                        + rel_path[final_slash_idx + 1:]
                         + ": "
                     )
                 else:
@@ -216,44 +216,40 @@ def output_run_cancelled():
     )
 
 
-class TestResultWriterBase:
+class ResultWriter:
     runtime_output_strategies = {
         "test-per-line": output_test_per_line,
         "dots-global": output_dots_global,
         "dots-module": output_dots_module,
     }
 
-    def __init__(
-        self, suite: Suite, test_output_style: str, config_path: Optional[Path]
-    ):
-        self.suite = suite
-        self.test_output_style = test_output_style
-        self.config_path = config_path
+    def __init__(self, collection_stats: CollectionStats, config: WardConfig):
+        self.collection_stats = collection_stats
+        self.config = config
         self.terminal_size = get_terminal_size()
 
     def output_all_test_results(
         self,
         test_results_gen: Generator[TestResult, None, None],
-        time_to_collect: float,
         fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
         print(f"Ward {__version__}, {python_impl} {python_version}")
-        if self.config_path:
+        if self.config.config_path:
             try:
-                path = self.config_path.relative_to(Path.cwd())
+                path = self.config.config_path.relative_to(Path.cwd())
             except ValueError:
-                path = self.config_path.name
+                path = self.config.config_path.name
             print(f"Using config from {path}")
         print(
-            f"Collected {self.suite.num_tests} tests "
-            f"in {time_to_collect:.2f} seconds."
+            f"Collected {self.collection_stats.number_of_tests} tests "
+            f"in {self.collection_stats.time_taken:.2f} seconds."
         )
-        if not self.suite.num_tests:
+        if not self.collection_stats.number_of_tests:
             return []
         output_tests = self.runtime_output_strategies.get(
-            self.test_output_style, output_test_per_line
+            self.config.test_output_style, output_test_per_line
         )
         all_results = output_tests(fail_limit, test_results_gen)
         self.output_test_run_post_failure_summary(test_results=all_results)
@@ -286,7 +282,7 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float, duration: int
+        self, test_results: List[TestResult], time_taken: float,
     ):
         raise NotImplementedError()
 
@@ -330,7 +326,7 @@ def get_terminal_size() -> TerminalSize:
     return TerminalSize(height=24, width=80)
 
 
-class SimpleTestResultWrite(TestResultWriterBase):
+class SequentialResultWriter(ResultWriter):
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
 
@@ -411,10 +407,10 @@ class SimpleTestResultWrite(TestResultWriterBase):
         return result_marker
 
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float, show_slowest: int
+        self, test_results: List[TestResult], time_taken: int,
     ):
-        if show_slowest:
-            self._output_slowest_tests(test_results, show_slowest)
+        if self.config.show_slowest:
+            self._output_slowest_tests(test_results, self.config.show_slowest)
         outcome_counts = self._get_outcome_counts(test_results)
 
         exit_code = get_exit_code(test_results)

@@ -1,5 +1,7 @@
+from cucumber_tag_expressions.model import Expression
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Union, Iterable
+from typing import Dict, Union, Iterable, Tuple, Optional
 
 import click
 import toml
@@ -86,3 +88,26 @@ def set_defaults_from_config(
 
     context.default_map.update(file_config)
     return project_root
+
+
+@dataclass
+class WardConfig:
+    path: Tuple[str]
+    exclude: Tuple[str]
+    search: Optional[str]
+    tag_expression: Optional[Expression]
+    fail_limit: Optional[int]
+    test_output_style: str
+    order: str
+    capture_output: bool
+    config: str
+    config_path: Optional[Path]
+    show_slowest: Optional[int]
+    dry_run: bool = False
+
+
+@dataclass
+class CollectionStats:
+    run_start: float
+    time_taken: float
+    number_of_tests: int
