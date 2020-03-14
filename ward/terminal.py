@@ -187,7 +187,7 @@ def output_dots_module(
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
+                        + rel_path[final_slash_idx + 1:]
                         + ": "
                     )
                 else:
@@ -233,6 +233,9 @@ class ResultWriter:
         test_results_gen: Generator[TestResult, None, None],
         fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
+        raise NotImplementedError()
+
+    def output_ward_header(self):
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
         print(f"Ward {__version__}, {python_impl} {python_version}")
@@ -246,27 +249,6 @@ class ResultWriter:
             f"Collected {self.collection_stats.number_of_tests} tests "
             f"in {self.collection_stats.time_taken:.2f} seconds."
         )
-        if not self.collection_stats.number_of_tests:
-            return []
-        output_tests = self.runtime_output_strategies.get(
-            self.config.test_output_style, output_test_per_line
-        )
-        all_results = output_tests(fail_limit, test_results_gen)
-        self.output_test_run_post_failure_summary(test_results=all_results)
-        failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
-        for failure in failed_test_results:
-            self.print_divider()
-            self.output_why_test_failed_header(failure)
-            self.output_why_test_failed(failure)
-            self.output_captured_stderr(failure)
-            self.output_captured_stdout(failure)
-            self.output_test_failed_location(failure)
-
-        if failed_test_results:
-            self.print_divider()
-        else:
-            print()
-        return all_results
 
     def print_divider(self):
         print(lightblack(f"{'_' * self.terminal_size.width}\n"))
@@ -284,7 +266,37 @@ class ResultWriter:
     def output_test_result_summary(
         self, test_results: List[TestResult], time_taken: float,
     ):
-        raise NotImplementedError()
+        if self.config.show_slowest:
+            self._output_slowest_tests(test_results, self.config.show_slowest)
+        outcome_counts = self._get_outcome_counts(test_results)
+
+        exit_code = get_exit_code(test_results)
+        if exit_code == ExitCode.SUCCESS:
+            result = colored(exit_code.name, color="green")
+        else:
+            result = colored(exit_code.name, color="red")
+
+        output = f"{result} in {time_taken:.2f} seconds"
+        if test_results:
+            output += " [ "
+
+        if outcome_counts[TestOutcome.FAIL]:
+            output += f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
+        if outcome_counts[TestOutcome.XPASS]:
+            output += f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
+        if outcome_counts[TestOutcome.XFAIL]:
+            output += f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
+        if outcome_counts[TestOutcome.SKIP]:
+            output += f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
+        if outcome_counts[TestOutcome.PASS]:
+            output += f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')}"
+        if outcome_counts[TestOutcome.DRYRUN]:
+            output += f"{colored(str(outcome_counts[TestOutcome.DRYRUN]) + ' printed', color='green')}"
+
+        if test_results:
+            output += " ] "
+
+        print(output)
 
     def output_why_test_failed(self, test_result: TestResult):
         """
@@ -304,6 +316,58 @@ class ResultWriter:
 
     def output_test_failed_location(self, test_result: TestResult):
         raise NotImplementedError()
+
+    def print_traceback(self, err):
+        trace = getattr(err, "__traceback__", "")
+        if trace:
+            trc = traceback.format_exception(None, err, trace)
+            for line in trc:
+                sublines = line.split("\n")
+                for subline in sublines:
+                    content = " " * 4 + subline
+                    if subline.lstrip().startswith('File "'):
+                        cprint(content, color="blue")
+                    else:
+                        print(content)
+        else:
+            print(str(err))
+
+    def _output_slowest_tests(self, test_results: List[TestResult], num_tests: int):
+        test_results = sorted(
+            test_results, key=lambda r: r.test.timer.duration, reverse=True
+        )
+        self.print_divider()
+        heading = f"{colored('Longest Running Tests:', color='cyan', attrs=['bold'])}\n"
+        print(indent(heading, INDENT))
+        for result in test_results[:num_tests]:
+            test_id = format_test_id(result)
+            message = f"{result.test.timer.duration:.2f} sec {test_id} {result.test.description} "
+            print(indent(message, DOUBLE_INDENT))
+        print()
+
+    def _get_outcome_counts(
+        self, test_results: List[TestResult]
+    ) -> Dict[TestOutcome, int]:
+        return {
+            TestOutcome.PASS: len(
+                [r for r in test_results if r.outcome == TestOutcome.PASS]
+            ),
+            TestOutcome.FAIL: len(
+                [r for r in test_results if r.outcome == TestOutcome.FAIL]
+            ),
+            TestOutcome.SKIP: len(
+                [r for r in test_results if r.outcome == TestOutcome.SKIP]
+            ),
+            TestOutcome.XFAIL: len(
+                [r for r in test_results if r.outcome == TestOutcome.XFAIL]
+            ),
+            TestOutcome.XPASS: len(
+                [r for r in test_results if r.outcome == TestOutcome.XPASS]
+            ),
+            TestOutcome.DRYRUN: len(
+                [r for r in test_results if r.outcome == TestOutcome.DRYRUN]
+            ),
+        }
 
 
 def lightblack(s: str) -> str:
@@ -327,15 +391,38 @@ def get_terminal_size() -> TerminalSize:
 
 
 class ParallelTestResultWriter(ResultWriter):
+    def output_all_test_results(
+        self,
+        test_results_gen: Generator[TestResult, None, None],
+        fail_limit: Optional[int] = None,
+    ) -> List[TestResult]:
+        self.output_ward_header()
+        if not self.collection_stats.number_of_tests:
+            return []
+        output_tests = self.runtime_output_strategies.get(
+            self.config.test_output_style, output_test_per_line
+        )
+        all_results = output_tests(fail_limit, test_results_gen)
+        self.output_test_run_post_failure_summary(test_results=all_results)
+        failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
+        for failure in failed_test_results:
+            self.print_divider()
+            self.output_why_test_failed_header(failure)
+            self.output_why_test_failed(failure)
+            self.output_captured_stderr(failure)
+            self.output_captured_stdout(failure)
+            self.output_test_failed_location(failure)
+
+        if failed_test_results:
+            self.print_divider()
+        else:
+            print()
+        return all_results
+
     def output_single_test_result(self, test_result: TestResult):
         print(test_result)
 
     def output_why_test_failed_header(self, test_result: TestResult):
-        pass
-
-    def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float
-    ):
         pass
 
     def output_why_test_failed(self, test_result: TestResult):
@@ -355,6 +442,34 @@ class ParallelTestResultWriter(ResultWriter):
 
 
 class SequentialResultWriter(ResultWriter):
+    def output_all_test_results(
+        self,
+        test_results_gen: Generator[TestResult, None, None],
+        fail_limit: Optional[int] = None,
+    ) -> List[TestResult]:
+        self.output_ward_header()
+        if not self.collection_stats.number_of_tests:
+            return []
+        output_tests = self.runtime_output_strategies.get(
+            self.config.test_output_style, output_test_per_line
+        )
+        all_results = output_tests(fail_limit, test_results_gen)
+        self.output_test_run_post_failure_summary(test_results=all_results)
+        failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
+        for failure in failed_test_results:
+            self.print_divider()
+            self.output_why_test_failed_header(failure)
+            self.output_why_test_failed(failure)
+            self.output_captured_stderr(failure)
+            self.output_captured_stdout(failure)
+            self.output_test_failed_location(failure)
+
+        if failed_test_results:
+            self.print_divider()
+        else:
+            print()
+        return all_results
+
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
 
@@ -412,76 +527,6 @@ class SequentialResultWriter(ResultWriter):
         diff = make_diff(err.lhs, err.rhs, width=self.terminal_size.width - 24)
         print(indent(diff, DOUBLE_INDENT))
 
-    def print_traceback(self, err):
-        trace = getattr(err, "__traceback__", "")
-        if trace:
-            trc = traceback.format_exception(None, err, trace)
-            for line in trc:
-                sublines = line.split("\n")
-                for subline in sublines:
-                    content = " " * 4 + subline
-                    if subline.lstrip().startswith('File "'):
-                        cprint(content, color="blue")
-                    else:
-                        print(content)
-        else:
-            print(str(err))
-
-    def result_checkbox(self, expect):
-        if expect.success:
-            result_marker = f"[ {Fore.GREEN}okay{Style.RESET_ALL} ]{Fore.GREEN}"
-        else:
-            result_marker = f"[ {Fore.RED}fail{Style.RESET_ALL} ]{Fore.RED}"
-        return result_marker
-
-    def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float,
-    ):
-        if self.config.show_slowest:
-            self._output_slowest_tests(test_results, self.config.show_slowest)
-        outcome_counts = self._get_outcome_counts(test_results)
-
-        exit_code = get_exit_code(test_results)
-        if exit_code == ExitCode.SUCCESS:
-            result = colored(exit_code.name, color="green")
-        else:
-            result = colored(exit_code.name, color="red")
-
-        output = f"{result} in {time_taken:.2f} seconds"
-        if test_results:
-            output += " [ "
-
-        if outcome_counts[TestOutcome.FAIL]:
-            output += f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
-        if outcome_counts[TestOutcome.XPASS]:
-            output += f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
-        if outcome_counts[TestOutcome.XFAIL]:
-            output += f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
-        if outcome_counts[TestOutcome.SKIP]:
-            output += f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
-        if outcome_counts[TestOutcome.PASS]:
-            output += f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')}"
-        if outcome_counts[TestOutcome.DRYRUN]:
-            output += f"{colored(str(outcome_counts[TestOutcome.DRYRUN]) + ' printed', color='green')}"
-
-        if test_results:
-            output += " ] "
-
-        print(output)
-
-    def _output_slowest_tests(self, test_results: List[TestResult], num_tests: int):
-        test_results = sorted(
-            test_results, key=lambda r: r.test.timer.duration, reverse=True
-        )
-        self.print_divider()
-        heading = f"{colored('Longest Running Tests:', color='cyan', attrs=['bold'])}\n"
-        print(indent(heading, INDENT))
-        for result in test_results[:num_tests]:
-            test_id = format_test_id(result)
-            message = f"{result.test.timer.duration:.2f} sec {test_id} {result.test.description} "
-            print(indent(message, DOUBLE_INDENT))
-        print()
-
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
             captured_stderr_lines = test_result.captured_stderr.split("\n")
@@ -516,30 +561,6 @@ class SequentialResultWriter(ResultWriter):
 
     def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
         pass
-
-    def _get_outcome_counts(
-        self, test_results: List[TestResult]
-    ) -> Dict[TestOutcome, int]:
-        return {
-            TestOutcome.PASS: len(
-                [r for r in test_results if r.outcome == TestOutcome.PASS]
-            ),
-            TestOutcome.FAIL: len(
-                [r for r in test_results if r.outcome == TestOutcome.FAIL]
-            ),
-            TestOutcome.SKIP: len(
-                [r for r in test_results if r.outcome == TestOutcome.SKIP]
-            ),
-            TestOutcome.XFAIL: len(
-                [r for r in test_results if r.outcome == TestOutcome.XFAIL]
-            ),
-            TestOutcome.XPASS: len(
-                [r for r in test_results if r.outcome == TestOutcome.XPASS]
-            ),
-            TestOutcome.DRYRUN: len(
-                [r for r in test_results if r.outcome == TestOutcome.DRYRUN]
-            ),
-        }
 
 
 def outcome_to_colour(outcome: TestOutcome) -> str:

@@ -199,6 +199,7 @@ def run(
         runner = SequentialTestRunner(suite, conf, collection_stats)
     else:
         runner = ParallelTestRunner(suite, conf, collection_stats)
+
     results = runner.run_all()
 
     exit_code = get_exit_code(results)
