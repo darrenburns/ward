@@ -15,7 +15,7 @@ from pygments.lexers.python import PythonLexer
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
-from rich.theme import Style as St
+from rich.theme import Style as St, Theme
 from termcolor import colored, cprint
 from typing import Any, Dict, Generator, Iterable, List, Optional
 
@@ -28,19 +28,23 @@ from ward.testing import TestOutcome, TestResult
 INDENT = " " * 2
 DOUBLE_INDENT = INDENT * 2
 
-console = Console()
-console.push_styles({
-    "pass-tag": St.parse("grey85 on dark_green bold"),
-    "fail-tag": St.parse("black on red bold"),
-    "skip-tag": St.parse("bright_white on dodger_blue1 bold"),
-    "xfail-tag": St.parse("grey85 on dark_magenta bold"),
-    "xpass-tag": St.parse("black on gold1 bold"),
-    "dryrun-tag": St.parse("black on green bold"),
-    "test-location": St.parse("grey46"),
-    "skip-reason": St.parse("italic blue"),
-    "xfail-reason": St.parse("italic magenta"),
-    "ward-header": St.parse("bold"),
-})
+console = Console(
+    theme=Theme(
+        {
+            "pass-tag": St.parse("grey85 on dark_green bold"),
+            "fail-tag": St.parse("black on red bold"),
+            "skip-tag": St.parse("bright_white on dodger_blue1 bold"),
+            "xfail-tag": St.parse("grey85 on dark_magenta bold"),
+            "xpass-tag": St.parse("black on gold1 bold"),
+            "dryrun-tag": St.parse("black on green bold"),
+            "test-location": St.parse("grey46"),
+            "skip-reason": St.parse("italic blue"),
+            "xfail-reason": St.parse("italic magenta"),
+            "ward-header": St.parse("bold"),
+            "warning": St.parse("black on dark_orange bold"),
+        }
+    )
+)
 
 
 def print_no_break(e: Any):
@@ -64,7 +68,9 @@ def get_iter_tag(test_result: TestResult) -> str:
     param_meta = test_result.test.param_meta
     if param_meta.group_size > 1:
         pad = len(str(param_meta.group_size))
-        iter_indicator = f" [{param_meta.instance_index + 1:>{pad}}/{param_meta.group_size}]"
+        iter_indicator = (
+            f" [{param_meta.instance_index + 1:>{pad}}/{param_meta.group_size}]"
+        )
     else:
         iter_indicator = ""
 
@@ -91,7 +97,9 @@ def output_test_result_line(test_result: TestResult):
     table.add_row(outcome, Text(location), Text(f"{description} "))
     console.print(table, highlight=False)
     if reason:
-        style = "skip-reason" if test_result.outcome == TestOutcome.SKIP else "xfail-reason"
+        style = (
+            "skip-reason" if test_result.outcome == TestOutcome.SKIP else "xfail-reason"
+        )
         console.print(Text(reason), style=style, highlight=False)
 
 
@@ -175,7 +183,11 @@ def output_dots_module(
                 )  # subtract 2 for ": "
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
-                    console.print(Text(rel_path[: final_slash_idx + 1].replace("/", ".")), end="", style="test-location")
+                    console.print(
+                        Text(rel_path[: final_slash_idx + 1].replace("/", ".")),
+                        end="",
+                        style="test-location",
+                    )
                     console.print(Text(current_path.stem), end=": ")
                 else:
                     console.print(f"\n{rel_path}: ")
@@ -196,10 +208,7 @@ def output_dots_module(
 
 
 def output_run_cancelled():
-    cprint(
-        "\n[WARD] Run cancelled - results for tests that ran shown below.",
-        color="yellow",
-    )
+    console.print("\n\n Run cancelled by user. ", style="warning")
 
 
 class TestResultWriterBase:
@@ -226,7 +235,10 @@ class TestResultWriterBase:
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
         console.print(
-            Text(f"Ward {__version__}, {python_impl} {python_version}\n", style="ward-header")
+            Text(
+                f"Ward {__version__}, {python_impl} {python_version}\n",
+                style="ward-header",
+            )
         )
         if self.config_path:
             try:

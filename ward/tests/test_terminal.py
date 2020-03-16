@@ -47,6 +47,8 @@ def _(
         TestOutcome.XPASS,
         TestOutcome.DRYRUN,
     ),
-    style=each("pass-tag", "skip-tag", "fail-tag", "xfail-tag", "xpass-tag", "dryrun-tag"),
+    style=each(
+        "pass-tag", "skip-tag", "fail-tag", "xfail-tag", "xpass-tag", "dryrun-tag"
+    ),
 ):
     assert outcome_to_theme(outcome) == style
