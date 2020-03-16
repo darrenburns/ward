@@ -30,14 +30,15 @@ DOUBLE_INDENT = INDENT * 2
 
 console = Console()
 console.push_styles({
-    "pass-tag": St.parse("black on green bold"),
+    "pass-tag": St.parse("grey85 on dark_green bold"),
     "fail-tag": St.parse("black on red bold"),
-    "skip-tag": St.parse("black on blue bold"),
-    "xfail-tag": St.parse("grey85 on magenta bold"),
-    "xpass-tag": St.parse("black on yellow bold"),
+    "skip-tag": St.parse("bright_white on dodger_blue1 bold"),
+    "xfail-tag": St.parse("grey85 on dark_magenta bold"),
+    "xpass-tag": St.parse("black on gold1 bold"),
     "dryrun-tag": St.parse("black on green bold"),
-    "test-location": St.parse("grey39"),
-    "skip-reason": St.parse("italic grey35"),
+    "test-location": St.parse("grey46"),
+    "skip-reason": St.parse("italic blue"),
+    "xfail-reason": St.parse("italic magenta"),
     "ward-header": St.parse("bold"),
 })
 
@@ -80,7 +81,7 @@ def output_test_result_line(test_result: TestResult):
     if test_result.outcome in (TestOutcome.SKIP, TestOutcome.XFAIL):
         reason = test_result.test.marker.reason or ""
         if reason:
-            reason = f"       \u2514 reason = {reason}"
+            reason = f"     \u2514 reason = {reason}"
 
     table = Table(show_header=False, padding=0, show_edge=False, box=0)
     table.add_column("outcome", style=theme, width=6, justify="center")
@@ -90,7 +91,8 @@ def output_test_result_line(test_result: TestResult):
     table.add_row(outcome, Text(location), Text(f"{description} "))
     console.print(table, highlight=False)
     if reason:
-        console.print(Text(reason), style="skip-reason", highlight=False)
+        style = "skip-reason" if test_result.outcome == TestOutcome.SKIP else "xfail-reason"
+        console.print(Text(reason), style=style, highlight=False)
 
 
 def output_test_per_line(fail_limit, test_results_gen):
@@ -100,7 +102,6 @@ def output_test_per_line(fail_limit, test_results_gen):
     try:
         for result in test_results_gen:
             output_test_result_line(result)
-            sys.stdout.write(Style.RESET_ALL)
             all_results.append(result)
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
