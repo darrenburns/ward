@@ -167,7 +167,7 @@ def output_dots_module(
             all_results.append(result)
             if result.test.path != current_path:
                 dots_on_line = 0
-                # console.print()
+                console.print()
                 current_path = result.test.path
                 rel_path = str(current_path.relative_to(os.getcwd()))
                 max_dots_per_line = (
@@ -175,11 +175,8 @@ def output_dots_module(
                 )  # subtract 2 for ": "
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
-                    console.print(
-                        rel_path[: final_slash_idx + 1]
-                        + rel_path[final_slash_idx + 1:]
-                        + ": ", end=""
-                    )
+                    console.print(Text(rel_path[: final_slash_idx + 1].replace("/", ".")), end="", style="test-location")
+                    console.print(Text(current_path.stem), end=": ")
                 else:
                     console.print(f"\n{rel_path}: ")
             print_dot(result)
@@ -194,6 +191,7 @@ def output_dots_module(
     except KeyboardInterrupt:
         output_run_cancelled()
     finally:
+        console.print()
         return all_results
 
 
