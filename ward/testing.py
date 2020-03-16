@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import inspect
+import traceback
 import uuid
 from collections import defaultdict
 from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
@@ -108,6 +109,7 @@ class Test:
     serr: StringIO = field(default_factory=StringIO)
     ward_meta: WardMeta = field(default_factory=WardMeta)
     timer: Optional["Timer"] = None
+    tags: List[str] = field(default_factory=list)
 
     def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
         with ExitStack() as stack:
@@ -161,6 +163,10 @@ class Test:
             if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
                 result = TestResult(self, outcome)
             else:
+                if isinstance(error, AssertionError):
+                    error.error_line = traceback.extract_tb(
+                        error.__traceback__, limit=-1
+                    )[0].lineno
                 result = TestResult(
                     self,
                     outcome,
@@ -275,20 +281,6 @@ class Test:
                 resolved = arg
             resolved_args[name] = resolved
         return self._unpack_resolved(resolved_args)
-
-    def get_result(self, outcome, exception=None):
-        with closing(self.sout), closing(self.serr):
-            if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
-                result = TestResult(self, outcome)
-            else:
-                result = TestResult(
-                    self,
-                    outcome,
-                    exception,
-                    captured_stdout=self.sout.getvalue(),
-                    captured_stderr=self.serr.getvalue(),
-                )
-            return result
 
     def _get_default_args(
         self, func: Optional[Union[Callable, Fixture]] = None
@@ -452,7 +444,7 @@ def is_test_module_name(module_name: str) -> bool:
 anonymous_tests: Dict[Path, List[Callable]] = defaultdict(list)
 
 
-def test(description: str, *args, **kwargs):
+def test(description: str, *args, tags=None, **kwargs):
     def decorator_test(func):
         unwrapped = inspect.unwrap(func)
         module_name: str = unwrapped.__module__
@@ -466,9 +458,12 @@ def test(description: str, *args, **kwargs):
 
             if hasattr(unwrapped, "ward_meta"):
                 unwrapped.ward_meta.description = description
+                unwrapped.ward_meta.tags = tags
                 unwrapped.ward_meta.path = path
             else:
-                unwrapped.ward_meta = WardMeta(description=description, path=path)
+                unwrapped.ward_meta = WardMeta(
+                    description=description, tags=tags, path=path,
+                )
 
             collect_into = kwargs.get("_collect_into", anonymous_tests)
             collect_into[path].append(unwrapped)

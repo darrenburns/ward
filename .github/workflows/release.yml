@@ -11,13 +11,11 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-python@v1
+    - uses: dschep/install-poetry-action@v1.3
       with:
-        python-version: '3.7'
-    - name: Build and publish Python distribution to PyPI
+        version: 1.0.3
+        create_virtualenvs: true
+    - name: Publish to PyPI
       run: |
-        python3.7 -m pip install --user --upgrade flit
-        python3.7 -m flit publish
+        poetry publish --build --username __token__ --password ${{ secrets.pypi_api_token }}
       working-directory: ${{ github.workspace }}
-      env:
-        FLIT_USERNAME: __token__
-        FLIT_PASSWORD: ${{ secrets.pypi_api_token }}

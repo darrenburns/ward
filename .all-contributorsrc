@@ -100,6 +100,24 @@
         "code",
         "ideas"
       ]
+    },
+    {
+      "login": "jayeshathila",
+      "name": "jayesh hathila",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1469191?v=4",
+      "profile": "https://github.com/jayeshathila",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mandarvaze",
+      "name": "Mandar Vaze",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/46438?v=4",
+      "profile": "https://mandarvaze.bitbucket.io/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7

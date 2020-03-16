@@ -2,8 +2,6 @@
 
 Contributions to Ward are encouraged and very welcome!
 
-You can install Ward for local development using `flit install -s`.
-
 Contributions can come in many forms: documentation enhancements, features, bug fixes, creating issues, and participating in the community.
 
 If you're interested in helping out, you might find some inspiration in [Issues](https://github.com/darrenburns/ward/issues). If you have an idea, but don't see it there, don't hesitate to create a new issue.
@@ -14,11 +12,18 @@ This will ensure no work is duplicated, and that a general approach has been agr
 
 Please also take time to review the [Code of Conduct](https://github.com/darrenburns/ward/blob/master/.github/CODE_OF_CONDUCT.md). Anyone who violates the code of conduct may be barred from contributing.
 
+## Local development setup
+
+To get started with developing Ward, you'll need to [install Poetry](https://python-poetry.org/docs/#installation). Run `poetry install` to have
+Poetry create a virtualenv for you and install everything you need into it. Any development commands
+you need from this point on can be found in the Makefile. e.g. `make test` to run the tests, `make format` to format
+your code, `make prep` to do both of those things (run this before creating a PR).
+
+
 ## Pull request guidelines
 
-When creating a PR:
-
-* Code is formatted using `make format`
+* Let us know before you start working on something! Someone else may already have started working on the same thing.
+* Prepare your code for review with `make prep` (this will format and run tests)
 * Ensure `README.md` is updated if necessary.
 * Tests written cover new code, and running `ward` results in a pass.
 
