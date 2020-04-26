@@ -536,14 +536,14 @@ def scope_to_colour(scope: Scope) -> str:
     return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta",}[scope]
 
 
-def output_fixtures():
+def output_fixtures(show_docstrings: bool):
     fixtures = [Fixture(f) for f in _FIXTURES]
 
     for fixture in fixtures:
-        output_fixture_information(fixture)
+        output_fixture_information(fixture, show_docstring=show_docstrings)
 
 
-def output_fixture_information(fixture):
+def output_fixture_information(fixture: Fixture, show_docstring: bool):
     deps = [
         format_fixture_header(Fixture(par.default)) for par in fixture.deps().values()
     ]
@@ -554,7 +554,7 @@ def output_fixture_information(fixture):
         lines.append(indent(f"depends on", INDENT))
         lines.extend(indent("\n".join(deps), DOUBLE_INDENT).splitlines())
 
-    if fixture.fn.__doc__ is not None:
+    if show_docstring and fixture.fn.__doc__ is not None:
         doc = dedent(fixture.fn.__doc__)
         lines.extend(indent(f"{doc}", INDENT).splitlines())
 

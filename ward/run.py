@@ -24,7 +24,42 @@ init()
 sys.path.append(".")
 
 
-@click.command(context_settings={"max_content_width": 100})
+@click.group(context_settings={"max_content_width": 100}, invoke_without_command=True)
+@click.pass_context
+def run(ctx: click.Context):
+    if ctx.invoked_subcommand is None:
+        ctx.forward(test)
+
+
+config = click.option(
+    "--config",
+    type=click.Path(
+        exists=False, file_okay=True, dir_okay=False, readable=True, allow_dash=False
+    ),
+    callback=set_defaults_from_config,
+    help="Read configuration from PATH.",
+    is_eager=True,
+)
+path = click.option(
+    "-p",
+    "--path",
+    type=click.Path(exists=True),
+    multiple=True,
+    is_eager=True,
+    help="Look for tests in PATH.",
+)
+exclude = click.option(
+    "--exclude",
+    type=click.STRING,
+    multiple=True,
+    help="Paths to ignore while searching for tests. Accepts glob patterns.",
+)
+
+
+@run.command()
+@config
+@path
+@exclude
 @click.option(
     "--search",
     help="Search test names, bodies, descriptions and module names for the search query and only run matching tests.",
@@ -54,33 +89,9 @@ sys.path.append(".")
     help="Specify the order in which tests should run.",
 )
 @click.option(
-    "--exclude",
-    type=click.STRING,
-    multiple=True,
-    help="Paths to ignore while searching for tests. Accepts glob patterns.",
-)
-@click.option(
     "--capture-output/--no-capture-output",
     default=True,
     help="Enable or disable output capturing.",
-)
-@click.version_option(version=__version__)
-@click.option(
-    "--config",
-    type=click.Path(
-        exists=False, file_okay=True, dir_okay=False, readable=True, allow_dash=False
-    ),
-    callback=set_defaults_from_config,
-    help="Read configuration from PATH.",
-    is_eager=True,
-)
-@click.option(
-    "-p",
-    "--path",
-    type=click.Path(exists=True),
-    multiple=True,
-    is_eager=True,
-    help="Look for tests in PATH.",
 )
 @click.option(
     "--show-slowest",
@@ -93,14 +104,12 @@ sys.path.append(".")
     help="Print all tests without executing them",
     default=False,
 )
-@click.option(
-    "--fixtures/--no-fixtures",
-    help="Display information on fixtures (and do not execute tests)",
-    default=False,
-)
+@click.version_option(version=__version__)
 @click.pass_context
-def run(
+def test(
     ctx: click.Context,
+    config: str,
+    config_path: Optional[Path],
     path: Tuple[str],
     exclude: Tuple[str],
     search: Optional[str],
@@ -109,12 +118,10 @@ def run(
     test_output_style: str,
     order: str,
     capture_output: bool,
-    config: str,
-    config_path: Optional[Path],
     show_slowest: int,
     dry_run: bool,
-    fixtures: bool,
 ):
+    """Run tests."""
     start_run = default_timer()
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
@@ -135,10 +142,6 @@ def run(
     )
     writer.output_header(time_to_collect=time_to_collect)
 
-    if fixtures:
-        output_fixtures()
-        sys.exit(0)
-
     results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
     time_taken = default_timer() - start_run
     writer.output_test_result_summary(results, time_taken, show_slowest)
@@ -146,3 +149,29 @@ def run(
     exit_code = get_exit_code(results)
 
     sys.exit(exit_code.value)
+
+
+@run.command()
+@config
+@path
+@exclude
+@click.option(
+    "--show-docstrings/--no-show-docstrings",
+    help="Print each fixture's docstring",
+    default=False,
+)
+@click.pass_context
+def fixtures(
+    ctx: click.Context,
+    config: str,
+    config_path: Optional[Path],
+    path: Tuple[str],
+    exclude: Tuple[str],
+    show_docstrings: bool,
+):
+    """Show information on fixtures."""
+    paths = [Path(p) for p in path]
+    mod_infos = get_info_for_modules(paths, exclude)
+    modules = list(load_modules(mod_infos))
+
+    output_fixtures(show_docstrings=show_docstrings)
