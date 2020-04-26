@@ -156,8 +156,28 @@ def test(
 @path
 @exclude
 @click.option(
+    "--show-scopes/--no-show-scopes",
+    help="Display each fixture's scope.",
+    default=True,
+)
+@click.option(
     "--show-docstrings/--no-show-docstrings",
-    help="Print each fixture's docstring",
+    help="Display each fixture's docstring.",
+    default=False,
+)
+@click.option(
+    "--show-direct-dependencies/--no-show-direct-dependencies",
+    help="Display the fixtures that each fixture depends on directly.",
+    default=False,
+)
+@click.option(
+    "--show-dependency-trees/--no-show-dependency-trees",
+    help="Display the entire dependency tree for each fixture.",
+    default=False,
+)
+@click.option(
+    "--full/--no-full",
+    help="Display all available information on each fixture.",
     default=False,
 )
 @click.pass_context
@@ -167,11 +187,20 @@ def fixtures(
     config_path: Optional[Path],
     path: Tuple[str],
     exclude: Tuple[str],
+    show_scopes: bool,
     show_docstrings: bool,
+    show_direct_dependencies: bool,
+    show_dependency_trees: bool,
+    full: bool,
 ):
     """Show information on fixtures."""
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
 
-    output_fixtures(show_docstrings=show_docstrings)
+    output_fixtures(
+        show_scopes=show_scopes or full,
+        show_docstrings=show_docstrings or full,
+        show_direct_dependencies=show_direct_dependencies or full,
+        show_dependency_trees=show_dependency_trees or full,
+    )

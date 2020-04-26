@@ -23,7 +23,13 @@ from ward.testing import TestOutcome, TestResult
 from ward.fixtures import Fixture, Scope, _FIXTURES
 
 INDENT = " " * 2
-DOUBLE_INDENT = INDENT * 2
+
+
+def make_indent(depth=1):
+    return INDENT * depth
+
+
+DOUBLE_INDENT = make_indent(depth=2)
 
 
 def print_no_break(e: Any):
@@ -536,25 +542,47 @@ def scope_to_colour(scope: Scope) -> str:
     return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta",}[scope]
 
 
-def output_fixtures(show_docstrings: bool):
+def output_fixtures(
+    show_scopes: bool,
+    show_docstrings: bool,
+    show_direct_dependencies: bool,
+    show_dependency_trees: bool,
+):
     fixtures = [Fixture(f) for f in _FIXTURES]
 
     for fixture in fixtures:
-        output_fixture_information(fixture, show_docstring=show_docstrings)
+        output_fixture_information(
+            fixture,
+            show_scopes=show_scopes,
+            show_docstrings=show_docstrings,
+            show_direct_dependencies=show_direct_dependencies,
+            show_dependency_trees=show_dependency_trees,
+        )
 
 
-def output_fixture_information(fixture: Fixture, show_docstring: bool):
-    deps = [
-        format_fixture_header(Fixture(par.default)) for par in fixture.deps().values()
-    ]
+def output_fixture_information(
+    fixture: Fixture,
+    show_scopes: bool,
+    show_docstrings: bool,
+    show_direct_dependencies: bool,
+    show_dependency_trees: bool,
+):
+    lines = [format_fixture_header(fixture, show_scopes=show_scopes)]
 
-    lines = [format_fixture_header(fixture)]
+    if show_dependency_trees:
+        max_depth = None
+    elif show_direct_dependencies:
+        max_depth = 1
+    else:
+        max_depth = 0
 
-    if deps:
-        lines.append(indent(f"depends on", INDENT))
-        lines.extend(indent("\n".join(deps), DOUBLE_INDENT).splitlines())
+    lines.extend(
+        output_fixture_dependency_tree(
+            fixture, show_scopes=show_scopes, max_depth=max_depth
+        )
+    )
 
-    if show_docstring and fixture.fn.__doc__ is not None:
+    if show_docstrings and fixture.fn.__doc__ is not None:
         doc = dedent(fixture.fn.__doc__)
         lines.extend(indent(f"{doc}", INDENT).splitlines())
 
@@ -564,13 +592,50 @@ def output_fixture_information(fixture: Fixture, show_docstring: bool):
     print("\n".join(lines))
 
 
-def format_fixture_header(fixture):
-    path = lightblack(f"{fixture.path.name}:{fixture.line_number}")
+def output_fixture_dependency_tree(
+    fixture: Fixture, show_scopes: bool, max_depth: Optional[int], depth: int = 0
+):
+    if max_depth is not None and depth >= max_depth:
+        return
+
+    deps = [Fixture(par.default) for par in fixture.deps().values()]
+
+    if not deps:
+        return
+
+    if depth == 0:
+        yield indent(f"depends on", INDENT)
+
+    for idx, dep in enumerate(deps):
+        prefix = "├─" if idx != len(deps) - 1 else "└─"
+        yield indent(
+            f"{prefix} {format_fixture_header(dep, show_scopes)}",
+            make_indent(depth + 1),
+        )
+
+        child_lines = list(
+            output_fixture_dependency_tree(
+                dep, show_scopes, max_depth, depth=depth + 1,
+            )
+        )
+        for child_idx, line in enumerate(child_lines):
+            if idx < len(deps) - 1:
+                line = line.replace("   └─", "│  └─")
+            yield " " + line
+
+
+def format_fixture_header(fixture: Fixture, show_scopes: bool):
+    path = lightblack(f"{fixture.path.name}::{fixture.line_number}")
     name = colored(fixture.name, color="cyan", attrs=["bold"])
     scope = colored(
         fixture.scope.value, color=scope_to_colour(fixture.scope), attrs=["bold"]
     )
-    return f"{path} {name} ({scope} scope)"
+    header = f"{path} {name}"
+
+    if show_scopes:
+        header = f"{header} ({scope} scope)"
+
+    return header
 
 
 class ExitCode(Enum):
