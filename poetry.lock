@@ -50,6 +50,17 @@ version = "7.1.1"
 
 [[package]]
 category = "main"
+description = "Extends click.Group to invoke a command without explicit subcommand name"
+name = "click-default-group"
+optional = false
+python-versions = "*"
+version = "1.2.2"
+
+[package.dependencies]
+click = "*"
+
+[[package]]
+category = "main"
 description = "Cross-platform colored terminal text."
 name = "colorama"
 optional = false
@@ -179,7 +190,7 @@ python-versions = "*"
 version = "1.4.1"
 
 [metadata]
-content-hash = "592c887b2b8ed2c3967a9aabfbc62566efc266170f3aff6404190c8a439530f2"
+content-hash = "0c8a5ac3b90d4f4ecca09846c4cf2915aacc583132b247e9c4832c634b133504"
 python-versions = "^3.6"
 
 [metadata.files]
@@ -198,6 +209,9 @@ black = [
 click = [
     {file = "click-7.1.1-py2.py3-none-any.whl", hash = "sha256:e345d143d80bf5ee7534056164e5e112ea5e22716bbb1ce727941f4c8b471b9a"},
     {file = "click-7.1.1.tar.gz", hash = "sha256:8a18b4ea89d8820c5d0c7da8a64b2c324b4dabb695804dbfea19b9be9d88c0cc"},
+]
+click-default-group = [
+    {file = "click-default-group-1.2.2.tar.gz", hash = "sha256:d9560e8e8dfa44b3562fbc9425042a0fd6d21956fcc2db0077f63f34253ab904"},
 ]
 colorama = [
     {file = "colorama-0.3.9-py2.py3-none-any.whl", hash = "sha256:463f8483208e921368c9f306094eb6f725c6ca42b0f97e313cb5d5512459feda"},

@@ -4,6 +4,7 @@ from timeit import default_timer
 from typing import List, Optional, Tuple
 
 import click
+from click_default_group import DefaultGroup
 from colorama import init
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
@@ -24,11 +25,16 @@ init()
 sys.path.append(".")
 
 
-@click.group(context_settings={"max_content_width": 100}, invoke_without_command=True)
+# TODO: simplify to use invoke_without_command and ctx.forward once https://github.com/pallets/click/issues/430 is resolved
+@click.group(
+    context_settings={"max_content_width": 100},
+    cls=DefaultGroup,
+    default="test",
+    default_if_no_args=True,
+)
 @click.pass_context
 def run(ctx: click.Context):
-    if ctx.invoked_subcommand is None:
-        ctx.forward(test)
+    pass
 
 
 config = click.option(
