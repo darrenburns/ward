@@ -20,7 +20,7 @@ from ward.diff import make_diff
 from ward.expect import Comparison, TestFailure
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
-from ward.fixtures import Fixture, Scope
+from ward.fixtures import Fixture, Scope, FIXTURES
 
 INDENT = " " * 2
 DOUBLE_INDENT = INDENT * 2
@@ -232,7 +232,7 @@ class TestResultWriterBase:
         self.config_path = config_path
         self.terminal_size = get_terminal_size()
 
-    def output_header(self, time_to_collect, num_fixtures):
+    def output_header(self, time_to_collect):
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
         print(f"Ward {__version__}, {python_impl} {python_version}")
@@ -244,7 +244,7 @@ class TestResultWriterBase:
             print(f"Using config from {path}")
         print(
             f"Collected {self.suite.num_tests} tests "
-            f"and {num_fixtures} fixtures "
+            f"and {len(FIXTURES)} fixtures "
             f"in {time_to_collect:.2f} seconds."
         )
 
@@ -536,8 +536,8 @@ def scope_to_colour(scope: Scope) -> str:
     return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta",}[scope]
 
 
-def output_fixtures(fixtures):
-    fixtures = [Fixture(f) for f in fixtures]
+def output_fixtures():
+    fixtures = [Fixture(f) for f in FIXTURES]
 
     for fixture in fixtures:
         output_fixture_information(fixture)

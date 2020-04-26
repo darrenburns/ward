@@ -17,7 +17,6 @@ from ward.collect import (
 from ward.config import set_defaults_from_config
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
-from ward.fixtures import FIXTURES
 from ward.terminal import SimpleTestResultWrite, output_fixtures, get_exit_code
 
 init()
@@ -134,10 +133,10 @@ def run(
     writer = SimpleTestResultWrite(
         suite=suite, test_output_style=test_output_style, config_path=config_path,
     )
-    writer.output_header(time_to_collect=time_to_collect, num_fixtures=len(FIXTURES))
+    writer.output_header(time_to_collect=time_to_collect)
 
     if fixtures:
-        output_fixtures(FIXTURES)
+        output_fixtures()
         sys.exit(0)
 
     results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
