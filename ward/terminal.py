@@ -565,7 +565,7 @@ def output_fixture_information(fixture):
 
 
 def format_fixture_header(fixture):
-    path = lightblack(f"{fixture.path.name}::{fixture.line_number}")
+    path = lightblack(f"{fixture.path.name}:{fixture.line_number}")
     name = colored(fixture.name, color="cyan", attrs=["bold"])
     scope = colored(
         fixture.scope.value, color=scope_to_colour(fixture.scope), attrs=["bold"]
