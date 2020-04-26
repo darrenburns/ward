@@ -135,7 +135,7 @@ class FixtureCache:
         return fixtures.get(fixture_key)
 
 
-FIXTURES = []
+_FIXTURES = []
 
 
 def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
@@ -155,7 +155,7 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
     else:
         func.ward_meta = WardMeta(is_fixture=True, scope=scope, path=path)
 
-    FIXTURES.append(func)
+    _FIXTURES.append(func)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
