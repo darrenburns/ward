@@ -4,7 +4,7 @@ import platform
 import traceback
 from enum import Enum
 from pathlib import Path
-from textwrap import indent, wrap
+from textwrap import indent, dedent, wrap
 from typing import Any, Dict, Generator, Iterable, List, Optional
 
 import sys
@@ -20,6 +20,7 @@ from ward.diff import make_diff
 from ward.expect import Comparison, TestFailure
 from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
+from ward.fixtures import Fixture, Scope
 
 INDENT = " " * 2
 DOUBLE_INDENT = INDENT * 2
@@ -231,12 +232,7 @@ class TestResultWriterBase:
         self.config_path = config_path
         self.terminal_size = get_terminal_size()
 
-    def output_all_test_results(
-        self,
-        test_results_gen: Generator[TestResult, None, None],
-        time_to_collect: float,
-        fail_limit: Optional[int] = None,
-    ) -> List[TestResult]:
+    def output_header(self, time_to_collect, num_fixtures):
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
         print(f"Ward {__version__}, {python_impl} {python_version}")
@@ -248,8 +244,15 @@ class TestResultWriterBase:
             print(f"Using config from {path}")
         print(
             f"Collected {self.suite.num_tests} tests "
+            f"and {num_fixtures} fixtures "
             f"in {time_to_collect:.2f} seconds."
         )
+
+    def output_all_test_results(
+        self,
+        test_results_gen: Generator[TestResult, None, None],
+        fail_limit: Optional[int] = None,
+    ) -> List[TestResult]:
         if not self.suite.num_tests:
             return []
         output_tests = self.runtime_output_strategies.get(
@@ -527,6 +530,47 @@ def outcome_to_colour(outcome: TestOutcome) -> str:
         TestOutcome.XPASS: "yellow",
         TestOutcome.DRYRUN: "green",
     }[outcome]
+
+
+def scope_to_colour(scope: Scope) -> str:
+    return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta",}[scope]
+
+
+def output_fixtures(fixtures):
+    fixtures = [Fixture(f) for f in fixtures]
+
+    for fixture in fixtures:
+        output_fixture_information(fixture)
+
+
+def output_fixture_information(fixture):
+    deps = [
+        format_fixture_header(Fixture(par.default)) for par in fixture.deps().values()
+    ]
+
+    lines = [format_fixture_header(fixture)]
+
+    if deps:
+        lines.append(indent(f"depends on", INDENT))
+        lines.extend(indent("\n".join(deps), DOUBLE_INDENT).splitlines())
+
+    if fixture.fn.__doc__ is not None:
+        doc = dedent(fixture.fn.__doc__)
+        lines.extend(indent(f"{doc}", INDENT).splitlines())
+
+    if len(lines) > 1:
+        lines.append("")
+
+    print("\n".join(lines))
+
+
+def format_fixture_header(fixture):
+    path = lightblack(f"{fixture.path.name}::{fixture.line_number}")
+    name = colored(fixture.name, color="cyan", attrs=["bold"])
+    scope = colored(
+        fixture.scope.value, color=scope_to_colour(fixture.scope), attrs=["bold"]
+    )
+    return f"{path} {name} ({scope} scope)"
 
 
 class ExitCode(Enum):

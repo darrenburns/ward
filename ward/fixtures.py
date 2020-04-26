@@ -35,6 +35,10 @@ class Fixture:
         return self.fn.ward_meta.path
 
     @property
+    def line_number(self) -> int:
+        return inspect.getsourcelines(self.fn)[1]
+
+    @property
     def is_generator_fixture(self):
         return inspect.isgeneratorfunction(inspect.unwrap(self.fn))
 
@@ -131,6 +135,9 @@ class FixtureCache:
         return fixtures.get(fixture_key)
 
 
+FIXTURES = []
+
+
 def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
     if not isinstance(scope, Scope):
         scope = Scope.from_str(scope)
@@ -147,6 +154,8 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
         func.ward_meta.path = path
     else:
         func.ward_meta = WardMeta(is_fixture=True, scope=scope, path=path)
+
+    FIXTURES.append(func)
 
     @wraps(func)
     def wrapper(*args, **kwargs):

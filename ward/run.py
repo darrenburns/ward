@@ -17,7 +17,8 @@ from ward.collect import (
 from ward.config import set_defaults_from_config
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
-from ward.terminal import SimpleTestResultWrite, get_exit_code
+from ward.fixtures import FIXTURES
+from ward.terminal import SimpleTestResultWrite, output_fixtures, get_exit_code
 
 init()
 
@@ -93,6 +94,11 @@ sys.path.append(".")
     help="Print all tests without executing them",
     default=False,
 )
+@click.option(
+    "--fixtures/--no-fixtures",
+    help="Display information on fixtures (and do not execute tests)",
+    default=False,
+)
 @click.pass_context
 def run(
     ctx: click.Context,
@@ -108,6 +114,7 @@ def run(
     config_path: Optional[Path],
     show_slowest: int,
     dry_run: bool,
+    fixtures: bool,
 ):
     start_run = default_timer()
     paths = [Path(p) for p in path]
@@ -127,9 +134,13 @@ def run(
     writer = SimpleTestResultWrite(
         suite=suite, test_output_style=test_output_style, config_path=config_path,
     )
-    results = writer.output_all_test_results(
-        test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
-    )
+    writer.output_header(time_to_collect=time_to_collect, num_fixtures=len(FIXTURES))
+
+    if fixtures:
+        output_fixtures(FIXTURES)
+        sys.exit(0)
+
+    results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
     time_taken = default_timer() - start_run
     writer.output_test_result_summary(results, time_taken, show_slowest)
 
