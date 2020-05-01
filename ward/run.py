@@ -52,13 +52,13 @@ path = click.option(
     type=click.Path(exists=True),
     multiple=True,
     is_eager=True,
-    help="Look for tests in PATH.",
+    help="Look for items in PATH.",
 )
 exclude = click.option(
     "--exclude",
     type=click.STRING,
     multiple=True,
-    help="Paths to ignore while searching for tests. Accepts glob patterns.",
+    help="Paths to ignore while searching for items. Accepts glob patterns.",
 )
 
 
