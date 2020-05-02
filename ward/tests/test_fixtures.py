@@ -65,8 +65,11 @@ def my_test(
     f3=module_fixture,
     f4=default_fixture,
 ):
-    # Inject these fixtures into a test, and resolve them
-    # to ensure they're ready to be torn down.
+    """
+    Inject these fixtures into a test, and resolve them
+    to ensure they're ready to be torn down.
+    """
+
     @testable_test
     def t(f1=f1, f2=f2, f3=f3, f4=f4):
         pass

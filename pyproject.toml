@@ -7,7 +7,7 @@ path = ["ward/tests"]
 
 [tool.poetry]
 name = "ward"
-version = "0.42.0b0"
+version = "0.44.0b0"
 description = "A modern Python testing framework"
 exclude = ["ward/tests"]
 authors = ["Darren Burns <darrenb900@gmail.com>"]
@@ -44,6 +44,7 @@ toml = "^0.9.4"
 pygments = "^2.4.2"
 pprintpp = "^0.4.0"
 cucumber-tag-expressions = "^2.0.0"
+click-default-group = "^1.2.2"
 
 [tool.poetry.dev-dependencies]
 black = "^19.9b0"

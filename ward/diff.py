@@ -45,10 +45,10 @@ def build_symbolic_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
     for line_idx, line in enumerate(diff):
         if line.startswith("- "):
             last_line_colour = "green"
-            output_lines.append(colored(f"+ {line[2:]}", color=last_line_colour))
+            output_lines.append(colored(f"- {line[2:]}", color=last_line_colour))
         elif line.startswith("+ "):
             last_line_colour = "red"
-            output_lines.append(colored(f"- {line[2:]}", color=last_line_colour))
+            output_lines.append(colored(f"+ {line[2:]}", color=last_line_colour))
         elif line.startswith("? "):
             output_lines.append(colored(line[:-1], color=last_line_colour))
         else:

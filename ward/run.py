@@ -4,6 +4,7 @@ from timeit import default_timer
 from typing import List, Optional, Tuple
 
 import click
+from click_default_group import DefaultGroup
 from colorama import init
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
@@ -17,14 +18,54 @@ from ward.collect import (
 from ward.config import set_defaults_from_config
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
-from ward.terminal import SimpleTestResultWrite, get_exit_code
+from ward.terminal import SimpleTestResultWrite, output_fixtures, get_exit_code
 
 init()
 
 sys.path.append(".")
 
 
-@click.command(context_settings={"max_content_width": 100})
+# TODO: simplify to use invoke_without_command and ctx.forward once https://github.com/pallets/click/issues/430 is resolved
+@click.group(
+    context_settings={"max_content_width": 100},
+    cls=DefaultGroup,
+    default="test",
+    default_if_no_args=True,
+)
+@click.pass_context
+def run(ctx: click.Context):
+    pass
+
+
+config = click.option(
+    "--config",
+    type=click.Path(
+        exists=False, file_okay=True, dir_okay=False, readable=True, allow_dash=False
+    ),
+    callback=set_defaults_from_config,
+    help="Read configuration from PATH.",
+    is_eager=True,
+)
+path = click.option(
+    "-p",
+    "--path",
+    type=click.Path(exists=True),
+    multiple=True,
+    is_eager=True,
+    help="Look for items in PATH.",
+)
+exclude = click.option(
+    "--exclude",
+    type=click.STRING,
+    multiple=True,
+    help="Paths to ignore while searching for items. Accepts glob patterns.",
+)
+
+
+@run.command()
+@config
+@path
+@exclude
 @click.option(
     "--search",
     help="Search test names, bodies, descriptions and module names for the search query and only run matching tests.",
@@ -69,24 +110,6 @@ sys.path.append(".")
     default=True,
     help="Enable or disable output capturing.",
 )
-@click.version_option(version=__version__)
-@click.option(
-    "--config",
-    type=click.Path(
-        exists=False, file_okay=True, dir_okay=False, readable=True, allow_dash=False
-    ),
-    callback=set_defaults_from_config,
-    help="Read configuration from PATH.",
-    is_eager=True,
-)
-@click.option(
-    "-p",
-    "--path",
-    type=click.Path(exists=True),
-    multiple=True,
-    is_eager=True,
-    help="Look for tests in PATH.",
-)
 @click.option(
     "--show-slowest",
     type=int,
@@ -98,9 +121,12 @@ sys.path.append(".")
     help="Print all tests without executing them",
     default=False,
 )
+@click.version_option(version=__version__)
 @click.pass_context
-def run(
+def test(
     ctx: click.Context,
+    config: str,
+    config_path: Optional[Path],
     path: Tuple[str],
     exclude: Tuple[str],
     search: Optional[str],
@@ -109,12 +135,11 @@ def run(
     test_output_style: str,
     order: str,
     capture_output: bool,
-    config: str,
-    config_path: Optional[Path],
     show_slowest: int,
     show_symbols: bool,
     dry_run: bool,
 ):
+    """Run tests."""
     start_run = default_timer()
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
@@ -136,12 +161,67 @@ def run(
         config_path=config_path,
         show_diff_symbols=show_symbols,
     )
-    results = writer.output_all_test_results(
-        test_results, time_to_collect=time_to_collect, fail_limit=fail_limit
-    )
+    writer.output_header(time_to_collect=time_to_collect)
+
+    results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
     time_taken = default_timer() - start_run
     writer.output_test_result_summary(results, time_taken, show_slowest)
 
     exit_code = get_exit_code(results)
 
     sys.exit(exit_code.value)
+
+
+@run.command()
+@config
+@path
+@exclude
+@click.option(
+    "--show-scopes/--no-show-scopes",
+    help="Display each fixture's scope.",
+    default=True,
+)
+@click.option(
+    "--show-docstrings/--no-show-docstrings",
+    help="Display each fixture's docstring.",
+    default=False,
+)
+@click.option(
+    "--show-direct-dependencies/--no-show-direct-dependencies",
+    help="Display the fixtures that each fixture depends on directly.",
+    default=False,
+)
+@click.option(
+    "--show-dependency-trees/--no-show-dependency-trees",
+    help="Display the entire dependency tree for each fixture.",
+    default=False,
+)
+@click.option(
+    "--full/--no-full",
+    help="Display all available information on each fixture.",
+    default=False,
+)
+@click.pass_context
+def fixtures(
+    ctx: click.Context,
+    config: str,
+    config_path: Optional[Path],
+    path: Tuple[str],
+    exclude: Tuple[str],
+    show_scopes: bool,
+    show_docstrings: bool,
+    show_direct_dependencies: bool,
+    show_dependency_trees: bool,
+    full: bool,
+):
+    """Show information on fixtures."""
+    paths = [Path(p) for p in path]
+    mod_infos = get_info_for_modules(paths, exclude)
+    modules = list(load_modules(mod_infos))
+
+    output_fixtures(
+        show_scopes=show_scopes or full,
+        show_docstrings=show_docstrings or full,
+        show_direct_dependencies=show_direct_dependencies or full,
+        show_dependency_trees=show_dependency_trees or full,
+    )
