@@ -3,6 +3,7 @@ import importlib.util
 import inspect
 import os
 import pkgutil
+import site
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from pathlib import Path
@@ -91,6 +92,12 @@ def get_info_for_modules(
                 continue
             for dir_name in dirs:
                 dir_path = Path(root, dir_name)
+                # ignore site-packages directories
+                if any(
+                    str(dir_path.absolute()).startswith(s)
+                    for s in site.getsitepackages()
+                ):
+                    continue
                 # if we have seen this path before, skip it
                 if dir_path not in checked_dirs and not excluded(dir_path, exclude):
                     checked_dirs.add(dir_path)
