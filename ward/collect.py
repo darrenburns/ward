@@ -3,7 +3,7 @@ import importlib.util
 import inspect
 import os
 import pkgutil
-import site
+from distutils.sysconfig import get_python_lib
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from pathlib import Path
@@ -92,12 +92,12 @@ def get_info_for_modules(
                 continue
             for dir_name in dirs:
                 dir_path = Path(root, dir_name)
+
                 # ignore site-packages directories
-                if any(
-                    str(dir_path.absolute()).startswith(s)
-                    for s in site.getsitepackages()
-                ):
+                abs_path = dir_path.absolute()
+                if str(abs_path).startswith(get_python_lib()):
                     continue
+
                 # if we have seen this path before, skip it
                 if dir_path not in checked_dirs and not excluded(dir_path, exclude):
                     checked_dirs.add(dir_path)
