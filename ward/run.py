@@ -1,13 +1,14 @@
 import sys
 from pathlib import Path
 from timeit import default_timer
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import click
 from click_default_group import DefaultGroup
 from colorama import init
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
+
 from ward._ward_version import __version__
 from ward.collect import (
     get_info_for_modules,
@@ -101,7 +102,7 @@ exclude = click.option(
     help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
 @click.option(
-    "--show-symbols/--hide-symbols",
+    "--show-diff-symbols/--hide-diff-symbols",
     default=False,
     help="If enabled, diffs will use symbols such as '?', '-', '+' and '^' instead of colours to highlight differences.",
 )
@@ -136,7 +137,7 @@ def test(
     order: str,
     capture_output: bool,
     show_slowest: int,
-    show_symbols: bool,
+    show_diff_symbols: bool,
     dry_run: bool,
 ):
     """Run tests."""
@@ -159,7 +160,7 @@ def test(
         suite=suite,
         test_output_style=test_output_style,
         config_path=config_path,
-        show_diff_symbols=show_symbols,
+        show_diff_symbols=show_diff_symbols,
     )
     writer.output_header(time_to_collect=time_to_collect)
 
