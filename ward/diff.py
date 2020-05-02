@@ -45,12 +45,17 @@ def build_symbolic_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
     for line_idx, line in enumerate(diff):
         if line.startswith("- "):
             last_line_colour = "green"
-            output_lines.append(colored(f"- {line[2:]}", color=last_line_colour))
+            output_lines.append(colored(f"+ {line[2:]}", color=last_line_colour))
         elif line.startswith("+ "):
             last_line_colour = "red"
-            output_lines.append(colored(f"+ {line[2:]}", color=last_line_colour))
+            output_lines.append(colored(f"- {line[2:]}", color=last_line_colour))
         elif line.startswith("? "):
-            output_lines.append(colored(line[:-1], color=last_line_colour))
+            output_line = line[:-1]
+            if last_line_colour == "red":
+                output_line = output_line.replace("+", "-")
+            elif last_line_colour == "green":
+                output_line = output_line.replace("-", "+")
+            output_lines.append(colored(output_line, color=last_line_colour))
         else:
             output_lines.append(line)
     return "\n".join(output_lines)
@@ -102,7 +107,7 @@ def build_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
                         current_span = ""
                     current_span += line_to_rewrite[
                         index - 2
-                    ]  # Subtract 2 to account for code at start of line
+                        ]  # Subtract 2 to account for code at start of line
                 prev_char = char
                 index += 1
 
