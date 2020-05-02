@@ -1,7 +1,7 @@
 # Ward
 ![Build](https://github.com/darrenburns/ward/workflows/Build/badge.svg)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
-[![Gitter](https://badges.gitter.im/python-ward/community.svg)](https://gitter.im/python-ward/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![Gitter](https://badges.gitter.im/python-ward/community.svg)](https://gitter.im/python-ward/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-13-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 See the full documentation and feature set [here](https://wardpy.com).
 
@@ -116,6 +116,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/DorianCzichotzki"><img src="https://avatars1.githubusercontent.com/u/10177001?v=4" width="60px;" alt="Dorian Czichotzki"/><br /><sub><b>Dorian Czichotzki</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=DorianCzichotzki" title="Code">💻</a> <a href="#ideas-DorianCzichotzki" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://github.com/jayeshathila"><img src="https://avatars0.githubusercontent.com/u/1469191?v=4" width="60px;" alt="jayesh hathila"/><br /><sub><b>jayesh hathila</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=jayeshathila" title="Code">💻</a></td>
     <td align="center"><a href="https://mandarvaze.bitbucket.io/"><img src="https://avatars1.githubusercontent.com/u/46438?v=4" width="60px;" alt="Mandar Vaze"/><br /><sub><b>Mandar Vaze</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=mandarvaze" title="Code">💻</a></td>
+    <td align="center"><a href="https://www.jtk.dev"><img src="https://avatars2.githubusercontent.com/u/7133863?v=4" width="60px;" alt="Josh Karpel"/><br /><sub><b>Josh Karpel</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=JoshKarpel" title="Code">💻</a></td>
+    <td align="center"><a href="https://www.lutro.me"><img src="https://avatars0.githubusercontent.com/u/163093?v=4" width="60px;" alt="Andreas Lutro"/><br /><sub><b>Andreas Lutro</b></sub></a><br /><a href="https://github.com/darrenburns/ward/commits?author=anlutro" title="Code">💻</a></td>
   </tr>
 </table>
 
