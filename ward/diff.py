@@ -1,11 +1,12 @@
 import difflib
+from typing import Generator
 
 import pprintpp
 from colorama import Style, Fore
 from termcolor import colored
 
 
-def make_diff(lhs, rhs, width=60) -> str:
+def make_diff(lhs, rhs, width=80, show_symbols=False) -> str:
     """Transform input into best format for diffing, then return output diff."""
     if isinstance(lhs, str):
         lhs_repr = lhs
@@ -17,6 +18,8 @@ def make_diff(lhs, rhs, width=60) -> str:
     else:
         rhs_repr = pprintpp.pformat(rhs, width=width)
 
+    if show_symbols:
+        return build_symbolic_unified_diff(lhs_repr, rhs_repr)
     return build_unified_diff(lhs_repr, rhs_repr)
 
 
@@ -28,12 +31,38 @@ def bright_green(s: str) -> str:
     return f"{Fore.LIGHTGREEN_EX}{s}{Style.RESET_ALL}"
 
 
-def build_unified_diff(lhs_repr, rhs_repr) -> str:
+def raw_unified_diff(lhs_repr: str, rhs_repr: str) -> Generator[str, None, None]:
     differ = difflib.Differ()
     lines_lhs = lhs_repr.splitlines()
     lines_rhs = rhs_repr.splitlines()
-    diff = differ.compare(lines_lhs, lines_rhs)
+    return differ.compare(lines_lhs, lines_rhs)
 
+
+def build_symbolic_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
+    diff = raw_unified_diff(lhs_repr, rhs_repr)
+    output_lines = []
+    last_line_colour = "grey"
+    for line_idx, line in enumerate(diff):
+        if line.startswith("- "):
+            last_line_colour = "green"
+            output_lines.append(colored(f"+ {line[2:]}", color=last_line_colour))
+        elif line.startswith("+ "):
+            last_line_colour = "red"
+            output_lines.append(colored(f"- {line[2:]}", color=last_line_colour))
+        elif line.startswith("? "):
+            output_line = line[:-1]
+            if last_line_colour == "red":
+                output_line = output_line.replace("+", "-")
+            elif last_line_colour == "green":
+                output_line = output_line.replace("-", "+")
+            output_lines.append(colored(output_line, color=last_line_colour))
+        else:
+            output_lines.append(line)
+    return "\n".join(output_lines)
+
+
+def build_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
+    diff = raw_unified_diff(lhs_repr, rhs_repr)
     output_lines = []
     prev_marker = ""
     for line_idx, line in enumerate(diff):
