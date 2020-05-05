@@ -2,10 +2,20 @@ import inspect
 import os
 import platform
 import traceback
+import collections
 from enum import Enum
 from pathlib import Path
 from textwrap import indent, dedent, wrap
-from typing import Any, Dict, Generator, Iterable, List, Optional
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Mapping,
+    Iterator,
+)
 
 import sys
 from colorama import Fore, Style
@@ -19,8 +29,8 @@ from ward._ward_version import __version__
 from ward.diff import make_diff
 from ward.expect import Comparison, TestFailure
 from ward.suite import Suite
-from ward.testing import TestOutcome, TestResult
-from ward.fixtures import Fixture, Scope, _FIXTURES
+from ward.testing import TestOutcome, TestResult, Test
+from ward.fixtures import Fixture, Scope, _DEFINED_FIXTURES
 
 INDENT = " " * 2
 
@@ -53,14 +63,14 @@ def format_test_id(test_result: TestResult) -> (str, str):
     """
 
     test_id = lightblack(
-        f"{format_test_location(test_result)}{format_test_case_number(test_result)}:"
+        f"{format_test_location(test_result.test)}{format_test_case_number(test_result)}:"
     )
 
     return test_id
 
 
-def format_test_location(test_result: TestResult) -> str:
-    return f"{test_result.test.module_name}:{test_result.test.line_number}"
+def format_test_location(test: Test) -> str:
+    return f"{test.module_name}:{test.line_number}"
 
 
 def format_test_case_number(test_result: TestResult) -> str:
@@ -255,7 +265,7 @@ class TestResultWriterBase:
             print(f"Using config from {path}")
         print(
             f"Collected {self.suite.num_tests} tests "
-            f"and {len(_FIXTURES)} fixtures "
+            f"and {len(_DEFINED_FIXTURES)} fixtures "
             f"in {time_to_collect:.2f} seconds."
         )
 
@@ -553,88 +563,163 @@ def scope_to_colour(scope: Scope) -> str:
 
 
 def output_fixtures(
+    suite: Suite,
     show_scopes: bool,
     show_docstrings: bool,
-    show_direct_dependencies: bool,
+    show_dependencies: bool,
     show_dependency_trees: bool,
 ):
-    fixtures = [Fixture(f) for f in _FIXTURES]
+    fixtures = [Fixture(f) for f in _DEFINED_FIXTURES]
+
+    # we look at suite.tests so we can see the tests before they are parameterised
+    test_to_fixtures = {test: test.resolver.fixtures for test in suite.tests}
+    fixture_to_tests = collections.defaultdict(list)
+    for test, used_fixtures in test_to_fixtures.items():
+        for fix in used_fixtures.values():
+            fixture_to_tests[fix].append(test)
+
+    fixtures_to_parents = {
+        fixture: [Fixture(par.default) for par in fixture.deps().values()]
+        for fixture in fixtures
+    }
+    fixtures_to_children = collections.defaultdict(list)
+    for fixture, parents in fixtures_to_parents.items():
+        for parent in parents:
+            fixtures_to_children[parent].append(fixture)
 
     for fixture in fixtures:
         output_fixture_information(
             fixture,
+            used_by_tests=fixture_to_tests[fixture],
+            fixtures_to_children=fixtures_to_children,
+            fixtures_to_parents=fixtures_to_parents,
             show_scopes=show_scopes,
             show_docstrings=show_docstrings,
-            show_direct_dependencies=show_direct_dependencies,
+            show_dependencies=show_dependencies,
             show_dependency_trees=show_dependency_trees,
         )
 
 
 def output_fixture_information(
     fixture: Fixture,
+    used_by_tests: List[Test],
+    fixtures_to_children: Mapping[Fixture, List[Fixture]],
+    fixtures_to_parents: Mapping[Fixture, List[Fixture]],
     show_scopes: bool,
     show_docstrings: bool,
-    show_direct_dependencies: bool,
+    show_dependencies: bool,
     show_dependency_trees: bool,
 ):
-    lines = [format_fixture_header(fixture, show_scopes=show_scopes)]
+    lines = [format_fixture(fixture, show_scopes=show_scopes)]
 
     if show_dependency_trees:
         max_depth = None
-    elif show_direct_dependencies:
+    elif show_dependencies:
         max_depth = 1
     else:
         max_depth = 0
 
-    lines.extend(
-        output_fixture_dependency_tree(
-            fixture, show_scopes=show_scopes, max_depth=max_depth
-        )
-    )
+    if show_dependencies or show_dependency_trees:
+        if fixtures_to_parents[fixture]:
+            lines.append(indent("depends on fixtures", INDENT))
+            lines.extend(
+                yield_fixture_dependency_tree(
+                    fixture,
+                    fixtures_to_parents,
+                    show_scopes=show_scopes,
+                    max_depth=max_depth,
+                )
+            )
+            lines.append("")
+
+        if fixtures_to_children[fixture]:
+            lines.append(indent("used by fixtures", INDENT))
+            lines.extend(
+                yield_fixture_dependency_tree(
+                    fixture,
+                    fixtures_to_children,
+                    show_scopes=show_scopes,
+                    max_depth=max_depth,
+                )
+            )
+            lines.append("")
+
+        if used_by_tests:
+            lines.append(indent("used directly by tests", INDENT))
+            lines.extend(yield_fixture_usages_by_tests(used_by_tests))
+            lines.append("")
+
+        if not (used_by_tests or fixtures_to_children[fixture]):
+            lines.append(
+                indent(
+                    f"used by {colored('no tests or fixtures', color = 'red', attrs = ['bold'])}",
+                    INDENT,
+                )
+            )
+            lines.append("")
 
     if show_docstrings and fixture.fn.__doc__ is not None:
-        doc = dedent(fixture.fn.__doc__)
-        lines.extend(indent(f"{doc}", INDENT).splitlines())
-
-    if len(lines) > 1:
+        doc = dedent(fixture.fn.__doc__.strip("\n"))
+        lines.extend(indent(doc, INDENT).splitlines())
         lines.append("")
 
     print("\n".join(lines))
 
 
-def output_fixture_dependency_tree(
-    fixture: Fixture, show_scopes: bool, max_depth: Optional[int], depth: int = 0
-):
+def yield_fixture_usages_by_tests(used_by: List[Test]) -> Iterator[str]:
+    for idx, test in enumerate(used_by):
+        prefix = "├─" if idx != len(used_by) - 1 else "└─"
+        yield indent(
+            f"{prefix} {lightblack(format_test_location(test))} {test.description}",
+            INDENT,
+        )
+
+
+def yield_fixture_usages_by_fixtures(used_by: List[Fixture]) -> Iterator[str]:
+    for idx, fixture in enumerate(used_by):
+        prefix = "├─" if idx != len(used_by) - 1 else "└─"
+        yield indent(
+            f"{prefix} {format_fixture(fixture, show_scopes = False)}", INDENT,
+        )
+
+
+def yield_fixture_dependency_tree(
+    fixture: Fixture,
+    fixtures_to_parents_or_children: Mapping[Fixture, List[Fixture]],
+    show_scopes: bool,
+    max_depth: Optional[int],
+    depth: int = 0,
+    prefix=INDENT,
+) -> Iterator[str]:
     if max_depth is not None and depth >= max_depth:
         return
 
-    deps = [Fixture(par.default) for par in fixture.deps().values()]
+    this_layer = fixtures_to_parents_or_children[fixture]
 
-    if not deps:
+    if not this_layer:
         return
 
-    if depth == 0:
-        yield indent(f"depends on", INDENT)
+    for idx, dep in enumerate(this_layer):
+        fix = format_fixture(dep, show_scopes)
+        if idx < len(this_layer) - 1:
+            tree = "├─"
+            next_prefix = prefix + "│  "
+        else:
+            tree = "└─"
+            next_prefix = prefix + "   "
 
-    for idx, dep in enumerate(deps):
-        prefix = "├─" if idx != len(deps) - 1 else "└─"
-        yield indent(
-            f"{prefix} {format_fixture_header(dep, show_scopes)}",
-            make_indent(depth + 1),
+        yield f"{prefix}{tree} {fix}"
+        yield from yield_fixture_dependency_tree(
+            dep,
+            fixtures_to_parents_or_children,
+            show_scopes,
+            max_depth,
+            depth=depth + 1,
+            prefix=next_prefix,
         )
 
-        child_lines = list(
-            output_fixture_dependency_tree(
-                dep, show_scopes, max_depth, depth=depth + 1,
-            )
-        )
-        for child_idx, line in enumerate(child_lines):
-            if idx < len(deps) - 1:
-                line = line.replace("   └─", "│  └─")
-            yield " " + line
 
-
-def format_fixture_header(fixture: Fixture, show_scopes: bool):
+def format_fixture(fixture: Fixture, show_scopes: bool):
     path = lightblack(f"{fixture.path.name}:{fixture.line_number}")
     name = colored(fixture.name, color="cyan", attrs=["bold"])
     scope = colored(

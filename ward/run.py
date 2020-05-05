@@ -61,22 +61,24 @@ exclude = click.option(
     multiple=True,
     help="Paths to ignore while searching for items. Accepts glob patterns.",
 )
+search = click.option(
+    "--search",
+    help="Search test names, bodies, descriptions and module names for the search query and only keep matching tests.",
+)
+tags = click.option(
+    "--tags",
+    help="Find tests matching a tag expression (e.g. 'unit and not slow').",
+    metavar="EXPR",
+    type=parse_tags,
+)
 
 
 @run.command()
 @config
 @path
 @exclude
-@click.option(
-    "--search",
-    help="Search test names, bodies, descriptions and module names for the search query and only run matching tests.",
-)
-@click.option(
-    "--tags",
-    help="Run tests matching tag expression (e.g. 'unit and not slow').\n",
-    metavar="EXPR",
-    type=parse_tags,
-)
+@search
+@tags
 @click.option(
     "--fail-limit",
     type=int,
@@ -94,12 +96,6 @@ exclude = click.option(
     type=click.Choice(["standard", "random"], case_sensitive=False),
     default="standard",
     help="Specify the order in which tests should run.",
-)
-@click.option(
-    "--exclude",
-    type=click.STRING,
-    multiple=True,
-    help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
 @click.option(
     "--show-diff-symbols/--hide-diff-symbols",
@@ -177,6 +173,8 @@ def test(
 @config
 @path
 @exclude
+@search
+@tags
 @click.option(
     "--show-scopes/--no-show-scopes",
     help="Display each fixture's scope.",
@@ -188,8 +186,8 @@ def test(
     default=False,
 )
 @click.option(
-    "--show-direct-dependencies/--no-show-direct-dependencies",
-    help="Display the fixtures that each fixture depends on directly.",
+    "--show-dependencies/--no-show-dependencies",
+    help="Display the fixtures and tests that each fixture depends on and is used by. Only displays direct dependencies; use --show-dependency-trees to show all dependency information.",
     default=False,
 )
 @click.option(
@@ -209,9 +207,11 @@ def fixtures(
     config_path: Optional[Path],
     path: Tuple[str],
     exclude: Tuple[str],
+    search: Optional[str],
+    tags: Optional[Expression],
     show_scopes: bool,
     show_docstrings: bool,
-    show_direct_dependencies: bool,
+    show_dependencies: bool,
     show_dependency_trees: bool,
     full: bool,
 ):
@@ -219,10 +219,15 @@ def fixtures(
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
+    unfiltered_tests = get_tests_in_modules(modules, capture_output=True)
+    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags,))
+
+    suite = Suite(tests=tests)
 
     output_fixtures(
+        suite,
         show_scopes=show_scopes or full,
         show_docstrings=show_docstrings or full,
-        show_direct_dependencies=show_direct_dependencies or full,
+        show_dependencies=show_dependencies or full,
         show_dependency_trees=show_dependency_trees or full,
     )

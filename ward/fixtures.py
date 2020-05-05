@@ -16,6 +16,16 @@ class Fixture:
     gen: Union[Generator, AsyncGenerator] = None
     resolved_val: Any = None
 
+    def __hash__(self):
+        return hash(self._id)
+
+    def __eq__(self, other):
+        return self._id == other._id
+
+    @property
+    def _id(self):
+        return self.__class__, self.name, self.path, self.line_number
+
     @property
     def key(self) -> str:
         path = self.path
@@ -135,7 +145,7 @@ class FixtureCache:
         return fixtures.get(fixture_key)
 
 
-_FIXTURES = []
+_DEFINED_FIXTURES = []
 
 
 def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
@@ -155,7 +165,7 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
     else:
         func.ward_meta = WardMeta(is_fixture=True, scope=scope, path=path)
 
-    _FIXTURES.append(func)
+    _DEFINED_FIXTURES.append(func)
 
     @wraps(func)
     def wrapper(*args, **kwargs):

@@ -80,7 +80,7 @@ def my_test(
 @fixture
 def cache(t=my_test):
     c = FixtureCache()
-    t.resolve_args(c)
+    t.resolver.resolve_args(c)
     return c
 
 
