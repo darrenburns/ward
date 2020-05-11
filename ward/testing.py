@@ -177,6 +177,11 @@ class Test:
 
         return result
 
+    def fail_with_error(self, error: Exception) -> "TestResult":
+        return TestResult(
+            self, outcome=TestOutcome.FAIL, error=error, message=str(error)
+        )
+
     @property
     def name(self) -> str:
         return self.fn.__name__
@@ -322,7 +327,7 @@ class Test:
         is_valid = len(set(lengths)) in (0, 1)
         if not is_valid:
             raise ParameterisationError(
-                f"The test {self.name}/{self.description} is parameterised incorrectly. "
+                f"The test described by '{self.description}' is parameterised incorrectly. "
                 f"Please ensure all instances of 'each' in the test signature "
                 f"are of equal length."
             )

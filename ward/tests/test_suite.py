@@ -1,10 +1,11 @@
 from unittest import mock
 
-from ward.tests.utilities import NUMBER_OF_TESTS, testable_test, example_test, module
 from ward import fixture
+from ward.errors import ParameterisationError
 from ward.models import Scope, SkipMarker
 from ward.suite import Suite
 from ward.testing import Test, skip, TestOutcome, TestResult, test, each
+from ward.tests.utilities import NUMBER_OF_TESTS, testable_test, example_test, module
 
 
 @fixture
@@ -435,7 +436,7 @@ def _():
     def test_1(a=each(a, "second", a)):
         events.append("running test")
 
-    suite = Suite(tests=[Test(fn=test_1, module_name="module1"),])
+    suite = Suite(tests=[Test(fn=test_1, module_name="module1")])
 
     list(suite.generate_test_runs())
 
@@ -448,3 +449,30 @@ def _():
         "running test",
         "teardown a",
     ]
+
+
+@test(
+    "Suite.generate_test_runs fails an incorrectly parameterised test without expanding it"
+)
+def _():
+    @testable_test
+    def test_1(a=each(1, 2), b=each(1, 2, 3)):
+        pass
+
+    @testable_test
+    def test_2(a=each(1, 2), b=each(1, 2)):
+        pass
+
+    suite = Suite(
+        tests=[
+            Test(fn=test_1, module_name="module1"),
+            Test(fn=test_2, module_name="module2"),
+        ]
+    )
+
+    results = list(suite.generate_test_runs())
+
+    assert (
+        len(results) == 1 + 2
+    )  # the first test doesn't expand, and the 2nd test expands into 2 tests
+    assert type(results[0].error) == ParameterisationError
