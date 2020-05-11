@@ -1,10 +1,13 @@
+import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
 from random import shuffle
 from typing import Generator, List
 
 from ward import Scope
+from ward.errors import ParameterisationError
 from ward.fixtures import FixtureCache
+from ward.terminal import ExitCode
 from ward.testing import Test, TestResult
 
 
@@ -38,8 +41,12 @@ class Suite:
 
         num_tests_per_module = self._test_counts_per_module()
         for test in self.tests:
-            generated_tests = test.get_parameterised_instances()
             num_tests_per_module[test.path] -= 1
+            try:
+                generated_tests = test.get_parameterised_instances()
+            except ParameterisationError as e:
+                yield test.fail_with_error(e)
+                continue
             for generated_test in generated_tests:
                 yield generated_test.run(self.cache, dry_run=dry_run)
                 self.cache.teardown_fixtures_for_scope(

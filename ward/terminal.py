@@ -18,7 +18,6 @@ from termcolor import colored, cprint
 from ward._ward_version import __version__
 from ward.diff import make_diff
 from ward.expect import Comparison, TestFailure
-from ward.suite import Suite
 from ward.testing import TestOutcome, TestResult
 from ward.fixtures import Fixture, Scope, _FIXTURES
 
@@ -232,7 +231,7 @@ class TestResultWriterBase:
 
     def __init__(
         self,
-        suite: Suite,
+        suite,
         test_output_style: str,
         config_path: Optional[Path],
         show_diff_symbols: bool = False,
