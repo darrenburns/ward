@@ -159,7 +159,6 @@ def test(
         show_diff_symbols=show_diff_symbols,
     )
     writer.output_header(time_to_collect=time_to_collect)
-
     results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
     time_taken = default_timer() - start_run
     writer.output_test_result_summary(results, time_taken, show_slowest)

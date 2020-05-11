@@ -5,14 +5,13 @@ import traceback
 import uuid
 from collections import defaultdict
 from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
 from timeit import default_timer
 from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
-from dataclasses import dataclass, field
 
 from ward.errors import FixtureError, ParameterisationError
 from ward.fixtures import Fixture, FixtureCache, ScopeKey
@@ -181,6 +180,11 @@ class Test:
 
         return result
 
+    def fail_with_error(self, error: Exception) -> "TestResult":
+        return TestResult(
+            self, outcome=TestOutcome.FAIL, error=error, message=str(error)
+        )
+
     @property
     def name(self) -> str:
         return self.fn.__name__
@@ -346,7 +350,7 @@ class TestArgumentResolver:
         }
 
     def _get_default_args(
-        self, func: Optional[Union[Callable, Fixture]] = None
+            self, func: Optional[Union[Callable, Fixture]] = None
     ) -> Dict[str, Any]:
         """
         Returns a mapping of test argument names to values.
@@ -372,7 +376,7 @@ class TestArgumentResolver:
         return default_binding.arguments
 
     def _resolve_single_arg(
-        self, arg: Callable, cache: FixtureCache
+            self, arg: Callable, cache: FixtureCache
     ) -> Union[Any, Fixture]:
         """
         Get the fixture return value
@@ -386,7 +390,7 @@ class TestArgumentResolver:
 
         fixture = Fixture(arg)
         if cache.contains(
-            fixture, fixture.scope, self.test.scope_key_from(fixture.scope)
+                fixture, fixture.scope, self.test.scope_key_from(fixture.scope)
         ):
             return cache.get(
                 fixture.key, fixture.scope, self.test.scope_key_from(fixture.scope)
