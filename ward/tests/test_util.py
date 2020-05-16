@@ -48,4 +48,4 @@ def fake_project_git():
 def _(root_file, project):
     root = find_project_root([project / "a/b/c", project / "a/d"])
     assert root.resolve() == project.resolve()
-    assert (root / root_file).exists() == True
+    assert (root / root_file).exists()

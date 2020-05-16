@@ -325,15 +325,9 @@ class TestArgumentResolver:
             return self._resolve_args(cache)
 
     def _resolve_args(self, cache: FixtureCache) -> Dict[str, Any]:
-        if not self.test.has_deps:
-            return {}
-        default_args = self._get_default_args()
+        args_for_iteration = self._get_args_for_iteration()
         resolved_args: Dict[str, Any] = {}
-        for name, arg in default_args.items():
-            # In the case of parameterised testing, grab the arg corresponding
-            # to the current iteration of the parameterised group of tests.
-            if isinstance(arg, Each):
-                arg = arg[self.iteration]
+        for name, arg in args_for_iteration.items():
             if arg_is_fixture(arg):
                 resolved = self._resolve_single_arg(arg, cache)
             else:
@@ -341,16 +335,29 @@ class TestArgumentResolver:
             resolved_args[name] = resolved
         return self._unpack_resolved(resolved_args)
 
+    def _get_args_for_iteration(self):
+        if not self.test.has_deps:
+            return {}
+        default_args = self._get_default_args()
+        args_for_iteration: Dict[str, Any] = {}
+        for name, arg in default_args.items():
+            # In the case of parameterised testing, grab the arg corresponding
+            # to the current iteration of the parameterised group of tests.
+            if isinstance(arg, Each):
+                arg = arg[self.iteration]
+            args_for_iteration[name] = arg
+        return args_for_iteration
+
     @property
     def fixtures(self) -> Dict[str, Fixture]:
         return {
             name: Fixture(arg)
-            for name, arg in self._get_default_args().items()
+            for name, arg in self._get_args_for_iteration().items()
             if arg_is_fixture(arg)
         }
 
     def _get_default_args(
-            self, func: Optional[Union[Callable, Fixture]] = None
+        self, func: Optional[Union[Callable, Fixture]] = None
     ) -> Dict[str, Any]:
         """
         Returns a mapping of test argument names to values.
@@ -376,7 +383,7 @@ class TestArgumentResolver:
         return default_binding.arguments
 
     def _resolve_single_arg(
-            self, arg: Callable, cache: FixtureCache
+        self, arg: Callable, cache: FixtureCache
     ) -> Union[Any, Fixture]:
         """
         Get the fixture return value
@@ -390,7 +397,7 @@ class TestArgumentResolver:
 
         fixture = Fixture(arg)
         if cache.contains(
-                fixture, fixture.scope, self.test.scope_key_from(fixture.scope)
+            fixture, fixture.scope, self.test.scope_key_from(fixture.scope)
         ):
             return cache.get(
                 fixture.key, fixture.scope, self.test.scope_key_from(fixture.scope)

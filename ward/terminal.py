@@ -4,6 +4,7 @@ import os
 import platform
 import sys
 import traceback
+import itertools
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -31,6 +32,7 @@ from ward.expect import Comparison, TestFailure
 from ward.fixtures import Fixture, Scope, _DEFINED_FIXTURES
 from ward.testing import Test
 from ward.testing import TestOutcome, TestResult
+from ward.util import group_by
 
 INDENT = " " * 2
 
@@ -95,8 +97,8 @@ def output_test_result_line(test_result: TestResult):
     iter_indicator = format_test_case_number(test_result)
     mod_name = format_test_id(test_result)
     if (
-            test_result.outcome == TestOutcome.SKIP
-            or test_result.outcome == TestOutcome.XFAIL
+        test_result.outcome == TestOutcome.SKIP
+        or test_result.outcome == TestOutcome.XFAIL
     ):
         reason = test_result.test.marker.reason or ""
         if reason:
@@ -106,11 +108,11 @@ def output_test_result_line(test_result: TestResult):
 
     name_or_desc = test_result.test.description
     indent = (
-            len(padded_outcome)
-            + len(test_result.test.module_name)
-            + len(str(test_result.test.line_number))
-            + len(iter_indicator)
-            + 4
+        len(padded_outcome)
+        + len(test_result.test.module_name)
+        + len(str(test_result.test.line_number))
+        + len(iter_indicator)
+        + 4
     )
     width = get_terminal_size().width - indent
     print(
@@ -140,7 +142,7 @@ def output_test_per_line(fail_limit, test_results_gen):
 
 
 def output_dots_global(
-        fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
     column = 0
     num_failures = 0
@@ -181,7 +183,7 @@ def print_dot(result):
 
 
 def output_dots_module(
-        fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
     current_path = Path("")
     rel_path = ""
@@ -198,13 +200,13 @@ def output_dots_module(
                 current_path = result.test.path
                 rel_path = str(current_path.relative_to(os.getcwd()))
                 max_dots_per_line = (
-                        get_terminal_size().width - len(rel_path) - 2
+                    get_terminal_size().width - len(rel_path) - 2
                 )  # subtract 2 for ": "
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
                     print_no_break(
                         lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1:]
+                        + rel_path[final_slash_idx + 1 :]
                         + ": "
                     )
                 else:
@@ -241,11 +243,11 @@ class TestResultWriterBase:
     }
 
     def __init__(
-            self,
-            suite,
-            test_output_style: str,
-            config_path: Optional[Path],
-            show_diff_symbols: bool = False,
+        self,
+        suite,
+        test_output_style: str,
+        config_path: Optional[Path],
+        show_diff_symbols: bool = False,
     ):
         self.suite = suite
         self.test_output_style = test_output_style
@@ -270,9 +272,9 @@ class TestResultWriterBase:
         )
 
     def output_all_test_results(
-            self,
-            test_results_gen: Generator[TestResult, None, None],
-            fail_limit: Optional[int] = None,
+        self,
+        test_results_gen: Generator[TestResult, None, None],
+        fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
         if not self.suite.num_tests:
             return []
@@ -310,7 +312,7 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
     def output_test_result_summary(
-            self, test_results: List[TestResult], time_taken: float, duration: int
+        self, test_results: List[TestResult], time_taken: float, duration: int
     ):
         raise NotImplementedError()
 
@@ -365,7 +367,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         name_or_desc = colored(name_or_desc)
         failure_heading = (
-                colored("Failure: ", color="cyan", attrs=["bold"]) + name_or_desc + "\n"
+            colored("Failure: ", color="cyan", attrs=["bold"]) + name_or_desc + "\n"
         )
         print(indent(failure_heading, INDENT))
 
@@ -440,7 +442,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         return result_marker
 
     def output_test_result_summary(
-            self, test_results: List[TestResult], time_taken: float, show_slowest: int
+        self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
         if show_slowest:
             self._output_slowest_tests(test_results, show_slowest)
@@ -512,7 +514,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_test_failed_location(self, test_result: TestResult):
         if isinstance(test_result.error, TestFailure) or isinstance(
-                test_result.error, AssertionError
+            test_result.error, AssertionError
         ):
             print(
                 indent(colored("Location:", color="cyan", attrs=["bold"]), INDENT),
@@ -523,7 +525,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         pass
 
     def _get_outcome_counts(
-            self, test_results: List[TestResult]
+        self, test_results: List[TestResult]
     ) -> Dict[TestOutcome, int]:
         return {
             TestOutcome.PASS: len(
@@ -559,20 +561,25 @@ def outcome_to_colour(outcome: TestOutcome) -> str:
 
 
 def scope_to_colour(scope: Scope) -> str:
-    return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta", }[scope]
+    return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta",}[scope]
 
 
 def output_fixtures(
-        suite,
-        show_scopes: bool,
-        show_docstrings: bool,
-        show_dependencies: bool,
-        show_dependency_trees: bool,
+    suite,
+    show_scopes: bool,
+    show_docstrings: bool,
+    show_dependencies: bool,
+    show_dependency_trees: bool,
 ):
     fixtures = [Fixture(f) for f in _DEFINED_FIXTURES]
 
     # we look at suite.tests so we can see the tests before they are parameterised
-    test_to_fixtures = {test: test.resolver.fixtures for test in suite.tests}
+
+    generated_tests = itertools.chain.from_iterable(
+        test.get_parameterised_instances() for test in suite.tests
+    )
+
+    test_to_fixtures = {test: test.resolver.fixtures for test in generated_tests}
     fixture_to_tests = collections.defaultdict(list)
     for test, used_fixtures in test_to_fixtures.items():
         for fix in used_fixtures.values():
@@ -601,14 +608,14 @@ def output_fixtures(
 
 
 def output_fixture_information(
-        fixture: Fixture,
-        used_by_tests: List[Test],
-        fixtures_to_children: Mapping[Fixture, List[Fixture]],
-        fixtures_to_parents: Mapping[Fixture, List[Fixture]],
-        show_scopes: bool,
-        show_docstrings: bool,
-        show_dependencies: bool,
-        show_dependency_trees: bool,
+    fixture: Fixture,
+    used_by_tests: List[Test],
+    fixtures_to_children: Mapping[Fixture, List[Fixture]],
+    fixtures_to_parents: Mapping[Fixture, List[Fixture]],
+    show_scopes: bool,
+    show_docstrings: bool,
+    show_dependencies: bool,
+    show_dependency_trees: bool,
 ):
     lines = [format_fixture(fixture, show_scopes=show_scopes)]
 
@@ -667,11 +674,14 @@ def output_fixture_information(
 
 
 def yield_fixture_usages_by_tests(used_by: List[Test]) -> Iterator[str]:
-    for idx, test in enumerate(used_by):
-        prefix = "├─" if idx != len(used_by) - 1 else "└─"
+    grouped_used_by = group_by(used_by, key=lambda t: t.description)
+    for idx, (description, tests) in enumerate(grouped_used_by.items()):
+        test = tests[0]
+        prefix = "├─" if idx != len(grouped_used_by) - 1 else "└─"
+        loc = lightblack(format_test_location(test))
+        sep = lightblack(f" [{len(tests)}]:" if len(tests) > 1 else ":")
         yield indent(
-            f"{prefix} {lightblack(format_test_location(test))} {test.description}",
-            INDENT,
+            f"{prefix} {loc}{sep} {test.description}", INDENT,
         )
 
 
@@ -684,12 +694,12 @@ def yield_fixture_usages_by_fixtures(used_by: List[Fixture]) -> Iterator[str]:
 
 
 def yield_fixture_dependency_tree(
-        fixture: Fixture,
-        fixtures_to_parents_or_children: Mapping[Fixture, List[Fixture]],
-        show_scopes: bool,
-        max_depth: Optional[int],
-        depth: int = 0,
-        prefix=INDENT,
+    fixture: Fixture,
+    fixtures_to_parents_or_children: Mapping[Fixture, List[Fixture]],
+    show_scopes: bool,
+    max_depth: Optional[int],
+    depth: int = 0,
+    prefix=INDENT,
 ) -> Iterator[str]:
     if max_depth is not None and depth >= max_depth:
         return
@@ -745,7 +755,7 @@ def get_exit_code(results: Iterable[TestResult]) -> ExitCode:
         return ExitCode.NO_TESTS_FOUND
 
     if any(
-            r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results
+        r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results
     ):
         exit_code = ExitCode.FAILED
     else:
