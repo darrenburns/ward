@@ -12,7 +12,7 @@ from ward.collect import (
     is_excluded_module,
     is_test_module,
     remove_excluded_paths,
-    search_generally,
+    filter_tests,
 )
 from ward.testing import Test, each
 from ward.tests.utilities import make_project
@@ -34,25 +34,25 @@ def tests_to_search(named_test=named_test):
 
 @test("search_generally matches on qualified test name")
 def _(tests=tests_to_search, named=named_test):
-    results = search_generally(tests, query="my_module.named")
+    results = filter_tests(tests, query="my_module.named")
     assert list(results) == [named]
 
 
 @test("search_generally matches on test name alone")
 def _(tests=tests_to_search, named=named_test):
-    results = search_generally(tests, query="named")
+    results = filter_tests(tests, query="named")
     assert list(results) == [named]
 
 
 @test("search_generally query='fox' returns tests with 'fox' in the body")
 def _(tests=tests_to_search, named=named_test):
-    results = search_generally(tests, query="fox")
+    results = filter_tests(tests, query="fox")
     assert list(results) == [named]
 
 
 @test("search_generally returns an empty generator when no tests match query")
 def _(tests=tests_to_search):
-    results = search_generally(tests, query="92qj3f9i")
+    results = filter_tests(tests, query="92qj3f9i")
     with raises(StopIteration):
         next(results)
 
@@ -61,7 +61,7 @@ def _(tests=tests_to_search):
 def _():
     apples = Test(fn=named, module_name="", tags=["apples"])
     bananas = Test(fn=named, module_name="", tags=["bananas"])
-    results = list(search_generally([apples, bananas], tag_expr=parse("apples")))
+    results = list(filter_tests([apples, bananas], tag_expr=parse("apples")))
     assert results == [apples]
 
 
@@ -71,7 +71,7 @@ def _():
     two = Test(fn=named, module_name="", tags=["bananas", "carrots"])
     three = Test(fn=named, module_name="", tags=["bananas"])
     tag_expr = parse("apples or bananas and not carrots")
-    results = list(search_generally([one, two, three], tag_expr=tag_expr))
+    results = list(filter_tests([one, two, three], tag_expr=tag_expr))
     assert results == [one, three]
 
 
@@ -80,7 +80,7 @@ def _():
     one = Test(fn=named, module_name="one", tags=["apples"])
     two = Test(fn=named, module_name="two", tags=["apples"])
     tag_expr = parse("apples")
-    results = list(search_generally([one, two], query="two", tag_expr=tag_expr))
+    results = list(filter_tests([one, two], query="two", tag_expr=tag_expr))
     # Both tests match the tag expression, but only two matches the search query
     # because the query matches the module name for the test.
     assert results == [two]
@@ -90,7 +90,7 @@ def _():
 def _():
     t = Test(fn=named, module_name="", tags=[])
     tag_expr = parse("apples")
-    results = list(search_generally([t], tag_expr=tag_expr))
+    results = list(filter_tests([t], tag_expr=tag_expr))
     assert results == []
 
 
@@ -98,7 +98,7 @@ def _():
 def _():
     t = Test(fn=named, module_name="", tags=["apples"])
     tag_expr = parse("")
-    results = list(search_generally([t], tag_expr=tag_expr))
+    results = list(filter_tests([t], tag_expr=tag_expr))
     assert results == [t]
 
 
@@ -107,7 +107,7 @@ def _():
     one = Test(fn=named, module_name="one", tags=["apples"])
     two = Test(fn=named, module_name="two", tags=["bananas"])
     tag_expr = parse("carrots")
-    results = list(search_generally([one, two], tag_expr=tag_expr))
+    results = list(filter_tests([one, two], tag_expr=tag_expr))
     assert results == []
 
 

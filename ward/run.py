@@ -14,11 +14,13 @@ from ward.collect import (
     get_info_for_modules,
     get_tests_in_modules,
     load_modules,
-    search_generally,
+    filter_tests,
+    filter_fixtures,
 )
 from ward.config import set_defaults_from_config
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
+from ward.fixtures import _DEFINED_FIXTURES
 from ward.terminal import SimpleTestResultWrite, output_fixtures, get_exit_code
 
 init()
@@ -61,24 +63,22 @@ exclude = click.option(
     multiple=True,
     help="Paths to ignore while searching for items. Accepts glob patterns.",
 )
-search = click.option(
-    "--search",
-    help="Search test names, bodies, descriptions and module names for the search query and only keep matching tests.",
-)
-tags = click.option(
-    "--tags",
-    help="Find tests matching a tag expression (e.g. 'unit and not slow').",
-    metavar="EXPR",
-    type=parse_tags,
-)
 
 
 @run.command()
 @config
 @path
 @exclude
-@search
-@tags
+@click.option(
+    "--search",
+    help="Search test names, bodies, descriptions and module names for the search query and only keep matching tests.",
+)
+@click.option(
+    "--tags",
+    help="Find tests matching a tag expression (e.g. 'unit and not slow').",
+    metavar="EXPR",
+    type=parse_tags,
+)
 @click.option(
     "--fail-limit",
     type=int,
@@ -142,10 +142,10 @@ def test(
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags,))
+    filtered_tests = list(filter_tests(unfiltered_tests, query=search, tag_expr=tags,))
 
     # Rewrite assertions in each test
-    tests = rewrite_assertions_in_tests(tests)
+    tests = rewrite_assertions_in_tests(filtered_tests)
 
     time_to_collect = default_timer() - start_run
 
@@ -172,8 +172,17 @@ def test(
 @config
 @path
 @exclude
-@search
-@tags
+@click.option(
+    "-f",
+    "--fixture-path",
+    help="Only display fixtures defined in or below the given paths.",
+    multiple=True,
+    type=Path,
+)
+@click.option(
+    "--search",
+    help="Search fixtures names, bodies, and module names for the search query and only keep matching fixtures.",
+)
 @click.option(
     "--show-scopes/--no-show-scopes",
     help="Display each fixture's scope.",
@@ -206,8 +215,8 @@ def fixtures(
     config_path: Optional[Path],
     path: Tuple[str],
     exclude: Tuple[str],
+    fixture_path: Tuple[Path],
     search: Optional[str],
-    tags: Optional[Expression],
     show_scopes: bool,
     show_docstrings: bool,
     show_dependencies: bool,
@@ -218,13 +227,15 @@ def fixtures(
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
-    unfiltered_tests = get_tests_in_modules(modules, capture_output=True)
-    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags,))
+    tests = list(get_tests_in_modules(modules, capture_output=True))
 
-    suite = Suite(tests=tests)
+    filtered_fixtures = list(
+        filter_fixtures(_DEFINED_FIXTURES, query=search, paths=fixture_path)
+    )
 
     output_fixtures(
-        suite,
+        fixtures=filtered_fixtures,
+        tests=tests,
         show_scopes=show_scopes or full,
         show_docstrings=show_docstrings or full,
         show_dependencies=show_dependencies or full,

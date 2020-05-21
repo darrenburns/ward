@@ -45,6 +45,15 @@ class Fixture:
         return self.fn.ward_meta.path
 
     @property
+    def module_name(self):
+        return self.fn.__module__
+
+    @property
+    def qualified_name(self) -> str:
+        name = self.name or ""
+        return f"{self.module_name}.{name}"
+
+    @property
     def line_number(self) -> int:
         return inspect.getsourcelines(self.fn)[1]
 
@@ -165,7 +174,7 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
     else:
         func.ward_meta = WardMeta(is_fixture=True, scope=scope, path=path)
 
-    _DEFINED_FIXTURES.append(func)
+    _DEFINED_FIXTURES.append(Fixture(func))
 
     @wraps(func)
     def wrapper(*args, **kwargs):

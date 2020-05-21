@@ -565,18 +565,15 @@ def scope_to_colour(scope: Scope) -> str:
 
 
 def output_fixtures(
-    suite,
+    fixtures: List[Fixture],
+    tests: List[Test],
     show_scopes: bool,
     show_docstrings: bool,
     show_dependencies: bool,
     show_dependency_trees: bool,
 ):
-    fixtures = [Fixture(f) for f in _DEFINED_FIXTURES]
-
-    # we look at suite.tests so we can see the tests before they are parameterised
-
     generated_tests = itertools.chain.from_iterable(
-        test.get_parameterised_instances() for test in suite.tests
+        test.get_parameterised_instances() for test in tests
     )
 
     test_to_fixtures = {test: test.resolver.fixtures for test in generated_tests}
