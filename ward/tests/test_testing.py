@@ -2,7 +2,6 @@ import asyncio
 from collections import defaultdict
 from pathlib import Path
 from unittest import mock
-
 import sys
 
 from ward.tests.utilities import FORCE_TEST_PATH, testable_test
