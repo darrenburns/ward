@@ -10,7 +10,7 @@ from ward import Scope, raises
 from ward.errors import ParameterisationError
 from ward.fixtures import FixtureCache, fixture
 from ward.models import WardMeta
-from ward.testing import ParamMeta, Test, each, test, xfail
+from ward.testing import ParamMeta, Test, each, test, xfail, TestOutcome
 
 
 def f():
@@ -141,6 +141,13 @@ async def _(one=one, two=two):
 @test("async/await passing test")
 async def _(one=one, two=two, three=three):
     assert one + two == three
+
+
+@test("a test that exits {exit_code} is marked as {outcome}")
+def _(exit_code=each(0, 1), outcome=each(TestOutcome.FAIL, TestOutcome.FAIL)):
+    t = Test(fn=lambda: sys.exit(exit_code), module_name=mod)
+
+    assert t.run(FixtureCache()).outcome is outcome
 
 
 @test("Test.is_parameterised should return True for parameterised test")

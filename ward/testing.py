@@ -144,7 +144,7 @@ class Test:
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
                 error: Optional[Exception] = e
-            except Exception as e:
+            except (Exception, SystemExit) as e:
                 outcome = (
                     TestOutcome.XFAIL
                     if isinstance(self.marker, XfailMarker)
