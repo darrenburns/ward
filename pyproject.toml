@@ -70,3 +70,6 @@ exclude_lines = [
 include = [
     "ward/*",
 ]
+omit = [
+    "ward/tests/*",
+]
