@@ -34,7 +34,7 @@ jobs:
     - name: Upload coverage report to codecov
       run: |
         poetry run coverage xml -i
-        bash <(curl -s https://codecov.io/bash)
+        bash <(curl -s https://codecov.io/bash) -f coverage.xml
       shell: bash
 
 # TODO: Update to use the Makefile and actually enforce this.
