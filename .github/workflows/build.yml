@@ -35,6 +35,7 @@ jobs:
       run: |
         poetry run coverage xml -i
         bash <(curl -s https://codecov.io/bash)
+      shell: bash
 
 # TODO: Update to use the Makefile and actually enforce this.
 #    - name: Lint with flake8 (CONFIG OUTDATED)

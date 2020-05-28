@@ -31,3 +31,4 @@ jobs:
       run: |
         poetry run coverage xml -i
         bash <(curl -s https://codecov.io/bash)
+      shell: bash
