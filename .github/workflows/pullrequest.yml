@@ -27,8 +27,8 @@ jobs:
       run: |
         poetry install
         poetry run coverage run -m ward
+        poetry run coverage xml -i
     - name: Upload coverage report to codecov
       run: |
-        poetry run coverage xml -i
         bash <(curl -s https://codecov.io/bash) -f coverage.xml
       shell: bash
