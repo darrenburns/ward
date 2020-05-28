@@ -31,7 +31,8 @@ jobs:
       run: |
         poetry install
         poetry run coverage run -m ward
-        bash <(curl -s https://codecov.io/bash)
+    - name: Upload coverage report to codecov
+      run: bash <(curl -s https://codecov.io/bash) -f .coverage
 
 # TODO: Update to use the Makefile and actually enforce this.
 #    - name: Lint with flake8 (CONFIG OUTDATED)
