@@ -30,7 +30,8 @@ jobs:
     - name: Run tests with Ward
       run: |
         poetry install
-        poetry run ward
+        poetry run coverage run -m ward
+        bash <(curl -s https://codecov.io/bash)
 
 # TODO: Update to use the Makefile and actually enforce this.
 #    - name: Lint with flake8 (CONFIG OUTDATED)
