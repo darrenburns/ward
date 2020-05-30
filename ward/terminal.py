@@ -561,7 +561,7 @@ def outcome_to_colour(outcome: TestOutcome) -> str:
 
 
 def scope_to_colour(scope: Scope) -> str:
-    return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta",}[scope]
+    return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta"}[scope]
 
 
 def output_fixtures(
@@ -611,7 +611,7 @@ def output_fixture_information(
     show_dependencies: bool,
     show_dependency_trees: bool,
 ):
-    lines = [format_fixture(fixture, show_scopes=show_scopes)]
+    lines = [format_fixture(fixture, show_scope=show_scopes)]
 
     if show_dependency_trees:
         max_depth = None
@@ -679,14 +679,6 @@ def yield_fixture_usages_by_tests(used_by: List[Test]) -> Iterator[str]:
         )
 
 
-def yield_fixture_usages_by_fixtures(used_by: List[Fixture]) -> Iterator[str]:
-    for idx, fixture in enumerate(used_by):
-        prefix = "├─" if idx != len(used_by) - 1 else "└─"
-        yield indent(
-            f"{prefix} {format_fixture(fixture, show_scopes=False)}", INDENT,
-        )
-
-
 def yield_fixture_dependency_tree(
     fixture: Fixture,
     fixtures_to_parents_or_children: Mapping[Fixture, List[Fixture]],
@@ -723,7 +715,7 @@ def yield_fixture_dependency_tree(
         )
 
 
-def format_fixture(fixture: Fixture, show_scopes: bool):
+def format_fixture(fixture: Fixture, show_scope: bool):
     path = lightblack(f"{fixture.path.name}:{fixture.line_number}")
     name = colored(fixture.name, color="cyan", attrs=["bold"])
     scope = colored(
@@ -731,8 +723,8 @@ def format_fixture(fixture: Fixture, show_scopes: bool):
     )
     header = f"{path} {name}"
 
-    if show_scopes:
-        header = f"{header} ({scope} scope)"
+    if show_scope:
+        header = f"{header} (scope: {scope})"
 
     return header
 
