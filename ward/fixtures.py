@@ -3,7 +3,7 @@ import inspect
 from contextlib import suppress
 from functools import partial, wraps
 from pathlib import Path
-from typing import Callable, Dict, Union, Optional, Any, Generator, AsyncGenerator
+from typing import Callable, Dict, Union, Optional, Any, Generator, AsyncGenerator, List
 
 from dataclasses import dataclass, field
 
@@ -71,6 +71,12 @@ class Fixture:
 
     def deps(self):
         return inspect.signature(self.fn).parameters
+
+    def parents(self) -> List["Fixture"]:
+        """
+        Return the parent fixtures of this fixture, as a list of Fixtures.
+        """
+        return [Fixture(par.default) for par in self.deps().values()]
 
     def teardown(self):
         # Suppress because we can't know whether there's more code

@@ -191,3 +191,29 @@ def _():
 @test("arg_is_fixture returns False for not-fixtures ({not_fixture!r})")
 def _(not_fixture=each("foo", 5, is_fixture, Fixture)):
     assert not is_fixture(not_fixture)
+
+
+@test("Fixture.parents returns the parents of the fixture as Fixtures")
+def _():
+    @fixture
+    def parent_a():
+        pass
+
+    @fixture
+    def parent_b():
+        pass
+
+    @fixture
+    def child(a=parent_a, b=parent_b):
+        pass
+
+    assert Fixture(child).parents() == [Fixture(parent_a), Fixture(parent_b)]
+
+
+@test("Fixture.parents returns an empty collection if the fixture has no parents")
+def _():
+    @fixture
+    def fix():
+        pass
+
+    assert len(Fixture(fix).parents()) == 0

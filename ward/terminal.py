@@ -582,10 +582,7 @@ def output_fixtures(
         for fix in used_fixtures.values():
             fixture_to_tests[fix].append(test)
 
-    fixtures_to_parents = {
-        fixture: [Fixture(par.default) for par in fixture.deps().values()]
-        for fixture in fixtures
-    }
+    fixtures_to_parents = {fixture: fixture.parents() for fixture in fixtures}
     fixtures_to_children = collections.defaultdict(list)
     for fixture, parents in fixtures_to_parents.items():
         for parent in parents:
