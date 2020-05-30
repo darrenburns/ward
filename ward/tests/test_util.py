@@ -7,6 +7,7 @@ from ward.testing import each
 from ward.util import (
     truncate,
     find_project_root,
+    group_by,
 )
 
 
@@ -49,3 +50,28 @@ def _(root_file, project):
     root = find_project_root([project / "a/b/c", project / "a/d"])
     assert root.resolve() == project.resolve()
     assert (root / root_file).exists()
+
+
+def is_even(n):
+    return n % 2 == 0
+
+
+def is_vowel(char):
+    return char in "aeiou"
+
+
+def square(x):
+    return x ** 2
+
+
+@test("group {items!r} by {key} returns {result}")
+def _(
+    items=each(range(5), "echolocation", [-2, 3, 4, -3, 2, 3]),
+    key=each(is_even, is_vowel, square),
+    result=each(
+        {True: [0, 2, 4], False: [1, 3]},
+        {True: ["e", "o", "o", "a", "i", "o"], False: ["c", "h", "l", "c", "t", "n"]},
+        {4: [-2, 2], 9: [3, -3, 3], 16: [4]},
+    ),
+):
+    assert group_by(items, key) == result
