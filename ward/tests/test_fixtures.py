@@ -1,9 +1,10 @@
 from typing import List
 
 from ward.tests.utilities import testable_test
-from ward import fixture, test, Scope
-from ward.fixtures import Fixture, FixtureCache, using
+from ward import fixture, test, Scope, each
+from ward.fixtures import Fixture, FixtureCache, using, is_fixture
 from ward.testing import Test
+from ward.tests.utilities import dummy_fixture
 
 
 @fixture
@@ -177,3 +178,16 @@ def _():
     expected = {"a": fixture_a, "b": "val"}
 
     assert bound_args.arguments == expected
+
+
+@test("arg_is_fixture returns True for fixtures")
+def _():
+    # I would have liked to combine this test into the parameterised test below,
+    # but if we put the fixture in the each, it would get resolved!
+    # So we need to check it from global scope.
+    assert is_fixture(dummy_fixture)
+
+
+@test("arg_is_fixture returns False for not-fixtures ({not_fixture!r})")
+def _(not_fixture=each("foo", 5, is_fixture, Fixture)):
+    assert not is_fixture(not_fixture)

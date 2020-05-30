@@ -199,3 +199,12 @@ def using(*using_args, **using_kwargs):
         return wrapper
 
     return decorator_using
+
+
+def is_fixture(obj: Any) -> bool:
+    """
+    Returns True if and only if the object is a fixture function
+    (it would be False for a Fixture instance,
+    but True for the underlying function inside it).
+    """
+    return hasattr(obj, "ward_meta") and obj.ward_meta.is_fixture

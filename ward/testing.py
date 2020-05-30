@@ -14,7 +14,7 @@ from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from ward.errors import FixtureError, ParameterisationError
-from ward.fixtures import Fixture, FixtureCache, ScopeKey
+from ward.fixtures import Fixture, FixtureCache, ScopeKey, is_fixture
 from ward.models import Marker, Scope, SkipMarker, WardMeta, XfailMarker
 from ward.util import get_absolute_path
 
@@ -328,7 +328,7 @@ class TestArgumentResolver:
         args_for_iteration = self._get_args_for_iteration()
         resolved_args: Dict[str, Any] = {}
         for name, arg in args_for_iteration.items():
-            if arg_is_fixture(arg):
+            if is_fixture(arg):
                 resolved = self._resolve_single_arg(arg, cache)
             else:
                 resolved = arg
@@ -353,7 +353,7 @@ class TestArgumentResolver:
         return {
             name: Fixture(arg)
             for name, arg in self._get_args_for_iteration().items()
-            if arg_is_fixture(arg)
+            if is_fixture(arg)
         }
 
     def _get_default_args(
@@ -464,10 +464,6 @@ class TestArgumentResolver:
             else:
                 resolved_vals[k] = arg
         return resolved_vals
-
-
-def arg_is_fixture(arg: Any) -> bool:
-    return hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture
 
 
 def is_test_module_name(module_name: str) -> bool:
