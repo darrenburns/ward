@@ -287,7 +287,7 @@ class Test:
     def format_description(self, args: Dict[str, Any]) -> str:
         """
         Applies any necessary string formatting to the description,
-        given a dictionary `arg_map` of values that will be injected
+        given a dictionary `args` of values that will be injected
         into the test.
 
         This method will mutate the Test by updating the description.
