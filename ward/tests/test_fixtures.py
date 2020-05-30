@@ -2,7 +2,13 @@ from typing import List
 
 from ward.tests.utilities import testable_test
 from ward import fixture, test, Scope, each
-from ward.fixtures import Fixture, FixtureCache, using, is_fixture
+from ward.fixtures import (
+    Fixture,
+    FixtureCache,
+    using,
+    is_fixture,
+    fixture_parents_and_children,
+)
 from ward.testing import Test
 from ward.tests.utilities import dummy_fixture
 
@@ -217,3 +223,35 @@ def _():
         pass
 
     assert len(Fixture(fix).parents()) == 0
+
+
+@test("fixture_parents_and_children analyzes fixture dependencies correctly")
+def _():
+    @fixture
+    def a():
+        pass
+
+    @fixture
+    def b():
+        pass
+
+    @fixture
+    def c(a=a, b=b):
+        pass
+
+    @fixture
+    def d(a=a, c=c):
+        pass
+
+    fa, fb, fc, fd = fixtures = list(map(Fixture, (a, b, c, d)))
+
+    to_parents, to_children = fixture_parents_and_children(fixtures)
+
+    assert to_parents == {fa: [], fb: [], fc: [fa, fb], fd: [fa, fc]}
+
+    assert to_children == {
+        fa: [fc, fd],
+        fb: [fc],
+        fc: [fd],
+        fd: [],
+    }

@@ -1,9 +1,23 @@
 import asyncio
+import collections
 import inspect
 from contextlib import suppress
 from functools import partial, wraps
 from pathlib import Path
-from typing import Callable, Dict, Union, Optional, Any, Generator, AsyncGenerator, List
+from typing import (
+    Callable,
+    Dict,
+    Union,
+    Optional,
+    Any,
+    Generator,
+    AsyncGenerator,
+    List,
+    Iterable,
+    Mapping,
+    Tuple,
+    Collection,
+)
 
 from dataclasses import dataclass, field
 
@@ -214,3 +228,25 @@ def is_fixture(obj: Any) -> bool:
     but True for the underlying function inside it).
     """
     return hasattr(obj, "ward_meta") and obj.ward_meta.is_fixture
+
+
+_TYPE_FIXTURE_TO_FIXTURES = Mapping[Fixture, Collection[Fixture]]
+
+
+def fixture_parents_and_children(
+    fixtures: Iterable[Fixture],
+) -> Tuple[_TYPE_FIXTURE_TO_FIXTURES, _TYPE_FIXTURE_TO_FIXTURES]:
+    """
+    Given an iterable of Fixtures, produce two dictionaries:
+    the first maps each fixture to its parents (the fixtures it depends on);
+    the second maps each fixture to its children (the fixtures that depend on it).
+    """
+    fixtures_to_parents = {fixture: fixture.parents() for fixture in fixtures}
+
+    # not a defaultdict, because we want to have empty entries if no parents when we return
+    fixtures_to_children = {fixture: [] for fixture in fixtures}
+    for fixture, parents in fixtures_to_parents.items():
+        for parent in parents:
+            fixtures_to_children[parent].append(fixture)
+
+    return fixtures_to_parents, fixtures_to_children

@@ -16,7 +16,6 @@ from typing import (
     Iterable,
     List,
     Optional,
-    Mapping,
     Iterator,
 )
 
@@ -29,7 +28,13 @@ from termcolor import colored, cprint
 from ward._ward_version import __version__
 from ward.diff import make_diff
 from ward.expect import Comparison, TestFailure
-from ward.fixtures import Fixture, Scope, _DEFINED_FIXTURES
+from ward.fixtures import (
+    Fixture,
+    Scope,
+    _DEFINED_FIXTURES,
+    fixture_parents_and_children,
+    _TYPE_FIXTURE_TO_FIXTURES,
+)
 from ward.testing import Test
 from ward.testing import TestOutcome, TestResult
 from ward.util import group_by
@@ -582,11 +587,7 @@ def output_fixtures(
         for fix in used_fixtures.values():
             fixture_to_tests[fix].append(test)
 
-    fixtures_to_parents = {fixture: fixture.parents() for fixture in fixtures}
-    fixtures_to_children = collections.defaultdict(list)
-    for fixture, parents in fixtures_to_parents.items():
-        for parent in parents:
-            fixtures_to_children[parent].append(fixture)
+    fixtures_to_parents, fixtures_to_children = fixture_parents_and_children(fixtures)
 
     for fixture in fixtures:
         output_fixture_information(
@@ -604,8 +605,8 @@ def output_fixtures(
 def output_fixture_information(
     fixture: Fixture,
     used_by_tests: List[Test],
-    fixtures_to_children: Mapping[Fixture, List[Fixture]],
-    fixtures_to_parents: Mapping[Fixture, List[Fixture]],
+    fixtures_to_children: _TYPE_FIXTURE_TO_FIXTURES,
+    fixtures_to_parents: _TYPE_FIXTURE_TO_FIXTURES,
     show_scopes: bool,
     show_docstrings: bool,
     show_dependencies: bool,
@@ -681,7 +682,7 @@ def yield_fixture_usages_by_tests(used_by: List[Test]) -> Iterator[str]:
 
 def yield_fixture_dependency_tree(
     fixture: Fixture,
-    fixtures_to_parents_or_children: Mapping[Fixture, List[Fixture]],
+    fixtures_to_parents_or_children: _TYPE_FIXTURE_TO_FIXTURES,
     show_scopes: bool,
     max_depth: Optional[int],
     depth: int = 0,
