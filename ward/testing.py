@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import functools
 import inspect
 import traceback
@@ -11,7 +12,18 @@ from io import StringIO
 from pathlib import Path
 from timeit import default_timer
 from types import MappingProxyType
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    Iterable,
+    Mapping,
+    Collection,
+)
 
 from ward.errors import FixtureError, ParameterisationError
 from ward.fixtures import Fixture, FixtureCache, ScopeKey, is_fixture
@@ -464,6 +476,19 @@ class TestArgumentResolver:
             else:
                 resolved_vals[k] = arg
         return resolved_vals
+
+
+def fixtures_used_directly_by_tests(
+    tests: Iterable[Test],
+) -> Mapping[Fixture, Collection[Test]]:
+    test_to_fixtures = {test: test.resolver.fixtures for test in tests}
+
+    fixture_to_tests = collections.defaultdict(list)
+    for test, used_fixtures in test_to_fixtures.items():
+        for fix in used_fixtures.values():
+            fixture_to_tests[fix].append(test)
+
+    return fixture_to_tests
 
 
 def is_test_module_name(module_name: str) -> bool:

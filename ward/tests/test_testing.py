@@ -8,9 +8,16 @@ import sys
 from ward.tests.utilities import FORCE_TEST_PATH, testable_test
 from ward import Scope, raises
 from ward.errors import ParameterisationError
-from ward.fixtures import FixtureCache, fixture
+from ward.fixtures import FixtureCache, fixture, Fixture
 from ward.models import WardMeta
-from ward.testing import ParamMeta, Test, each, test, xfail
+from ward.testing import (
+    ParamMeta,
+    Test,
+    each,
+    test,
+    xfail,
+    fixtures_used_directly_by_tests,
+)
 
 
 def f():
@@ -328,3 +335,53 @@ def _(func=example_test):
     path = Path("p")
     test("test", _collect_into=dest, _force_path=path)(func)
     assert len(dest) == 0
+
+
+@test("fixtures_used_directly_by_tests finds used fixture")
+def _():
+    @fixture
+    def f():
+        pass
+
+    t = Test(lambda f=f: None, module_name="")
+
+    assert fixtures_used_directly_by_tests([t]) == {Fixture(f): [t]}
+
+
+@test("fixtures_used_directly_by_tests doesn't follow indirect dependencies")
+def _():
+    @fixture
+    def parent():
+        pass
+
+    @fixture
+    def child():
+        pass
+
+    t = Test(lambda c=child: None, module_name="")
+
+    assert fixtures_used_directly_by_tests([t]) == {Fixture(child): [t]}
+
+
+@test("fixtures_used_directly_by_tests works on a complex example")
+def _():
+    @fixture
+    def parent():
+        pass
+
+    @fixture
+    def child():
+        pass
+
+    @fixture
+    def not_used():
+        pass
+
+    t1 = Test(lambda c=child: None, module_name="")
+    t2 = Test(lambda p=parent, c=child: None, module_name="")
+    t3 = Test(lambda _: None, module_name="")
+
+    assert fixtures_used_directly_by_tests([t1, t2, t3]) == {
+        Fixture(child): [t1, t2],
+        Fixture(parent): [t2],
+    }

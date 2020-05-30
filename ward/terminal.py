@@ -1,4 +1,3 @@
-import collections
 import inspect
 import os
 import platform
@@ -17,6 +16,7 @@ from typing import (
     List,
     Optional,
     Iterator,
+    Collection,
 )
 
 from colorama import Fore, Style
@@ -35,7 +35,7 @@ from ward.fixtures import (
     fixture_parents_and_children,
     _TYPE_FIXTURE_TO_FIXTURES,
 )
-from ward.testing import Test
+from ward.testing import Test, fixtures_used_directly_by_tests
 from ward.testing import TestOutcome, TestResult
 from ward.util import group_by
 
@@ -581,11 +581,7 @@ def output_fixtures(
         test.get_parameterised_instances() for test in tests
     )
 
-    test_to_fixtures = {test: test.resolver.fixtures for test in generated_tests}
-    fixture_to_tests = collections.defaultdict(list)
-    for test, used_fixtures in test_to_fixtures.items():
-        for fix in used_fixtures.values():
-            fixture_to_tests[fix].append(test)
+    fixture_to_tests = fixtures_used_directly_by_tests(generated_tests)
 
     fixtures_to_parents, fixtures_to_children = fixture_parents_and_children(fixtures)
 
@@ -604,7 +600,7 @@ def output_fixtures(
 
 def output_fixture_information(
     fixture: Fixture,
-    used_by_tests: List[Test],
+    used_by_tests: Collection[Test],
     fixtures_to_children: _TYPE_FIXTURE_TO_FIXTURES,
     fixtures_to_parents: _TYPE_FIXTURE_TO_FIXTURES,
     show_scopes: bool,
