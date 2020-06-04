@@ -1,4 +1,3 @@
-import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
 from random import shuffle
@@ -7,7 +6,6 @@ from typing import Generator, List
 from ward import Scope
 from ward.errors import ParameterisationError
 from ward.fixtures import FixtureCache
-from ward.terminal import ExitCode
 from ward.testing import Test, TestResult
 
 
