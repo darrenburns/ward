@@ -186,7 +186,7 @@ def _():
     assert bound_args.arguments == expected
 
 
-@test("arg_is_fixture returns True for fixtures")
+@test("is_fixture returns True for fixtures")
 def _():
     # I would have liked to combine this test into the parameterised test below,
     # but if we put the fixture in the each, it would get resolved!
