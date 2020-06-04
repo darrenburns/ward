@@ -243,7 +243,7 @@ def _():
     def d(a=a, c=c):
         pass
 
-    fa, fb, fc, fd = fixtures = list(map(Fixture, (a, b, c, d)))
+    fa, fb, fc, fd = fixtures = [Fixture(f) for f in (a, b, c, d)]
 
     to_parents, to_children = fixture_parents_and_children(fixtures)
 
