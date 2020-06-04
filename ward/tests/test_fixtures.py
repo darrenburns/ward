@@ -16,6 +16,7 @@ from ward.testing import Test
 from ward.errors import FixtureError
 from ward.tests.utilities import dummy_fixture
 
+
 @fixture
 def exception_raising_fixture():
     @fixture
@@ -198,7 +199,7 @@ def _(exit_code=each(0, 1)):
     t = Test(fn=lambda exits=exits: None, module_name="foo")
 
     with raises(FixtureError):
-        t.resolve_args(FixtureCache())
+        t.resolver.resolve_args(FixtureCache())
 
 
 @test("is_fixture returns True for fixtures")
