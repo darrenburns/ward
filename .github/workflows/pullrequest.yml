@@ -26,4 +26,9 @@ jobs:
     - name: Run tests with Ward
       run: |
         poetry install
-        poetry run ward
+        poetry run coverage run -m ward
+        poetry run coverage xml -i
+    - name: Upload coverage report to codecov
+      run: |
+        bash <(curl -s https://codecov.io/bash) -f coverage.xml
+      shell: bash
