@@ -49,6 +49,28 @@ click-default-group = "^1.2.2"
 [tool.poetry.dev-dependencies]
 black = "^19.9b0"
 flake8 = "^3.7.0"
+coverage = "^5.1"
 
 [tool.poetry.scripts]
 ward = "ward.run:run"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+]
+
+[tool.coverage.run]
+branch = true
+include = [
+    "ward/*",
+]
+omit = [
+    "ward/tests/*",
+]
