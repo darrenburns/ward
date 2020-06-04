@@ -2,7 +2,6 @@ import asyncio
 from collections import defaultdict
 from pathlib import Path
 from unittest import mock
-
 import sys
 
 from ward.tests.utilities import FORCE_TEST_PATH, testable_test
@@ -12,6 +11,7 @@ from ward.fixtures import FixtureCache, fixture, Fixture
 from ward.models import WardMeta
 from ward.testing import (
     ParamMeta,
+    TestOutcome,
     Test,
     each,
     test,
@@ -148,6 +148,13 @@ async def _(one=one, two=two):
 @test("async/await passing test")
 async def _(one=one, two=two, three=three):
     assert one + two == three
+
+
+@test("a test that exits {exit_code} is marked as {outcome}")
+def _(exit_code=each(0, 1), outcome=each(TestOutcome.FAIL, TestOutcome.FAIL)):
+    t = Test(fn=lambda: sys.exit(exit_code), module_name=mod)
+
+    assert t.run(FixtureCache()).outcome is outcome
 
 
 @test("Test.is_parameterised should return True for parameterised test")

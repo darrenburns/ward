@@ -7,7 +7,7 @@ path = ["ward/tests"]
 
 [tool.poetry]
 name = "ward"
-version = "0.46.0b0"
+version = "0.47.0b0"
 description = "A modern Python testing framework"
 exclude = ["ward/tests"]
 authors = ["Darren Burns <darrenb900@gmail.com>"]
@@ -40,7 +40,7 @@ dataclasses = { version = "^0.7", python = "3.6" }
 colorama = "^0.3.3"
 click = "^7.0"
 termcolor = "^1.1.0"
-toml = "^0.9.4"
+toml = "^0.10.1"
 pygments = "^2.4.2"
 pprintpp = "^0.4.0"
 cucumber-tag-expressions = "^2.0.0"
@@ -49,6 +49,28 @@ click-default-group = "^1.2.2"
 [tool.poetry.dev-dependencies]
 black = "^19.9b0"
 flake8 = "^3.7.0"
+coverage = "^5.1"
 
 [tool.poetry.scripts]
 ward = "ward.run:run"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+]
+
+[tool.coverage.run]
+branch = true
+include = [
+    "ward/*",
+]
+omit = [
+    "ward/tests/*",
+]

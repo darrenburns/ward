@@ -1,7 +1,8 @@
 from typing import List
+import sys
 
 from ward.tests.utilities import testable_test
-from ward import fixture, test, Scope, each
+from ward import fixture, test, Scope, raises, each
 from ward.fixtures import (
     Fixture,
     FixtureCache,
@@ -9,9 +10,11 @@ from ward.fixtures import (
     is_fixture,
     fixture_parents_and_children,
 )
+from ward import fixture, test, Scope, raises, each
+from ward.fixtures import Fixture, FixtureCache, using
 from ward.testing import Test
+from ward.errors import FixtureError
 from ward.tests.utilities import dummy_fixture
-
 
 @fixture
 def exception_raising_fixture():
@@ -184,6 +187,18 @@ def _():
     expected = {"a": fixture_a, "b": "val"}
 
     assert bound_args.arguments == expected
+
+
+@test("resolving a fixture that exits {exit_code} raises a FixtureError")
+def _(exit_code=each(0, 1)):
+    @fixture
+    def exits():
+        sys.exit(exit_code)
+
+    t = Test(fn=lambda exits=exits: None, module_name="foo")
+
+    with raises(FixtureError):
+        t.resolve_args(FixtureCache())
 
 
 @test("is_fixture returns True for fixtures")

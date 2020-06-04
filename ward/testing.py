@@ -159,7 +159,7 @@ class Test:
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
                 error: Optional[Exception] = e
-            except Exception as e:
+            except (Exception, SystemExit) as e:
                 outcome = (
                     TestOutcome.XFAIL
                     if isinstance(self.marker, XfailMarker)
@@ -433,7 +433,7 @@ class TestArgumentResolver:
                     )
                 else:
                     fixture.resolved_val = arg()
-            except Exception as e:
+            except (Exception, SystemExit) as e:
                 raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
             scope_key = self.test.scope_key_from(fixture.scope)
             cache.cache_fixture(fixture, scope_key)
@@ -462,7 +462,7 @@ class TestArgumentResolver:
                 )
             else:
                 fixture.resolved_val = arg(**args_to_inject)
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
         scope_key = self.test.scope_key_from(fixture.scope)
         cache.cache_fixture(fixture, scope_key)
