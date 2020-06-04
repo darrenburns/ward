@@ -199,7 +199,7 @@ def _(not_fixture=each("foo", 5, is_fixture, Fixture)):
     assert not is_fixture(not_fixture)
 
 
-@test("Fixture.parents returns the parents of the fixture as Fixtures")
+@test("Fixture.parents returns the parents of the fixture as Fixture instances")
 def _():
     @fixture
     def parent_a():
