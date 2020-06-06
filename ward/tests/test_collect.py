@@ -32,32 +32,32 @@ def tests_to_search(named_test=named_test):
     return [named_test]
 
 
-@test("search_generally matches on qualified test name")
+@test("filter_tests matches on qualified test name")
 def _(tests=tests_to_search, named=named_test):
     results = filter_tests(tests, query="my_module.named")
     assert list(results) == [named]
 
 
-@test("search_generally matches on test name alone")
+@test("filter_tests matches on test name alone")
 def _(tests=tests_to_search, named=named_test):
     results = filter_tests(tests, query="named")
     assert list(results) == [named]
 
 
-@test("search_generally query='fox' returns tests with 'fox' in the body")
+@test("filter_tests query='fox' returns tests with 'fox' in the body")
 def _(tests=tests_to_search, named=named_test):
     results = filter_tests(tests, query="fox")
     assert list(results) == [named]
 
 
-@test("search_generally returns an empty generator when no tests match query")
+@test("filter_tests returns an empty generator when no tests match query")
 def _(tests=tests_to_search):
     results = filter_tests(tests, query="92qj3f9i")
     with raises(StopIteration):
         next(results)
 
 
-@test("search_generally when tags match simple tag expression")
+@test("filter_tests when tags match simple tag expression")
 def _():
     apples = Test(fn=named, module_name="", tags=["apples"])
     bananas = Test(fn=named, module_name="", tags=["bananas"])
@@ -65,7 +65,7 @@ def _():
     assert results == [apples]
 
 
-@test("search_generally when tags match complex tag expression")
+@test("filter_tests when tags match complex tag expression")
 def _():
     one = Test(fn=named, module_name="", tags=["apples", "bananas"])
     two = Test(fn=named, module_name="", tags=["bananas", "carrots"])
@@ -75,7 +75,7 @@ def _():
     assert results == [one, three]
 
 
-@test("search_generally when both query and tag expression match a test")
+@test("filter_tests when both query and tag expression match a test")
 def _():
     one = Test(fn=named, module_name="one", tags=["apples"])
     two = Test(fn=named, module_name="two", tags=["apples"])
@@ -86,7 +86,7 @@ def _():
     assert results == [two]
 
 
-@test("search_generally when a test is defined with an empty tag list doesnt match")
+@test("filter_tests when a test is defined with an empty tag list doesnt match")
 def _():
     t = Test(fn=named, module_name="", tags=[])
     tag_expr = parse("apples")
@@ -94,7 +94,7 @@ def _():
     assert results == []
 
 
-@test("search_generally matches all tags when a tag expression is an empty string")
+@test("filter_tests matches all tags when a tag expression is an empty string")
 def _():
     t = Test(fn=named, module_name="", tags=["apples"])
     tag_expr = parse("")
@@ -102,7 +102,7 @@ def _():
     assert results == [t]
 
 
-@test("search_generally returns [] when the tag expression matches no tests")
+@test("filter_tests returns [] when the tag expression matches no tests")
 def _():
     one = Test(fn=named, module_name="one", tags=["apples"])
     two = Test(fn=named, module_name="two", tags=["bananas"])
