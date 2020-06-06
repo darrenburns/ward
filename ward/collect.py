@@ -168,6 +168,8 @@ def filter_fixtures(
     query: str = "",
     paths: Optional[Collection[Path]] = None,
 ) -> Iterator[Fixture]:
+    if paths is None:
+        paths = []
     paths = {path.absolute() for path in paths}
 
     for fixture in fixtures:

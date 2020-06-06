@@ -13,9 +13,11 @@ from ward.collect import (
     is_test_module,
     remove_excluded_paths,
     filter_tests,
+    filter_fixtures,
 )
 from ward.testing import Test, each
 from ward.tests.utilities import make_project
+from ward.fixtures import Fixture
 
 
 def named():
@@ -109,6 +111,66 @@ def _():
     tag_expr = parse("carrots")
     results = list(filter_tests([one, two], tag_expr=tag_expr))
     assert results == []
+
+
+@fixture
+def named_fixture():
+    pass
+
+
+@fixture
+def marker_fixture():
+    return "marker"
+
+
+@test("filter_fixtures on empty list returns empty list")
+def _():
+    assert list(filter_fixtures([])) == []
+
+
+@test("filter_fixtures matches anything with empty query and paths")
+def _():
+    fixtures = [Fixture(f) for f in [named_fixture, marker_fixture]]
+    assert list(filter_fixtures(fixtures)) == fixtures
+
+
+@test("filter_fixtures matches 'named_fixture' by name query {query!r}")
+def _(query=each("named_fixture", "named", "fixture", "med_fix")):
+    fixtures = [Fixture(f) for f in [named_fixture]]
+    assert list(filter_fixtures(fixtures, query=query)) == fixtures
+
+
+@test("filter_fixtures matches 'named_fixture' by module name query on {query!r}")
+def _(query=each("test", "test_collect", "collect", "t_coll")):
+    fixtures = [Fixture(f) for f in [named_fixture]]
+    assert list(filter_fixtures(fixtures, query=query)) == fixtures
+
+
+@test("filter_fixtures matches fixture by source query on {query!r}")
+def _(query=each("marker", "mark", "ret", "return", '"')):
+    fixtures = [Fixture(f) for f in [named_fixture, marker_fixture]]
+    assert list(filter_fixtures(fixtures, query=query)) == [Fixture(marker_fixture)]
+
+
+@test("filter_fixtures excludes fixtures when querying for {query!r}")
+def _(query=each("echo", "foobar", "wizbang")):
+    fixtures = [Fixture(f) for f in [named_fixture, marker_fixture]]
+    assert list(filter_fixtures(fixtures, query=query)) == []
+
+
+THIS_FILE = Path(__file__)
+
+
+@test("filter_fixtures matches fixture by path on {path}")
+def _(path=each(THIS_FILE, THIS_FILE.parent, THIS_FILE.parent.parent)):
+    fixtures = [Fixture(f) for f in [named_fixture]]
+    assert list(filter_fixtures(fixtures, paths=[path])) == fixtures
+
+
+@test("filter_fixtures excludes by path on {path}")
+def _(path=each(THIS_FILE.parent / "the-fixture-is-not-in-this-file.py")):
+    fixtures = [Fixture(f) for f in [named_fixture]]
+    assert list(filter_fixtures(fixtures, paths=[path])) == []
 
 
 @test("is_test_module(<module: '{module_name}'>) returns {rv}")
