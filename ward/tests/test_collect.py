@@ -12,10 +12,12 @@ from ward.collect import (
     is_excluded_module,
     is_test_module,
     remove_excluded_paths,
-    search_generally,
+    filter_tests,
+    filter_fixtures,
 )
 from ward.testing import Test, each
 from ward.tests.utilities import make_project
+from ward.fixtures import Fixture
 
 
 def named():
@@ -32,83 +34,143 @@ def tests_to_search(named_test=named_test):
     return [named_test]
 
 
-@test("search_generally matches on qualified test name")
+@test("filter_tests matches on qualified test name")
 def _(tests=tests_to_search, named=named_test):
-    results = search_generally(tests, query="my_module.named")
+    results = filter_tests(tests, query="my_module.named")
     assert list(results) == [named]
 
 
-@test("search_generally matches on test name alone")
+@test("filter_tests matches on test name alone")
 def _(tests=tests_to_search, named=named_test):
-    results = search_generally(tests, query="named")
+    results = filter_tests(tests, query="named")
     assert list(results) == [named]
 
 
-@test("search_generally query='fox' returns tests with 'fox' in the body")
+@test("filter_tests query='fox' returns tests with 'fox' in the body")
 def _(tests=tests_to_search, named=named_test):
-    results = search_generally(tests, query="fox")
+    results = filter_tests(tests, query="fox")
     assert list(results) == [named]
 
 
-@test("search_generally returns an empty generator when no tests match query")
+@test("filter_tests returns an empty generator when no tests match query")
 def _(tests=tests_to_search):
-    results = search_generally(tests, query="92qj3f9i")
+    results = filter_tests(tests, query="92qj3f9i")
     with raises(StopIteration):
         next(results)
 
 
-@test("search_generally when tags match simple tag expression")
+@test("filter_tests when tags match simple tag expression")
 def _():
     apples = Test(fn=named, module_name="", tags=["apples"])
     bananas = Test(fn=named, module_name="", tags=["bananas"])
-    results = list(search_generally([apples, bananas], tag_expr=parse("apples")))
+    results = list(filter_tests([apples, bananas], tag_expr=parse("apples")))
     assert results == [apples]
 
 
-@test("search_generally when tags match complex tag expression")
+@test("filter_tests when tags match complex tag expression")
 def _():
     one = Test(fn=named, module_name="", tags=["apples", "bananas"])
     two = Test(fn=named, module_name="", tags=["bananas", "carrots"])
     three = Test(fn=named, module_name="", tags=["bananas"])
     tag_expr = parse("apples or bananas and not carrots")
-    results = list(search_generally([one, two, three], tag_expr=tag_expr))
+    results = list(filter_tests([one, two, three], tag_expr=tag_expr))
     assert results == [one, three]
 
 
-@test("search_generally when both query and tag expression match a test")
+@test("filter_tests when both query and tag expression match a test")
 def _():
     one = Test(fn=named, module_name="one", tags=["apples"])
     two = Test(fn=named, module_name="two", tags=["apples"])
     tag_expr = parse("apples")
-    results = list(search_generally([one, two], query="two", tag_expr=tag_expr))
+    results = list(filter_tests([one, two], query="two", tag_expr=tag_expr))
     # Both tests match the tag expression, but only two matches the search query
     # because the query matches the module name for the test.
     assert results == [two]
 
 
-@test("search_generally when a test is defined with an empty tag list doesnt match")
+@test("filter_tests when a test is defined with an empty tag list doesnt match")
 def _():
     t = Test(fn=named, module_name="", tags=[])
     tag_expr = parse("apples")
-    results = list(search_generally([t], tag_expr=tag_expr))
+    results = list(filter_tests([t], tag_expr=tag_expr))
     assert results == []
 
 
-@test("search_generally matches all tags when a tag expression is an empty string")
+@test("filter_tests matches all tags when a tag expression is an empty string")
 def _():
     t = Test(fn=named, module_name="", tags=["apples"])
     tag_expr = parse("")
-    results = list(search_generally([t], tag_expr=tag_expr))
+    results = list(filter_tests([t], tag_expr=tag_expr))
     assert results == [t]
 
 
-@test("search_generally returns [] when the tag expression matches no tests")
+@test("filter_tests returns [] when the tag expression matches no tests")
 def _():
     one = Test(fn=named, module_name="one", tags=["apples"])
     two = Test(fn=named, module_name="two", tags=["bananas"])
     tag_expr = parse("carrots")
-    results = list(search_generally([one, two], tag_expr=tag_expr))
+    results = list(filter_tests([one, two], tag_expr=tag_expr))
     assert results == []
+
+
+@fixture
+def named_fixture():
+    pass
+
+
+@fixture
+def marker_fixture():
+    return "marker"
+
+
+@test("filter_fixtures on empty list returns empty list")
+def _():
+    assert list(filter_fixtures([])) == []
+
+
+@test("filter_fixtures matches anything with empty query and paths")
+def _():
+    fixtures = [Fixture(f) for f in [named_fixture, marker_fixture]]
+    assert list(filter_fixtures(fixtures)) == fixtures
+
+
+@test("filter_fixtures matches 'named_fixture' by name query {query!r}")
+def _(query=each("named_fixture", "named", "fixture", "med_fix")):
+    fixtures = [Fixture(f) for f in [named_fixture]]
+    assert list(filter_fixtures(fixtures, query=query)) == fixtures
+
+
+@test("filter_fixtures matches 'named_fixture' by module name query on {query!r}")
+def _(query=each("test", "test_collect", "collect", "t_coll")):
+    fixtures = [Fixture(f) for f in [named_fixture]]
+    assert list(filter_fixtures(fixtures, query=query)) == fixtures
+
+
+@test("filter_fixtures matches fixture by source query on {query!r}")
+def _(query=each("marker", "mark", "ret", "return", '"')):
+    fixtures = [Fixture(f) for f in [named_fixture, marker_fixture]]
+    assert list(filter_fixtures(fixtures, query=query)) == [Fixture(marker_fixture)]
+
+
+@test("filter_fixtures excludes fixtures when querying for {query!r}")
+def _(query=each("echo", "foobar", "wizbang")):
+    fixtures = [Fixture(f) for f in [named_fixture, marker_fixture]]
+    assert list(filter_fixtures(fixtures, query=query)) == []
+
+
+THIS_FILE = Path(__file__)
+
+
+@test("filter_fixtures matches fixture by path on {path}")
+def _(path=each(THIS_FILE, THIS_FILE.parent, THIS_FILE.parent.parent)):
+    fixtures = [Fixture(f) for f in [named_fixture]]
+    assert list(filter_fixtures(fixtures, paths=[path])) == fixtures
+
+
+@test("filter_fixtures excludes by path on {path}")
+def _(path=each(THIS_FILE.parent / "the-fixture-is-not-in-this-file.py")):
+    fixtures = [Fixture(f) for f in [named_fixture]]
+    assert list(filter_fixtures(fixtures, paths=[path])) == []
 
 
 @test("is_test_module(<module: '{module_name}'>) returns {rv}")

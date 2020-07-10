@@ -14,11 +14,13 @@ from ward.collect import (
     get_info_for_modules,
     get_tests_in_modules,
     load_modules,
-    search_generally,
+    filter_tests,
+    filter_fixtures,
 )
 from ward.config import set_defaults_from_config
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
+from ward.fixtures import _DEFINED_FIXTURES
 from ward.terminal import SimpleTestResultWrite, output_fixtures, get_exit_code
 
 init()
@@ -53,13 +55,13 @@ path = click.option(
     type=click.Path(exists=True),
     multiple=True,
     is_eager=True,
-    help="Look for items in PATH.",
+    help="Look for tests in PATH.",
 )
 exclude = click.option(
     "--exclude",
     type=click.STRING,
     multiple=True,
-    help="Paths to ignore while searching for items. Accepts glob patterns.",
+    help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
 
 
@@ -69,11 +71,11 @@ exclude = click.option(
 @exclude
 @click.option(
     "--search",
-    help="Search test names, bodies, descriptions and module names for the search query and only run matching tests.",
+    help="Search test names, bodies, descriptions and module names for the search query and only keep matching tests.",
 )
 @click.option(
     "--tags",
-    help="Run tests matching tag expression (e.g. 'unit and not slow').\n",
+    help="Find tests matching a tag expression (e.g. 'unit and not slow').",
     metavar="EXPR",
     type=parse_tags,
 )
@@ -94,12 +96,6 @@ exclude = click.option(
     type=click.Choice(["standard", "random"], case_sensitive=False),
     default="standard",
     help="Specify the order in which tests should run.",
-)
-@click.option(
-    "--exclude",
-    type=click.STRING,
-    multiple=True,
-    help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
 @click.option(
     "--show-diff-symbols/--hide-diff-symbols",
@@ -146,10 +142,10 @@ def test(
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    tests = list(search_generally(unfiltered_tests, query=search, tag_expr=tags,))
+    filtered_tests = list(filter_tests(unfiltered_tests, query=search, tag_expr=tags,))
 
     # Rewrite assertions in each test
-    tests = rewrite_assertions_in_tests(tests)
+    tests = rewrite_assertions_in_tests(filtered_tests)
 
     time_to_collect = default_timer() - start_run
 
@@ -177,6 +173,17 @@ def test(
 @path
 @exclude
 @click.option(
+    "-f",
+    "--fixture-path",
+    help="Only display fixtures defined in or below the given paths.",
+    multiple=True,
+    type=Path,
+)
+@click.option(
+    "--search",
+    help="Search fixtures names, bodies, and module names for the search query and only keep matching fixtures.",
+)
+@click.option(
     "--show-scopes/--no-show-scopes",
     help="Display each fixture's scope.",
     default=True,
@@ -187,8 +194,8 @@ def test(
     default=False,
 )
 @click.option(
-    "--show-direct-dependencies/--no-show-direct-dependencies",
-    help="Display the fixtures that each fixture depends on directly.",
+    "--show-dependencies/--no-show-dependencies",
+    help="Display the fixtures and tests that each fixture depends on and is used by. Only displays direct dependencies; use --show-dependency-trees to show all dependency information.",
     default=False,
 )
 @click.option(
@@ -208,9 +215,11 @@ def fixtures(
     config_path: Optional[Path],
     path: Tuple[str],
     exclude: Tuple[str],
+    fixture_path: Tuple[Path],
+    search: Optional[str],
     show_scopes: bool,
     show_docstrings: bool,
-    show_direct_dependencies: bool,
+    show_dependencies: bool,
     show_dependency_trees: bool,
     full: bool,
 ):
@@ -218,10 +227,17 @@ def fixtures(
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
+    tests = list(get_tests_in_modules(modules, capture_output=True))
+
+    filtered_fixtures = list(
+        filter_fixtures(_DEFINED_FIXTURES, query=search, paths=fixture_path)
+    )
 
     output_fixtures(
+        fixtures=filtered_fixtures,
+        tests=tests,
         show_scopes=show_scopes or full,
         show_docstrings=show_docstrings or full,
-        show_direct_dependencies=show_direct_dependencies or full,
+        show_dependencies=show_dependencies or full,
         show_dependency_trees=show_dependency_trees or full,
     )

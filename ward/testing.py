@@ -1,21 +1,32 @@
 import asyncio
+import collections
 import functools
 import inspect
 import traceback
 import uuid
 from collections import defaultdict
 from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
 from timeit import default_timer
 from types import MappingProxyType
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
-from dataclasses import dataclass, field
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    Iterable,
+    Mapping,
+    Collection,
+)
 
 from ward.errors import FixtureError, ParameterisationError
-from ward.fixtures import Fixture, FixtureCache, ScopeKey
+from ward.fixtures import Fixture, FixtureCache, ScopeKey, is_fixture
 from ward.models import Marker, Scope, SkipMarker, WardMeta, XfailMarker
 from ward.util import get_absolute_path
 
@@ -111,6 +122,12 @@ class Test:
     timer: Optional["Timer"] = None
     tags: List[str] = field(default_factory=list)
 
+    def __hash__(self):
+        return hash((self.__class__, self.id))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.id == other.id
+
     def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
         with ExitStack() as stack:
             self.timer = stack.enter_context(Timer())
@@ -132,9 +149,7 @@ class Test:
                 # TODO:onlyanegg: I don't love this. We're setting up the
                 # fixture within the testing module, but cleaning it up in the
                 # suite module.
-                resolved_args = self.resolve_args(
-                    cache, iteration=self.param_meta.instance_index
-                )
+                resolved_args = self.resolver.resolve_args(cache)
                 self.format_description(resolved_args)
                 if self.is_async_test:
                     coro = self.fn(**resolved_args)
@@ -214,8 +229,12 @@ class Test:
         A test is considered parameterised if any of its default arguments
         have a value that is an instance of `Each`.
         """
-        default_args = self._get_default_args()
+        default_args = self.resolver._get_default_args()
         return any(isinstance(arg, Each) for arg in default_args.values())
+
+    @property
+    def resolver(self):
+        return TestArgumentResolver(self, self.param_meta.instance_index)
 
     def scope_key_from(self, scope: Scope) -> ScopeKey:
         if scope == Scope.Test:
@@ -254,38 +273,100 @@ class Test:
             generated_tests.append(test)
         return generated_tests
 
+    def _find_number_of_instances(self) -> int:
+        """
+        Returns the number of instances that would be generated for the current
+        parameterised test.
+
+        A parameterised test is only valid if every instance of `each` contains
+        an equal number of items. If the current test is an invalid parameterisation,
+        then a `ParameterisationError` is raised.
+        """
+        default_args = self.resolver._get_default_args()
+        lengths = [len(arg) for _, arg in default_args.items() if isinstance(arg, Each)]
+        is_valid = len(set(lengths)) in (0, 1)
+        if not is_valid:
+            raise ParameterisationError(
+                f"The test {self.name}/{self.description} is parameterised incorrectly. "
+                f"Please ensure all instances of 'each' in the test signature "
+                f"are of equal length."
+            )
+        return lengths[0]
+
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
-    def resolve_args(self, cache: FixtureCache, iteration: int = 0) -> Dict[str, Any]:
+    def format_description(self, args: Dict[str, Any]) -> str:
+        """
+        Applies any necessary string formatting to the description,
+        given a dictionary `args` of values that will be injected
+        into the test.
+
+        This method will mutate the Test by updating the description.
+        Returns the newly updated description.
+        """
+
+        format_dict = FormatDict(**args)
+        if not self.description:
+            self.description = ""
+
+        try:
+            self.description = self.description.format_map(format_dict)
+        except ValueError:
+            pass
+
+        return self.description
+
+
+@dataclass
+class TestArgumentResolver:
+    test: Test
+    iteration: int
+
+    def resolve_args(self, cache: FixtureCache) -> Dict[str, Any]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         If the argument is not a fixture, the raw argument will be used.
         Resolved values will be stored in fixture_cache, accessible
         using the fixture cache key (See `Fixture.key`).
         """
-        if self.capture_output:
-            with redirect_stdout(self.sout), redirect_stderr(self.serr):
-                return self._resolve_args(cache, iteration)
+        if self.test.capture_output:
+            with redirect_stdout(self.test.sout), redirect_stderr(self.test.serr):
+                return self._resolve_args(cache)
         else:
-            return self._resolve_args(cache, iteration)
+            return self._resolve_args(cache)
 
-    def _resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
-        if not self.has_deps:
-            return {}
-        default_args = self._get_default_args()
+    def _resolve_args(self, cache: FixtureCache) -> Dict[str, Any]:
+        args_for_iteration = self._get_args_for_iteration()
         resolved_args: Dict[str, Any] = {}
-        for name, arg in default_args.items():
-            # In the case of parameterised testing, grab the arg corresponding
-            # to the current iteration of the parameterised group of tests.
-            if isinstance(arg, Each):
-                arg = arg[iteration]
-            if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
+        for name, arg in args_for_iteration.items():
+            if is_fixture(arg):
                 resolved = self._resolve_single_arg(arg, cache)
             else:
                 resolved = arg
             resolved_args[name] = resolved
         return self._unpack_resolved(resolved_args)
+
+    def _get_args_for_iteration(self):
+        if not self.test.has_deps:
+            return {}
+        default_args = self._get_default_args()
+        args_for_iteration: Dict[str, Any] = {}
+        for name, arg in default_args.items():
+            # In the case of parameterised testing, grab the arg corresponding
+            # to the current iteration of the parameterised group of tests.
+            if isinstance(arg, Each):
+                arg = arg[self.iteration]
+            args_for_iteration[name] = arg
+        return args_for_iteration
+
+    @property
+    def fixtures(self) -> Dict[str, Fixture]:
+        return {
+            name: Fixture(arg)
+            for name, arg in self._get_args_for_iteration().items()
+            if is_fixture(arg)
+        }
 
     def _get_default_args(
         self, func: Optional[Union[Callable, Fixture]] = None
@@ -298,7 +379,7 @@ class Test:
         If a value is a fixture function, then the raw fixture
         function is returned as a value in the dict, *not* the `Fixture` object.
         """
-        fn = func or self.fn
+        fn = func or self.test.fn
         meta = getattr(fn, "ward_meta", None)
         signature = inspect.signature(fn)
 
@@ -312,26 +393,6 @@ class Test:
         default_binding = signature.bind_partial()
         default_binding.apply_defaults()
         return default_binding.arguments
-
-    def _find_number_of_instances(self) -> int:
-        """
-        Returns the number of instances that would be generated for the current
-        parameterised test.
-
-        A parameterised test is only valid if every instance of `each` contains
-        an equal number of items. If the current test is an invalid parameterisation,
-        then a `ParameterisationError` is raised.
-        """
-        default_args = self._get_default_args()
-        lengths = [len(arg) for _, arg in default_args.items() if isinstance(arg, Each)]
-        is_valid = len(set(lengths)) in (0, 1)
-        if not is_valid:
-            raise ParameterisationError(
-                f"The test described by '{self.description}' is parameterised incorrectly. "
-                f"Please ensure all instances of 'each' in the test signature "
-                f"are of equal length."
-            )
-        return lengths[0]
 
     def _resolve_single_arg(
         self, arg: Callable, cache: FixtureCache
@@ -347,9 +408,11 @@ class Test:
             return arg
 
         fixture = Fixture(arg)
-        if cache.contains(fixture, fixture.scope, self.scope_key_from(fixture.scope)):
+        if cache.contains(
+            fixture, fixture.scope, self.test.scope_key_from(fixture.scope)
+        ):
             return cache.get(
-                fixture.key, fixture.scope, self.scope_key_from(fixture.scope)
+                fixture.key, fixture.scope, self.test.scope_key_from(fixture.scope)
             )
 
         has_deps = len(fixture.deps()) > 0
@@ -372,7 +435,7 @@ class Test:
                     fixture.resolved_val = arg()
             except (Exception, SystemExit) as e:
                 raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
-            scope_key = self.scope_key_from(fixture.scope)
+            scope_key = self.test.scope_key_from(fixture.scope)
             cache.cache_fixture(fixture, scope_key)
             return fixture
 
@@ -401,7 +464,7 @@ class Test:
                 fixture.resolved_val = arg(**args_to_inject)
         except (Exception, SystemExit) as e:
             raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
-        scope_key = self.scope_key_from(fixture.scope)
+        scope_key = self.test.scope_key_from(fixture.scope)
         cache.cache_fixture(fixture, scope_key)
         return fixture
 
@@ -414,26 +477,18 @@ class Test:
                 resolved_vals[k] = arg
         return resolved_vals
 
-    def format_description(self, args: Dict[str, Any]) -> str:
-        """
-        Applies any necessary string formatting to the description,
-        given a dictionary `arg_map` of values that will be injected
-        into the test.
 
-        This method will mutate the Test by updating the description.
-        Returns the newly updated description.
-        """
+def fixtures_used_directly_by_tests(
+    tests: Iterable[Test],
+) -> Mapping[Fixture, Collection[Test]]:
+    test_to_fixtures = {test: test.resolver.fixtures for test in tests}
 
-        format_dict = FormatDict(**args)
-        if not self.description:
-            self.description = ""
+    fixture_to_tests = collections.defaultdict(list)
+    for test, used_fixtures in test_to_fixtures.items():
+        for fix in used_fixtures.values():
+            fixture_to_tests[fix].append(test)
 
-        try:
-            self.description = self.description.format_map(format_dict)
-        except ValueError:
-            pass
-
-        return self.description
+    return fixture_to_tests
 
 
 def is_test_module_name(module_name: str) -> bool:

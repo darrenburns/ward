@@ -3,9 +3,18 @@ import sys
 
 from ward.tests.utilities import testable_test
 from ward import fixture, test, Scope, raises, each
+from ward.fixtures import (
+    Fixture,
+    FixtureCache,
+    using,
+    is_fixture,
+    fixture_parents_and_children,
+)
+from ward import fixture, test, Scope, raises, each
 from ward.fixtures import Fixture, FixtureCache, using
 from ward.testing import Test
 from ward.errors import FixtureError
+from ward.tests.utilities import dummy_fixture
 
 
 @fixture
@@ -82,7 +91,7 @@ def my_test(
 @fixture
 def cache(t=my_test):
     c = FixtureCache()
-    t.resolve_args(c)
+    t.resolver.resolve_args(c)
     return c
 
 
@@ -190,4 +199,75 @@ def _(exit_code=each(0, 1)):
     t = Test(fn=lambda exits=exits: None, module_name="foo")
 
     with raises(FixtureError):
-        t.resolve_args(FixtureCache())
+        t.resolver.resolve_args(FixtureCache())
+
+
+@test("is_fixture returns True for fixtures")
+def _():
+    # I would have liked to combine this test into the parameterised test below,
+    # but if we put the fixture in the each, it would get resolved!
+    # So we need to check it from global scope.
+    assert is_fixture(dummy_fixture)
+
+
+@test("arg_is_fixture returns False for not-fixtures ({not_fixture!r})")
+def _(not_fixture=each("foo", 5, is_fixture, Fixture)):
+    assert not is_fixture(not_fixture)
+
+
+@test("Fixture.parents returns the parents of the fixture as Fixture instances")
+def _():
+    @fixture
+    def parent_a():
+        pass
+
+    @fixture
+    def parent_b():
+        pass
+
+    @fixture
+    def child(a=parent_a, b=parent_b):
+        pass
+
+    assert Fixture(child).parents() == [Fixture(parent_a), Fixture(parent_b)]
+
+
+@test("Fixture.parents returns an empty collection if the fixture has no parents")
+def _():
+    @fixture
+    def fix():
+        pass
+
+    assert len(Fixture(fix).parents()) == 0
+
+
+@test("fixture_parents_and_children analyzes fixture dependencies correctly")
+def _():
+    @fixture
+    def a():
+        pass
+
+    @fixture
+    def b():
+        pass
+
+    @fixture
+    def c(a=a, b=b):
+        pass
+
+    @fixture
+    def d(a=a, c=c):
+        pass
+
+    fa, fb, fc, fd = fixtures = [Fixture(f) for f in (a, b, c, d)]
+
+    to_parents, to_children = fixture_parents_and_children(fixtures)
+
+    assert to_parents == {fa: [], fb: [], fc: [fa, fb], fd: [fa, fc]}
+
+    assert to_children == {
+        fa: [fc, fd],
+        fb: [fc],
+        fc: [fd],
+        fd: [],
+    }

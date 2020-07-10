@@ -16,6 +16,8 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Iterator,
+    Collection,
 )
 
 from cucumber_tag_expressions.model import Expression
@@ -23,6 +25,7 @@ from cucumber_tag_expressions.model import Expression
 from ward.errors import CollectionError
 from ward.models import WardMeta
 from ward.testing import Test, anonymous_tests, is_test_module_name
+from ward.fixtures import Fixture
 from ward.util import get_absolute_path
 
 Glob = str
@@ -137,9 +140,9 @@ def get_tests_in_modules(
                 )
 
 
-def search_generally(
+def filter_tests(
     tests: Iterable[Test], query: str = "", tag_expr: Optional[Expression] = None,
-) -> Generator[Test, None, None]:
+) -> Iterator[Test]:
     if not query and not tag_expr:
         yield from tests
 
@@ -158,3 +161,30 @@ def search_generally(
 
         if matches_query and matches_tags:
             yield test
+
+
+def filter_fixtures(
+    fixtures: Iterable[Fixture],
+    query: str = "",
+    paths: Optional[Collection[Path]] = None,
+) -> Iterator[Fixture]:
+    if paths is None:
+        paths = []
+    paths = {path.absolute() for path in paths}
+
+    for fixture in fixtures:
+        matches_query = (
+            not query
+            or query in f"{fixture.module_name}."
+            or query in inspect.getsource(fixture.fn)
+            or query in fixture.qualified_name
+        )
+
+        matches_paths = (
+            not paths
+            or fixture.path in paths
+            or any(parent in paths for parent in fixture.path.parents)
+        )
+
+        if matches_query and matches_paths:
+            yield fixture

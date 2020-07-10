@@ -31,6 +31,14 @@ testable_test.path = FORCE_TEST_PATH
 
 
 @fixture
+def dummy_fixture():
+    """
+    This is a dummy fixture for use inside tests.
+    """
+    return "dummy"
+
+
+@fixture
 def fixture_b():
     def b():
         return 2
