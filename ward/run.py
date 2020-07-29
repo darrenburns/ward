@@ -4,8 +4,9 @@ from timeit import default_timer
 from typing import Optional, Tuple
 
 import click
+import click_completion
+import colorama
 from click_default_group import DefaultGroup
-from colorama import init
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
 
@@ -23,9 +24,20 @@ from ward.suite import Suite
 from ward.fixtures import _DEFINED_FIXTURES
 from ward.terminal import SimpleTestResultWrite, output_fixtures, get_exit_code
 
-init()
+colorama.init()
+click_completion.init()
 
 sys.path.append(".")
+
+
+def install_completion_callback(ctx: click.Context, attr: click.Option, value: bool) -> bool:
+    """Install completion for the current shell."""
+    if not value or ctx.resilient_parsing:
+        return value
+
+    shell, path = click_completion.core.install()
+    click.echo(f"{shell} completion installed in {path}")
+    ctx.exit(0)
 
 
 # TODO: simplify to use invoke_without_command and ctx.forward once https://github.com/pallets/click/issues/430 is resolved
@@ -63,7 +75,6 @@ exclude = click.option(
     multiple=True,
     help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
-
 
 @run.command()
 @config
@@ -117,6 +128,13 @@ exclude = click.option(
     "--dry-run/--no-dry-run",
     help="Print all tests without executing them",
     default=False,
+)
+@click.option(
+    "--install-completion",
+    is_flag=True,
+    callback=install_completion_callback,
+    expose_value=False,
+    help="Install completion for the current shell.",
 )
 @click.version_option(version=__version__)
 @click.pass_context
