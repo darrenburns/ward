@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import click
 import click_completion
@@ -30,7 +30,7 @@ click_completion.init()
 sys.path.append(".")
 
 
-def install_completion_callback(ctx: click.Context, attr: click.Option, value: bool) -> bool:
+def install_completion_callback(ctx: click.Context, attr: Union[click.Option, click.Parameter], value: bool) -> bool:
     """Install completion for the current shell."""
     if not value or ctx.resilient_parsing:
         return value
