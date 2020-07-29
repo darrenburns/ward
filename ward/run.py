@@ -30,7 +30,9 @@ click_completion.init()
 sys.path.append(".")
 
 
-def install_completion_callback(ctx: click.Context, attr: Union[click.Option, click.Parameter], value: bool) -> bool:
+def install_completion_callback(
+    ctx: click.Context, attr: Union[click.Option, click.Parameter], value: bool
+) -> bool:
     """Install completion for the current shell."""
     if not value or ctx.resilient_parsing:
         return value
@@ -75,6 +77,7 @@ exclude = click.option(
     multiple=True,
     help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
+
 
 @run.command()
 @config
