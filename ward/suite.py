@@ -46,10 +46,14 @@ class Suite:
                 yield test.fail_with_error(e)
                 continue
             for generated_test in generated_tests:
-                yield generated_test.run(self.cache, dry_run=dry_run)
-                self.cache.teardown_fixtures_for_scope(
-                    Scope.Test, scope_key=generated_test.id
-                )
+                result = generated_test.run(self.cache, dry_run=dry_run)
+                try:
+                    self.cache.teardown_fixtures_for_scope(
+                        Scope.Test, scope_key=generated_test.id
+                    )
+                except Exception as e:
+                    result = test.fail_with_error(e)
+                yield result
 
             if num_tests_per_module[test.path] == 0:
                 self.cache.teardown_fixtures_for_scope(
