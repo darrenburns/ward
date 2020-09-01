@@ -95,7 +95,7 @@ class Fixture:
     def teardown(self):
         # Suppress because we can't know whether there's more code
         # to execute below the yield.
-        with suppress(RuntimeError, StopIteration, StopAsyncIteration):
+        with suppress(StopIteration, StopAsyncIteration):
             if self.is_generator_fixture and self.gen:
                 next(self.gen)
             elif self.is_async_generator_fixture and self.gen:
@@ -156,8 +156,7 @@ class FixtureCache:
         fixture_dict = self.get_fixtures_at_scope(scope, scope_key)
         fixtures = list(fixture_dict.values())
         for fixture in fixtures:
-            with suppress(RuntimeError, StopIteration):
-                fixture.teardown()
+            fixture.teardown()
             del fixture_dict[fixture.key]
 
     def teardown_global_fixtures(self):
