@@ -1,9 +1,9 @@
 import inspect
+import itertools
 import os
 import platform
 import sys
 import traceback
-import itertools
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -19,10 +19,16 @@ from typing import (
     Collection,
 )
 
-from colorama import Fore, Style
 from pygments import highlight
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.python import PythonLexer
+from rich.console import Console
+from rich.highlighter import NullHighlighter
+from rich.padding import Padding
+from rich.rule import Rule
+from rich.table import Table
+from rich.text import Text
+from rich.theme import Theme
 from termcolor import colored, cprint
 
 from ward._ward_version import __version__
@@ -48,9 +54,21 @@ def make_indent(depth=1):
 
 DOUBLE_INDENT = make_indent(depth=2)
 
+theme = Theme({
+    "heading": "bold",
+    "primary": "black on blue",
+    "pass": "black on green",
+    "warning": "black on yellow",
+    "fail": "black on red",
+    "xfail": "black on magenta",
+    "muted": "dim",
+    "info": "yellow italic",
+})
+console = Console(theme=theme, highlighter=NullHighlighter())
+
 
 def print_no_break(e: Any):
-    print(e, end="")
+    console.print(e, end="")
 
 
 def multiline_description(s: str, indent: int, width: int) -> str:
@@ -68,25 +86,32 @@ def format_test_id(test_result: TestResult) -> (str, str):
     """
     Format module name, line number, and test case number
     """
-
     test_id = lightblack(
-        f"{format_test_location(test_result.test)}{format_test_case_number(test_result)}:"
+        f"{format_test_location(test_result.test)}{format_test_case_number(test_result.test)}:"
     )
 
     return test_id
 
 
 def format_test_location(test: Test) -> str:
+    """
+    Returns the location of a test as a string of the form '{test.module_name}:{test.line_number}'
+    """
     return f"{test.module_name}:{test.line_number}"
 
 
-def format_test_case_number(test_result: TestResult) -> str:
-    # If we're executing a parameterised test
-    param_meta = test_result.test.param_meta
+def format_test_case_number(test: Test) -> str:
+    """
+    Returns a string of the format '[{current_test_number}/{num_parameterised_instances}]'.
+
+    For example, for the 3rd run of a test that is parameterised with 5 parameter sets the
+    return value is '[3/5]'.
+    """
+    param_meta = test.param_meta
     if param_meta.group_size > 1:
         pad = len(str(param_meta.group_size))
         iter_indicator = (
-            f" [{param_meta.instance_index + 1:>{pad}}/{param_meta.group_size}]"
+            f"[{param_meta.instance_index + 1:>{pad}}/{param_meta.group_size}]"
         )
     else:
         iter_indicator = ""
@@ -95,46 +120,54 @@ def format_test_case_number(test_result: TestResult) -> str:
 
 
 def output_test_result_line(test_result: TestResult):
-    colour = outcome_to_colour(test_result.outcome)
-    bg = f"on_{colour}"
-    padded_outcome = f" {test_result.outcome.name[:4]} "
+    """
+    Outputs a single test result to the terminal in Ward's standard output
+    format which outputs a single test per line.
+    """
+    outcome_tag = test_result.outcome.name[:4]
 
-    iter_indicator = format_test_case_number(test_result)
-    mod_name = format_test_id(test_result)
-    if (
-        test_result.outcome == TestOutcome.SKIP
-        or test_result.outcome == TestOutcome.XFAIL
-    ):
-        reason = test_result.test.marker.reason or ""
-        if reason:
-            reason = lightblack(f" [{reason}]")
+    test = test_result.test
+    test_location = format_test_location(test)
+    test_case_number = format_test_case_number(test)
+
+    # Skip/Xfail tests may have a reason note attached that we'll print
+    if hasattr(test.marker, "reason"):
+        reason = test.marker.reason
     else:
         reason = ""
 
-    name_or_desc = test_result.test.description
-    indent = (
-        len(padded_outcome)
-        + len(test_result.test.module_name)
-        + len(str(test_result.test.line_number))
-        + len(iter_indicator)
-        + 4
+    grid = Table.grid()
+    grid.add_column()
+    grid.add_column()
+    grid.add_column()
+
+    common_columns = (
+        Padding(outcome_tag, style=outcome_to_style(test_result.outcome), pad=(0, 1, 0, 1)),
+        Padding(f"{test_location}{test_case_number}", style="muted", pad=(0, 1, 0, 1)),
+        test.description,
     )
-    width = get_terminal_size().width - indent
-    print(
-        colored(padded_outcome, color="grey", on_color=bg),
-        mod_name,
-        multiline_description(name_or_desc + reason, indent=indent, width=width),
-    )
+
+    if reason:
+        grid.add_column(justify="right")
+        grid.add_row(
+            *common_columns,
+            Padding(reason, style="muted", pad=(0, 1, 0, 1)),
+        )
+    else:
+        grid.add_row(*common_columns)
+
+    console.print(grid)
 
 
 def output_test_per_line(fail_limit, test_results_gen):
     num_failures = 0
     all_results = []
-    print()
+
+    console.print()
+
     try:
         for result in test_results_gen:
             output_test_result_line(result)
-            sys.stdout.write(Style.RESET_ALL)
             all_results.append(result)
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
@@ -147,26 +180,26 @@ def output_test_per_line(fail_limit, test_results_gen):
 
 
 def output_dots_global(
-    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+        fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
     column = 0
     num_failures = 0
     all_results = []
     try:
-        print()
+        console.print()
         for result in test_results_gen:
             all_results.append(result)
             print_dot(result)
             column += 1
             if column == get_terminal_size().width:
-                print()
+                console.print()
                 column = 0
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
             if num_failures == fail_limit:
                 break
             sys.stdout.flush()
-        print()
+        console.print()
     except KeyboardInterrupt:
         output_run_cancelled()
     finally:
@@ -174,21 +207,12 @@ def output_dots_global(
 
 
 def print_dot(result):
-    colour = outcome_to_colour(result.outcome)
-    if result.outcome == TestOutcome.PASS:
-        print_no_break(colored(".", color=colour))
-    elif result.outcome == TestOutcome.FAIL:
-        print_no_break(colored("F", color=colour))
-    elif result.outcome == TestOutcome.XPASS:
-        print_no_break(colored("U", color=colour))
-    elif result.outcome == TestOutcome.XFAIL:
-        print_no_break(colored("x", color=colour))
-    elif result.outcome == TestOutcome.SKIP:
-        print_no_break(colored("s", color=colour))
+    style = outcome_to_style(result.outcome)
+    console.print(result.outcome.display_char, style=style)
 
 
 def output_dots_module(
-    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+        fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
     current_path = Path("")
     rel_path = ""
@@ -201,32 +225,28 @@ def output_dots_module(
             all_results.append(result)
             if result.test.path != current_path:
                 dots_on_line = 0
-                print()
+                console.print()
                 current_path = result.test.path
                 rel_path = str(current_path.relative_to(os.getcwd()))
                 max_dots_per_line = (
-                    get_terminal_size().width - len(rel_path) - 2
+                        get_terminal_size().width - len(rel_path) - 2
                 )  # subtract 2 for ": "
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
-                    print_no_break(
-                        lightblack(rel_path[: final_slash_idx + 1])
-                        + rel_path[final_slash_idx + 1 :]
-                        + ": "
-                    )
+                    console.print(rel_path[: final_slash_idx + 1], style="muted", end="")
+                    console.print(rel_path[final_slash_idx + 1:] + ": ", end="")
                 else:
-                    print_no_break(f"\n{rel_path}: ")
+                    console.print(f"\n{rel_path}: ", end="")
             print_dot(result)
             dots_on_line += 1
             if dots_on_line == max_dots_per_line:
-                print_no_break("\n" + " " * (len(rel_path) + 2))
+                console.print("\n" + " " * (len(rel_path) + 2), end="")
                 dots_on_line = 0
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
             if num_failures == fail_limit:
                 break
-            sys.stdout.flush()
-        print()
+        console.print()
     except KeyboardInterrupt:
         output_run_cancelled()
     finally:
@@ -234,9 +254,9 @@ def output_dots_module(
 
 
 def output_run_cancelled():
-    cprint(
-        "\n[WARD] Run cancelled - results for tests that ran shown below.",
-        color="yellow",
+    console.print(
+        "Run cancelled - results for tests that ran shown below.",
+        style="info",
     )
 
 
@@ -248,11 +268,11 @@ class TestResultWriterBase:
     }
 
     def __init__(
-        self,
-        suite,
-        test_output_style: str,
-        config_path: Optional[Path],
-        show_diff_symbols: bool = False,
+            self,
+            suite,
+            test_output_style: str,
+            config_path: Optional[Path],
+            show_diff_symbols: bool = False,
     ):
         self.suite = suite
         self.test_output_style = test_output_style
@@ -263,23 +283,23 @@ class TestResultWriterBase:
     def output_header(self, time_to_collect):
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
-        print(f"Ward {__version__}, {python_impl} {python_version}")
+        console.print(Text(f"Ward {__version__}, {python_impl} {python_version}", ))
         if self.config_path:
             try:
                 path = self.config_path.relative_to(Path.cwd())
             except ValueError:
                 path = self.config_path.name
-            print(f"Using config from {path}")
-        print(
+            console.print(f"Using config from {path}")
+        console.print(
             f"Collected {self.suite.num_tests} tests "
             f"and {len(_DEFINED_FIXTURES)} fixtures "
             f"in {time_to_collect:.2f} seconds."
         )
 
     def output_all_test_results(
-        self,
-        test_results_gen: Generator[TestResult, None, None],
-        fail_limit: Optional[int] = None,
+            self,
+            test_results_gen: Generator[TestResult, None, None],
+            fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
         if not self.suite.num_tests:
             return []
@@ -300,11 +320,11 @@ class TestResultWriterBase:
         if failed_test_results:
             self.print_divider()
         else:
-            print()
+            console.print()
         return all_results
 
     def print_divider(self):
-        print(lightblack(f"{'_' * self.terminal_size.width}\n"))
+        console.print(Rule(style="muted"))
 
     def output_single_test_result(self, test_result: TestResult):
         """Indicate whether a test passed, failed, was skipped etc."""
@@ -317,7 +337,7 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float, duration: int
+            self, test_results: List[TestResult], time_taken: float, duration: int
     ):
         raise NotImplementedError()
 
@@ -342,7 +362,7 @@ class TestResultWriterBase:
 
 
 def lightblack(s: str) -> str:
-    return f"{Fore.LIGHTBLACK_EX}{s}{Style.RESET_ALL}"
+    return s
 
 
 @dataclass
@@ -372,7 +392,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
         name_or_desc = colored(name_or_desc)
         failure_heading = (
-            colored("Failure: ", color="cyan", attrs=["bold"]) + name_or_desc + "\n"
+                colored("Failure: ", color="cyan", attrs=["bold"]) + name_or_desc + "\n"
         )
         print(indent(failure_heading, INDENT))
 
@@ -387,13 +407,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
             gutter_width = len(str(len(src_lines) + line_num))
 
-            def gutter(i):
+            def gutter(i: int) -> Text:
                 offset_line_num = i + line_num
                 rv = f"{str(offset_line_num):>{gutter_width}}"
                 if offset_line_num == err.error_line:
-                    return colored(f"{rv} ! ", color="red")
+                    return Text(f"{rv} ! ", style="red")
                 else:
-                    return lightblack(f"{rv} | ")
+                    return Text(f"{rv} | ", style="muted")
 
             if err.operator in Comparison:
                 src = "".join(src_lines)
@@ -401,14 +421,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 src = f"".join(
                     [gutter(i) + l for i, l in enumerate(src.splitlines(keepends=True))]
                 )
-                print(indent(src, DOUBLE_INDENT))
+                # pre-Rich: console.print(indent(src, DOUBLE_INDENT))
+                console.print(Padding(src, (0, 0, 0, 4)))
 
                 if err.operator == Comparison.Equals:
                     self.print_failure_equals(err)
         else:
             self.print_traceback(err)
-
-        print(Style.RESET_ALL)
 
     def print_failure_equals(self, err: TestFailure):
         diff_msg = (
@@ -439,15 +458,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
         else:
             print(str(err))
 
-    def result_checkbox(self, expect):
-        if expect.success:
-            result_marker = f"[ {Fore.GREEN}okay{Style.RESET_ALL} ]{Fore.GREEN}"
-        else:
-            result_marker = f"[ {Fore.RED}fail{Style.RESET_ALL} ]{Fore.RED}"
-        return result_marker
-
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float, show_slowest: int
+            self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
         if show_slowest:
             self._output_slowest_tests(test_results, show_slowest)
@@ -519,7 +531,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
     def output_test_failed_location(self, test_result: TestResult):
         if isinstance(test_result.error, TestFailure) or isinstance(
-            test_result.error, AssertionError
+                test_result.error, AssertionError
         ):
             print(
                 indent(colored("Location:", color="cyan", attrs=["bold"]), INDENT),
@@ -530,7 +542,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         pass
 
     def _get_outcome_counts(
-        self, test_results: List[TestResult]
+            self, test_results: List[TestResult]
     ) -> Dict[TestOutcome, int]:
         return {
             TestOutcome.PASS: len(
@@ -565,17 +577,28 @@ def outcome_to_colour(outcome: TestOutcome) -> str:
     }[outcome]
 
 
+def outcome_to_style(outcome: TestOutcome) -> str:
+    return {
+        TestOutcome.PASS: "pass",
+        TestOutcome.SKIP: "primary",
+        TestOutcome.FAIL: "fail",
+        TestOutcome.XFAIL: "xfail",
+        TestOutcome.XPASS: "warning",
+        TestOutcome.DRYRUN: "dryrun",
+    }[outcome]
+
+
 def scope_to_colour(scope: Scope) -> str:
     return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta"}[scope]
 
 
 def output_fixtures(
-    fixtures: List[Fixture],
-    tests: List[Test],
-    show_scopes: bool,
-    show_docstrings: bool,
-    show_dependencies: bool,
-    show_dependency_trees: bool,
+        fixtures: List[Fixture],
+        tests: List[Test],
+        show_scopes: bool,
+        show_docstrings: bool,
+        show_dependencies: bool,
+        show_dependency_trees: bool,
 ):
     generated_tests = itertools.chain.from_iterable(
         test.get_parameterised_instances() for test in tests
@@ -599,14 +622,14 @@ def output_fixtures(
 
 
 def output_fixture_information(
-    fixture: Fixture,
-    used_by_tests: Collection[Test],
-    fixtures_to_children: _TYPE_FIXTURE_TO_FIXTURES,
-    fixtures_to_parents: _TYPE_FIXTURE_TO_FIXTURES,
-    show_scopes: bool,
-    show_docstrings: bool,
-    show_dependencies: bool,
-    show_dependency_trees: bool,
+        fixture: Fixture,
+        used_by_tests: Collection[Test],
+        fixtures_to_children: _TYPE_FIXTURE_TO_FIXTURES,
+        fixtures_to_parents: _TYPE_FIXTURE_TO_FIXTURES,
+        show_scopes: bool,
+        show_docstrings: bool,
+        show_dependencies: bool,
+        show_dependency_trees: bool,
 ):
     lines = [format_fixture(fixture, show_scope=show_scopes)]
 
@@ -664,7 +687,7 @@ def output_fixture_information(
     print("\n".join(lines))
 
 
-def yield_fixture_usages_by_tests(used_by: List[Test]) -> Iterator[str]:
+def yield_fixture_usages_by_tests(used_by: Iterable[Test]) -> Iterator[str]:
     grouped_used_by = group_by(used_by, key=lambda t: t.description)
     for idx, (description, tests) in enumerate(grouped_used_by.items()):
         test = tests[0]
@@ -677,12 +700,12 @@ def yield_fixture_usages_by_tests(used_by: List[Test]) -> Iterator[str]:
 
 
 def yield_fixture_dependency_tree(
-    fixture: Fixture,
-    fixtures_to_parents_or_children: _TYPE_FIXTURE_TO_FIXTURES,
-    show_scopes: bool,
-    max_depth: Optional[int],
-    depth: int = 0,
-    prefix=INDENT,
+        fixture: Fixture,
+        fixtures_to_parents_or_children: _TYPE_FIXTURE_TO_FIXTURES,
+        show_scopes: bool,
+        max_depth: Optional[int],
+        depth: int = 0,
+        prefix=INDENT,
 ) -> Iterator[str]:
     if max_depth is not None and depth >= max_depth:
         return
@@ -738,7 +761,7 @@ def get_exit_code(results: Iterable[TestResult]) -> ExitCode:
         return ExitCode.NO_TESTS_FOUND
 
     if any(
-        r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results
+            r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results
     ):
         exit_code = ExitCode.FAILED
     else:

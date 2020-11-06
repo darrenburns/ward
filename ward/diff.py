@@ -1,5 +1,5 @@
 import difflib
-from typing import Generator
+from typing import Iterator
 
 import pprintpp
 from colorama import Style, Fore
@@ -31,7 +31,7 @@ def bright_green(s: str) -> str:
     return f"{Fore.LIGHTGREEN_EX}{s}{Style.RESET_ALL}"
 
 
-def raw_unified_diff(lhs_repr: str, rhs_repr: str) -> Generator[str, None, None]:
+def raw_unified_diff(lhs_repr: str, rhs_repr: str) -> Iterator[str]:
     differ = difflib.Differ()
     lines_lhs = lhs_repr.splitlines()
     lines_rhs = rhs_repr.splitlines()
