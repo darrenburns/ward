@@ -74,6 +74,7 @@ theme = Theme({
     "xfail.textonly": "#695CC8",
     "muted": "dim",
     "info": "yellow italic",
+    "dryrun": "#ffffff on #162740",
     "rule.line": "#189F4A",
 })
 console = Console(theme=theme, highlighter=NullHighlighter())
@@ -557,7 +558,7 @@ def outcome_to_colour(outcome: TestOutcome) -> str:
         TestOutcome.FAIL: "red",
         TestOutcome.XFAIL: "magenta",
         TestOutcome.XPASS: "yellow",
-        TestOutcome.DRYRUN: "green",
+        TestOutcome.DRYRUN: "pass",
     }[outcome]
 
 

@@ -135,20 +135,17 @@ class Test:
                 stack.enter_context(redirect_stdout(self.sout))
                 stack.enter_context(redirect_stderr(self.serr))
 
-            if isinstance(self.marker, SkipMarker):
-                with closing(self.sout), closing(self.serr):
-                    result = TestResult(self, TestOutcome.SKIP)
-                return result
-
             if dry_run:
                 with closing(self.sout), closing(self.serr):
                     result = TestResult(self, TestOutcome.DRYRUN)
                 return result
 
+            if isinstance(self.marker, SkipMarker):
+                with closing(self.sout), closing(self.serr):
+                    result = TestResult(self, TestOutcome.SKIP)
+                return result
+
             try:
-                # TODO:onlyanegg: I don't love this. We're setting up the
-                # fixture within the testing module, but cleaning it up in the
-                # suite module.
                 resolved_args = self.resolver.resolve_args(cache)
                 self.format_description(resolved_args)
                 if self.is_async_test:
