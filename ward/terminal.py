@@ -19,16 +19,17 @@ from typing import (
     Collection,
 )
 
-from pygments import highlight
-from pygments.formatters.terminal import TerminalFormatter
-from pygments.lexers.python import PythonLexer
-from rich.console import Console
+from rich.console import Console, RenderableType, RenderGroup
 from rich.highlighter import NullHighlighter
+from rich.markdown import Markdown
 from rich.padding import Padding
+from rich.panel import Panel
 from rich.rule import Rule
+from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
+from rich.traceback import Traceback
 from termcolor import colored, cprint
 
 from ward._ward_version import __version__
@@ -45,7 +46,10 @@ from ward.testing import Test, fixtures_used_directly_by_tests
 from ward.testing import TestOutcome, TestResult
 from ward.util import group_by
 
+HORIZONTAL_PAD = (0, 1, 0, 1)
+
 INDENT = " " * 2
+BODY_INDENT_SIZE = 4
 
 
 def make_indent(depth=1):
@@ -55,14 +59,22 @@ def make_indent(depth=1):
 DOUBLE_INDENT = make_indent(depth=2)
 
 theme = Theme({
+    "title": "bold",
     "heading": "bold",
-    "primary": "black on blue",
-    "pass": "black on green",
-    "warning": "black on yellow",
-    "fail": "black on red",
-    "xfail": "black on magenta",
+    "pass": "#ffffff on #137C39",
+    "pass.textonly": "#189F4A",
+    "fail": "#ffffff on #BF2D2D",
+    "fail.textonly": "#BF2D2D",
+    "fail.header": "bold #BF2D2D",
+    "skip": "#ffffff on #0E67B3",
+    "skip.textonly": "#0E67B3",
+    "xpass": "#162740 on #F4C041",
+    "xpass.textonly": "#F4C041",
+    "xfail": "#ffffff on #695CC8",
+    "xfail.textonly": "#695CC8",
     "muted": "dim",
     "info": "yellow italic",
+    "rule.line": "#189F4A",
 })
 console = Console(theme=theme, highlighter=NullHighlighter())
 
@@ -129,6 +141,7 @@ def output_test_result_line(test_result: TestResult):
     test = test_result.test
     test_location = format_test_location(test)
     test_case_number = format_test_case_number(test)
+    test_style = outcome_to_style(test_result.outcome)
 
     # Skip/Xfail tests may have a reason note attached that we'll print
     if hasattr(test.marker, "reason"):
@@ -136,22 +149,21 @@ def output_test_result_line(test_result: TestResult):
     else:
         reason = ""
 
-    grid = Table.grid()
+    grid = Table.grid(expand=True)
     grid.add_column()
     grid.add_column()
     grid.add_column()
-
     common_columns = (
-        Padding(outcome_tag, style=outcome_to_style(test_result.outcome), pad=(0, 1, 0, 1)),
+        Padding(outcome_tag, style=test_style, pad=(0, 1, 0, 1)),
         Padding(f"{test_location}{test_case_number}", style="muted", pad=(0, 1, 0, 1)),
-        test.description,
+        Padding(Markdown(test.description, inline_code_theme="ansi_dark"), pad=(0, 1, 0, 0)),
     )
 
     if reason:
-        grid.add_column(justify="right")
+        grid.add_column(justify="center", style=test_style)
         grid.add_row(
             *common_columns,
-            Padding(reason, style="muted", pad=(0, 1, 0, 1)),
+            Padding(Padding(reason, pad=(0, 1, 0, 1)), pad=(0, 1, 0, 1)),
         )
     else:
         grid.add_row(*common_columns)
@@ -208,7 +220,7 @@ def output_dots_global(
 
 def print_dot(result):
     style = outcome_to_style(result.outcome)
-    console.print(result.outcome.display_char, style=style)
+    console.print(result.outcome.display_char, style=style, end="")
 
 
 def output_dots_module(
@@ -283,17 +295,19 @@ class TestResultWriterBase:
     def output_header(self, time_to_collect):
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
-        console.print(Text(f"Ward {__version__}, {python_impl} {python_version}", ))
+        console.print(
+            Rule(Text(f"Ward {__version__}", style="title")),
+        )
         if self.config_path:
             try:
                 path = self.config_path.relative_to(Path.cwd())
             except ValueError:
                 path = self.config_path.name
-            console.print(f"Using config from {path}")
+            console.print(f"Loaded config from [b]{path}[/b].")
         console.print(
-            f"Collected {self.suite.num_tests} tests "
-            f"and {len(_DEFINED_FIXTURES)} fixtures "
-            f"in {time_to_collect:.2f} seconds."
+            f"Collected [b]{self.suite.num_tests}[/b] tests "
+            f"and [b]{len(_DEFINED_FIXTURES)}[/b] fixtures "
+            f"in [b]{time_to_collect:.2f}[/b] seconds."
         )
 
     def output_all_test_results(
@@ -307,16 +321,13 @@ class TestResultWriterBase:
             self.test_output_style, output_test_per_line
         )
         all_results = output_tests(fail_limit, test_results_gen)
-        self.output_test_run_post_failure_summary(test_results=all_results)
         failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
         for failure in failed_test_results:
-            self.print_divider()
             self.output_why_test_failed_header(failure)
+            self.output_test_failed_location(failure)
             self.output_why_test_failed(failure)
             self.output_captured_stderr(failure)
             self.output_captured_stdout(failure)
-            self.output_test_failed_location(failure)
-
         if failed_test_results:
             self.print_divider()
         else:
@@ -346,9 +357,6 @@ class TestResultWriterBase:
         Extended output shown for failing tests, may include further explanations,
         assertion error info, diffs, etc.
         """
-        raise NotImplementedError()
-
-    def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
         raise NotImplementedError()
 
     def output_captured_stderr(self, test_result: TestResult):
@@ -384,45 +392,19 @@ def get_terminal_size() -> TerminalSize:
 class SimpleTestResultWrite(TestResultWriterBase):
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
-
-        if test.description:
-            name_or_desc = test.description
-        else:
-            name_or_desc = test.qualified_name
-
-        name_or_desc = colored(name_or_desc)
-        failure_heading = (
-                colored("Failure: ", color="cyan", attrs=["bold"]) + name_or_desc + "\n"
-        )
-        print(indent(failure_heading, INDENT))
+        console.print(Rule(title=Text(test.description, style="fail.header"), style="fail.textonly"))
 
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
         if isinstance(err, TestFailure):
             src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
 
-            # TODO: Only include lines up to where the failure occurs
-            if src_lines[-1].strip() == "":
-                src_lines = src_lines[:-1]
-
-            gutter_width = len(str(len(src_lines) + line_num))
-
-            def gutter(i: int) -> Text:
-                offset_line_num = i + line_num
-                rv = f"{str(offset_line_num):>{gutter_width}}"
-                if offset_line_num == err.error_line:
-                    return Text(f"{rv} ! ", style="red")
-                else:
-                    return Text(f"{rv} | ", style="muted")
-
             if err.operator in Comparison:
                 src = "".join(src_lines)
-                src = highlight(src, PythonLexer(), TerminalFormatter())
-                src = f"".join(
-                    [gutter(i) + l for i, l in enumerate(src.splitlines(keepends=True))]
-                )
-                # pre-Rich: console.print(indent(src, DOUBLE_INDENT))
-                console.print(Padding(src, (0, 0, 0, 4)))
+                src = Syntax(src, "python", start_line=line_num, line_numbers=True, highlight_lines={err.error_line},
+                             background_color="default", theme="ansi_dark")
+                src = Padding(src, (1, 0, 1, 4))
+                console.print(src)
 
                 if err.operator == Comparison.Equals:
                     self.print_failure_equals(err)
@@ -430,11 +412,11 @@ class SimpleTestResultWrite(TestResultWriterBase):
             self.print_traceback(err)
 
     def print_failure_equals(self, err: TestFailure):
-        diff_msg = (
-            f"{colored('Comparison:', color='cyan', attrs=['bold'])} {colored('LHS', color='green')}"
-            f" vs {colored('RHS', color='red')} shown below\n"
-        )
-        print(indent(diff_msg, INDENT))
+        diff_msg = Text("LHS", style="pass.textonly")
+        diff_msg.append(" vs ", style="default")
+        diff_msg.append("RHS", style="fail.textonly")
+        diff_msg.append(" shown below", style="default")
+        console.print(Padding(diff_msg, pad=(0, 0, 1, 2)))
         diff = make_diff(
             err.lhs,
             err.rhs,
@@ -446,15 +428,8 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
         if trace:
-            trc = traceback.format_exception(None, err, trace)
-            for line in trc:
-                sublines = line.split("\n")
-                for subline in sublines:
-                    content = " " * 4 + subline
-                    if subline.lstrip().startswith('File "'):
-                        cprint(content, color="blue")
-                    else:
-                        print(content)
+            tb = Traceback.from_exception(err.__class__, err, trace, theme="ansi_dark")
+            console.print(tb)
         else:
             print(str(err))
 
@@ -463,35 +438,41 @@ class SimpleTestResultWrite(TestResultWriterBase):
     ):
         if show_slowest:
             self._output_slowest_tests(test_results, show_slowest)
+
+        result_table = Table.grid()
+        result_table.add_column(justify="right")
+        result_table.add_column()
+        result_table.add_column()
+
         outcome_counts = self._get_outcome_counts(test_results)
+        test_count = sum(outcome_counts.values())
+        result_table.add_row(
+            Padding(str(test_count), pad=HORIZONTAL_PAD, style="bold"),
+            Padding("Tests Found", pad=HORIZONTAL_PAD),
+            style="default"
+        )
+        for outcome, count in outcome_counts.items():
+            if count > 0:
+                result_table.add_row(
+                    Padding(str(count), pad=HORIZONTAL_PAD, style="bold"),
+                    Padding(outcome.display_name, pad=HORIZONTAL_PAD),
+                    Padding(f"({100 * count / test_count:.1f}%)", pad=HORIZONTAL_PAD),
+                    style=outcome_to_style(outcome)
+                )
 
         exit_code = get_exit_code(test_results)
         if exit_code == ExitCode.SUCCESS:
-            result = colored(exit_code.name, color="green")
+            result_style = "pass.textonly"
         else:
-            result = colored(exit_code.name, color="red")
+            result_style = "fail.textonly"
 
-        output = f"{result} in {time_taken:.2f} seconds"
-        if test_results:
-            output += " [ "
+        result_summary_panel = Panel(result_table, title="Summary", style="none", expand=False,
+                                     border_style=result_style)
+        console.print(result_summary_panel)
 
-        if outcome_counts[TestOutcome.FAIL]:
-            output += f"{colored(str(outcome_counts[TestOutcome.FAIL]) + ' failed', color='red')}  "
-        if outcome_counts[TestOutcome.XPASS]:
-            output += f"{colored(str(outcome_counts[TestOutcome.XPASS]) + ' xpassed', color='yellow')}  "
-        if outcome_counts[TestOutcome.XFAIL]:
-            output += f"{colored(str(outcome_counts[TestOutcome.XFAIL]) + ' xfailed', color='magenta')}  "
-        if outcome_counts[TestOutcome.SKIP]:
-            output += f"{colored(str(outcome_counts[TestOutcome.SKIP]) + ' skipped', color='blue')}  "
-        if outcome_counts[TestOutcome.PASS]:
-            output += f"{colored(str(outcome_counts[TestOutcome.PASS]) + ' passed', color='green')}"
-        if outcome_counts[TestOutcome.DRYRUN]:
-            output += f"{colored(str(outcome_counts[TestOutcome.DRYRUN]) + ' printed', color='green')}"
-
-        if test_results:
-            output += " ] "
-
-        print(output)
+        console.print(
+            Rule(f"[b]{exit_code.clean_name}[/b] in [b]{time_taken:.2f}[/b] seconds", style=result_style)
+        )
 
     def _output_slowest_tests(self, test_results: List[TestResult], num_tests: int):
         test_results = sorted(
@@ -533,13 +514,16 @@ class SimpleTestResultWrite(TestResultWriterBase):
         if isinstance(test_result.error, TestFailure) or isinstance(
                 test_result.error, AssertionError
         ):
-            print(
-                indent(colored("Location:", color="cyan", attrs=["bold"]), INDENT),
-                f"{test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}",
+            # print(
+            #     indent(colored("Location:", color="cyan", attrs=["bold"]), INDENT),
+            #     f"{test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}",
+            # )
+            console.print(
+                Padding(
+                    Text(f"Failed at {test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}"),
+                    pad=(1, 0, 0, 2)
+                )
             )
-
-    def output_test_run_post_failure_summary(self, test_results: List[TestResult]):
-        pass
 
     def _get_outcome_counts(
             self, test_results: List[TestResult]
@@ -580,10 +564,10 @@ def outcome_to_colour(outcome: TestOutcome) -> str:
 def outcome_to_style(outcome: TestOutcome) -> str:
     return {
         TestOutcome.PASS: "pass",
-        TestOutcome.SKIP: "primary",
+        TestOutcome.SKIP: "skip",
         TestOutcome.FAIL: "fail",
         TestOutcome.XFAIL: "xfail",
-        TestOutcome.XPASS: "warning",
+        TestOutcome.XPASS: "xpass",
         TestOutcome.DRYRUN: "dryrun",
     }[outcome]
 
@@ -754,6 +738,10 @@ class ExitCode(Enum):
     FAILED = 1
     ERROR = 2
     NO_TESTS_FOUND = 3
+
+    @property
+    def clean_name(self):
+        return self.name.replace("_", " ")
 
 
 def get_exit_code(results: Iterable[TestResult]) -> ExitCode:

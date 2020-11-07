@@ -560,6 +560,19 @@ class TestOutcome(Enum):
         assert len(display_chars) == len(TestOutcome)
         return display_chars[self]
 
+    @property
+    def display_name(self):
+        display_names = {
+            TestOutcome.PASS: "Passes",
+            TestOutcome.FAIL: "Failures",
+            TestOutcome.SKIP: "Skips",
+            TestOutcome.XPASS: "Unexpected Passes",
+            TestOutcome.XFAIL: "Expected Failures",
+            TestOutcome.DRYRUN: "Dry-runs",
+        }
+        assert len(display_names) == len(TestOutcome)
+        return display_names[self]
+
 
 @dataclass
 class TestResult:

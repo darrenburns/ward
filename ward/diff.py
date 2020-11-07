@@ -6,7 +6,7 @@ from colorama import Style, Fore
 from termcolor import colored
 
 
-def make_diff(lhs, rhs, width=80, show_symbols=False) -> str:
+def make_diff(lhs, rhs, width=80, show_symbols=False):
     """Transform input into best format for diffing, then return output diff."""
     if isinstance(lhs, str):
         lhs_repr = lhs
@@ -107,14 +107,14 @@ def build_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
                         current_span = ""
                     current_span += line_to_rewrite[
                         index - 2
-                    ]  # Subtract 2 to account for code at start of line
+                        ]  # Subtract 2 to account for code at start of line
                 prev_char = char
                 index += 1
 
             # Lines starting with ? aren't guaranteed to be the same length as the lines before them
             #  so some characters may be left over. Add any leftover characters to the output
             remaining_index = (
-                index - 3
+                    index - 3
             )  # subtract 2 for code at start, and 1 to remove the newline char
             if prev_marker == "+":
                 output_lines[last_output_idx] += colored(
