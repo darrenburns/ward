@@ -3,7 +3,6 @@ import itertools
 import os
 import platform
 import sys
-import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -19,7 +18,7 @@ from typing import (
     Collection,
 )
 
-from rich.console import Console, RenderableType, RenderGroup
+from rich.console import Console, ConsoleOptions, RenderResult
 from rich.highlighter import NullHighlighter
 from rich.markdown import Markdown
 from rich.padding import Padding
@@ -30,7 +29,7 @@ from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 from rich.traceback import Traceback
-from termcolor import colored, cprint
+from termcolor import colored
 
 from ward._ward_version import __version__
 from ward.diff import make_diff
@@ -273,6 +272,34 @@ def output_run_cancelled():
     )
 
 
+@dataclass
+class LongestRunningTestsDisplay:
+    all_tests_in_session: List[TestResult]
+    num_tests_to_show: int
+
+    def __rich_console__(self, c: Console, options: ConsoleOptions) -> RenderResult:
+        test_results = sorted(
+            self.all_tests_in_session, key=lambda r: r.test.timer.duration, reverse=True
+        )
+        grid = Table.grid()
+        grid.add_column()  # Time taken
+        grid.add_column()  # Test ID
+        grid.add_column()  # Test description
+
+        for result in test_results[:self.num_tests_to_show]:
+            time_taken_millis = result.test.timer.duration * 1000
+            test_id = format_test_id(result)
+            description = result.test.description
+            grid.add_row(f"{time_taken_millis:.0f}ms", test_id, description)
+
+        panel = Panel(
+            grid,
+            title="[b white]Slowest Tests[/b white]",
+        )
+
+        yield panel
+
+
 class TestResultWriterBase:
     runtime_output_strategies = {
         "test-per-line": output_test_per_line,
@@ -449,7 +476,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         test_count = sum(outcome_counts.values())
         result_table.add_row(
             Padding(str(test_count), pad=HORIZONTAL_PAD, style="bold"),
-            Padding("Tests Found", pad=HORIZONTAL_PAD),
+            Padding("Tests Encountered", pad=HORIZONTAL_PAD),
             style="default"
         )
         for outcome, count in outcome_counts.items():
@@ -467,7 +494,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         else:
             result_style = "fail.textonly"
 
-        result_summary_panel = Panel(result_table, title="Summary", style="none", expand=False,
+        result_summary_panel = Panel(result_table, title="[b white]Summary[/b white]", style="none", expand=False,
                                      border_style=result_style)
         console.print(result_summary_panel)
 
@@ -479,9 +506,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
         test_results = sorted(
             test_results, key=lambda r: r.test.timer.duration, reverse=True
         )
-        self.print_divider()
         heading = f"{colored('Longest Running Tests:', color='cyan', attrs=['bold'])}\n"
         print(indent(heading, INDENT))
+
         for result in test_results[:num_tests]:
             test_id = format_test_id(result)
             message = f"{result.test.timer.duration:.2f} sec {test_id} {result.test.description} "
@@ -558,7 +585,7 @@ def outcome_to_colour(outcome: TestOutcome) -> str:
         TestOutcome.FAIL: "red",
         TestOutcome.XFAIL: "magenta",
         TestOutcome.XPASS: "yellow",
-        TestOutcome.DRYRUN: "pass",
+        TestOutcome.DRYRUN: "green",
     }[outcome]
 
 
