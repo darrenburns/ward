@@ -37,14 +37,13 @@ def tests_to_search(named_test=named_test):
 @test("__filter_tests__ matches on qualified test name")
 def _(tests=tests_to_search, named=named_test):
     results = filter_tests(tests, query="my_module.named")
-    assert list(results) == [1]
+    assert list(results) == [named]
 
 
 @test("filter_tests matches on test name alone")
 def _(tests=tests_to_search, named=named_test):
     results = filter_tests(tests, query="named")
-    raise ZeroDivisionError("asdas")
-    assert list(results) == [1]
+    assert list(results) == [named]
 
 
 @test("filter_tests `query='fox'` returns tests with `'fox'` in the body")
