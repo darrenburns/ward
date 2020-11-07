@@ -1,7 +1,9 @@
 import inspect
 import itertools
+import math
 import os
 import platform
+import statistics
 import sys
 from dataclasses import dataclass
 from enum import Enum
@@ -18,7 +20,7 @@ from typing import (
     Collection,
 )
 
-from rich.console import Console, ConsoleOptions, RenderResult
+from rich.console import Console, ConsoleOptions, RenderResult, RenderGroup
 from rich.highlighter import NullHighlighter
 from rich.markdown import Markdown
 from rich.padding import Padding
@@ -94,15 +96,11 @@ def multiline_description(s: str, indent: int, width: int) -> str:
     return rv
 
 
-def format_test_id(test_result: TestResult) -> (str, str):
+def format_test_id(test_result: TestResult) -> str:
     """
     Format module name, line number, and test case number
     """
-    test_id = lightblack(
-        f"{format_test_location(test_result.test)}{format_test_case_number(test_result.test)}:"
-    )
-
-    return test_id
+    return f"{format_test_location(test_result.test)}{format_test_case_number(test_result.test)}"
 
 
 def format_test_location(test: Test) -> str:
@@ -273,28 +271,55 @@ def output_run_cancelled():
 
 
 @dataclass
-class LongestRunningTestsDisplay:
+class TestTimingStats:
     all_tests_in_session: List[TestResult]
     num_tests_to_show: int
 
-    def __rich_console__(self, c: Console, options: ConsoleOptions) -> RenderResult:
+    @property
+    def _raw_test_durations_secs(self):
+        return [r.test.timer.duration for r in self.all_tests_in_session]
+
+    @property
+    def median_secs(self):
+        return statistics.median(self._raw_test_durations_secs)
+
+    @property
+    def percentile99_secs(self):
+        data = self._raw_test_durations_secs
+        size = len(data)
+        percentile = 99
+        return sorted(data)[int(math.ceil((size * percentile) / 100)) - 1]
+
+    def __rich_console__(self, c: Console, co: ConsoleOptions) -> RenderResult:
         test_results = sorted(
             self.all_tests_in_session, key=lambda r: r.test.timer.duration, reverse=True
         )
-        grid = Table.grid()
-        grid.add_column()  # Time taken
+        grid = Table.grid(padding=(0, 2, 0, 0))
+        grid.add_column(justify="right")  # Time taken
         grid.add_column()  # Test ID
         grid.add_column()  # Test description
 
         for result in test_results[:self.num_tests_to_show]:
-            time_taken_millis = result.test.timer.duration * 1000
+            time_taken_secs = result.test.timer.duration
+            time_taken_millis = time_taken_secs * 1000
             test_id = format_test_id(result)
             description = result.test.description
-            grid.add_row(f"{time_taken_millis:.0f}ms", test_id, description)
+            grid.add_row(f"[b]{time_taken_millis:.0f}[/b]ms", Text(test_id, style="muted"), description)
 
+        num_slowest_displayed = min(len(self.all_tests_in_session), self.num_tests_to_show)
         panel = Panel(
-            grid,
-            title="[b white]Slowest Tests[/b white]",
+            RenderGroup(
+                Padding(
+                    f"Median: [b]{self.median_secs * 1000:.2f}[/b]ms"
+                    f" [muted]|[/muted] "
+                    f"99th Percentile: [b]{self.percentile99_secs * 1000:.2f}[/b]ms",
+                    pad=(0, 0, 1, 0)
+                ),
+                grid,
+            ),
+            title=f"[b white]{num_slowest_displayed} Slowest Tests[/b white]",
+            style="none",
+            border_style="rule.line",
         )
 
         yield panel
@@ -465,7 +490,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
         if show_slowest:
-            self._output_slowest_tests(test_results, show_slowest)
+            console.print(TestTimingStats(test_results, show_slowest))
 
         result_table = Table.grid()
         result_table.add_column(justify="right")
@@ -494,7 +519,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         else:
             result_style = "fail.textonly"
 
-        result_summary_panel = Panel(result_table, title="[b white]Summary[/b white]", style="none", expand=False,
+        result_summary_panel = Panel(result_table, title="[b white]Results[/b white]", style="none", expand=False,
                                      border_style=result_style)
         console.print(result_summary_panel)
 
