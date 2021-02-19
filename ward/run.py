@@ -30,18 +30,6 @@ click_completion.init()
 sys.path.append(".")
 
 
-def install_completion_callback(
-    ctx: click.Context, attr: Union[click.Option, click.Parameter], value: bool
-) -> bool:
-    """Install completion for the current shell."""
-    if not value or ctx.resilient_parsing:
-        return value
-
-    shell, path = click_completion.core.install()
-    click.echo(f"{shell} completion installed in {path}")
-    ctx.exit(0)
-
-
 # TODO: simplify to use invoke_without_command and ctx.forward once https://github.com/pallets/click/issues/430 is resolved
 @click.group(
     context_settings={"max_content_width": 100},
@@ -131,13 +119,6 @@ exclude = click.option(
     "--dry-run/--no-dry-run",
     help="Print all tests without executing them",
     default=False,
-)
-@click.option(
-    "--install-completion",
-    is_flag=True,
-    callback=install_completion_callback,
-    expose_value=False,
-    help="Install completion for the current shell.",
 )
 @click.version_option(version=__version__)
 @click.pass_context
@@ -262,3 +243,10 @@ def fixtures(
         show_dependencies=show_dependencies or full,
         show_dependency_trees=show_dependency_trees or full,
     )
+
+@run.command()
+@click.pass_context
+def completions(ctx: click.Context):
+    shell, path = click_completion.core.install()
+    click.echo(f"{shell} completion installed in {path}")
+    ctx.exit(0)
