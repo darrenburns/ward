@@ -1,11 +1,12 @@
 import sys
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import click
+import click_completion
+import colorama
 from click_default_group import DefaultGroup
-from colorama import init
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
 
@@ -23,7 +24,8 @@ from ward.suite import Suite
 from ward.fixtures import _DEFINED_FIXTURES
 from ward.terminal import SimpleTestResultWrite, output_fixtures, get_exit_code
 
-init()
+colorama.init()
+click_completion.init()
 
 sys.path.append(".")
 
@@ -241,3 +243,10 @@ def fixtures(
         show_dependencies=show_dependencies or full,
         show_dependency_trees=show_dependency_trees or full,
     )
+
+@run.command()
+@click.pass_context
+def completions(ctx: click.Context):
+    shell, path = click_completion.core.install()
+    click.echo(f"{shell} completion installed in {path}")
+    ctx.exit(0)
