@@ -1,10 +1,7 @@
 import inspect
-import itertools
-import math
 import os
 import platform
 import statistics
-import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -20,6 +17,9 @@ from typing import (
     Collection,
 )
 
+import itertools
+import math
+import sys
 from rich.console import Console, ConsoleOptions, RenderResult, RenderGroup
 from rich.highlighter import NullHighlighter
 from rich.markdown import Markdown
@@ -161,7 +161,7 @@ def output_test_result_line(test_result: TestResult):
         grid.add_column(justify="center", style=test_style)
         grid.add_row(
             *common_columns,
-            Padding(Padding(reason, pad=(0, 1, 0, 1)), pad=(0, 1, 0, 1)),
+            Padding(reason, pad=(0, 1, 0, 1)),
         )
     else:
         grid.add_row(*common_columns)
@@ -358,7 +358,7 @@ class TestResultWriterBase:
                 path = self.config_path.name
             console.print(f"Loaded config from [b]{path}[/b].")
         console.print(
-            f"Collected [b]{self.suite.num_tests}[/b] tests "
+            f"Found [b]{self.suite.num_tests}[/b] tests "
             f"and [b]{len(_DEFINED_FIXTURES)}[/b] fixtures "
             f"in [b]{time_to_collect:.2f}[/b] seconds."
         )
@@ -445,7 +445,9 @@ def get_terminal_size() -> TerminalSize:
 class SimpleTestResultWrite(TestResultWriterBase):
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
-        console.print(Rule(title=Text(test.description, style="fail.header"), style="fail.textonly"))
+        console.print(
+            Padding(Rule(title=Text(test.description, style="fail.header"), style="fail.textonly"), pad=(1, 0, 0, 0)),
+        )
 
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
@@ -476,13 +478,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
             width=self.terminal_size.width - 24,
             show_symbols=self.show_diff_symbols,
         )
-        print(indent(diff, DOUBLE_INDENT))
+        console.print(Padding(diff, pad=(0, 0, 1, 4)))
 
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
         if trace:
             tb = Traceback.from_exception(err.__class__, err, trace, theme="ansi_dark")
-            console.print(tb)
+            console.print(Padding(tb, pad=(1, 0, 0, 0)))
         else:
             print(str(err))
 
@@ -519,7 +521,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         else:
             result_style = "fail.textonly"
 
-        result_summary_panel = Panel(result_table, title="[b white]Results[/b white]", style="none", expand=False,
+        result_summary_panel = Panel(result_table, title="[b default]Results[/b default]", style="none", expand=False,
                                      border_style=result_style)
         console.print(result_summary_panel)
 
@@ -527,50 +529,34 @@ class SimpleTestResultWrite(TestResultWriterBase):
             Rule(f"[b]{exit_code.clean_name}[/b] in [b]{time_taken:.2f}[/b] seconds", style=result_style)
         )
 
-    def _output_slowest_tests(self, test_results: List[TestResult], num_tests: int):
-        test_results = sorted(
-            test_results, key=lambda r: r.test.timer.duration, reverse=True
-        )
-        heading = f"{colored('Longest Running Tests:', color='cyan', attrs=['bold'])}\n"
-        print(indent(heading, INDENT))
-
-        for result in test_results[:num_tests]:
-            test_id = format_test_id(result)
-            message = f"{result.test.timer.duration:.2f} sec {test_id} {result.test.description} "
-            print(indent(message, DOUBLE_INDENT))
-        print()
-
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
             captured_stderr_lines = test_result.captured_stderr.split("\n")
-            print(
-                indent(
-                    colored(f"Captured stderr:\n", color="cyan", attrs=["bold"]), INDENT
+            console.print(
+                Padding(
+                    Text(f"Captured stderr"),
+                    pad=(0, 0, 1, 2)
                 )
             )
             for line in captured_stderr_lines:
-                print(indent(line, DOUBLE_INDENT))
-            print()
+                console.print(Padding(line, pad=(0, 0, 0, 4)))
 
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
             captured_stdout_lines = test_result.captured_stdout.split("\n")
-            print(
-                indent(
-                    colored(f"Captured stdout:\n", color="cyan", attrs=["bold"]), INDENT
+            console.print(
+                Padding(
+                    Text(f"Captured stdout"),
+                    pad=(0, 0, 1, 2)
                 )
             )
             for line in captured_stdout_lines:
-                print(indent(line, DOUBLE_INDENT))
+                console.print(Padding(line, pad=(0, 0, 0, 4)))
 
     def output_test_failed_location(self, test_result: TestResult):
         if isinstance(test_result.error, TestFailure) or isinstance(
                 test_result.error, AssertionError
         ):
-            # print(
-            #     indent(colored("Location:", color="cyan", attrs=["bold"]), INDENT),
-            #     f"{test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}",
-            # )
             console.print(
                 Padding(
                     Text(f"Failed at {test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}"),
