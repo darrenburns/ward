@@ -90,7 +90,7 @@ def _(skipped=skipped_test, example=example_test):
 
     expected_runs = [
         TestResult(example, TestOutcome.DRYRUN, None, ""),
-        TestResult(skipped, TestOutcome.SKIP, None, ""),
+        TestResult(skipped, TestOutcome.DRYRUN, None, ""),
     ]
 
     assert test_runs == expected_runs

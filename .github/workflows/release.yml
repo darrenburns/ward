@@ -11,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-python@v1
-    - uses: dschep/install-poetry-action@v1.3
+    - uses: snok/install-poetry@v1.1.1
       with:
         version: 1.0.3
         create_virtualenvs: true

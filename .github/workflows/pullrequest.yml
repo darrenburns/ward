@@ -1,6 +1,6 @@
 name: Ward Pull Requests
 
-on: [pull_request]
+on: [ pull_request ]
 
 jobs:
   test:
@@ -10,25 +10,34 @@ jobs:
       max-parallel: 9
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8]
+        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    defaults:
+      run:
+        shell: bash
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-    - uses: dschep/install-poetry-action@v1.3
-      with:
-        version: 1.0.3
-        create_virtualenvs: true
-    - name: Run tests with Ward
-      run: |
-        poetry install
-        poetry run coverage run -m ward
-        poetry run coverage xml -i
-    - name: Upload coverage report to codecov
-      run: |
-        bash <(curl -s https://codecov.io/bash) -f coverage.xml
-      shell: bash
+
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: snok/install-poetry@v1.1.1
+        with:
+          virtualenvs-create: true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Run tests with Ward
+        run: |
+          poetry run coverage run -m ward
+          poetry run coverage xml -i
+
+      - name: Upload coverage report to codecov
+        run: |
+          bash <(curl -s https://codecov.io/bash) -f coverage.xml
+        shell: bash
