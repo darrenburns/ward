@@ -34,7 +34,7 @@ def tests_to_search(named_test=named_test):
     return [named_test]
 
 
-@test("filter_tests matches on qualified test name")
+@test("__filter_tests__ matches on qualified test name")
 def _(tests=tests_to_search, named=named_test):
     results = filter_tests(tests, query="my_module.named")
     assert list(results) == [named]
@@ -46,7 +46,7 @@ def _(tests=tests_to_search, named=named_test):
     assert list(results) == [named]
 
 
-@test("filter_tests query='fox' returns tests with 'fox' in the body")
+@test("filter_tests `query='fox'` returns tests with `'fox'` in the body")
 def _(tests=tests_to_search, named=named_test):
     results = filter_tests(tests, query="fox")
     assert list(results) == [named]
