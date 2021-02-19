@@ -32,29 +32,14 @@ jobs:
       - uses: snok/install-poetry@v1.1.1
         with:
           virtualenvs-create: true
-          vitualenvs-in-project: true
-
-      - name: Load cached venv
-        id: cached-pip-wheels
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
         run: poetry install --no-interaction
 
-      - run: |
-          source .venv/scripts/activate
-        if: runner.os == 'Windows'
-      - run: |
-          source .venv/bin/activate
-        if: runner.os != 'Windows'
-
       - name: Run tests with Ward
         run: |
-          coverage run -m ward
-          coverage xml -i
+          poetry run coverage run -m ward
+          poetry run coverage xml -i
 
       - name: Upload coverage report to codecov
         run: |
