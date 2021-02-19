@@ -12,6 +12,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         python-version: [3.6, 3.7, 3.8]
+    defaults:
+      run:
+        shell: bash
 
     steps:
     - uses: actions/checkout@v1
@@ -20,6 +23,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - uses: snok/install-poetry@v1.1.1
+    - run: |
+        source .venv/scripts/activate
+        pytest --version
+      if: runner.os == 'Windows'
+    - run: |
+        source .venv/bin/activate
+        pytest --version
+      if: runner.os != 'Windows'
     - name: Run tests with Ward
       run: |
         poetry install
