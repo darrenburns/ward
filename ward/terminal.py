@@ -483,10 +483,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
         if trace:
-            tb = Traceback.from_exception(err.__class__, err, trace, theme="ansi_dark")
-            console.print(Padding(tb, pad=(1, 0, 0, 0)))
+            # The first frame contains library internal code which is not
+            # relevant to end users, so skip over it.
+            trace = trace.tb_next
+            tb = Traceback.from_exception(err.__class__, err, trace, show_locals=True)
+            console.print(Padding(tb, pad=(0, 4, 1, 4)))
         else:
-            print(str(err))
+            console.print(str(err))
 
     def output_test_result_summary(
             self, test_results: List[TestResult], time_taken: float, show_slowest: int
@@ -540,6 +543,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             )
             for line in captured_stderr_lines:
                 console.print(Padding(line, pad=(0, 0, 0, 4)))
+            console.print()
 
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
@@ -552,6 +556,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             )
             for line in captured_stdout_lines:
                 console.print(Padding(line, pad=(0, 0, 0, 4)))
+            console.print()
 
     def output_test_failed_location(self, test_result: TestResult):
         if isinstance(test_result.error, TestFailure) or isinstance(
@@ -560,7 +565,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             console.print(
                 Padding(
                     Text(f"Failed at {test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}"),
-                    pad=(1, 0, 0, 2)
+                    pad=(1, 0, 1, 2)
                 )
             )
 
