@@ -244,6 +244,7 @@ def fixtures(
         show_dependency_trees=show_dependency_trees or full,
     )
 
+
 @run.command()
 @click.pass_context
 def completions(ctx: click.Context):
