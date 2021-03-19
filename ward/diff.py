@@ -1,22 +1,25 @@
 import difflib
-import pprint
+from typing import Iterator
 
+import pprintpp
 from colorama import Style, Fore
 from termcolor import colored
 
 
-def make_diff(lhs, rhs, width=60) -> str:
+def make_diff(lhs, rhs, width=80, show_symbols=False):
     """Transform input into best format for diffing, then return output diff."""
     if isinstance(lhs, str):
         lhs_repr = lhs
     else:
-        lhs_repr = pprint.pformat(lhs, width=width)
+        lhs_repr = pprintpp.pformat(lhs, width=width)
 
     if isinstance(rhs, str):
         rhs_repr = rhs
     else:
-        rhs_repr = pprint.pformat(rhs, width=width)
+        rhs_repr = pprintpp.pformat(rhs, width=width)
 
+    if show_symbols:
+        return build_symbolic_unified_diff(lhs_repr, rhs_repr)
     return build_unified_diff(lhs_repr, rhs_repr)
 
 
@@ -28,12 +31,38 @@ def bright_green(s: str) -> str:
     return f"{Fore.LIGHTGREEN_EX}{s}{Style.RESET_ALL}"
 
 
-def build_unified_diff(lhs_repr, rhs_repr) -> str:
+def raw_unified_diff(lhs_repr: str, rhs_repr: str) -> Iterator[str]:
     differ = difflib.Differ()
     lines_lhs = lhs_repr.splitlines()
     lines_rhs = rhs_repr.splitlines()
-    diff = differ.compare(lines_lhs, lines_rhs)
+    return differ.compare(lines_lhs, lines_rhs)
 
+
+def build_symbolic_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
+    diff = raw_unified_diff(lhs_repr, rhs_repr)
+    output_lines = []
+    last_line_colour = "grey"
+    for line_idx, line in enumerate(diff):
+        if line.startswith("- "):
+            last_line_colour = "green"
+            output_lines.append(colored(f"+ {line[2:]}", color=last_line_colour))
+        elif line.startswith("+ "):
+            last_line_colour = "red"
+            output_lines.append(colored(f"- {line[2:]}", color=last_line_colour))
+        elif line.startswith("? "):
+            output_line = line[:-1]
+            if last_line_colour == "red":
+                output_line = output_line.replace("+", "-")
+            elif last_line_colour == "green":
+                output_line = output_line.replace("-", "+")
+            output_lines.append(colored(output_line, color=last_line_colour))
+        else:
+            output_lines.append(line)
+    return "\n".join(output_lines)
+
+
+def build_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
+    diff = raw_unified_diff(lhs_repr, rhs_repr)
     output_lines = []
     prev_marker = ""
     for line_idx, line in enumerate(diff):
@@ -76,17 +105,16 @@ def build_unified_diff(lhs_repr, rhs_repr) -> str:
                                 )
                             )
                         current_span = ""
-                    current_span += line_to_rewrite[
-                        index - 2
-                    ]  # Subtract 2 to account for code at start of line
+                    # Subtract 2 to account for code at start of line
+                    current_span += line_to_rewrite[index - 2]
                 prev_char = char
                 index += 1
 
             # Lines starting with ? aren't guaranteed to be the same length as the lines before them
             #  so some characters may be left over. Add any leftover characters to the output
-            remaining_index = (
-                index - 3
-            )  # subtract 2 for code at start, and 1 to remove the newline char
+
+            # subtract 2 for code at start, and 1 to remove the newline char
+            remaining_index = index - 3
             if prev_marker == "+":
                 output_lines[last_output_idx] += colored(
                     line_to_rewrite[remaining_index:], color="red"

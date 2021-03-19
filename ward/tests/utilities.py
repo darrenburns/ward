@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 from collections import defaultdict
 from pathlib import Path
 
@@ -26,6 +28,14 @@ def testable_test(func):
 
 
 testable_test.path = FORCE_TEST_PATH
+
+
+@fixture
+def dummy_fixture():
+    """
+    This is a dummy fixture for use inside tests.
+    """
+    return "dummy"
 
 
 @fixture
@@ -65,3 +75,19 @@ def example_test(module=module, fixtures=fixtures):
         return fix_a
 
     return Test(fn=t, module_name=module)
+
+
+def make_project(root_file: str):
+    tempdir = Path(tempfile.gettempdir())
+    paths = [
+        tempdir / "project/a/b/c",
+        tempdir / "project/a/d",
+        tempdir / "project/a",
+    ]
+    for path in paths:
+        path.mkdir(parents=True, exist_ok=True)
+
+    root_file = tempdir / f"project/{root_file}"
+    with open(root_file, "w+", encoding="utf-8"):
+        yield tempdir / "project"
+    shutil.rmtree(tempdir / "project")

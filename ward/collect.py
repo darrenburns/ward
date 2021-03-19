@@ -3,14 +3,29 @@ import importlib.util
 import inspect
 import os
 import pkgutil
+from distutils.sysconfig import get_python_lib
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterable, List, Set, Tuple
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Iterator,
+    Collection,
+)
+
+from cucumber_tag_expressions.model import Expression
 
 from ward.errors import CollectionError
 from ward.models import WardMeta
 from ward.testing import Test, anonymous_tests, is_test_module_name
+from ward.fixtures import Fixture
 from ward.util import get_absolute_path
 
 Glob = str
@@ -80,6 +95,12 @@ def get_info_for_modules(
                 continue
             for dir_name in dirs:
                 dir_path = Path(root, dir_name)
+
+                # ignore site-packages directories
+                abs_path = dir_path.absolute()
+                if str(abs_path).startswith(get_python_lib()):
+                    continue
+
                 # if we have seen this path before, skip it
                 if dir_path not in checked_dirs and not excluded(dir_path, exclude):
                     checked_dirs.add(dir_path)
@@ -115,21 +136,55 @@ def get_tests_in_modules(
                     marker=meta.marker,
                     description=meta.description or "",
                     capture_output=capture_output,
+                    tags=meta.tags or [],
                 )
 
 
-def search_generally(
-    tests: Iterable[Test], query: str = ""
-) -> Generator[Test, None, None]:
-    if not query:
+def filter_tests(
+    tests: Iterable[Test], query: str = "", tag_expr: Optional[Expression] = None,
+) -> Iterator[Test]:
+    if not query and not tag_expr:
         yield from tests
 
     for test in tests:
         description = test.description or ""
-        if (
-            query in description
+
+        matches_query = (
+            not query
+            or query in description
             or query in f"{test.module_name}."
             or query in inspect.getsource(test.fn)
             or query in test.qualified_name
-        ):
+        )
+
+        matches_tags = not tag_expr or tag_expr.evaluate(test.tags)
+
+        if matches_query and matches_tags:
             yield test
+
+
+def filter_fixtures(
+    fixtures: Iterable[Fixture],
+    query: str = "",
+    paths: Optional[Collection[Path]] = None,
+) -> Iterator[Fixture]:
+    if paths is None:
+        paths = []
+    paths = {path.absolute() for path in paths}
+
+    for fixture in fixtures:
+        matches_query = (
+            not query
+            or query in f"{fixture.module_name}."
+            or query in inspect.getsource(fixture.fn)
+            or query in fixture.qualified_name
+        )
+
+        matches_paths = (
+            not paths
+            or fixture.path in paths
+            or any(parent in paths for parent in fixture.path.parents)
+        )
+
+        if matches_query and matches_paths:
+            yield fixture

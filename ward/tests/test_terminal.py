@@ -1,4 +1,4 @@
-from tests.utilities import example_test
+from ward.tests.utilities import example_test
 from ward import using
 from ward.terminal import outcome_to_colour, get_exit_code, ExitCode
 from ward.testing import TestOutcome, each, test, TestResult
@@ -45,7 +45,8 @@ def _(
         TestOutcome.FAIL,
         TestOutcome.XFAIL,
         TestOutcome.XPASS,
+        TestOutcome.DRYRUN,
     ),
-    colour=each("green", "blue", "red", "magenta", "yellow"),
+    colour=each("green", "blue", "red", "magenta", "yellow", "green"),
 ):
     assert outcome_to_colour(outcome) == colour

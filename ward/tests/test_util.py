@@ -1,14 +1,13 @@
 import os
-import pdb
-import shutil
-import tempfile
 from pathlib import Path
 
 from ward import test, using, fixture
 from ward.testing import each
+from ward.tests.utilities import make_project
 from ward.util import (
     truncate,
     find_project_root,
+    group_by,
 )
 
 
@@ -32,22 +31,6 @@ def _():
     assert project_root == Path(fs_root)
 
 
-def make_project(root_file: str):
-    tempdir = Path(tempfile.gettempdir())
-    paths = [
-        tempdir / "project/a/b/c",
-        tempdir / "project/a/d",
-        tempdir / "project/a",
-    ]
-    for path in paths:
-        path.mkdir(parents=True, exist_ok=True)
-
-    root_file = tempdir / f"project/{root_file}"
-    with open(root_file, "w+", encoding="utf-8"):
-        yield tempdir / "project"
-    shutil.rmtree(tempdir / "project")
-
-
 @fixture
 def fake_project_pyproject():
     yield from make_project("pyproject.toml")
@@ -66,4 +49,29 @@ def fake_project_git():
 def _(root_file, project):
     root = find_project_root([project / "a/b/c", project / "a/d"])
     assert root.resolve() == project.resolve()
-    assert (root / root_file).exists() == True
+    assert (root / root_file).exists()
+
+
+def is_even(n):
+    return n % 2 == 0
+
+
+def is_vowel(char):
+    return char in "aeiou"
+
+
+def square(x):
+    return x ** 2
+
+
+@test("group {items!r} by {key} returns {result}")
+def _(
+    items=each(range(5), "echolocation", [-2, 3, 4, -3, 2, 3]),
+    key=each(is_even, is_vowel, square),
+    result=each(
+        {True: [0, 2, 4], False: [1, 3]},
+        {True: ["e", "o", "o", "a", "i", "o"], False: ["c", "h", "l", "c", "t", "n"]},
+        {4: [-2, 2], 9: [3, -3, 3], 16: [4]},
+    ),
+):
+    assert group_by(items, key) == result

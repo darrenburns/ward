@@ -81,6 +81,70 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "thilp",
+      "name": "Thibaut Le Page",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/968838?v=4",
+      "profile": "https://github.com/thilp",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "DorianCzichotzki",
+      "name": "Dorian Czichotzki",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/10177001?v=4",
+      "profile": "https://github.com/DorianCzichotzki",
+      "contributions": [
+        "code",
+        "ideas"
+      ]
+    },
+    {
+      "login": "jayeshathila",
+      "name": "jayesh hathila",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1469191?v=4",
+      "profile": "https://github.com/jayeshathila",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mandarvaze",
+      "name": "Mandar Vaze",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/46438?v=4",
+      "profile": "https://mandarvaze.bitbucket.io/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "JoshKarpel",
+      "name": "Josh Karpel",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/7133863?v=4",
+      "profile": "https://www.jtk.dev",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "anlutro",
+      "name": "Andreas Lutro",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/163093?v=4",
+      "profile": "https://www.lutro.me",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "hoefling",
+      "name": "Oleg Höfling",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/4455652?v=4",
+      "profile": "https://hoefling.io",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7

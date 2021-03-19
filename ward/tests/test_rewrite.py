@@ -1,6 +1,6 @@
 import ast
 
-from tests.utilities import testable_test
+from ward.tests.utilities import testable_test
 from ward import test, fixture
 from ward.rewrite import (
     rewrite_assertions_in_tests,
@@ -174,3 +174,16 @@ def _(
 ):
     assert_node = ast.parse(src).body[0]
     assert not is_comparison_type(assert_node, node_type)
+
+
+if True:
+
+    @test("test with indentation level of 1")
+    def _():
+        assert 1 + 2 == 3
+
+    if True:
+
+        @test("test with indentation level of 2")
+        def _():
+            assert 2 + 3 == 5

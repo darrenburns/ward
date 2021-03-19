@@ -1,9 +1,25 @@
+import asyncio
+import collections
 import inspect
 from contextlib import suppress
-from dataclasses import dataclass, field
 from functools import partial, wraps
 from pathlib import Path
-from typing import Callable, Dict, Union, Optional, Any, Generator
+from typing import (
+    Callable,
+    Dict,
+    Union,
+    Optional,
+    Any,
+    Generator,
+    AsyncGenerator,
+    List,
+    Iterable,
+    Mapping,
+    Tuple,
+    Collection,
+)
+
+from dataclasses import dataclass, field
 
 from ward.models import WardMeta, Scope
 
@@ -11,8 +27,18 @@ from ward.models import WardMeta, Scope
 @dataclass
 class Fixture:
     fn: Callable
-    gen: Generator = None
+    gen: Union[Generator, AsyncGenerator] = None
     resolved_val: Any = None
+
+    def __hash__(self):
+        return hash(self._id)
+
+    def __eq__(self, other):
+        return self._id == other._id
+
+    @property
+    def _id(self):
+        return self.__class__, self.name, self.path, self.line_number
 
     @property
     def key(self) -> str:
@@ -33,18 +59,48 @@ class Fixture:
         return self.fn.ward_meta.path
 
     @property
+    def module_name(self):
+        return self.fn.__module__
+
+    @property
+    def qualified_name(self) -> str:
+        name = self.name or ""
+        return f"{self.module_name}.{name}"
+
+    @property
+    def line_number(self) -> int:
+        return inspect.getsourcelines(self.fn)[1]
+
+    @property
     def is_generator_fixture(self):
         return inspect.isgeneratorfunction(inspect.unwrap(self.fn))
+
+    @property
+    def is_async_generator_fixture(self):
+        return inspect.isasyncgenfunction(inspect.unwrap(self.fn))
+
+    @property
+    def is_coroutine_fixture(self):
+        return inspect.iscoroutinefunction(inspect.unwrap(self.fn))
 
     def deps(self):
         return inspect.signature(self.fn).parameters
 
+    def parents(self) -> List["Fixture"]:
+        """
+        Return the parent fixtures of this fixture, as a list of Fixtures.
+        """
+        return [Fixture(par.default) for par in self.deps().values()]
+
     def teardown(self):
         # Suppress because we can't know whether there's more code
         # to execute below the yield.
-        with suppress(StopIteration, RuntimeError):
+        with suppress(RuntimeError, StopIteration, StopAsyncIteration):
             if self.is_generator_fixture and self.gen:
                 next(self.gen)
+            elif self.is_async_generator_fixture and self.gen:
+                awaitable = self.gen.__anext__()
+                asyncio.get_event_loop().run_until_complete(awaitable)
 
 
 FixtureKey = str
@@ -118,6 +174,9 @@ class FixtureCache:
         return fixtures.get(fixture_key)
 
 
+_DEFINED_FIXTURES = []
+
+
 def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
     if not isinstance(scope, Scope):
         scope = Scope.from_str(scope)
@@ -134,6 +193,8 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
         func.ward_meta.path = path
     else:
         func.ward_meta = WardMeta(is_fixture=True, scope=scope, path=path)
+
+    _DEFINED_FIXTURES.append(Fixture(func))
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -158,3 +219,34 @@ def using(*using_args, **using_kwargs):
         return wrapper
 
     return decorator_using
+
+
+def is_fixture(obj: Any) -> bool:
+    """
+    Returns True if and only if the object is a fixture function
+    (it would be False for a Fixture instance,
+    but True for the underlying function inside it).
+    """
+    return hasattr(obj, "ward_meta") and obj.ward_meta.is_fixture
+
+
+_TYPE_FIXTURE_TO_FIXTURES = Mapping[Fixture, Collection[Fixture]]
+
+
+def fixture_parents_and_children(
+    fixtures: Iterable[Fixture],
+) -> Tuple[_TYPE_FIXTURE_TO_FIXTURES, _TYPE_FIXTURE_TO_FIXTURES]:
+    """
+    Given an iterable of Fixtures, produce two dictionaries:
+    the first maps each fixture to its parents (the fixtures it depends on);
+    the second maps each fixture to its children (the fixtures that depend on it).
+    """
+    fixtures_to_parents = {fixture: fixture.parents() for fixture in fixtures}
+
+    # not a defaultdict, because we want to have empty entries if no parents when we return
+    fixtures_to_children = {fixture: [] for fixture in fixtures}
+    for fixture, parents in fixtures_to_parents.items():
+        for parent in parents:
+            fixtures_to_children[parent].append(fixture)
+
+    return fixtures_to_parents, fixtures_to_children

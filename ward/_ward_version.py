@@ -1,1 +1,3 @@
-__version__ = "0.33.1b0"
+import pkg_resources
+
+__version__ = pkg_resources.get_distribution("ward").version

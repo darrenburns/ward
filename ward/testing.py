@@ -1,18 +1,33 @@
+import asyncio
+import collections
 import functools
 import inspect
+import traceback
 import uuid
 from collections import defaultdict
-from contextlib import closing, redirect_stderr, redirect_stdout
+from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
-from enum import auto, Enum
+from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
+from timeit import default_timer
 from types import MappingProxyType
-from typing import Callable, Dict, List, Optional, Any, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    Iterable,
+    Mapping,
+    Collection,
+)
 
 from ward.errors import FixtureError, ParameterisationError
-from ward.fixtures import Fixture, FixtureCache, ScopeKey
-from ward.models import Marker, SkipMarker, XfailMarker, WardMeta, Scope
+from ward.fixtures import Fixture, FixtureCache, ScopeKey, is_fixture
+from ward.models import Marker, Scope, SkipMarker, WardMeta, XfailMarker
 from ward.util import get_absolute_path
 
 
@@ -104,12 +119,80 @@ class Test:
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)
     ward_meta: WardMeta = field(default_factory=WardMeta)
+    timer: Optional["Timer"] = None
+    tags: List[str] = field(default_factory=list)
 
-    def __call__(self, *args, **kwargs):
-        if self.capture_output:
-            with redirect_stdout(self.sout), redirect_stderr(self.serr):
-                return self.fn(*args, **kwargs)
-        return self.fn(*args, **kwargs)
+    def __hash__(self):
+        return hash((self.__class__, self.id))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.id == other.id
+
+    def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
+        with ExitStack() as stack:
+            self.timer = stack.enter_context(Timer())
+            if self.capture_output:
+                stack.enter_context(redirect_stdout(self.sout))
+                stack.enter_context(redirect_stderr(self.serr))
+
+            if dry_run:
+                with closing(self.sout), closing(self.serr):
+                    result = TestResult(self, TestOutcome.DRYRUN)
+                return result
+
+            if isinstance(self.marker, SkipMarker):
+                with closing(self.sout), closing(self.serr):
+                    result = TestResult(self, TestOutcome.SKIP)
+                return result
+
+            try:
+                resolved_args = self.resolver.resolve_args(cache)
+                self.format_description(resolved_args)
+                if self.is_async_test:
+                    coro = self.fn(**resolved_args)
+                    asyncio.get_event_loop().run_until_complete(coro)
+                else:
+                    self.fn(**resolved_args)
+            except FixtureError as e:
+                outcome = TestOutcome.FAIL
+                error: Optional[Exception] = e
+            except (Exception, SystemExit) as e:
+                outcome = (
+                    TestOutcome.XFAIL
+                    if isinstance(self.marker, XfailMarker)
+                    else TestOutcome.FAIL
+                )
+                error = e
+            else:
+                outcome = (
+                    TestOutcome.XPASS
+                    if isinstance(self.marker, XfailMarker)
+                    else TestOutcome.PASS
+                )
+                error = None
+
+        with closing(self.sout), closing(self.serr):
+            if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
+                result = TestResult(self, outcome)
+            else:
+                if isinstance(error, AssertionError):
+                    error.error_line = traceback.extract_tb(
+                        error.__traceback__, limit=-1
+                    )[0].lineno
+                result = TestResult(
+                    self,
+                    outcome,
+                    error,
+                    captured_stdout=self.sout.getvalue(),
+                    captured_stderr=self.serr.getvalue(),
+                )
+
+        return result
+
+    def fail_with_error(self, error: Exception) -> "TestResult":
+        return TestResult(
+            self, outcome=TestOutcome.FAIL, error=error, message=str(error)
+        )
 
     @property
     def name(self) -> str:
@@ -123,6 +206,10 @@ class Test:
     def qualified_name(self) -> str:
         name = self.name or ""
         return f"{self.module_name}.{name}"
+
+    @property
+    def is_async_test(self) -> bool:
+        return inspect.iscoroutinefunction(inspect.unwrap(self.fn))
 
     @property
     def line_number(self) -> int:
@@ -139,8 +226,12 @@ class Test:
         A test is considered parameterised if any of its default arguments
         have a value that is an instance of `Each`.
         """
-        default_args = self._get_default_args()
+        default_args = self.resolver._get_default_args()
         return any(isinstance(arg, Each) for arg in default_args.values())
+
+    @property
+    def resolver(self):
+        return TestArgumentResolver(self, self.param_meta.instance_index)
 
     def scope_key_from(self, scope: Scope) -> ScopeKey:
         if scope == Scope.Test:
@@ -166,65 +257,113 @@ class Test:
 
         generated_tests = []
         for instance_index in range(number_of_instances):
-            generated_tests.append(
-                Test(
-                    fn=self.fn,
-                    module_name=self.module_name,
-                    marker=self.marker,
-                    description=self.description,
-                    param_meta=ParamMeta(
-                        instance_index=instance_index, group_size=number_of_instances
-                    ),
-                    capture_output=self.capture_output,
-                )
+            test = Test(
+                fn=self.fn,
+                module_name=self.module_name,
+                marker=self.marker,
+                description=self.description,
+                param_meta=ParamMeta(
+                    instance_index=instance_index, group_size=number_of_instances
+                ),
+                capture_output=self.capture_output,
             )
+            generated_tests.append(test)
         return generated_tests
+
+    def _find_number_of_instances(self) -> int:
+        """
+        Returns the number of instances that would be generated for the current
+        parameterised test.
+
+        A parameterised test is only valid if every instance of `each` contains
+        an equal number of items. If the current test is an invalid parameterisation,
+        then a `ParameterisationError` is raised.
+        """
+        default_args = self.resolver._get_default_args()
+        lengths = [len(arg) for _, arg in default_args.items() if isinstance(arg, Each)]
+        is_valid = len(set(lengths)) in (0, 1)
+        if not is_valid:
+            raise ParameterisationError(
+                f"The test {self.name}/{self.description} is parameterised incorrectly. "
+                f"Please ensure all instances of 'each' in the test signature "
+                f"are of equal length."
+            )
+        return lengths[0]
 
     def deps(self) -> MappingProxyType:
         return inspect.signature(self.fn).parameters
 
-    def resolve_args(self, cache: FixtureCache, iteration: int = 0) -> Dict[str, Any]:
+    def format_description(self, args: Dict[str, Any]) -> str:
+        """
+        Applies any necessary string formatting to the description,
+        given a dictionary `args` of values that will be injected
+        into the test.
+
+        This method will mutate the Test by updating the description.
+        Returns the newly updated description.
+        """
+
+        format_dict = FormatDict(**args)
+        if not self.description:
+            self.description = ""
+
+        try:
+            self.description = self.description.format_map(format_dict)
+        except ValueError:
+            pass
+
+        return self.description
+
+
+@dataclass
+class TestArgumentResolver:
+    test: Test
+    iteration: int
+
+    def resolve_args(self, cache: FixtureCache) -> Dict[str, Any]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         If the argument is not a fixture, the raw argument will be used.
         Resolved values will be stored in fixture_cache, accessible
         using the fixture cache key (See `Fixture.key`).
         """
-        if self.capture_output:
-            with redirect_stdout(self.sout), redirect_stderr(self.serr):
-                return self._resolve_args(cache, iteration)
-        return self._resolve_args(cache, iteration)
+        if self.test.capture_output:
+            with redirect_stdout(self.test.sout), redirect_stderr(self.test.serr):
+                return self._resolve_args(cache)
+        else:
+            return self._resolve_args(cache)
 
-    def _resolve_args(self, cache: FixtureCache, iteration: int) -> Dict[str, Any]:
-        if not self.has_deps:
-            return {}
-        default_args = self._get_default_args()
+    def _resolve_args(self, cache: FixtureCache) -> Dict[str, Any]:
+        args_for_iteration = self._get_args_for_iteration()
         resolved_args: Dict[str, Any] = {}
-        for name, arg in default_args.items():
-            # In the case of parameterised testing, grab the arg corresponding
-            # to the current iteration of the parameterised group of tests.
-            if isinstance(arg, Each):
-                arg = arg[iteration]
-            if hasattr(arg, "ward_meta") and arg.ward_meta.is_fixture:
+        for name, arg in args_for_iteration.items():
+            if is_fixture(arg):
                 resolved = self._resolve_single_arg(arg, cache)
             else:
                 resolved = arg
             resolved_args[name] = resolved
         return self._unpack_resolved(resolved_args)
 
-    def get_result(self, outcome, exception=None):
-        with closing(self.sout), closing(self.serr):
-            if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
-                result = TestResult(self, outcome)
-            else:
-                result = TestResult(
-                    self,
-                    outcome,
-                    exception,
-                    captured_stdout=self.sout.getvalue(),
-                    captured_stderr=self.serr.getvalue(),
-                )
-            return result
+    def _get_args_for_iteration(self):
+        if not self.test.has_deps:
+            return {}
+        default_args = self._get_default_args()
+        args_for_iteration: Dict[str, Any] = {}
+        for name, arg in default_args.items():
+            # In the case of parameterised testing, grab the arg corresponding
+            # to the current iteration of the parameterised group of tests.
+            if isinstance(arg, Each):
+                arg = arg[self.iteration]
+            args_for_iteration[name] = arg
+        return args_for_iteration
+
+    @property
+    def fixtures(self) -> Dict[str, Fixture]:
+        return {
+            name: Fixture(arg)
+            for name, arg in self._get_args_for_iteration().items()
+            if is_fixture(arg)
+        }
 
     def _get_default_args(
         self, func: Optional[Union[Callable, Fixture]] = None
@@ -237,7 +376,7 @@ class Test:
         If a value is a fixture function, then the raw fixture
         function is returned as a value in the dict, *not* the `Fixture` object.
         """
-        fn = func or self.fn
+        fn = func or self.test.fn
         meta = getattr(fn, "ward_meta", None)
         signature = inspect.signature(fn)
 
@@ -252,50 +391,48 @@ class Test:
         default_binding.apply_defaults()
         return default_binding.arguments
 
-    def _find_number_of_instances(self) -> int:
-        """
-        Returns the number of instances that would be generated for the current
-        parameterised test.
-
-        A parameterised test is only valid if every instance of `each` contains
-        an equal number of items. If the current test is an invalid parameterisation,
-        then a `ParameterisationError` is raised.
-        """
-        default_args = self._get_default_args()
-        lengths = [len(arg) for _, arg in default_args.items() if isinstance(arg, Each)]
-        is_valid = len(set(lengths)) in (0, 1)
-        if not is_valid:
-            raise ParameterisationError(
-                f"The test {self.name}/{self.description} is parameterised incorrectly. "
-                f"Please ensure all instances of 'each' in the test signature "
-                f"are of equal length."
-            )
-        return lengths[0]
-
     def _resolve_single_arg(
         self, arg: Callable, cache: FixtureCache
     ) -> Union[Any, Fixture]:
+        """
+        Get the fixture return value
+
+        If the fixture has been cached, return the value from the cache.
+        Otherwise, call the fixture function and return the value.
+        """
+
         if not hasattr(arg, "ward_meta"):
             return arg
 
         fixture = Fixture(arg)
-        if cache.contains(fixture, fixture.scope, self.scope_key_from(fixture.scope)):
+        if cache.contains(
+            fixture, fixture.scope, self.test.scope_key_from(fixture.scope)
+        ):
             return cache.get(
-                fixture.key, fixture.scope, self.scope_key_from(fixture.scope)
+                fixture.key, fixture.scope, self.test.scope_key_from(fixture.scope)
             )
 
         has_deps = len(fixture.deps()) > 0
-        is_generator = fixture.is_generator_fixture
         if not has_deps:
             try:
-                if is_generator:
+                if fixture.is_generator_fixture:
                     fixture.gen = arg()
                     fixture.resolved_val = next(fixture.gen)
+                elif fixture.is_async_generator_fixture:
+                    fixture.gen = arg()
+                    awaitable = fixture.gen.__anext__()
+                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                        awaitable
+                    )
+                elif fixture.is_coroutine_fixture:
+                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                        arg()
+                    )
                 else:
                     fixture.resolved_val = arg()
-            except Exception as e:
+            except (Exception, SystemExit) as e:
                 raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
-            scope_key = self.scope_key_from(fixture.scope)
+            scope_key = self.test.scope_key_from(fixture.scope)
             cache.cache_fixture(fixture, scope_key)
             return fixture
 
@@ -307,14 +444,24 @@ class Test:
 
         try:
             args_to_inject = self._unpack_resolved(children_resolved)
-            if is_generator:
+            if fixture.is_generator_fixture:
                 fixture.gen = arg(**args_to_inject)
                 fixture.resolved_val = next(fixture.gen)
+            elif fixture.is_async_generator_fixture:
+                fixture.gen = arg(**args_to_inject)
+                awaitable = fixture.gen.__anext__()
+                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                    awaitable
+                )
+            elif fixture.is_coroutine_fixture:
+                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
+                    arg(**args_to_inject)
+                )
             else:
                 fixture.resolved_val = arg(**args_to_inject)
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
-        scope_key = self.scope_key_from(fixture.scope)
+        scope_key = self.test.scope_key_from(fixture.scope)
         cache.cache_fixture(fixture, scope_key)
         return fixture
 
@@ -327,25 +474,18 @@ class Test:
                 resolved_vals[k] = arg
         return resolved_vals
 
-    def format_description(self, arg_map: Dict[str, Any]) -> str:
-        """
-        Applies any necessary string formatting to the description,
-        given a dictionary `arg_map` of values that will be injected
-        into the test.
 
-        This method will mutate the Test by updating the description.
-        Returns the newly updated description.
-        """
-        format_dict = FormatDict(**arg_map)
-        if not self.description:
-            self.description = ""
+def fixtures_used_directly_by_tests(
+    tests: Iterable[Test],
+) -> Mapping[Fixture, Collection[Test]]:
+    test_to_fixtures = {test: test.resolver.fixtures for test in tests}
 
-        try:
-            self.description = self.description.format_map(format_dict)
-        except ValueError:
-            pass
+    fixture_to_tests = collections.defaultdict(list)
+    for test, used_fixtures in test_to_fixtures.items():
+        for fix in used_fixtures.values():
+            fixture_to_tests[fix].append(test)
 
-        return self.description
+    return fixture_to_tests
 
 
 def is_test_module_name(module_name: str) -> bool:
@@ -361,7 +501,7 @@ def is_test_module_name(module_name: str) -> bool:
 anonymous_tests: Dict[Path, List[Callable]] = defaultdict(list)
 
 
-def test(description: str, *args, **kwargs):
+def test(description: str, *args, tags=None, **kwargs):
     def decorator_test(func):
         unwrapped = inspect.unwrap(func)
         module_name: str = unwrapped.__module__
@@ -375,9 +515,12 @@ def test(description: str, *args, **kwargs):
 
             if hasattr(unwrapped, "ward_meta"):
                 unwrapped.ward_meta.description = description
+                unwrapped.ward_meta.tags = tags
                 unwrapped.ward_meta.path = path
             else:
-                unwrapped.ward_meta = WardMeta(description=description, path=path)
+                unwrapped.ward_meta = WardMeta(
+                    description=description, tags=tags, path=path,
+                )
 
             collect_into = kwargs.get("_collect_into", anonymous_tests)
             collect_into[path].append(unwrapped)
@@ -399,6 +542,33 @@ class TestOutcome(Enum):
     SKIP = auto()
     XFAIL = auto()  # expected fail
     XPASS = auto()  # unexpected pass
+    DRYRUN = auto()  # tests arent executed during dryruns
+
+    @property
+    def display_char(self):
+        display_chars = {
+            TestOutcome.PASS: ".",
+            TestOutcome.FAIL: "F",
+            TestOutcome.SKIP: "-",
+            TestOutcome.XPASS: "U",
+            TestOutcome.XFAIL: "x",
+            TestOutcome.DRYRUN: ".",
+        }
+        assert len(display_chars) == len(TestOutcome)
+        return display_chars[self]
+
+    @property
+    def display_name(self):
+        display_names = {
+            TestOutcome.PASS: "Passes",
+            TestOutcome.FAIL: "Failures",
+            TestOutcome.SKIP: "Skips",
+            TestOutcome.XPASS: "Unexpected Passes",
+            TestOutcome.XFAIL: "Expected Failures",
+            TestOutcome.DRYRUN: "Dry-runs",
+        }
+        assert len(display_names) == len(TestOutcome)
+        return display_names[self]
 
 
 @dataclass
@@ -409,3 +579,16 @@ class TestResult:
     message: str = ""
     captured_stdout: str = ""
     captured_stderr: str = ""
+
+
+class Timer:
+    def __init__(self):
+        self._start_time = None
+        self.duration = None
+
+    def __enter__(self):
+        self._start_time = default_timer()
+        return self
+
+    def __exit__(self, *args):
+        self.duration = default_timer() - self._start_time

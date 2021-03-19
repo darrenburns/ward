@@ -1,22 +1,23 @@
- [build-system]
-requires = ["flit_core >=2,<3"]
-build-backend = "flit_core.buildapi"
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
 
-[tool.flit.metadata]
-module = "ward"
-author = "Darren Burns"
-author-email = "darrenb900@gmail.com"
-home-page = "https://github.com/darrenburns/ward"
-description-file = "README.md"
-requires-python = ">=3.6"
-requires = [
-    "colorama>=0.3.3",
-    "termcolor>=1.1.0",
-    "dataclasses>=0.1; python_version < '3.7'",
-    "click>=7.0",
-    "toml>=0.9.4",
-    "pygments>=2.4.2",
-]
+[tool.ward]
+path = ["ward/tests"]
+
+[tool.poetry]
+name = "ward"
+version = "0.51.0b0"
+description = "A modern Python testing framework"
+exclude = ["ward/tests"]
+authors = ["Darren Burns <darrenb900@gmail.com>"]
+maintainers = ["Darren Burns <darrenb900@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://wardpy.com"
+repository = "https://github.com/darrenburns/ward"
+documentation = "https://wardpy.com"
+keywords = ["test", "testing", "quality-assurance", "cli", "python3"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
@@ -33,16 +34,45 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 
-[tool.flit.metadata.requires-extra]
-dev = [
-    "black>=19.10b0",
-    "flake8>=3.7.9",
-    "flit>=2.2.0",
-    "pycleanup>=0.0.1",
-]
+[tool.poetry.dependencies]
+python = "^3.6"
+dataclasses = { version = "^0.7", python = "3.6" }
+colorama = "^0.4.0"
+click = "^7.0"
+termcolor = "^1.1.0"
+rich = "^9.1.0"
+toml = "^0.10.1"
+pygments = "^2.4.2"
+pprintpp = "^0.4.0"
+cucumber-tag-expressions = "^2.0.0"
+click-default-group = "^1.2.2"
+click-completion = "^0.5.2"
 
-[tool.flit.scripts]
+[tool.poetry.dev-dependencies]
+black = "^19.9b0"
+flake8 = "^3.7.0"
+coverage = "^5.1"
+
+[tool.poetry.scripts]
 ward = "ward.run:run"
 
-[tool.ward]
-path = ["tests"]
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+]
+
+[tool.coverage.run]
+branch = true
+include = [
+    "ward/*",
+]
+omit = [
+    "ward/tests/*",
+]

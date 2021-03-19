@@ -4,9 +4,9 @@ from random import shuffle
 from typing import Generator, List
 
 from ward import Scope
-from ward.errors import FixtureError
+from ward.errors import ParameterisationError
 from ward.fixtures import FixtureCache
-from ward.testing import Test, TestOutcome, TestResult
+from ward.testing import Test, TestResult
 
 
 @dataclass
@@ -25,40 +25,31 @@ class Suite:
             counts[path] += 1
         return counts
 
-    def generate_test_runs(self, order="standard") -> Generator[TestResult, None, None]:
+    def generate_test_runs(
+        self, order="standard", dry_run=False
+    ) -> Generator[TestResult, None, None]:
+        """
+        Run tests
+
+        Returns a generator which yields test results
+        """
+
         if order == "random":
             shuffle(self.tests)
 
         num_tests_per_module = self._test_counts_per_module()
         for test in self.tests:
-            generated_tests = test.get_parameterised_instances()
             num_tests_per_module[test.path] -= 1
-            for i, generated_test in enumerate(generated_tests):
-                marker = generated_test.marker.name if generated_test.marker else None
-                if marker == "SKIP":
-                    yield generated_test.get_result(TestOutcome.SKIP)
-                    continue
-
-                try:
-                    resolved_vals = generated_test.resolve_args(self.cache, iteration=i)
-                    generated_test.format_description(resolved_vals)
-                    generated_test(**resolved_vals)
-                    outcome = (
-                        TestOutcome.XPASS if marker == "XFAIL" else TestOutcome.PASS
-                    )
-                    yield generated_test.get_result(outcome)
-                except FixtureError as e:
-                    yield generated_test.get_result(TestOutcome.FAIL, e)
-                    continue
-                except Exception as e:
-                    outcome = (
-                        TestOutcome.XFAIL if marker == "XFAIL" else TestOutcome.FAIL
-                    )
-                    yield generated_test.get_result(outcome, e)
-                finally:
-                    self.cache.teardown_fixtures_for_scope(
-                        Scope.Test, scope_key=generated_test.id
-                    )
+            try:
+                generated_tests = test.get_parameterised_instances()
+            except ParameterisationError as e:
+                yield test.fail_with_error(e)
+                continue
+            for generated_test in generated_tests:
+                yield generated_test.run(self.cache, dry_run=dry_run)
+                self.cache.teardown_fixtures_for_scope(
+                    Scope.Test, scope_key=generated_test.id
+                )
 
             if num_tests_per_module[test.path] == 0:
                 self.cache.teardown_fixtures_for_scope(

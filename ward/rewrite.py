@@ -1,5 +1,6 @@
 import ast
 import inspect
+import textwrap
 import types
 from typing import Iterable, List
 
@@ -94,6 +95,9 @@ def rewrite_assertions_in_tests(tests: Iterable[Test]) -> List[Test]:
 def rewrite_assertion(test: Test) -> Test:
     # Get the old code and code object
     code = inspect.getsource(test.fn)
+    indents = textwrap._leading_whitespace_re.findall(code)
+    col_offset = len(indents[0]) if len(indents) > 0 else 0
+    code = textwrap.dedent(code)
     code_obj = test.fn.__code__
 
     # Rewrite the AST of the code
@@ -102,6 +106,11 @@ def rewrite_assertion(test: Test) -> Test:
     ast.increment_lineno(tree, line_no - 1)
 
     new_tree = RewriteAssert().visit(tree)
+
+    # We dedented the code so that it was a valid tree, now re-apply the indent
+    for child in ast.walk(new_tree):
+        if hasattr(child, "col_offset"):
+            child.col_offset = getattr(child, "col_offset", 0) + col_offset
 
     # Reconstruct the test function
     new_mod_code_obj = compile(new_tree, code_obj.co_filename, "exec")

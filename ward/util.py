@@ -1,6 +1,7 @@
+import collections
 import inspect
 from pathlib import Path
-from typing import Iterable, Any
+from typing import Iterable, Any, Callable, Hashable, TypeVar, Dict, List
 
 
 def truncate(s: str, num_chars: int) -> str:
@@ -31,3 +32,14 @@ def find_project_root(paths: Iterable[Path]) -> Path:
 
 def get_absolute_path(object: Any) -> Path:
     return Path(inspect.getfile(object)).absolute()
+
+
+T = TypeVar("T")
+H = TypeVar("H", bound=Hashable)
+
+
+def group_by(items: Iterable[T], key: Callable[[T], H]) -> Dict[H, List[T]]:
+    groups = collections.defaultdict(list)
+    for item in items:
+        groups[key(item)].append(item)
+    return dict(groups)

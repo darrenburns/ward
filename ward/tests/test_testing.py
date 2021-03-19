@@ -1,16 +1,23 @@
+import asyncio
 from collections import defaultdict
 from pathlib import Path
 from unittest import mock
-from unittest.mock import Mock
-
 import sys
 
-from tests.utilities import testable_test, FORCE_TEST_PATH
-from ward import raises, Scope
+from ward.tests.utilities import FORCE_TEST_PATH, testable_test
+from ward import Scope, raises
 from ward.errors import ParameterisationError
-from ward.fixtures import fixture
+from ward.fixtures import FixtureCache, fixture, Fixture
 from ward.models import WardMeta
-from ward.testing import Test, test, each, ParamMeta
+from ward.testing import (
+    ParamMeta,
+    TestOutcome,
+    Test,
+    each,
+    test,
+    xfail,
+    fixtures_used_directly_by_tests,
+)
 
 
 def f():
@@ -39,6 +46,11 @@ def dependent_test():
         assert 1 == 1
 
     return Test(fn=_, module_name=mod)
+
+
+@fixture()
+def cache():
+    return FixtureCache()
 
 
 @test("Test.name should return the name of the function it wraps")
@@ -77,12 +89,72 @@ def _(anonymous_test=anonymous_test):
     assert not anonymous_test.has_deps
 
 
-@test("Test.__call__ should delegate to the function it wraps")
-def _():
-    mock = Mock()
-    t = Test(fn=mock, module_name=mod)
-    t(1, 2, key="val")
-    mock.assert_called_once_with(1, 2, key="val")
+@test("Test.run should delegate to the function it wraps")
+def _(cache: FixtureCache = cache):
+    called_with = None
+    call_kwargs = (), {}
+
+    def func(key="val", **kwargs):
+        nonlocal called_with, call_kwargs
+        called_with = key
+        call_kwargs = kwargs
+
+    t = Test(fn=func, module_name=mod)
+    t.run(cache)
+    assert called_with == "val"
+    assert call_kwargs == {"kwargs": {}}
+
+
+@test("Test.run should delegate to coroutine function it wraps")
+def _(cache: FixtureCache = cache):
+    called_with = None
+    call_kwargs = (), {}
+
+    async def func(key="val", **kwargs):
+        nonlocal called_with, call_kwargs
+        called_with = key
+        call_kwargs = kwargs
+
+    t = Test(fn=func, module_name=mod)
+    t.run(cache)
+    assert called_with == "val"
+    assert call_kwargs == {"kwargs": {}}
+
+
+@fixture
+async def one():
+    await asyncio.sleep(0.00001)
+    yield 1
+
+
+@fixture(scope="module")
+async def two():
+    await asyncio.sleep(0.00001)
+    return 2
+
+
+@fixture
+def three():
+    return 3
+
+
+@xfail("intentional failure")
+@test("async/await failing test")
+async def _(one=one, two=two):
+    await asyncio.sleep(0.0001)
+    assert one + two == 999
+
+
+@test("async/await passing test")
+async def _(one=one, two=two, three=three):
+    assert one + two == three
+
+
+@test("a test that exits {exit_code} is marked as {outcome}")
+def _(exit_code=each(0, 1), outcome=each(TestOutcome.FAIL, TestOutcome.FAIL)):
+    t = Test(fn=lambda: sys.exit(exit_code), module_name=mod)
+
+    assert t.run(FixtureCache()).outcome is outcome
 
 
 @test("Test.is_parameterised should return True for parameterised test")
@@ -179,22 +251,23 @@ def _():
 def i_print_something():
     print("out")
     sys.stderr.write("err")
+    raise Exception
 
 
 @test("stdout/stderr are captured by default when a test is called")
-def _():
+def _(cache: FixtureCache = cache):
     t = Test(fn=i_print_something, module_name="")
-    t()
-    assert t.sout.getvalue() == "out\n"
-    assert t.serr.getvalue() == "err"
+    result = t.run(cache)
+    assert result.captured_stdout == "out\n"
+    assert result.captured_stderr == "err"
 
 
 @test("stdout/stderr are not captured when Test.capture_output = False")
-def _():
+def _(cache: FixtureCache = cache):
     t = Test(fn=i_print_something, module_name="", capture_output=False)
-    t()
-    assert t.sout.getvalue() == ""
-    assert t.serr.getvalue() == ""
+    result = t.run(cache)
+    assert result.captured_stdout == ""
+    assert result.captured_stderr == ""
 
 
 @fixture
@@ -269,3 +342,53 @@ def _(func=example_test):
     path = Path("p")
     test("test", _collect_into=dest, _force_path=path)(func)
     assert len(dest) == 0
+
+
+@test("fixtures_used_directly_by_tests finds used fixture")
+def _():
+    @fixture
+    def f():
+        pass
+
+    t = Test(lambda f=f: None, module_name="")
+
+    assert fixtures_used_directly_by_tests([t]) == {Fixture(f): [t]}
+
+
+@test("fixtures_used_directly_by_tests doesn't follow indirect dependencies")
+def _():
+    @fixture
+    def parent():
+        pass
+
+    @fixture
+    def child():
+        pass
+
+    t = Test(lambda c=child: None, module_name="")
+
+    assert fixtures_used_directly_by_tests([t]) == {Fixture(child): [t]}
+
+
+@test("fixtures_used_directly_by_tests works on a complex example")
+def _():
+    @fixture
+    def parent():
+        pass
+
+    @fixture
+    def child():
+        pass
+
+    @fixture
+    def not_used():
+        pass
+
+    t1 = Test(lambda c=child: None, module_name="")
+    t2 = Test(lambda p=parent, c=child: None, module_name="")
+    t3 = Test(lambda _: None, module_name="")
+
+    assert fixtures_used_directly_by_tests([t1, t2, t3]) == {
+        Fixture(child): [t1, t2],
+        Fixture(parent): [t2],
+    }

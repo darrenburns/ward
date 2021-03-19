@@ -56,7 +56,8 @@ def temp_config_file_hyphens():
 @test("read_config_toml reads from only [tool.ward] section")
 def _(tmp=temp_config_file):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
-    assert conf == {"path": "test_path"}
+    assert "path" in conf
+    assert conf["path"] == "test_path"
 
 
 @test("read_config_toml returns {} if config file doesnt exist")
@@ -76,7 +77,8 @@ def _(tmp=temp_config_missing):
 )
 def _(tmp=temp_config_file_hyphens):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
-    assert conf == {"some_key": "some-value"}
+    assert "some_key" in conf
+    assert conf["some_key"] == "some-value"
 
 
 @test("read_config_toml raises click.FileError if config file syntax invalid")

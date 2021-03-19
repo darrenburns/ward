@@ -1,20 +1,31 @@
 import inspect
+import types
 from enum import Enum
-from typing import Type, Any
+from typing import Type, Any, ContextManager, TypeVar, Generic, Optional, cast
+
+_E = TypeVar("_E", bound=Exception)
 
 
-class raises:
-    def __init__(self, expected_ex_type: Type[Exception]):
+class raises(Generic[_E], ContextManager["raises[_E]"]):
+    raised: _E
+
+    def __init__(self, expected_ex_type: Type[_E]):
         self.expected_ex_type = expected_ex_type
 
-    def __enter__(self):
-        pass
+    def __enter__(self) -> "raises[_E]":
+        return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[types.TracebackType],
+    ) -> bool:
         if exc_type is not self.expected_ex_type:
             raise AssertionError(
                 f"Expected exception {self.expected_ex_type}, but {exc_type} was raised instead."
             )
+        self.raised: _E = cast(_E, exc_val)
         return True
 
 
