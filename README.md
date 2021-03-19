@@ -2,7 +2,7 @@
 ![Build](https://github.com/darrenburns/ward/workflows/Build/badge.svg)
 [![Codecov](https://codecov.io/gh/darrenburns/ward/branch/master/graph/badge.svg)](https://codecov.io/gh/darrenburns/ward)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
-[![Gitter](https://badges.gitter.im/python-ward/community.svg)](https://gitter.im/python-ward/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
