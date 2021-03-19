@@ -30,7 +30,7 @@ def _(suite=suite):
 
 
 @test(
-    f"Suite.generate_test_runs generates {NUMBER_OF_TESTS} when suite has {NUMBER_OF_TESTS} tests"
+    f"Suite.generate_test_runs generates {NUMBER_OF_TESTS} tests when suite has {NUMBER_OF_TESTS} tests"
 )
 def _(suite=suite):
     runs = suite.generate_test_runs()
@@ -38,7 +38,7 @@ def _(suite=suite):
     assert len(list(runs)) == NUMBER_OF_TESTS
 
 
-@test("Suite.generate_test_runs generates yields the expected test results")
+@test("Suite.generate_test_runs yields the expected test results")
 def _(suite=suite):
     results = list(suite.generate_test_runs())
     expected = [
