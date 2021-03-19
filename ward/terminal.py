@@ -5,7 +5,7 @@ import statistics
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from textwrap import indent, dedent, wrap
+from textwrap import dedent, wrap
 from typing import (
     Any,
     Dict,
@@ -13,7 +13,6 @@ from typing import (
     Iterable,
     List,
     Optional,
-    Iterator,
     Collection,
 )
 
@@ -32,7 +31,6 @@ from rich.text import Text
 from rich.theme import Theme
 from rich.traceback import Traceback
 from rich.tree import Tree
-from termcolor import colored
 
 from ward._ward_version import __version__
 from ward.diff import make_diff
@@ -70,7 +68,7 @@ theme = Theme(
         "fail.textonly": "#BF2D2D",
         "fail.header": "bold #BF2D2D",
         "skip": "#ffffff on #0E67B3",
-        "skip.textonly": "#0E67B3",
+        "skip.textonly": "#1381E0",
         "xpass": "#162740 on #F4C041",
         "xpass.textonly": "#F4C041",
         "xfail": "#ffffff on #695CC8",
@@ -79,7 +77,11 @@ theme = Theme(
         "info": "yellow italic",
         "dryrun": "#ffffff on #162740",
         "rule.line": "#189F4A",
-        "fixture.name": "bold cyan",
+        "fixture.name": "bold #1381E0",
+        "fixture.scope.test": "bold #189F4A",
+        "fixture.scope.module": "bold #F4C041",
+        "fixture.scope.global": "bold #EA913C",
+        "usedby": "#9285F6",
     }
 )
 console = Console(theme=theme, highlighter=NullHighlighter())
@@ -640,7 +642,11 @@ def outcome_to_style(outcome: TestOutcome) -> str:
 
 
 def scope_to_style(scope: Scope) -> str:
-    return {Scope.Test: "green", Scope.Module: "blue", Scope.Global: "magenta"}[scope]
+    return {
+        Scope.Test: "fixture.scope.test",
+        Scope.Module: "fixture.scope.module",
+        Scope.Global: "fixture.scope.global",
+    }[scope]
 
 
 def output_fixtures(
@@ -700,7 +706,7 @@ def make_fixture_information_tree(
 
     if show_dependencies or show_dependency_trees:
         if fixtures_to_parents[fixture]:
-            depends_on_node = root.add(label="[info]depends on fixtures")
+            depends_on_node = root.add(label="[usedby]depends on fixtures")
             add_fixture_dependencies_to_tree(
                 depends_on_node,
                 fixture,
@@ -710,7 +716,7 @@ def make_fixture_information_tree(
             )
 
         if fixtures_to_children[fixture]:
-            used_by_node = root.add(label="[info]used by fixtures")
+            used_by_node = root.add(label="[usedby]used by fixtures")
             add_fixture_dependencies_to_tree(
                 used_by_node,
                 fixture,
@@ -720,11 +726,11 @@ def make_fixture_information_tree(
             )
 
         if used_by_tests:
-            used_by_tests_node = root.add("[info]used directly by tests")
+            used_by_tests_node = root.add("[usedby]used directly by tests")
             add_fixture_usages_by_tests_to_tree(used_by_tests_node, used_by_tests)
 
         if not (used_by_tests or fixtures_to_children[fixture]):
-            root.add(f"[info]used by [fail]no tests or fixtures")
+            root.add(f"[usedby]used by [fail]no tests or fixtures")
 
     return root
 
