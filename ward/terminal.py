@@ -400,7 +400,7 @@ class TestResultWriterBase:
         return all_results
 
     def print_divider(self) -> None:
-        print_divider()
+        console.print(Rule(style="muted"))
 
     def output_single_test_result(self, test_result: TestResult):
         """Indicate whether a test passed, failed, was skipped etc."""
@@ -432,10 +432,6 @@ class TestResultWriterBase:
 
     def output_test_failed_location(self, test_result: TestResult):
         raise NotImplementedError()
-
-
-def print_divider() -> None:
-    console.print(Rule(style="muted"))
 
 
 @dataclass
