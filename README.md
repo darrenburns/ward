@@ -10,7 +10,7 @@ See the full documentation and feature set [here](https://wardpy.com).
 
 A modern Python test framework designed to help you find and fix flaws faster.
 
-![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
+<img width="567" alt="image" src="https://user-images.githubusercontent.com/5740731/111796103-bfa00b00-88bf-11eb-91a5-63622b2426c1.png">
 
 ## Features
 
