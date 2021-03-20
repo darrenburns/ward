@@ -53,6 +53,7 @@ black = "^19.9b0"
 flake8 = "^3.7.0"
 coverage = "^5.1"
 Sphinx = "^3.5.1"
+sphinx-rtd-theme = "^0.5.1"
 
 [tool.poetry.scripts]
 ward = "ward.run:run"
