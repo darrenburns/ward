@@ -19,7 +19,7 @@ def s():
 
 @test("truncate('{input}', num_chars={num_chars}) returns '{expected}'")
 def _(
-        input=s, num_chars=each(20, 11, 10, 5), expected=each(s, s, "hello w...", "he...")
+    input=s, num_chars=each(20, 11, 10, 5), expected=each(s, s, "hello w...", "he...")
 ):
     result = truncate(input, num_chars)
     assert result == expected
@@ -67,12 +67,12 @@ def square(x):
 
 @test("group {items!r} by {key} returns {result}")
 def _(
-        items=each(range(5), "echolocation", [-2, 3, 4, -3, 2, 3]),
-        key=each(is_even, is_vowel, square),
-        result=each(
-            {True: [0, 2, 4], False: [1, 3]},
-            {True: ["e", "o", "o", "a", "i", "o"], False: ["c", "h", "l", "c", "t", "n"]},
-            {4: [-2, 2], 9: [3, -3, 3], 16: [4]},
-        ),
+    items=each(range(5), "echolocation", [-2, 3, 4, -3, 2, 3]),
+    key=each(is_even, is_vowel, square),
+    result=each(
+        {True: [0, 2, 4], False: [1, 3]},
+        {True: ["e", "o", "o", "a", "i", "o"], False: ["c", "h", "l", "c", "t", "n"]},
+        {4: [-2, 2], 9: [3, -3, 3], 16: [4]},
+    ),
 ):
     assert group_by(items, key) == result

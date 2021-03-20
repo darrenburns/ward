@@ -2,7 +2,7 @@
 ![Build](https://github.com/darrenburns/ward/workflows/Build/badge.svg)
 [![Codecov](https://codecov.io/gh/darrenburns/ward/branch/master/graph/badge.svg)](https://codecov.io/gh/darrenburns/ward)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
-[![Gitter](https://badges.gitter.im/python-ward/community.svg)](https://gitter.im/python-ward/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
@@ -10,7 +10,7 @@ See the full documentation and feature set [here](https://wardpy.com).
 
 A modern Python test framework designed to help you find and fix flaws faster.
 
-![screenshot](https://raw.githubusercontent.com/darrenburns/ward/master/screenshot.png)
+<img width="567" alt="image" src="https://user-images.githubusercontent.com/5740731/111796103-bfa00b00-88bf-11eb-91a5-63622b2426c1.png">
 
 ## Features
 

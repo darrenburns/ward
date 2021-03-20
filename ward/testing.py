@@ -366,7 +366,7 @@ class TestArgumentResolver:
         }
 
     def _get_default_args(
-            self, func: Optional[Union[Callable, Fixture]] = None
+        self, func: Optional[Union[Callable, Fixture]] = None
     ) -> Dict[str, Any]:
         """
         Returns a mapping of test argument names to values.
@@ -392,7 +392,7 @@ class TestArgumentResolver:
         return default_binding.arguments
 
     def _resolve_single_arg(
-            self, arg: Callable, cache: FixtureCache
+        self, arg: Callable, cache: FixtureCache
     ) -> Union[Any, Fixture]:
         """
         Get the fixture return value
@@ -406,7 +406,7 @@ class TestArgumentResolver:
 
         fixture = Fixture(arg)
         if cache.contains(
-                fixture, fixture.scope, self.test.scope_key_from(fixture.scope)
+            fixture, fixture.scope, self.test.scope_key_from(fixture.scope)
         ):
             return cache.get(
                 fixture.key, fixture.scope, self.test.scope_key_from(fixture.scope)
@@ -476,7 +476,7 @@ class TestArgumentResolver:
 
 
 def fixtures_used_directly_by_tests(
-        tests: Iterable[Test],
+    tests: Iterable[Test],
 ) -> Mapping[Fixture, Collection[Test]]:
     test_to_fixtures = {test: test.resolver.fixtures for test in tests}
 
