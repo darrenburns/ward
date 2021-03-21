@@ -6,37 +6,6 @@ To find and run tests in your project, you can run ``ward`` without any argument
 This will recursively search through the current directory for modules with a name starting with ``test_`` or ending with ``_test``,
 and execute any tests contained in the modules it finds.
 
-Specifying test modules or directories
---------------------------------------
-
-You can run tests in a specific directory or module using the ``--path`` option. For example, to run all tests inside a directory named ``tests``:
-
-``ward --path tests``
-
-To run tests in the current directory, you can just type ``ward``, which is functionally equivalent to ``ward --path .``.
-
-You can also directly specify a test module, for example:
-
-``ward --path tests/api/test_get_user.py``
-
-You can supply multiple test directories by providing the ``--path`` option multiple times:
-
-``ward --path "unit" --path "integration"``
-
-Ward will run all tests it finds across all given paths. If one of the specified paths is contained within another, it won't repeat the same test more than once.
-Excluding modules or directories
-
-``ward --exclude glob1 --exclude glob2``
-
-You can tell Ward to ignore specific modules or directories using the ``--exclude`` command line option. This option can be supplied multiple times, and supports glob patterns.
-
-To configure excluded directories in a more permanent manner, you can use ``pyproject.toml``:
-
-.. code-block:: toml
-
-   [tool.ward]
-   exclude = ["glob1", "glob2"]
-
 Test outcomes
 -------------
 
@@ -56,53 +25,64 @@ run completes or is cancelled.
     :height: 230
     :alt: An example test result output from Ward
 
-Tag expressions: Selecting tests with ``--tags``
-------------------------------------------------
+Specifying test paths with ``--path``
+-------------------------------------
+
+You can run tests in a specific directory or module using the ``--path`` option. For example, to run all tests inside a directory named ``tests``: ``ward --path tests``
+
+To run tests in the current directory, you can just type ``ward``, which is functionally equivalent to ``ward --path .``.
+
+You can directly specify a test module, for example: ``ward --path tests/api/test_get_user.py``.
+
+You can supply multiple test directories by providing the ``--path`` option multiple times: ``ward --path "unit" --path "integration"``.
+
+Ward will run all tests it finds across all given paths. If one of the specified paths is contained within another, they'll only be included once. Ward will only run a test once per session.
+
+Excluding modules or paths with ``--exclude``
+---------------------------------------------
+
+``ward --exclude glob1 --exclude glob2``
+
+You can tell Ward to ignore specific modules or directories using the ``--exclude`` command line option. This option can be supplied multiple times, and supports glob patterns.
+
+You can also exclude paths using ``pyproject.toml``:
+
+.. code-block:: toml
+
+   [tool.ward]
+   exclude = ["glob1", "glob2"]
+
+Selecting tagged tests with ``--tags``
+--------------------------------------
 
 You can select which tests to run based on a "test expressions" using the ``--tags`` option: ``ward --tags EXPR``.
-
-For example, if you wanted to run all tests tagged with either ``android`` or ``ios``, you can run:
-
-``ward --tags "android or ios"``
 
 A tag expression is an infix boolean expression that can be used to accurately select a subset of tests you wish to execute.
 Tests are tagged using the tags keyword argument of the ``@test`` decorator (e.g. ``@test("eggs are green", tags=["unit"])``.)
 
+For example, if you wanted to run all tests tagged with either ``android`` or ``ios``, run ``ward --tags "android or ios"``.
+
 Here are some examples of tag expressions and what they mean:
 
-``slow``: tests tagged with ``slow``
-``unit and integration``: tests tagged with both ``unit`` and ``integration``
-``big and not slow``: tests tagged with ``big`` that aren't also tagged with ``slow``
-``android or ios``:	tests tagged with either ``android`` or ``ios``
+* ``slow``: tests tagged with ``slow``
+* ``unit and integration``: tests tagged with both ``unit`` and ``integration``
+* ``big and not slow``: tests tagged with ``big`` that aren't also tagged with ``slow``
+* ``android or ios``:	tests tagged with either ``android`` or ``ios``
 
 You can use parentheses in tag expressions to change the precedence rules to suit your needs.
 
-Searching: Selecting tests with ``--search``
---------------------------------------------
+Loosely search for tests with ``--search``
+------------------------------------------
 
 You can choose to limit which tests are collected and ran by Ward using the ``--search`` option. Module names, test descriptions and test function bodies will be searched, and those which contain the argument will be ran.
 
 Here are some examples:
 
-Run all tests that call the ``fetch_users`` function:
-
-``ward --search "fetch_users("``
-
-Run all tests that check if a ``ZeroDivisionError`` is raised:
-
-``ward --search "raises(ZeroDivisionError)"``
-
-Run all tests decorated with the ``@xfail`` decorator:
-
-``ward --search "@xfail"``
-
-Run a test described with ``"my_function should return False"``:
-
-``ward --search "my_function should return False"``
-
-Running tests inside a module: The search takes place on the fully qualified name, so you can run a single module (e.g. my_module) using the following command:
-
-``ward --search my_module.``
+* Run all tests that call the ``fetch_users`` function: ``ward --search "fetch_users("``
+* Run all tests that check if a ``ZeroDivisionError`` is raised: ``ward --search "raises(ZeroDivisionError)"``
+* Run all tests decorated with the ``@xfail`` decorator: ``ward --search "@xfail"``
+* Run a test described with ``"my_function should return False"``: ``ward --search "my_function should return False"``
+* Running tests inside a module: The search takes place on the fully qualified name, so you can run a single module (e.g. my_module) using the following command: ``ward --search my_module.``
 
 Of course, if a test name or body contains the string ``"my_module."``, that test will also be selected and will run.
 
@@ -145,30 +125,43 @@ If that is still too verbose, you may wish to represent every test outcome with 
 Output capturing
 ----------------
 
-By default, Ward captures everything that is written to standard output and standard error as your tests run. If a test fails, everything that was printed during the time it was running will be printed as part of the failure output.
+By default, Ward captures everything that is written to stdout and stderr as your tests run.
+If a test fails, everything that was printed during the time it was running will be printed as part of the failure output.
 
 .. image:: ../_static/captured_output.png
     :align: center
     :alt: An example test output capture in Ward
 
 With output capturing enabled, if you run a debugger such as pdb during test execution, everything it writes to the stdout will be captured by Ward too.
-Disabling output capturing
+
+Disabling output capturing with ``--no-capture-output``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you wish to disable output capturing you can do so using the ``--no-capture-output`` flag on the command line.
+Anything printed to stdout or stderr will no longer be captured by Ward, and will be printed to the terminal as your tests run,
+regardless of outcome.
 
-You can also disable output capturing using the capture-output key in your ``pyproject.toml``:
+You can also disable output capturing using the ``capture-output`` config in your ``pyproject.toml``:
 
 .. code-block:: toml
 
     [tool.ward]
     capture-output = false
 
-Randomise test execution order
-------------------------------
+Randomise test execution order with ``--order random``
+------------------------------------------------------
 
 Use ``--order "random"`` when running your tests to have Ward randomise the order they run in: ``ward --order "random"``.
 
-Running tests in a random order can help identify tests that have hidden dependencies on each other. Tests should pass regardless of the order they run in, and they should pass if run in isolation.
+Running tests in a random order can help identify tests that have hidden dependencies on each other.
+Tests should pass regardless of the order they run in, and they should pass if run in isolation.
+
+To have Ward always run tests in a random order, use the ``order`` config in your ``pyproject.toml``:
+
+.. code-block:: toml
+
+    [tool.ward]
+    order = "random"
 
 Cancelling after a number of failures with ``--fail-limit``
 -----------------------------------------------------------
@@ -177,8 +170,8 @@ If you wish for Ward to cancel a run immediately after a specific number of fail
 
 ``ward --fail-limit 5``
 
-Finding slow running tests
---------------------------
+Finding slow running tests with ``--show-slowest``
+--------------------------------------------------
 
 Use ``--show-slowest N`` to print the N tests with the highest execution time after the test run completes.
 
@@ -186,8 +179,8 @@ Use ``--show-slowest N`` to print the N tests with the highest execution time af
     :align: center
     :alt: The output for the slowest tests
 
-Performing a dry run
---------------------
+Performing a dry run with ``--dry-run``
+---------------------------------------
 
 Use the ``--dry-run`` option to have Ward search for and collect tests without running them (or any fixtures they depend on).
 When using ``--dry-run``, tests will return with an outcome of ``DRYRUN``.
@@ -200,8 +193,8 @@ This is useful for determining which tests Ward would run if invoked normally.
 
 Format strings in test descriptions may not be resolved during a dry-run, since no fixtures are evaluated and the data may therefore be missing.
 
-Customising the diff output
----------------------------
+Displaying symbols in diffs with ``--show-diff-symbols``
+--------------------------------------------------------
 
 Use ``--show-diff-symbols`` when invoking ``ward`` in order to have the diff output present itself with symbols instead
 of the colour-based highlighting. This may be useful in a continuous integration environment that doesn't support coloured terminal
@@ -209,4 +202,5 @@ output.
 
 .. image:: ../_static/show_diff_symbols.png
     :align: center
+    :height: 150
     :alt: Ward output with diff symbols enabled

@@ -239,8 +239,8 @@ You can mark a test that you expect to fail with the ``@xfail`` decorator.::
         # ...
 
 If a test decorated with ``@xfail`` *does* indeed fail as we expected, it is shown
-in the results as an XFAIL.
+in the results as an ``XFAIL``.
 
-If a test marked with this decorator passes unexpectedly, it is known as an XPASS (an unexpected pass).
+If a test marked with this decorator passes unexpectedly, it is known as an ``XPASS`` (an unexpected pass).
 
-If an XPASS occurs during a run, that run will be considered a failure.
+If an ``XPASS`` occurs during a run, the run will be considered a failure.

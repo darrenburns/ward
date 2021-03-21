@@ -126,8 +126,8 @@ Fixtures have the ability to cleanup after themselves.
 
 For a fixture to run teardown code, it must be declared as a `generator function`.
 
-Notice how we yield the value of the fixture in the test below.
-Ward will inject the yielded value into the test, and after the test has run, all code below the yield will be executed.
+Notice how we ``yield`` the value of the fixture in the test below.
+Ward will inject the yielded value into the test, and after the test has run, all code below the ``yield`` will be executed.
 
 .. code-block:: python
 
@@ -153,15 +153,12 @@ The output captured by Ward whilst the test above runs is:
 2. I'm running the test!
 3. I've torn down the database!
 
-Global and module scoped fixtures can also contain teardown code.
+Global and module scoped fixtures can also contain teardown code:
 
-In the case of a module scoped fixture, the teardown code will run after the test module completes.
-
-In the case of a global scoped fixture, the teardown code will run after the whole test suite completes.
-
-If an exception occurs during the setup phase of the fixture, the teardown phase will not run.
-
-If an exception occurs during the running of a test, the teardown phase of on any fixtures that test depends on will run.
+* In the case of a module scoped fixture, the teardown code will run after the test module completes.
+* In the case of a global scoped fixture, the teardown code will run after the whole test suite completes.
+* If an exception occurs during the setup phase of the fixture, the teardown phase will not run.
+* If an exception occurs during the running of a test, the teardown phase of any fixtures that that test depends on will run.
 
 
 Inspecting fixtures
