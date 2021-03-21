@@ -32,24 +32,6 @@ During the test run, Ward will print the test description to the console.
 
 Tests will only be collected from modules with names that start with `"test_"` or end with `"_test"`.
 
-Testing `async` code
---------------------
-
-You can declare any test or fixture as ``async`` in order to test asynchronous code::
-
-    @fixture
-    async def post():
-        return await create_post("hello world")
-
-    @test("a newly created post has no children")
-    async def _(p=post):
-        children = await p.children
-        assert children == []
-
-    @test("a newly created post has an id > 0")
-    def _(p=post):
-        assert p.id > 0
-
 Tagging tests
 -------------
 
@@ -205,6 +187,24 @@ use ``with raises(<exc_type>) as <exc_object>``::
 
 Note that ``ex`` is only populated after the context manager exits, so
 be careful with your indentation.
+
+Testing `async` code
+--------------------
+
+You can declare any test or fixture as ``async`` in order to test asynchronous code::
+
+    @fixture
+    async def post():
+        return await create_post("hello world")
+
+    @test("a newly created post has no children")
+    async def _(p=post):
+        children = await p.children
+        assert children == []
+
+    @test("a newly created post has an id > 0")
+    def _(p=post):
+        assert p.id > 0
 
 Skipping a test
 ---------------

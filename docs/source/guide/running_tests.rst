@@ -19,7 +19,7 @@ You can also directly specify a test module, for example:
 
 ``ward --path tests/api/test_get_user.py``
 
-You can supply multiple test directories by providing multiple --path options:
+You can supply multiple test directories by providing the ``--path`` option multiple times:
 
 ``ward --path "unit" --path "integration"``
 
@@ -32,10 +32,29 @@ You can tell Ward to ignore specific modules or directories using the ``--exclud
 
 To configure excluded directories in a more permanent manner, you can use ``pyproject.toml``:
 
-.. code-block:: yaml
+.. code-block:: toml
 
    [tool.ward]
    exclude = ["glob1", "glob2"]
+
+Test outcomes
+-------------
+
+A test in Ward can finish with one of several different outcomes.
+The outcome of a test will be clearly indicated during the run, and a summary of those outcomes is displayed after the
+run completes or is cancelled.
+
+* ``PASS``: The test passed. It completed without any exceptions occurring or assertions failing.
+* ``FAIL``: The test failed. An exception occurred or an assertion failed.
+* ``SKIP``: The test was skipped. It wasn't executed at all because it was decorated with ``@skip``.
+* ``XFAIL``: An expected failure. The test is decorated with ``@xfail``, indicating that we currently expect it to fail... and it did!
+* ``XPASS``: An unexpected pass. The test is decorated with ``@xfail``, indicating that we expected it to fail. However, the test passed unexpectedly.
+* ``DRYRUN``: The status is only used during a dry-run (using the ``--dry-run`` option). The test nor any injected fixtures were executed.
+
+.. image:: ../_static/test_results.png
+    :align: center
+    :height: 230
+    :alt: An example test result output from Ward
 
 Tag expressions: Selecting tests with ``--tags``
 ------------------------------------------------
@@ -101,37 +120,36 @@ As your project grows, it may become impractical to print each test result on it
 
 The default test output of Ward looks like this (``--test-output-style=test-per-line``):
 
-.. code-block:: text
-
-    PASS test_earth:3: it is not flat
-    PASS test_earth:11: 24 hours to rotate
-    FAIL test_sun:4: it is hot
+.. image:: ../_static/test_per_line_output.png
+    :align: center
+    :alt: Output using test-per-line mode
 
 ``dots-module``
 ^^^^^^^^^^^^^^^
 
 If you run Ward with ``--test-output-style=dots-module``, each module will be printed on its own line, and a single character will be used to represent the outcome of each test in that module:
 
-.. code-block:: text
-
-    tests/test_earth.py: ..
-    tests/test_sun.py: F
+.. image:: ../_static/dots_module.png
+    :align: center
+    :alt: Output using dots-module mode
 
 ``dots-global``
 ^^^^^^^^^^^^^^^
 
-If that is still too verbose, you may wish to represent every test outcome with a single character, without grouping them by modules (--test-output-style=dots-global):
+If that is still too verbose, you may wish to represent every test outcome with a single character, without grouping them by modules (``--test-output-style=dots-global``):
 
-.. code-block:: text
-
-    ..F
+.. image:: ../_static/dots_global.png
+    :align: center
+    :alt: Output using dots-global mode
 
 Output capturing
 ----------------
 
 By default, Ward captures everything that is written to standard output and standard error as your tests run. If a test fails, everything that was printed during the time it was running will be printed as part of the failure output.
 
-example showing ward capturing output
+.. image:: ../_static/captured_output.png
+    :align: center
+    :alt: An example test output capture in Ward
 
 With output capturing enabled, if you run a debugger such as pdb during test execution, everything it writes to the stdout will be captured by Ward too.
 Disabling output capturing
@@ -166,11 +184,29 @@ Use ``--show-slowest N`` to print the N tests with the highest execution time af
 
 .. image:: ../_static/show_slowest.png
     :align: center
-    :alt: alternate text
+    :alt: The output for the slowest tests
 
 Performing a dry run
 --------------------
 
-Use the ``--dry-run`` option to have Ward search for and collect tests without running them (or any fixtures they depend on). When using ``--dry-run``, tests will return with an outcome of ``DRYRUN`` or ``SKIP``.
+Use the ``--dry-run`` option to have Ward search for and collect tests without running them (or any fixtures they depend on).
+When using ``--dry-run``, tests will return with an outcome of ``DRYRUN``.
+
+.. image:: ../_static/dry_run.png
+    :align: center
+    :alt: Ward output using the dry run option
 
 This is useful for determining which tests Ward would run if invoked normally.
+
+Format strings in test descriptions may not be resolved during a dry-run, since no fixtures are evaluated and the data may therefore be missing.
+
+Customising the diff output
+---------------------------
+
+Use ``--show-diff-symbols`` when invoking ``ward`` in order to have the diff output present itself with symbols instead
+of the colour-based highlighting. This may be useful in a continuous integration environment that doesn't support coloured terminal
+output.
+
+.. image:: ../_static/show_diff_symbols.png
+    :align: center
+    :alt: Ward output with diff symbols enabled

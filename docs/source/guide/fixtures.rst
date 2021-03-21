@@ -73,6 +73,7 @@ To make the user fixture global scope, we can change the decorator call to ``@fi
 .. code-block:: python
 
     from ward import fixture, Scope
+    
     @fixture(scope=Scope.Global)  # @fixture(scope="global") also works
     def user():
         return User(id=1, name="sam")
@@ -101,9 +102,11 @@ You can inject a fixture into another fixture in the same way that you'd inject 
     @fixture
     def name():
         return "sam"
+
     @fixture
     def user(name=name):
         return {"name": name}
+
     @test("fixtures can be composed")
     def _(name=name, user=user):
         assert user["name"] == name
@@ -129,6 +132,7 @@ Ward will inject the yielded value into the test, and after the test has run, al
 .. code-block:: python
 
     from ward import test, fixture
+
     @fixture
     def database():
         print("1. I'm setting up the database!")
@@ -136,6 +140,7 @@ Ward will inject the yielded value into the test, and after the test has run, al
         yield db_conn
         db_conn.close()
         print("3. I've torn down the database!")
+
     @test(f"Bob is one of the users contained in the database")
     def _(db=database):
         print("2. I'm running the test!")
@@ -157,3 +162,20 @@ In the case of a global scoped fixture, the teardown code will run after the who
 If an exception occurs during the setup phase of the fixture, the teardown phase will not run.
 
 If an exception occurs during the running of a test, the teardown phase of on any fixtures that test depends on will run.
+
+
+Inspecting fixtures
+-------------------
+
+You can view all of the fixtures in your project using the ``ward fixtures`` command.
+
+.. image:: ../_static/ward_fixtures_command.png
+    :align: center
+    :alt: Output of ward fixtures command
+
+To view the dependency graph of fixtures, and detect fixtures that are unused, you can run ``ward fixtures --show-dependency-trees``:
+
+.. image:: ../_static/ward_fixtures_dep_trees.png
+    :align: center
+    :alt: Output of ward fixtures show-dependency-trees command
+
