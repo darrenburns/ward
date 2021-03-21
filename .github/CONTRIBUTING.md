@@ -4,7 +4,7 @@ Contributions to Ward are encouraged and very welcome!
 
 Contributions can come in many forms: documentation enhancements, features, bug fixes, creating issues, and participating in the community.
 
-If you're interested in helping out, you might find some inspiration in [Issues](https://github.com/darrenburns/ward/issues). If you have an idea, but don't see it there, don't hesitate to create a new issue.
+If you're interested in helping out, you might find some inspiration in [Discussions](https://github.com/darrenburns/ward/discussions). If you have an idea, but don't see it there, don't hesitate to open a new discussion.
 
 Before submitting a pull request, please make sure the enhancement or bugfix you've made has been discussed. 
 
@@ -25,6 +25,6 @@ your code, `make prep` to do both of those things (run this before creating a PR
 * Let us know before you start working on something! Someone else may already have started working on the same thing.
 * Prepare your code for review with `make prep` (this will format and run tests)
 * Ensure `README.md` is updated if necessary.
-* Tests written cover new code, and running `ward` results in a pass.
+* Tests written cover new code, and running `make test` results in a pass.
 
 If something is missing from this guide (it probably is), please let me know by creating an issue or a pull request.
