@@ -1,5 +1,4 @@
 # Ward
-![Build](https://github.com/darrenburns/ward/workflows/Build/badge.svg)
 [![Codecov](https://codecov.io/gh/darrenburns/ward/branch/master/graph/badge.svg)](https://codecov.io/gh/darrenburns/ward)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
