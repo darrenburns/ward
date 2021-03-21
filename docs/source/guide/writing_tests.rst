@@ -73,6 +73,8 @@ use the helper ``assert_{op}`` methods from ``ward.expect``.
 
 .. TODO: Make some notes on how this works.
 
+.. _parameterisation:
+
 Parameterised testing
 ---------------------
 
@@ -187,6 +189,8 @@ use ``with raises(<exc_type>) as <exc_object>``::
 
 Note that ``ex`` is only populated after the context manager exits, so
 be careful with your indentation.
+
+.. _async_tests:
 
 Testing `async` code
 --------------------

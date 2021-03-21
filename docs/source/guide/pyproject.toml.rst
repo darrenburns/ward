@@ -1,3 +1,5 @@
+.. _pyproject:
+
 Configuring Ward in ``pyproject.toml``
 ========================================
 
@@ -8,7 +10,7 @@ You can configure Ward using the standard ``pyproject.toml`` configuration file,
 
 You don't need a ``pyproject.toml`` file to use Ward.
 
-If you do decide to use one, Ward will find read your ``pyproject.toml`` file and treat the values inside it as defaults.
+If you do decide to use one, Ward will find and read your ``pyproject.toml`` file, and treat the values inside it as defaults.
 
 If you pass an option via the command line that also appears in your ``pyproject.toml``, the option supplied via the command line takes priority.
 
