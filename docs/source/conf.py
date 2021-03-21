@@ -49,6 +49,12 @@ exclude_patterns = []
 #
 import sphinx_rtd_theme
 html_theme = 'sphinx_rtd_theme'
+html_logo = './_static/ward_logo.png'
+
+html_theme_options = {
+    "logo_only": True,
+}
+
 
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
