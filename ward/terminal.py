@@ -586,7 +586,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
                     Text(
                         f"Failed at {test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}"
                     ),
-                    pad=(1, 0, 1, 2),
+                    pad=(1, 0, 0, 2),
                 )
             )
 
