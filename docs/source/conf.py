@@ -53,8 +53,10 @@ html_logo = './_static/ward_logo.png'
 
 html_theme_options = {
     "logo_only": True,
+    "analytics_id": "G-KX64S7FJWH",  # Provided by Google in your dashboard
+    "analytics_anonymize_ip": False,
+    "display_version": True,
 }
-
 
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
