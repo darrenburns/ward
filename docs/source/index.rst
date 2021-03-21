@@ -23,8 +23,8 @@ Installation
 ------------
 Ward is available on PyPI, and can be installed with ``pip install ward`` (Python 3.6+ required).
 
-Usage
------
+A Quick Taste
+-------------
 
 Here's a simple example of a test written using Ward:
 
