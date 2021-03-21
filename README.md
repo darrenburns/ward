@@ -6,7 +6,7 @@ See the full documentation and feature set [here](https://ward.readthedocs.io/).
 
 A modern Python test framework designed to help you find and fix flaws faster.
 
-intro_screenshot.png<img width="807" alt="image" src="https://user-images.githubusercontent.com/5740731/111924675-9937c680-8a9d-11eb-8df3-6d9c9b8807c8.png">
+<img width="807" alt="image" src="https://user-images.githubusercontent.com/5740731/111924675-9937c680-8a9d-11eb-8df3-6d9c9b8807c8.png">
 
 ## Features
 
