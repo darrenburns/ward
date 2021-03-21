@@ -1,8 +1,9 @@
 # Ward
 [![Codecov](https://codecov.io/gh/darrenburns/ward/branch/master/graph/badge.svg)](https://codecov.io/gh/darrenburns/ward)
+[![Documentation Status](https://readthedocs.org/projects/ward/badge/?version=latest)](https://ward.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-See the full documentation [here](https://ward.readthedocs.io/).
+Ward is a modern test framework for Python with a focus on productivity and readability. 
 
 <img width="807" alt="image" src="https://user-images.githubusercontent.com/5740731/111924675-9937c680-8a9d-11eb-8df3-6d9c9b8807c8.png">
 
