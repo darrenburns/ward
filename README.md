@@ -75,18 +75,6 @@ def _(
 
 **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
 
-This project is currently in beta.
-
-Planned features:
-
-* Smart test execution order designed to surface failures faster (using various heuristics)
-* Multi-process mode to improve performance
-* Code coverage with `--coverage` flag
-* Handling flaky tests with test-specific retries, timeouts
-* Plugin system
-
-Let me know if you'd like to help out with any of these features!
-
 ## Getting Started
 
 [Take a look at the "Getting Started" tutorial.](https://wardpy.com/guide/tutorial)
