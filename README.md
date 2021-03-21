@@ -2,7 +2,7 @@
 [![Codecov](https://codecov.io/gh/darrenburns/ward/branch/master/graph/badge.svg)](https://codecov.io/gh/darrenburns/ward)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-See the full documentation and feature set [here](https://wardpy.com).
+See the full documentation and feature set [here](https://ward.readthedocs.io/).
 
 A modern Python test framework designed to help you find and fix flaws faster.
 
