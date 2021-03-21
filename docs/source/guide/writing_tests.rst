@@ -2,7 +2,7 @@ Writing Tests
 =============
 
 Descriptive testing
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 Tests aren't only a great way of ensuring your code behaves correctly, they're also a fantastic form of documentation.
 Therefore, a test framework should make describing your tests in a clear and concise manner as simple as possible.
@@ -16,7 +16,7 @@ as you'd like::
     def _():
         assert 1 + 2 == 3
 
-The description of a test is a [format string](https://docs.python.org/3/library/string.html#format-string-syntax), and may
+The description of a test is a format string, and may
 refer to any of the parameters (variables or fixtures) present in the test signature. This
 makes it easy to keep your test data and test descriptions in sync::
 
@@ -33,9 +33,9 @@ During the test run, Ward will print the test description to the console.
 Tests will only be collected from modules with names that start with `"test_"` or end with `"_test"`.
 
 Testing `async` code
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
-You can declare any test or fixture as `async` in order to test asynchronous code::
+You can declare any test or fixture as ``async`` in order to test asynchronous code::
 
     @fixture
     async def post():
@@ -51,9 +51,9 @@ You can declare any test or fixture as `async` in order to test asynchronous cod
         assert p.id > 0
 
 Tagging tests
-^^^^^^^^^^^^^
+-------------
 
-You can tag tests using the `tags` keyword argument of the `@test` decorator::
+You can tag tests using the ``tags`` keyword argument of the ``@test`` decorator::
 
     @test("simple addition", tags=["unit", "regression"])
     def _():
@@ -73,30 +73,32 @@ Here are some ways you could use tags:
 With your tests tagged you can now run only the tests you care about. To ask Ward to run only
 integration tests which target any mobile platform, you might invoke it like so:
 
-    ward --tags "integration and (ios or android)"
+``ward --tags "integration and (ios or android)"``
 
 For a deeper look into tag expressions, see the [running tests](/guide/running-tests) page.
 
-Using `assert`
-^^^^^^^^^^^^^^
+Using ``assert`` statements
+---------------------------
 
-Ward lets you use plain `assert` statements when writing your tests, but gives you considerably
+Ward lets you use plain ``assert`` statements when writing your tests, but gives you considerably
 more information should the assertion fail than a typical `assert` statement. It does this by
 modifying the abstract syntax tree (AST) of any collected tests. Occurrences of the `assert`
 statement are replaced with a function call, depending on which comparison operator was used.
 
-Currently, Ward only rewrites `assert` statements that appear directly in the body of your tests.
-If you use helper methods that contain `assert` statements and would like detailed output, you can
-use the helper `assert_{op}` methods in `ward.expect`.
+Currently, Ward only rewrites ``assert`` statements that appear directly in the body of your tests.
+If you use helper methods that contain ``assert`` statements and would like detailed output, you can
+use the helper ``assert_{op}`` methods from ``ward.expect``.
+
+.. TODO: Make some notes on how this works.
 
 Parameterised testing
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 A parameterised test is where you define a single test that runs multiple times,
 with different arguments being injected on each run.
 
 Ward supports parameterised testing by allowing multiple fixtures or
-values to be bound as a keyword argument using the `each` function::
+values to be bound as a keyword argument using the ```each`` function::
 
     from ward import each, fixture, test
 
@@ -114,16 +116,16 @@ values to be bound as a keyword argument using the `each` function::
 Although the example above is written as a single test,
 Ward will generate and run 3 distinct tests from it at run-time: one for each item passed into `each`.
 
-The variables `a` and `b` take the values `a=1` and `b=2` in the first test,
-`a=2` and `b=4` in the second test, and the third test will be passed the values `a=3` and `b=6`.
+The variables ``a`` and ``b`` take the values ``a=1`` and ``b=2`` in the first test,
+``a=2`` and ``b=4`` in the second test, and the third test will be passed the values ``a=3`` and ``b=6``.
 
-If any of the items inside `each` is a fixture, that fixture will be resolved
+If any of the items inside ``each`` is a fixture, that fixture will be resolved
 and injected. Each of the test runs are considered *unique tests* from
 a fixture scoping perspective.
 
-.. warning:: All occurrences of `each` in a test signature must contain the same number of arguments.
+.. warning:: All occurrences of ``each`` in a test signature must contain the same number of arguments.
 
-Using `each` in a test signature doesn't stop you from injecting other fixtures as normal.::
+Using ``each`` in a test signature doesn't stop you from injecting other fixtures as normal.::
 
     from ward import each, fixture, test
 
@@ -171,15 +173,15 @@ In other words, the single parameterised test above is functionally equivalent t
        book: Book = api.get_book(isbn)
        assert book.name == name
 
-If you'd like to use the same `book_api` instance across each of the three generated tests,
-you'd have to increase its scope to `module` or `global`.
+If you'd like to use the same ``book_api`` instance across each of the three generated tests,
+you'd have to increase its scope to ``module`` or ``global``.
 
-Currently, `each` can only be used in the signature of *tests*.
+Currently, ``each`` can only be used in the signature of *tests*.
 
 Checking for exceptions
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
-The test below will pass, because a `ZeroDivisionError` is raised. If a `ZeroDivisionError` wasn't raised,
+The test below will pass, because a ``ZeroDivisionError`` is raised. If a ``ZeroDivisionError`` wasn't raised,
 the test would fail.::
 
     from ward import raises, test
@@ -190,7 +192,7 @@ the test would fail.::
             1/0
 
 If you need to access the exception object that your code raised, you can
-use `with raises(<exc_type>) as <exc_object>`::
+use ``with raises(<exc_type>) as <exc_object>``::
 
     def my_func():
         raise Exception("oh no!")
@@ -201,13 +203,13 @@ use `with raises(<exc_type>) as <exc_object>`::
             my_func()
         assert str(ex.raised) == "oh no!"
 
-Note that `ex` is only populated after the context manager exits, so
+Note that ``ex`` is only populated after the context manager exits, so
 be careful with your indentation.
 
 Skipping a test
-^^^^^^^^^^^^^^^
+---------------
 
-Use the `@skip` decorator to tell Ward not to execute a test.::
+Use the ``@skip`` decorator to tell Ward not to execute a test.::
 
     from ward import skip
 
@@ -216,7 +218,7 @@ Use the `@skip` decorator to tell Ward not to execute a test.::
     def _():
         # ...
 
-You can pass a `reason` to the `skip` decorator, and it will be printed
+You can pass a ``reason`` to the ``skip`` decorator, and it will be printed
 next to the test name/description during the run ::
 
     @skip("not implemented yet")
@@ -225,9 +227,9 @@ next to the test name/description during the run ::
         # ...
 
 Expecting a test to fail
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
-You can mark a test that you expect to fail with the `@xfail` decorator.::
+You can mark a test that you expect to fail with the ``@xfail`` decorator.::
 
     from ward import xfail
 
@@ -236,7 +238,7 @@ You can mark a test that you expect to fail with the `@xfail` decorator.::
     def _():
         # ...
 
-If a test decorated with `@xfail` *does* indeed fail as we expected, it is shown
+If a test decorated with ``@xfail`` *does* indeed fail as we expected, it is shown
 in the results as an XFAIL.
 
 If a test marked with this decorator passes unexpectedly, it is known as an XPASS (an unexpected pass).

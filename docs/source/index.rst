@@ -14,12 +14,7 @@ You can run all tests in your current directory by just running ``ward`` with no
 
     guide/writing_tests
     guide/running_tests
-
-
-
-
-
-
+    guide/fixtures
 
 Indices and tables
 ==================
