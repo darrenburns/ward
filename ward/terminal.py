@@ -2,6 +2,7 @@ import inspect
 import os
 import platform
 import statistics
+import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -14,6 +15,8 @@ from typing import (
     List,
     Optional,
     Collection,
+    Callable,
+    Iterator,
 )
 
 import itertools
@@ -24,6 +27,14 @@ from rich.highlighter import NullHighlighter
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
+from rich.progress import (
+    Progress,
+    Task,
+    TimeRemainingColumn,
+    BarColumn,
+    TimeElapsedColumn,
+    SpinnerColumn,
+)
 from rich.rule import Rule
 from rich.syntax import Syntax
 from rich.table import Table
@@ -42,6 +53,7 @@ from ward.fixtures import (
     fixture_parents_and_children,
     _TYPE_FIXTURE_TO_FIXTURES,
 )
+from ward.suite import Suite
 from ward.testing import Test, fixtures_used_directly_by_tests
 from ward.testing import TestOutcome, TestResult
 from ward.util import group_by
@@ -161,7 +173,15 @@ def output_test_result_line(test_result: TestResult):
     console.print(grid)
 
 
-def output_test_per_line(fail_limit, test_results_gen):
+ProgressCallback = Callable[[], None]
+
+
+def output_test_per_line(
+    fail_limit: int,
+    test_results_gen: Iterator[TestResult],
+    test_done: ProgressCallback,
+    test_failed: ProgressCallback,
+):
     num_failures = 0
     all_results = []
 
@@ -173,8 +193,10 @@ def output_test_per_line(fail_limit, test_results_gen):
             all_results.append(result)
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
+                test_failed()
             if num_failures == fail_limit:
                 break
+            test_done()
     except KeyboardInterrupt:
         output_run_cancelled()
     finally:
@@ -182,7 +204,10 @@ def output_test_per_line(fail_limit, test_results_gen):
 
 
 def output_dots_global(
-    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+    fail_limit: int,
+    test_results_gen: Iterator[TestResult],
+    test_done: ProgressCallback,
+    test_failed: ProgressCallback,
 ) -> List[TestResult]:
     column = 0
     num_failures = 0
@@ -198,8 +223,10 @@ def output_dots_global(
                 column = 0
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
+                test_failed()
             if num_failures == fail_limit:
                 break
+            test_done()
             sys.stdout.flush()
         console.print()
     except KeyboardInterrupt:
@@ -214,7 +241,10 @@ def print_dot(result):
 
 
 def output_dots_module(
-    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+    fail_limit: int,
+    test_results_gen: Iterator[TestResult],
+    test_done: ProgressCallback,
+    test_failed: ProgressCallback,
 ) -> List[TestResult]:
     current_path = Path("")
     rel_path = ""
@@ -230,9 +260,8 @@ def output_dots_module(
                 console.print()
                 current_path = result.test.path
                 rel_path = str(current_path.relative_to(os.getcwd()))
-                max_dots_per_line = (
-                    get_terminal_size().width - len(rel_path) - 2
-                )  # subtract 2 for ": "
+                # subtract 2 for ": "
+                max_dots_per_line = get_terminal_size().width - len(rel_path) - 2
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
                     console.print(
@@ -248,8 +277,10 @@ def output_dots_module(
                 dots_on_line = 0
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
+                test_failed()
             if num_failures == fail_limit:
                 break
+            test_done()
         console.print()
     except KeyboardInterrupt:
         output_run_cancelled()
@@ -333,7 +364,7 @@ class TestResultWriterBase:
 
     def __init__(
         self,
-        suite,
+        suite: Suite,
         test_output_style: str,
         config_path: Optional[Path],
         show_diff_symbols: bool = False,
@@ -370,7 +401,39 @@ class TestResultWriterBase:
         output_tests = self.runtime_output_strategies.get(
             self.test_output_style, output_test_per_line
         )
-        all_results = output_tests(fail_limit, test_results_gen)
+
+        spinner = SpinnerColumn(style="pass.textonly")
+        bar = BarColumn(complete_style="pass.textonly")
+        progress = Progress(
+            spinner,
+            TimeElapsedColumn(),
+            bar,
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            "[progress.percentage][{task.completed} / {task.total}]",
+            TimeRemainingColumn(),
+            console=console,
+            transient=True,
+            auto_refresh=True,
+            # TODO: figure out how to make the progress bar work with printing with end="" (for dots)
+            disable=self.test_output_style != "test-per-line",
+        )
+
+        task = progress.add_task(
+            "Testing...", total=self.suite.num_tests_with_parameterization
+        )
+
+        def test_done() -> None:
+            progress.update(task, advance=1, refresh=True)
+
+        def test_fail() -> None:
+            spinner.spinner.style = "fail.textonly"
+            bar.complete_style = "fail.textonly"
+
+        with progress:
+            all_results = output_tests(
+                fail_limit, test_results_gen, test_done, test_fail
+            )
+
         failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
         for failure in failed_test_results:
             self.output_why_test_failed_header(failure)
