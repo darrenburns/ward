@@ -187,3 +187,19 @@ if True:
         @test("test with indentation level of 2")
         def _():
             assert 2 + 3 == 5
+
+
+@test("rewriter finds correct function when there is a lambda in an each")
+def _():
+    @testable_test
+    def _(x=each(lambda: 5)):
+        assert x == 5
+
+    t = Test(fn=_, module_name="m")
+
+    rewritten = rewrite_assertions_in_tests([t])[0]
+
+    # https://github.com/darrenburns/ward/issues/169
+    # The assertion rewriter thought the lambda function stored in co_consts was the test function,
+    # so it was rebuilding the test function using the lambda as the test instead of the original function.
+    assert rewritten.fn.__code__.co_name != "<lambda>"
