@@ -2,9 +2,7 @@
 [![Codecov](https://codecov.io/gh/darrenburns/ward/branch/master/graph/badge.svg)](https://codecov.io/gh/darrenburns/ward)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-See the full documentation and feature set [here](https://ward.readthedocs.io/).
-
-A modern Python test framework designed to help you find and fix flaws faster.
+See the full documentation [here](https://ward.readthedocs.io/).
 
 <img width="807" alt="image" src="https://user-images.githubusercontent.com/5740731/111924675-9937c680-8a9d-11eb-8df3-6d9c9b8807c8.png">
 
