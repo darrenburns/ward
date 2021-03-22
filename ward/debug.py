@@ -6,12 +6,25 @@ import warnings
 
 import click
 import sys
-from termcolor import cprint
+
+from ward.terminal import console
 
 original_stdout = sys.stdout
 
 
-def breakpointhook(*args, **kwargs):
+def init_breakpointhooks():
+    import pdb
+    try:
+        # On 3.7+, set system breakpoint hook, and patch pdb
+        breakpoint
+        sys.breakpointhook = _breakpointhook
+        pdb.set_trace = _breakpointhook
+    except NameError:
+        # On 3.6, we just patch pdb ourselves
+        pdb.set_trace = _breakpointhook
+
+
+def _breakpointhook(*args, **kwargs):
     hookname = os.getenv("PYTHONBREAKPOINT")
     if hookname is None or len(hookname) == 0:
         hookname = "pdb.set_trace"
@@ -42,12 +55,11 @@ def breakpointhook(*args, **kwargs):
 
     if capture_enabled and capture_active:
         sys.stdout = original_stdout
-        cprint(
-            f"[WARD] Entering {modname} - output capturing temporarily cancelled.",
-            color="yellow",
+        console.print(
+            f"[WARD] Entering {modname} - output capturing temporarily cancelled.", style="info"
         )
         return hook(*args, **kwargs)
     return hook(*args, **kwargs)
 
 
-__breakpointhook__ = breakpointhook
+__breakpointhook__ = _breakpointhook
