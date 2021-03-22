@@ -1,3 +1,5 @@
+import pdb
+
 import sys
 from pathlib import Path
 from timeit import default_timer
@@ -140,7 +142,7 @@ def test(
     dry_run: bool,
 ):
     """Run tests."""
-    init_breakpointhooks()
+    init_breakpointhooks(pdb, sys)
     start_run = default_timer()
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)

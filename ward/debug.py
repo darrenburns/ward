@@ -7,21 +7,18 @@ import warnings
 import click
 import sys
 
+from ward.config import _breakpoint_supported
 from ward.terminal import console
 
 original_stdout = sys.stdout
 
 
-def init_breakpointhooks():
-    import pdb
-    try:
-        # On 3.7+, set system breakpoint hook, and patch pdb
-        breakpoint
-        sys.breakpointhook = _breakpointhook
-        pdb.set_trace = _breakpointhook
-    except NameError:
-        # On 3.6, we just patch pdb ourselves
-        pdb.set_trace = _breakpointhook
+def init_breakpointhooks(pdb_module, sys_module) -> None:
+    # breakpoint() is Python 3.7+
+    if _breakpoint_supported():
+        sys_module.breakpointhook = _breakpointhook
+    pdb_module.set_trace = _breakpointhook
+
 
 
 def _breakpointhook(*args, **kwargs):
@@ -56,7 +53,7 @@ def _breakpointhook(*args, **kwargs):
     if capture_enabled and capture_active:
         sys.stdout = original_stdout
         console.print(
-            f"[WARD] Entering {modname} - output capturing temporarily cancelled.", style="info"
+            f"Entering {modname} - output capturing disabled.", style="info"
         )
         return hook(*args, **kwargs)
     return hook(*args, **kwargs)

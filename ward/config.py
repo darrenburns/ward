@@ -11,6 +11,12 @@ Config = Dict[str, ConfigValue]
 
 CONFIG_FILE = "pyproject.toml"
 
+def _breakpoint_supported() -> bool:
+    try:
+        breakpoint
+    except NameError:
+        return False
+    return True
 
 def read_config_toml(project_root: Path, config_file: str) -> Config:
     path = project_root / config_file
