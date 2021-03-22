@@ -120,8 +120,13 @@ def rewrite_assertion(test: Test) -> Test:
     if test.fn.__closure__:
         clo_glob = test.fn.__closure__[0].cell_contents.__globals__
 
+    # Look through the new module,
+    # find the code object with the same name as the original code object,
+    # and build a new function with the injected assert functions added to the global namespace.
+    # Filtering on the code object name prevents finding other kinds of code objects,
+    # like lambdas stored directly in test function arguments.
     for const in new_mod_code_obj.co_consts:
-        if isinstance(const, types.CodeType):
+        if isinstance(const, types.CodeType) and const.co_name == code_obj.co_name:
             new_test_func = types.FunctionType(
                 const,
                 {**assert_func_namespace, **test.fn.__globals__, **clo_glob},

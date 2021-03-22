@@ -1,16 +1,11 @@
 # Ward
-![Build](https://github.com/darrenburns/ward/workflows/Build/badge.svg)
 [![Codecov](https://codecov.io/gh/darrenburns/ward/branch/master/graph/badge.svg)](https://codecov.io/gh/darrenburns/ward)
-[![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![Documentation Status](https://readthedocs.org/projects/ward/badge/?version=latest)](https://ward.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward) <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-See the full documentation and feature set [here](https://wardpy.com).
+Ward is a modern test framework for Python with a focus on productivity and readability. 
 
-A modern Python test framework designed to help you find and fix flaws faster.
-
-<img width="567" alt="image" src="https://user-images.githubusercontent.com/5740731/111796103-bfa00b00-88bf-11eb-91a5-63622b2426c1.png">
+<img width="807" alt="image" src="https://user-images.githubusercontent.com/5740731/111924675-9937c680-8a9d-11eb-8df3-6d9c9b8807c8.png">
 
 ## Features
 
@@ -74,18 +69,6 @@ def _(
 **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started. Can be configured using `pyproject.toml` or the command line if required.
 
 **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
-
-This project is currently in beta.
-
-Planned features:
-
-* Smart test execution order designed to surface failures faster (using various heuristics)
-* Multi-process mode to improve performance
-* Code coverage with `--coverage` flag
-* Handling flaky tests with test-specific retries, timeouts
-* Plugin system
-
-Let me know if you'd like to help out with any of these features!
 
 ## Getting Started
 
