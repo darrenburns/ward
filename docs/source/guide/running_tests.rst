@@ -204,3 +204,12 @@ output.
     :align: center
     :height: 150
     :alt: Ward output with diff symbols enabled
+
+Debugging your code with ``pdb``/``breakpoint()``
+-------------------------------------------------
+
+Ward will automatically disable output capturing when you use `pdb.set_trace()` or `breakpoint()`, and re-enable it when you exit the debugger.
+
+.. image:: ../_static/debugging_support.png
+    :align: center
+    :alt: Ward debugging example

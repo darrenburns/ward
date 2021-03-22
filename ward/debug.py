@@ -20,7 +20,6 @@ def init_breakpointhooks(pdb_module, sys_module) -> None:
     pdb_module.set_trace = _breakpointhook
 
 
-
 def _breakpointhook(*args, **kwargs):
     hookname = os.getenv("PYTHONBREAKPOINT")
     if hookname is None or len(hookname) == 0:
@@ -52,9 +51,7 @@ def _breakpointhook(*args, **kwargs):
 
     if capture_enabled and capture_active:
         sys.stdout = original_stdout
-        console.print(
-            f"Entering {modname} - output capturing disabled.", style="info"
-        )
+        console.print(f"Entering {modname} - output capturing disabled.", style="info")
         return hook(*args, **kwargs)
     return hook(*args, **kwargs)
 
