@@ -7,7 +7,7 @@ path = ["ward/tests"]
 
 [tool.poetry]
 name = "ward"
-version = "0.51.2b0"
+version = "0.52.0b0"
 description = "A modern Python testing framework"
 exclude = ["ward/tests"]
 authors = ["Darren Burns <darrenb900@gmail.com>"]

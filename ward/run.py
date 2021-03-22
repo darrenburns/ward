@@ -1,7 +1,9 @@
+import pdb
+
 import sys
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 import click
 import click_completion
@@ -19,6 +21,7 @@ from ward.collect import (
     filter_fixtures,
 )
 from ward.config import set_defaults_from_config
+from ward.debug import init_breakpointhooks
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
 from ward.fixtures import _DEFINED_FIXTURES
@@ -139,6 +142,7 @@ def test(
     dry_run: bool,
 ):
     """Run tests."""
+    init_breakpointhooks(pdb, sys)
     start_run = default_timer()
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
@@ -146,7 +150,6 @@ def test(
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
     filtered_tests = list(filter_tests(unfiltered_tests, query=search, tag_expr=tags,))
 
-    # Rewrite assertions in each test
     tests = rewrite_assertions_in_tests(filtered_tests)
 
     time_to_collect = default_timer() - start_run

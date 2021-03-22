@@ -4,6 +4,7 @@ import functools
 import inspect
 import traceback
 import uuid
+from bdb import BdbQuit
 from collections import defaultdict
 from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
@@ -156,6 +157,12 @@ class Test:
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
                 error: Optional[Exception] = e
+            except BdbQuit:
+                # We don't want to treat the user quitting the debugger
+                # as an exception, so we'll ignore BdbQuit. This will
+                # also prevent a large pdb-internal stack trace flooding
+                # the terminal.
+                pass
             except (Exception, SystemExit) as e:
                 outcome = (
                     TestOutcome.XFAIL

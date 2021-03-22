@@ -87,21 +87,6 @@ theme = Theme(
 console = Console(theme=theme, highlighter=NullHighlighter())
 
 
-def print_no_break(e: Any):
-    console.print(e, end="")
-
-
-def multiline_description(s: str, indent: int, width: int) -> str:
-    wrapped = wrap(s, width)
-    if len(wrapped) == 1:
-        return wrapped[0]
-    rv = wrapped[0]
-    for line in wrapped[1:]:
-        indent_str = " " * indent
-        rv += f"\n{indent_str}{line}"
-    return rv
-
-
 def format_test_id(test_result: TestResult) -> str:
     """
     Format module name, line number, and test case number
