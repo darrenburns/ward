@@ -3,7 +3,7 @@ import pdb
 import sys
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import click
 import click_completion
@@ -25,7 +25,12 @@ from ward.debug import init_breakpointhooks
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
 from ward.fixtures import _DEFINED_FIXTURES
-from ward.terminal import SimpleTestResultWrite, output_fixtures, get_exit_code
+from ward.terminal import (
+    SimpleTestResultWrite,
+    output_fixtures,
+    get_exit_code,
+    TestProgressStyle,
+)
 
 colorama.init()
 click_completion.init()
@@ -97,6 +102,12 @@ exclude = click.option(
     default="test-per-line",
 )
 @click.option(
+    "--progress-style",
+    type=click.Choice(list(TestProgressStyle), case_sensitive=False),
+    multiple=True,
+    default=["inline"],
+)
+@click.option(
     "--order",
     type=click.Choice(["standard", "random"], case_sensitive=False),
     default="standard",
@@ -135,6 +146,7 @@ def test(
     tags: Optional[Expression],
     fail_limit: Optional[int],
     test_output_style: str,
+    progress_style: List[str],
     order: str,
     capture_output: bool,
     show_slowest: int,
@@ -160,6 +172,7 @@ def test(
     writer = SimpleTestResultWrite(
         suite=suite,
         test_output_style=test_output_style,
+        progress_styles=[TestProgressStyle(ps) for ps in progress_style],
         config_path=config_path,
         show_diff_symbols=show_diff_symbols,
     )

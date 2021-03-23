@@ -3,6 +3,7 @@ import os
 import platform
 import statistics
 import time
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -17,6 +18,7 @@ from typing import (
     Collection,
     Callable,
     Iterator,
+    Mapping,
 )
 
 import itertools
@@ -24,6 +26,7 @@ import math
 import sys
 from rich.console import Console, ConsoleOptions, RenderResult, RenderGroup
 from rich.highlighter import NullHighlighter
+from rich.live import Live
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
@@ -132,7 +135,18 @@ def format_test_case_number(test: Test) -> str:
     return iter_indicator
 
 
-def output_test_result_line(test_result: TestResult):
+class TestProgressStyle(str, Enum):
+    INLINE = "inline"
+    BAR = "bar"
+    NONE = "none"
+
+
+def output_test_result_line(
+    test_result: TestResult,
+    idx: int,
+    num_tests: int,
+    progress_styles: List[TestProgressStyle],
+):
     """
     Outputs a single test result to the terminal in Ward's standard output
     format which outputs a single test per line.
@@ -154,21 +168,23 @@ def output_test_result_line(test_result: TestResult):
     grid.add_column()
     grid.add_column()
     grid.add_column()
-    common_columns = (
+    columns = [
         Padding(outcome_tag, style=test_style, pad=(0, 1, 0, 1)),
         Padding(f"{test_location}{test_case_number}", style="muted", pad=(0, 1, 0, 1)),
         Padding(
             Markdown(test.description, inline_code_theme="ansi_dark"), pad=(0, 1, 0, 0)
         ),
-    )
+    ]
 
     if reason:
         grid.add_column(justify="center", style=test_style)
-        grid.add_row(
-            *common_columns, Padding(reason, pad=(0, 1, 0, 1)),
-        )
-    else:
-        grid.add_row(*common_columns)
+        columns.append(Padding(reason, pad=(0, 1, 0, 1)))
+
+    if TestProgressStyle.INLINE in progress_styles:
+        grid.add_column(justify="right", style=test_style)
+        columns.append(f"[{idx / num_tests:>4.0%}]")
+
+    grid.add_row(*columns)
 
     console.print(grid)
 
@@ -178,7 +194,9 @@ ProgressCallback = Callable[[], None]
 
 def output_test_per_line(
     fail_limit: int,
+    num_tests: int,
     test_results_gen: Iterator[TestResult],
+    progress_styles: List[TestProgressStyle],
     test_done: ProgressCallback,
     test_failed: ProgressCallback,
 ):
@@ -188,8 +206,8 @@ def output_test_per_line(
     console.print()
 
     try:
-        for result in test_results_gen:
-            output_test_result_line(result)
+        for idx, result in enumerate(test_results_gen):
+            output_test_result_line(result, idx, num_tests, progress_styles)
             all_results.append(result)
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
@@ -205,22 +223,31 @@ def output_test_per_line(
 
 def output_dots_global(
     fail_limit: int,
+    num_tests: int,
     test_results_gen: Iterator[TestResult],
+    progress_styles: List[TestProgressStyle],
     test_done: ProgressCallback,
     test_failed: ProgressCallback,
 ) -> List[TestResult]:
-    column = 0
+    dots_on_line = 0
     num_failures = 0
     all_results = []
+    max_dots_per_line = get_terminal_size().width
+    if TestProgressStyle.INLINE in progress_styles:
+        max_dots_per_line -= 7  # e.g. " [ 93%]"
     try:
         console.print()
-        for result in test_results_gen:
+
+        idx = 0
+        for idx, result in enumerate(test_results_gen):
             all_results.append(result)
             print_dot(result)
-            column += 1
-            if column == get_terminal_size().width:
-                console.print()
-                column = 0
+            dots_on_line += 1
+            if dots_on_line == max_dots_per_line:
+                print_end_of_line(
+                    idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+                )
+                dots_on_line = 0
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
                 test_failed()
@@ -228,40 +255,72 @@ def output_dots_global(
                 break
             test_done()
             sys.stdout.flush()
-        console.print()
+        print_end_of_line(
+            idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+        )
     except KeyboardInterrupt:
         output_run_cancelled()
     finally:
         return all_results
 
 
-def print_dot(result):
+def print_dot(result: TestResult) -> None:
     style = outcome_to_style(result.outcome)
     console.print(result.outcome.display_char, style=style, end="")
 
 
+def print_end_of_line(
+    idx: int,
+    num_tests: int,
+    dots_on_line: int,
+    max_dots_per_line: int,
+    progress_styles: List[TestProgressStyle],
+) -> None:
+    if TestProgressStyle.INLINE in progress_styles and num_tests > 0:
+        console.print(
+            " " * (max_dots_per_line - dots_on_line) + f" [{idx / num_tests:>4.0%}]",
+            style="muted",
+        )
+    else:
+        console.print()
+
+
 def output_dots_module(
     fail_limit: int,
+    num_tests: int,
     test_results_gen: Iterator[TestResult],
+    progress_styles: List[TestProgressStyle],
     test_done: ProgressCallback,
     test_failed: ProgressCallback,
 ) -> List[TestResult]:
     current_path = Path("")
-    rel_path = ""
     dots_on_line = 0
     num_failures = 0
-    max_dots_per_line = get_terminal_size().width - 40
+
+    # subtract 2 for ": "
+    base_max_dots_per_line = get_terminal_size().width - 2
+    if TestProgressStyle.INLINE in progress_styles:
+        base_max_dots_per_line -= 7  # e.g. " [ 93%]"
+    max_dots_per_line = base_max_dots_per_line - 40
+
     all_results = []
     try:
-        for result in test_results_gen:
+        console.print()
+
+        idx = 0
+        for idx, result in enumerate(test_results_gen):
             all_results.append(result)
             if result.test.path != current_path:
+                if idx > 0:
+                    print_end_of_line(
+                        idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+                    )
                 dots_on_line = 0
-                console.print()
                 current_path = result.test.path
                 rel_path = str(current_path.relative_to(os.getcwd()))
-                # subtract 2 for ": "
-                max_dots_per_line = get_terminal_size().width - len(rel_path) - 2
+
+                max_dots_per_line = base_max_dots_per_line - len(rel_path)
+
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
                     console.print(
@@ -273,7 +332,9 @@ def output_dots_module(
             print_dot(result)
             dots_on_line += 1
             if dots_on_line == max_dots_per_line:
-                console.print("\n" + " " * (len(rel_path) + 2), end="")
+                print_end_of_line(
+                    idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+                )
                 dots_on_line = 0
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
@@ -281,7 +342,9 @@ def output_dots_module(
             if num_failures == fail_limit:
                 break
             test_done()
-        console.print()
+        print_end_of_line(
+            idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+        )
     except KeyboardInterrupt:
         output_run_cancelled()
     finally:
@@ -366,11 +429,13 @@ class TestResultWriterBase:
         self,
         suite: Suite,
         test_output_style: str,
+        progress_styles: List[TestProgressStyle],
         config_path: Optional[Path],
         show_diff_symbols: bool = False,
     ):
         self.suite = suite
         self.test_output_style = test_output_style
+        self.progress_styles = progress_styles
         self.config_path = config_path
         self.show_diff_symbols = show_diff_symbols
         self.terminal_size = get_terminal_size()
@@ -415,7 +480,8 @@ class TestResultWriterBase:
             transient=True,
             auto_refresh=True,
             # TODO: figure out how to make the progress bar work with printing with end="" (for dots)
-            disable=self.test_output_style != "test-per-line",
+            disable=TestProgressStyle.BAR not in self.progress_styles
+            or self.test_output_style != "test-per-line",
         )
 
         task = progress.add_task(
@@ -423,7 +489,7 @@ class TestResultWriterBase:
         )
 
         def test_done() -> None:
-            progress.update(task, advance=1, refresh=True)
+            progress.update(task, advance=1)
 
         def test_fail() -> None:
             spinner.spinner.style = "fail.textonly"
@@ -431,7 +497,12 @@ class TestResultWriterBase:
 
         with progress:
             all_results = output_tests(
-                fail_limit, test_results_gen, test_done, test_fail
+                fail_limit,
+                self.suite.num_tests_with_parameterization,
+                test_results_gen,
+                self.progress_styles,
+                test_done,
+                test_fail,
             )
 
         failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
