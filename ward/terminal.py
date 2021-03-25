@@ -216,7 +216,7 @@ def output_test_per_line(
                 break
             test_done()
     except KeyboardInterrupt:
-        output_run_cancelled()
+        print_run_cancelled()
     finally:
         return all_results
 
@@ -238,14 +238,18 @@ def output_dots_global(
     try:
         console.print()
 
-        idx = 0
-        for idx, result in enumerate(test_results_gen):
+        test_index = 0  # this makes sure that test_index is defined for the last end of line print after the loop
+        for test_index, result in enumerate(test_results_gen):
             all_results.append(result)
             print_dot(result)
             dots_on_line += 1
             if dots_on_line == max_dots_per_line:
-                print_end_of_line(
-                    idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+                print_end_of_line_for_dots(
+                    test_index,
+                    num_tests,
+                    dots_on_line,
+                    max_dots_per_line,
+                    progress_styles,
                 )
                 dots_on_line = 0
             if result.outcome == TestOutcome.FAIL:
@@ -255,34 +259,13 @@ def output_dots_global(
                 break
             test_done()
             sys.stdout.flush()
-        print_end_of_line(
-            idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+        print_end_of_line_for_dots(
+            test_index, num_tests, dots_on_line, max_dots_per_line, progress_styles
         )
     except KeyboardInterrupt:
-        output_run_cancelled()
+        print_run_cancelled()
     finally:
         return all_results
-
-
-def print_dot(result: TestResult) -> None:
-    style = outcome_to_style(result.outcome)
-    console.print(result.outcome.display_char, style=style, end="")
-
-
-def print_end_of_line(
-    idx: int,
-    num_tests: int,
-    dots_on_line: int,
-    max_dots_per_line: int,
-    progress_styles: List[TestProgressStyle],
-) -> None:
-    if TestProgressStyle.INLINE in progress_styles and num_tests > 0:
-        console.print(
-            " " * (max_dots_per_line - dots_on_line) + f" [{idx / num_tests:>4.0%}]",
-            style="muted",
-        )
-    else:
-        console.print()
 
 
 def output_dots_module(
@@ -307,13 +290,17 @@ def output_dots_module(
     try:
         console.print()
 
-        idx = 0
-        for idx, result in enumerate(test_results_gen):
+        test_index = 0  # this makes sure that test_index is defined for the last end of line print after the loop
+        for test_index, result in enumerate(test_results_gen):
             all_results.append(result)
             if result.test.path != current_path:
-                if idx > 0:
-                    print_end_of_line(
-                        idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+                if test_index > 0:
+                    print_end_of_line_for_dots(
+                        test_index,
+                        num_tests,
+                        dots_on_line,
+                        max_dots_per_line,
+                        progress_styles,
                     )
                 dots_on_line = 0
                 current_path = result.test.path
@@ -332,8 +319,12 @@ def output_dots_module(
             print_dot(result)
             dots_on_line += 1
             if dots_on_line == max_dots_per_line:
-                print_end_of_line(
-                    idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+                print_end_of_line_for_dots(
+                    test_index,
+                    num_tests,
+                    dots_on_line,
+                    max_dots_per_line,
+                    progress_styles,
                 )
                 dots_on_line = 0
             if result.outcome == TestOutcome.FAIL:
@@ -342,16 +333,39 @@ def output_dots_module(
             if num_failures == fail_limit:
                 break
             test_done()
-        print_end_of_line(
-            idx, num_tests, dots_on_line, max_dots_per_line, progress_styles
+            sys.stdout.flush()
+        print_end_of_line_for_dots(
+            test_index, num_tests, dots_on_line, max_dots_per_line, progress_styles
         )
     except KeyboardInterrupt:
-        output_run_cancelled()
+        print_run_cancelled()
     finally:
         return all_results
 
 
-def output_run_cancelled():
+def print_dot(result: TestResult) -> None:
+    style = outcome_to_style(result.outcome)
+    console.print(result.outcome.display_char, style=style, end="")
+
+
+def print_end_of_line_for_dots(
+    test_index: int,
+    num_tests: int,
+    dots_on_line: int,
+    max_dots_per_line: int,
+    progress_styles: List[TestProgressStyle],
+) -> None:
+    if TestProgressStyle.INLINE in progress_styles and num_tests > 0:
+        console.print(
+            " " * (max_dots_per_line - dots_on_line)
+            + f" [{(test_index + 1) / num_tests:>4.0%}]",
+            style="muted",
+        )
+    else:
+        console.print()
+
+
+def print_run_cancelled():
     console.print(
         "Run cancelled - results for tests that ran shown below.", style="info",
     )
@@ -443,7 +457,14 @@ class TestResultWriterBase:
     def output_header(self, time_to_collect):
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
-        console.print(Rule(Text(f"Ward {__version__}", style="title")),)
+        console.print(
+            Rule(
+                Text(
+                    f"Ward {__version__} | {python_impl} {python_version}",
+                    style="title",
+                )
+            )
+        )
         if self.config_path:
             try:
                 path = self.config_path.relative_to(Path.cwd())
