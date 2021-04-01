@@ -5,7 +5,7 @@ from ward.errors import ParameterisationError
 from ward.models import Scope, SkipMarker
 from ward.suite import Suite
 from ward.testing import Test, skip, TestOutcome, TestResult, test, each
-from ward.tests.utilities import NUMBER_OF_TESTS, testable_test, example_test, module
+from tests.utilities import NUMBER_OF_TESTS, testable_test, example_test, module
 
 
 @fixture

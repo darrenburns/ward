@@ -1,3 +1,6 @@
+import sys
+from typing import get_type_hints
+
 from ward import test, each
 from ward.expect import (
     assert_not_equal,

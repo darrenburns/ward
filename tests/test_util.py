@@ -3,7 +3,7 @@ from pathlib import Path
 
 from ward import test, using, fixture
 from ward.testing import each
-from ward.tests.utilities import make_project
+from tests.utilities import make_project
 from ward.util import (
     truncate,
     find_project_root,
