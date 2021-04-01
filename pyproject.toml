@@ -3,13 +3,13 @@ requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
 [tool.ward]
-path = ["ward/tests"]
+path = ["tests"]
 
 [tool.poetry]
 name = "ward"
 version = "0.52.0b0"
 description = "A modern Python testing framework"
-exclude = ["ward/tests"]
+exclude = ["tests"]
 authors = ["Darren Burns <darrenb900@gmail.com>"]
 maintainers = ["Darren Burns <darrenb900@gmail.com>"]
 license = "MIT"

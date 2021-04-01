@@ -1,4 +1,4 @@
-from ward.tests.utilities import example_test
+from tests.utilities import example_test
 from ward import using
 from ward.terminal import outcome_to_colour, get_exit_code, ExitCode
 from ward.testing import TestOutcome, each, test, TestResult

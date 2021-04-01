@@ -17,7 +17,7 @@ from ward.collect import (
     filter_fixtures,
 )
 from ward.testing import Test, each
-from ward.tests.utilities import make_project
+from tests.utilities import make_project
 from ward.fixtures import Fixture
 
 

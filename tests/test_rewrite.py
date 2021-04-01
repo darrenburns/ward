@@ -1,6 +1,6 @@
 import ast
 
-from ward.tests.utilities import testable_test
+from tests.utilities import testable_test
 from ward import test, fixture
 from ward.rewrite import (
     rewrite_assertions_in_tests,
