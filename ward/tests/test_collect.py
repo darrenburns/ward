@@ -1,9 +1,10 @@
+from dataclasses import dataclass
 from modulefinder import ModuleFinder
 from pathlib import Path
 from pkgutil import ModuleInfo
 
+import sys
 from cucumber_tag_expressions import parse
-from dataclasses import dataclass
 
 from ward import fixture, raises, test
 from ward.collect import (
@@ -250,3 +251,12 @@ def _(
 ):
     module_path = root / mod
     assert not handled_within(module_path, [root / search])
+
+
+@test("test modules and mro chain are added to sys.modules")
+def _():
+    class Abc:
+        x: int
+
+    for base in reversed(Abc.__mro__):
+        assert base.__module__ in sys.modules

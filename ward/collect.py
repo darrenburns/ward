@@ -3,6 +3,7 @@ import importlib.util
 import inspect
 import os
 import pkgutil
+import sys
 from distutils.sysconfig import get_python_lib
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
@@ -115,8 +116,12 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
             file_finder: FileFinder = m.module_finder
             spec: ModuleSpec = file_finder.find_spec(m.name)
             m = importlib.util.module_from_spec(spec)
-        if is_test_module_name(m.__name__):
+
+        module_name = m.__name__
+        if is_test_module_name(module_name):
             m.__loader__.exec_module(m)
+            if module_name not in sys.modules:
+                sys.modules[module_name] = m
             yield m
 
 
