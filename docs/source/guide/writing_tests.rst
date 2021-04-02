@@ -251,9 +251,6 @@ Here's an example of a test that is skipped on Windows:
         m.__file__ = path
         assert _build_package_name(m) == pkg
 
-When you run this test, you can see that it gets skipped, and the ``reason`` is
-displayed in the console:
-
 .. image:: ../_static/conditional_skip.png
     :align: center
     :alt: Output of a conditionally skipped, parameterised test.
