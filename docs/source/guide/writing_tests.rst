@@ -233,7 +233,7 @@ next to the test name/description during the run ::
 To conditionally skip a test in some circumstances (for example, on specific OS's), you
 can supply a ``when`` predicate to the ``@skip`` decorator. This can be either a boolean
 or a Callable, and will be evaluated just before the test is scheduled to be executed. If it
-evaluates to ``False``, the test will be skipped. Otherwise the test will run as normal.
+evaluates to ``True``, the test will be skipped. Otherwise the test will run as normal.
 
 Here's an example of a test that is skipped on Windows:
 
