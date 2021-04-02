@@ -133,7 +133,7 @@ def output_test_result_line(test_result: TestResult):
     test_style = outcome_to_style(test_result.outcome)
 
     # Skip/Xfail tests may have a reason note attached that we'll print
-    if hasattr(test.marker, "reason"):
+    if hasattr(test.marker, "reason") and test.marker.active:
         reason = test.marker.reason
     else:
         reason = ""

@@ -2,13 +2,14 @@ import asyncio
 from collections import defaultdict
 from pathlib import Path
 from unittest import mock
+
 import sys
 
 from tests.utilities import FORCE_TEST_PATH, testable_test
 from ward import Scope, raises
 from ward.errors import ParameterisationError
 from ward.fixtures import FixtureCache, fixture, Fixture
-from ward.models import WardMeta
+from ward.models import WardMeta, SkipMarker, XfailMarker
 from ward.testing import (
     ParamMeta,
     TestOutcome,
@@ -16,7 +17,7 @@ from ward.testing import (
     each,
     test,
     xfail,
-    fixtures_used_directly_by_tests,
+    fixtures_used_directly_by_tests, TestResult, TestArgumentResolver,
 )
 
 
@@ -53,43 +54,75 @@ def cache():
     return FixtureCache()
 
 
-@test("Test.name should return the name of the function it wraps")
+@test("Test.name returns the name of the function it wraps")
 def _(anonymous_test=anonymous_test):
     assert anonymous_test.name == "_"
 
 
-@test("Test.qualified_name should return `module_name.function_name`")
+@test("Test.path returns the path from the ward_meta of the wrapped function")
+def _():
+    @testable_test
+    def test_fn():
+        assert True
+    t = Test(test_fn, "",)
+
+    assert t.path == FORCE_TEST_PATH
+
+
+@test("Test.qualified_name returns `module_name.function_name`")
 def _():
     assert t.qualified_name == f"{mod}.{f.__name__}"
 
 
-@test("Test.qualified_name should return `module_name._` when test name is _")
+@test("Test.qualified_name returns `module_name._` when test name is _")
 def _(anonymous_test=anonymous_test):
     assert anonymous_test.qualified_name == f"{mod}._"
 
 
-@test("Test.deps should return {} when test uses no fixtures")
+@test("Test.is_async_test returns True if the wrapped function is a coroutine function")
+def _():
+    @testable_test
+    async def test_fn():
+        assert True
+
+    t = Test(test_fn, "")
+
+    assert t.is_async_test
+
+
+@test("Test.is_async_test returns False if the wrapped function isn't a coroutine function")
+def _():
+    @testable_test
+    def test_fn():
+        assert True
+
+    t = Test(test_fn, "")
+
+    assert not t.is_async_test
+
+
+@test("Test.deps returns {} when test uses no fixtures")
 def _(anonymous_test=anonymous_test):
     assert anonymous_test.deps() == {}
 
 
-@test("Test.deps should return correct params when test uses fixtures")
+@test("Test.deps returns correct params when test uses fixtures")
 def _(dependent_test=dependent_test):
     deps = dependent_test.deps()
     assert "a" in deps
 
 
-@test("Test.has_deps should return True when test uses fixtures")
+@test("Test.has_deps returns True when test uses fixtures")
 def _(dependent_test=dependent_test):
     assert dependent_test.has_deps
 
 
-@test("Test.has_deps should return False when test doesn't use fixtures")
+@test("Test.has_deps returns False when test doesn't use fixtures")
 def _(anonymous_test=anonymous_test):
     assert not anonymous_test.has_deps
 
 
-@test("Test.run should delegate to the function it wraps")
+@test("Test.run delegates to the function it wraps")
 def _(cache: FixtureCache = cache):
     called_with = None
     call_kwargs = (), {}
@@ -105,7 +138,7 @@ def _(cache: FixtureCache = cache):
     assert call_kwargs == {"kwargs": {}}
 
 
-@test("Test.run should delegate to coroutine function it wraps")
+@test("Test.run delegates to coroutine function it wraps")
 def _(cache: FixtureCache = cache):
     called_with = None
     call_kwargs = (), {}
@@ -119,6 +152,94 @@ def _(cache: FixtureCache = cache):
     t.run(cache)
     assert called_with == "val"
     assert call_kwargs == {"kwargs": {}}
+
+
+@test("Test.run returns DRYRUN TestResult when dry_run == True")
+def _(cache=cache):
+    t = Test(fn=lambda: 1, module_name=mod)
+    result = t.run(cache, dry_run=True)
+    assert result == TestResult(t, outcome=TestOutcome.DRYRUN)
+
+
+TRUTHY_PREDICATES = each(True, lambda: True, 1, "truthy string")
+FALSY_PREDICATES = each(False, lambda: False, 0, "")
+
+
+@test("Test.run returns *SKIP* TestResult, @skip(when={when})")
+def _(cache=cache, when=TRUTHY_PREDICATES):
+    t = Test(fn=lambda: 1, module_name=mod, marker=SkipMarker(when=when))
+    result = t.run(cache)
+    assert result == TestResult(t, outcome=TestOutcome.SKIP)
+
+
+@test("Test.run returns *PASS* TestResult for passing test, @skip(when={when})")
+def _(cache=cache, when=FALSY_PREDICATES):
+    def test_fn():
+        assert True
+
+    t = Test(fn=test_fn, module_name=mod, marker=SkipMarker(when=when))
+    result = t.run(cache)
+
+    assert result == TestResult(t, outcome=TestOutcome.PASS)
+
+
+@test("Test.run returns *FAIL* TestResult for failing test, @skip(when={when})")
+def _(cache=cache, when=FALSY_PREDICATES):
+    def test_fn():
+        assert 1 == 2
+
+    t = Test(fn=test_fn, module_name=mod, marker=SkipMarker(when=when))
+    result = t.run(cache)
+
+    assert result.test == t
+    assert result.outcome == TestOutcome.FAIL
+
+
+@test("Test.run returns *XFAIL* TestResult for failing test, @xfail(when={when})")
+def _(cache=cache, when=TRUTHY_PREDICATES):
+    def test_fn():
+        assert 1 == 2
+
+    t = Test(fn=test_fn, module_name=mod, marker=XfailMarker(when=when))
+    result = t.run(cache)
+
+    assert result.test == t
+    assert result.outcome == TestOutcome.XFAIL
+
+
+@test("Test.run returns *FAIL* TestResult for failing test, @xfail(when={when})")
+def _(cache=cache, when=FALSY_PREDICATES):
+    def test_fn():
+        assert 1 == 2
+
+    t = Test(fn=test_fn, module_name=mod, marker=XfailMarker(when=when))
+    result = t.run(cache)
+
+    assert result.test == t
+    assert result.outcome == TestOutcome.FAIL
+
+
+@test("Test.run returns *XPASS* TestResult for passing test, @xfail(when={when})")
+def _(cache=cache, when=TRUTHY_PREDICATES):
+    def test_fn():
+        assert 1 == 1
+
+    t = Test(fn=test_fn, module_name=mod, marker=XfailMarker(when=when))
+    result = t.run(cache)
+
+    assert result.test == t
+    assert result.outcome == TestOutcome.XPASS
+
+
+@test("Test.fail_with_error returns the expected TestResult")
+def _():
+    message = "error message"
+    error = ZeroDivisionError(message)
+
+    t = Test(lambda: 1, "")
+    rv = t.fail_with_error(error=error)
+
+    assert rv == TestResult(test=t, outcome=TestOutcome.FAIL, error=error, message=message)
 
 
 @fixture
@@ -175,6 +296,18 @@ def _():
     t = Test(fn=test, module_name=mod)
 
     assert not t.is_parameterised
+
+
+@test("Test.resolver returns the expected TestArgumentResolver")
+def _():
+    @testable_test
+    def test_fn():
+        assert True
+
+    t = Test(test_fn, "", param_meta=ParamMeta(instance_index=123))
+
+    assert t.resolver == TestArgumentResolver(t, iteration=123)
+
 
 
 @test("Test.scope_key_from(Scope.Test) returns the test ID")
