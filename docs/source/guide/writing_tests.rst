@@ -230,10 +230,40 @@ next to the test name/description during the run ::
     def _():
         # ...
 
+To conditionally skip a test in some circumstances (for example, on specific OS's), you
+can supply a ``when`` predicate to the ``@skip`` decorator. This can be either a boolean
+or a Callable, and will be evaluated just before the test is scheduled to be executed. If it
+evaluates to ``False``, the test will be skipped. Otherwise the test will run as normal.
+
+Here's an example of a test that is skipped on Windows:
+
+.. code-block:: python
+
+    import platform
+
+    @skip("Skipped on Windows", when=platform.system() == "Windows")
+    @test("_build_package_name constructs package name '{pkg}' from '{path}'")
+    def _(
+        pkg=each("", "foo", "foo.bar"),
+        path=each("foo.py", "foo/bar.py", "foo/bar/baz.py"),
+    ):
+        m = ModuleType(name="")
+        m.__file__ = path
+        assert _build_package_name(m) == pkg
+
+When you run this test, you can see that it gets skipped, and the ``reason`` is
+displayed in the console:
+
+.. image:: ../_static/conditional_skip.png
+    :align: center
+    :alt: Output of a conditionally skipped, parameterised test.
+
 Expecting a test to fail
 ------------------------
 
-You can mark a test that you expect to fail with the ``@xfail`` decorator.::
+You can mark a test that you expect to fail with the ``@xfail`` decorator.
+
+.. code-block:: python
 
     from ward import xfail
 
@@ -244,6 +274,19 @@ You can mark a test that you expect to fail with the ``@xfail`` decorator.::
 
 If a test decorated with ``@xfail`` *does* indeed fail as we expected, it is shown
 in the results as an ``XFAIL``.
+
+You can conditionally apply ``@xfail`` using the same approach as we described for ``@skip`` above.
+
+For example, we expect the test below to fail, but *only* when it's run in a Python 3.6 environment.
+
+.. code-block:: python
+
+    from ward import xfail
+
+    @xfail("expected fail on Python 3.6", when=platform.python_version().startswith("3.6"))
+    @test("everything is okay")
+    def _():
+        # ...
 
 If a test marked with this decorator passes unexpectedly, it is known as an ``XPASS`` (an unexpected pass).
 
