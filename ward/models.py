@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from inspect import BoundArguments
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union, Callable
 
 from ward.errors import FixtureError
 
@@ -23,18 +23,25 @@ class Scope(Enum):
 @dataclass
 class Marker:
     name: str
+    reason: Optional[str] = None
+    when: Union[bool, Callable] = True
+
+    @property
+    def active(self):
+        try:
+            return self.when()
+        except TypeError:
+            return self.when
 
 
 @dataclass
 class SkipMarker(Marker):
     name: str = "SKIP"
-    reason: Optional[str] = None
 
 
 @dataclass
 class XfailMarker(Marker):
     name: str = "XFAIL"
-    reason: Optional[str] = None
 
 
 @dataclass

@@ -47,12 +47,12 @@ def each(*args):
     return Each(args)
 
 
-def skip(func_or_reason=None, *, reason: str = None):
+def skip(func_or_reason: Union[str, Callable] = None, *, reason: str = None, when: Union[bool, Callable] = True):
     if func_or_reason is None:
-        return functools.partial(skip, reason=reason)
+        return functools.partial(skip, reason=reason, when=when)
 
     if isinstance(func_or_reason, str):
-        return functools.partial(skip, reason=func_or_reason)
+        return functools.partial(skip, reason=func_or_reason, when=when)
 
     func = func_or_reason
     marker = SkipMarker(reason=reason)
@@ -68,12 +68,12 @@ def skip(func_or_reason=None, *, reason: str = None):
     return wrapper
 
 
-def xfail(func_or_reason=None, *, reason: str = None):
+def xfail(func_or_reason: Union[str, Callable] = None, *, reason: str = None, when: Union[bool, Callable] = True):
     if func_or_reason is None:
-        return functools.partial(xfail, reason=reason)
+        return functools.partial(xfail, reason=reason, when=when)
 
     if isinstance(func_or_reason, str):
-        return functools.partial(xfail, reason=func_or_reason)
+        return functools.partial(xfail, reason=func_or_reason, when=when)
 
     func = func_or_reason
     marker = XfailMarker(reason=reason)
@@ -141,7 +141,7 @@ class Test:
                     result = TestResult(self, TestOutcome.DRYRUN)
                 return result
 
-            if isinstance(self.marker, SkipMarker):
+            if isinstance(self.marker, SkipMarker) and self.marker.active:
                 with closing(self.sout), closing(self.serr):
                     result = TestResult(self, TestOutcome.SKIP)
                 return result
@@ -164,19 +164,17 @@ class Test:
                 # the terminal.
                 pass
             except (Exception, SystemExit) as e:
-                outcome = (
-                    TestOutcome.XFAIL
-                    if isinstance(self.marker, XfailMarker)
-                    else TestOutcome.FAIL
-                )
                 error = e
+                if isinstance(self.marker, XfailMarker) and self.marker.active:
+                    outcome = TestOutcome.XFAIL
+                else:
+                    outcome = TestOutcome.FAIL
             else:
-                outcome = (
-                    TestOutcome.XPASS
-                    if isinstance(self.marker, XfailMarker)
-                    else TestOutcome.PASS
-                )
                 error = None
+                if isinstance(self.marker, XfailMarker) and self.marker.active:
+                    outcome = TestOutcome.XPASS
+                else:
+                    outcome = TestOutcome.PASS
 
         with closing(self.sout), closing(self.serr):
             if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
