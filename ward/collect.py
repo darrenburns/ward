@@ -3,11 +3,9 @@ import importlib.util
 import inspect
 import os
 import pkgutil
-import sys
 from distutils.sysconfig import get_python_lib
-from importlib._bootstrap import ModuleSpec
-from importlib._bootstrap_external import FileFinder
 from pathlib import Path
+from types import ModuleType
 from typing import (
     Any,
     Callable,
@@ -21,41 +19,44 @@ from typing import (
     Collection,
 )
 
+import sys
 from cucumber_tag_expressions.model import Expression
+from importlib._bootstrap import ModuleSpec
+from importlib._bootstrap_external import FileFinder
 
 from ward.errors import CollectionError
+from ward.fixtures import Fixture
 from ward.models import WardMeta
 from ward.testing import Test, anonymous_tests, is_test_module_name
-from ward.fixtures import Fixture
 from ward.util import get_absolute_path
 
 Glob = str
 
 
-def is_test_module(module: pkgutil.ModuleInfo) -> bool:
+def is_test_module(module: ModuleType) -> bool:
     return is_test_module_name(module.name)
 
 
-def get_module_path(module: pkgutil.ModuleInfo) -> Path:
+def _get_module_path(module: ModuleType) -> Path:
     return Path(module.module_finder.find_module(module.name).path)
 
 
-def is_excluded_module(module: pkgutil.ModuleInfo, exclusions: Iterable[Glob]) -> bool:
-    return excluded(get_module_path(module), exclusions)
+def _is_excluded_module(module: ModuleType, exclusions: Iterable[Glob]) -> bool:
+    return _excluded(_get_module_path(module), exclusions)
 
 
-def excluded(path: Path, exclusions: Iterable[Glob]) -> bool:
+def _excluded(path: Path, exclusions: Iterable[Glob]) -> bool:
     """Return True if path matches any of the glob patterns in exclusions. False otherwise."""
     return any(path.match(pattern) for pattern in exclusions)
 
 
-def remove_excluded_paths(
+def _remove_excluded_paths(
     paths: Iterable[Path], exclusions: Iterable[Glob]
 ) -> List[Path]:
-    return [p for p in paths if not excluded(p, exclusions)]
+    return [p for p in paths if not _excluded(p, exclusions)]
 
 
-def handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
+def _handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
     """
     Return True if the module path starts with any of the search paths,
     that is, if any module is contained within any of the search paths
@@ -70,11 +71,11 @@ def handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
 def get_info_for_modules(
     paths: List[Path], exclude: Tuple[Glob],
 ) -> Generator[pkgutil.ModuleInfo, None, None]:
-    paths = remove_excluded_paths(set(paths), exclude)
+    paths = _remove_excluded_paths(set(paths), exclude)
 
     # Handle case where path points directly to modules
     for path in paths:
-        if path.is_file() and not handled_within(path, paths):
+        if path.is_file() and not _handled_within(path, paths):
             spec = importlib.util.spec_from_file_location(path.stem, path)
             try:
                 mod = importlib.util.module_from_spec(spec)
@@ -85,14 +86,14 @@ def get_info_for_modules(
 
     # Check for modules at the root of the specified path (or paths)
     for mod in pkgutil.iter_modules([str(p) for p in paths if p.is_dir()]):
-        if is_test_module(mod) and not is_excluded_module(mod, exclude):
+        if is_test_module(mod) and not _is_excluded_module(mod, exclude):
             yield mod
 
     # Now check for modules in every subdirectory
     checked_dirs: Set[Path] = set(p for p in paths)
     for p in paths:
         for root, dirs, _ in os.walk(str(p)):
-            if excluded(Path(root), exclude):
+            if _excluded(Path(root), exclude):
                 continue
             for dir_name in dirs:
                 dir_path = Path(root, dir_name)
@@ -103,14 +104,16 @@ def get_info_for_modules(
                     continue
 
                 # if we have seen this path before, skip it
-                if dir_path not in checked_dirs and not excluded(dir_path, exclude):
+                if dir_path not in checked_dirs and not _excluded(dir_path, exclude):
                     checked_dirs.add(dir_path)
                     for mod in pkgutil.iter_modules([str(dir_path)]):
-                        if is_test_module(mod) and not is_excluded_module(mod, exclude):
+                        if is_test_module(mod) and not _is_excluded_module(
+                            mod, exclude
+                        ):
                             yield mod
 
 
-def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, None]:
+def load_modules(modules: Iterable[ModuleType]) -> Generator[Any, None, None]:
     for m in modules:
         if hasattr(m, "module_finder"):
             file_finder: FileFinder = m.module_finder
@@ -119,10 +122,18 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> Generator[Any, None, 
 
         module_name = m.__name__
         if is_test_module_name(module_name):
-            m.__loader__.exec_module(m)
             if module_name not in sys.modules:
                 sys.modules[module_name] = m
+            m.__package__ = _build_package_name(m)
+            m.__loader__.exec_module(m)
             yield m
+
+
+def _build_package_name(module: ModuleType) -> str:
+    path_without_ext: str = module.__file__.rpartition(".")[0]
+    path_with_dots: str = path_without_ext.replace(os.path.sep, ".")
+    package_name: str = path_with_dots.rpartition(".")[0]
+    return "" if package_name == "." else package_name
 
 
 def get_tests_in_modules(

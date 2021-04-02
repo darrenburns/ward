@@ -1,24 +1,26 @@
+import platform
 from dataclasses import dataclass
 from modulefinder import ModuleFinder
 from pathlib import Path
 from pkgutil import ModuleInfo
+from types import ModuleType
 
 import sys
 from cucumber_tag_expressions import parse
 
 from ward import fixture, raises, test
 from ward.collect import (
-    get_module_path,
-    handled_within,
-    is_excluded_module,
+    _get_module_path,
+    _handled_within,
+    _is_excluded_module,
     is_test_module,
-    remove_excluded_paths,
+    _remove_excluded_paths,
     filter_tests,
-    filter_fixtures,
+    filter_fixtures, _build_package_name,
 )
 from ward.testing import Test, each
-from tests.utilities import make_project
 from ward.fixtures import Fixture
+from tests.utilities import make_project
 
 
 def named():
@@ -202,7 +204,7 @@ def test_module():
 
 @test("get_module_path returns the path of the module")
 def _(mod=test_module):
-    assert get_module_path(mod) == PATH
+    assert _get_module_path(mod) == PATH
 
 
 @test("is_excluded_module({mod.name}) is True for {excludes}")
@@ -212,12 +214,12 @@ def _(
         "*", "*/**.py", str(PATH), "**/test_mod.py", "path/to/*", "path/*/*.py",
     ),
 ):
-    assert is_excluded_module(mod, [excludes])
+    assert _is_excluded_module(mod, [excludes])
 
 
 @test("is_excluded_module({mod.name}) is False for {excludes}")
 def _(mod=test_module, excludes=each("abc", str(PATH.parent))):
-    assert not is_excluded_module(mod, [excludes])
+    assert not _is_excluded_module(mod, [excludes])
 
 
 @test("remove_excluded_paths removes exclusions from list of paths")
@@ -227,7 +229,7 @@ def _():
         Path("/a/b/"),
     ]
     excludes = ["**/*.py"]
-    assert remove_excluded_paths(paths, excludes) == [paths[1]]
+    assert _remove_excluded_paths(paths, excludes) == [paths[1]]
 
 
 @fixture
@@ -240,17 +242,17 @@ def _(
     root: Path = project, search=each("", "/", "a", "a/b", "a/b/c"), mod="a/b/c/d/e.py",
 ):
     module_path = root / mod
-    assert handled_within(module_path, [root / search])
+    assert _handled_within(module_path, [root / search])
 
 
 @test("handled_within({mod}, {search}) is False")
 def _(
     root: Path = project,
-    search=each("x/y/z", "a.py", "a/b.py", "a/b/c/d/e.py"),
+    search=each("x/y/z", "test_a.py", "a/b.py", "a/b/c/d/e.py"),
     mod="a/b/c/d/e.py",
 ):
     module_path = root / mod
-    assert not handled_within(module_path, [root / search])
+    assert not _handled_within(module_path, [root / search])
 
 
 @test("test modules and mro chain are added to sys.modules")
@@ -260,3 +262,28 @@ def _():
 
     for base in reversed(Abc.__mro__):
         assert base.__module__ in sys.modules
+
+
+@test("this test module has `__package__` set as `tests`")
+def _():
+    assert sys.modules[__name__].__package__ == "tests"
+
+
+if platform.system() != "Windows":
+    @test("_build_package_name constructs package name '{pkg}' from '{path}'", tags=["windows"])
+    def _(
+        pkg=each("", "foo", "foo.bar"),
+        path=each("foo.py", "foo/bar.py", "foo/bar/baz.py"),
+    ):
+        m = ModuleType(name="")
+        m.__file__ = path
+        assert _build_package_name(m) == pkg
+else:
+    @test("_build_package_name constructs package name '{pkg}' from '{path}'")
+    def _(
+        pkg=each("", "foo", "foo.bar"),
+        path=each("foo.py", "foo\\bar.py", "foo\\bar\\baz.py"),
+    ):
+        m = ModuleType(name="")
+        m.__file__ = path
+        assert _build_package_name(m) == pkg
