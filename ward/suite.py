@@ -21,7 +21,7 @@ class Suite:
     @property
     def num_tests_with_parameterization(self) -> int:
         return sum(
-            test._find_number_of_instances() if test.is_parameterised else 1
+            test.find_number_of_instances() if test.is_parameterised else 1
             for test in self.tests
         )
 
