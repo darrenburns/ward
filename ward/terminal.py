@@ -158,12 +158,6 @@ def output_test_result_line(
     test_case_number = format_test_case_number(test)
     test_style = outcome_to_style(test_result.outcome)
 
-    # Skip/Xfail tests may have a reason note attached that we'll print
-    if hasattr(test.marker, "reason"):
-        reason = test.marker.reason
-    else:
-        reason = ""
-
     grid = Table.grid(expand=True)
     grid.add_column()
     grid.add_column()
@@ -176,13 +170,15 @@ def output_test_result_line(
         ),
     ]
 
+    # Skip/Xfail tests may have a reason note attached that we'll print
+    reason = getattr(test.marker, "reason", "")
     if reason:
         grid.add_column(justify="center", style=test_style)
         columns.append(Padding(reason, pad=(0, 1, 0, 1)))
 
     if TestProgressStyle.INLINE in progress_styles:
-        grid.add_column(justify="right", style=test_style)
-        columns.append(f"[{idx / num_tests:>4.0%}]")
+        grid.add_column(justify="right", style="muted")
+        columns.append(f"{idx / num_tests:>4.0%}")
 
     grid.add_row(*columns)
 
@@ -234,7 +230,7 @@ def output_dots_global(
     all_results = []
     max_dots_per_line = get_terminal_size().width
     if TestProgressStyle.INLINE in progress_styles:
-        max_dots_per_line -= 7  # e.g. " [ 93%]"
+        max_dots_per_line -= 5  # e.g. "  93%"
     try:
         console.print()
 
@@ -283,7 +279,7 @@ def output_dots_module(
     # subtract 2 for ": "
     base_max_dots_per_line = get_terminal_size().width - 2
     if TestProgressStyle.INLINE in progress_styles:
-        base_max_dots_per_line -= 7  # e.g. " [ 93%]"
+        base_max_dots_per_line -= 5  # e.g. "  93%"
     max_dots_per_line = base_max_dots_per_line - 40
 
     all_results = []
@@ -358,7 +354,7 @@ def print_end_of_line_for_dots(
     if TestProgressStyle.INLINE in progress_styles and num_tests > 0:
         console.print(
             " " * (max_dots_per_line - dots_on_line)
-            + f" [{(test_index + 1) / num_tests:>4.0%}]",
+            + f" {(test_index + 1) / num_tests:>4.0%}",
             style="muted",
         )
     else:
