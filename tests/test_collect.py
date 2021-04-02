@@ -1,3 +1,4 @@
+import platform
 from dataclasses import dataclass
 from modulefinder import ModuleFinder
 from pathlib import Path
@@ -268,11 +269,21 @@ def _():
     assert sys.modules[__name__].__package__ == "tests"
 
 
-@test("_build_package_name constructs package name '{pkg}' from '{path}'")
-def _(
-    pkg=each("", "foo", "foo.bar"),
-    path=each("foo.py", "foo/bar.py", "foo/bar/baz.py"),
-):
-    m = ModuleType(name="")
-    m.__file__ = path
-    assert _build_package_name(m) == pkg
+if platform.system() != "Windows":
+    @test("_build_package_name constructs package name '{pkg}' from '{path}'", tags=["windows"])
+    def _(
+        pkg=each("", "foo", "foo.bar"),
+        path=each("foo.py", "foo/bar.py", "foo/bar/baz.py"),
+    ):
+        m = ModuleType(name="")
+        m.__file__ = path
+        assert _build_package_name(m) == pkg
+else:
+    @test("_build_package_name constructs package name '{pkg}' from '{path}'")
+    def _(
+        pkg=each("", "foo", "foo.bar"),
+        path=each("foo.py", "foo\\bar.py", "foo\\bar\\baz.py"),
+    ):
+        m = ModuleType(name="")
+        m.__file__ = path
+        assert _build_package_name(m) == pkg
