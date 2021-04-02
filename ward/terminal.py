@@ -172,7 +172,7 @@ def output_test_result_line(
 
     # Skip/Xfail tests may have a reason note attached that we'll print
     reason = getattr(test.marker, "reason", "")
-    if reason:
+    if reason and test.marker.active:
         grid.add_column(justify="center", style=test_style)
         columns.append(Padding(reason, pad=(0, 1, 0, 1)))
 
