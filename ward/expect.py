@@ -1,5 +1,6 @@
 import inspect
 import types
+from dataclasses import dataclass
 from enum import Enum
 from typing import Type, Any, ContextManager, TypeVar, Generic, Optional, cast
 
@@ -42,6 +43,7 @@ class Comparison(Enum):
     GreaterThanEqualTo = ">="
 
 
+@dataclass
 class TestFailure(Exception):
     def __init__(
         self,
