@@ -18,7 +18,7 @@ from ward.collect import (
     filter_tests,
     filter_fixtures, _build_package_name,
 )
-from ward.testing import Test, each
+from ward.testing import Test, each, skip
 from ward.fixtures import Fixture
 from tests.utilities import make_project
 
@@ -269,21 +269,23 @@ def _():
     assert sys.modules[__name__].__package__ == "tests"
 
 
-if platform.system() != "Windows":
-    @test("_build_package_name constructs package name '{pkg}' from '{path}'", tags=["windows"])
-    def _(
-        pkg=each("", "foo", "foo.bar"),
-        path=each("foo.py", "foo/bar.py", "foo/bar/baz.py"),
-    ):
-        m = ModuleType(name="")
-        m.__file__ = path
-        assert _build_package_name(m) == pkg
-else:
-    @test("_build_package_name constructs package name '{pkg}' from '{path}'")
-    def _(
-        pkg=each("", "foo", "foo.bar"),
-        path=each("foo.py", "foo\\bar.py", "foo\\bar\\baz.py"),
-    ):
-        m = ModuleType(name="")
-        m.__file__ = path
-        assert _build_package_name(m) == pkg
+@skip("Skipped on Windows", when=platform.system() == "Windows")
+@test("_build_package_name constructs package name '{pkg}' from '{path}'")
+def _(
+    pkg=each("", "foo", "foo.bar"),
+    path=each("foo.py", "foo/bar.py", "foo/bar/baz.py"),
+):
+    m = ModuleType(name="")
+    m.__file__ = path
+    assert _build_package_name(m) == pkg
+
+
+@skip("Skipped on Unix", when=platform.system() != "Windows")
+@test("_build_package_name constructs package name '{pkg}' from '{path}'")
+def _(
+    pkg=each("", "foo", "foo.bar"),
+    path=each("foo.py", "foo\\bar.py", "foo\\bar\\baz.py"),
+):
+    m = ModuleType(name="")
+    m.__file__ = path
+    assert _build_package_name(m) == pkg

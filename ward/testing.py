@@ -47,15 +47,20 @@ def each(*args):
     return Each(args)
 
 
-def skip(func_or_reason=None, *, reason: str = None):
+def skip(
+    func_or_reason: Union[str, Callable] = None,
+    *,
+    reason: str = None,
+    when: Union[bool, Callable] = True,
+):
     if func_or_reason is None:
-        return functools.partial(skip, reason=reason)
+        return functools.partial(skip, reason=reason, when=when)
 
     if isinstance(func_or_reason, str):
-        return functools.partial(skip, reason=func_or_reason)
+        return functools.partial(skip, reason=func_or_reason, when=when)
 
     func = func_or_reason
-    marker = SkipMarker(reason=reason)
+    marker = SkipMarker(reason=reason, when=when)
     if hasattr(func, "ward_meta"):
         func.ward_meta.marker = marker
     else:
@@ -68,15 +73,20 @@ def skip(func_or_reason=None, *, reason: str = None):
     return wrapper
 
 
-def xfail(func_or_reason=None, *, reason: str = None):
+def xfail(
+    func_or_reason: Union[str, Callable] = None,
+    *,
+    reason: str = None,
+    when: Union[bool, Callable] = True,
+):
     if func_or_reason is None:
-        return functools.partial(xfail, reason=reason)
+        return functools.partial(xfail, reason=reason, when=when)
 
     if isinstance(func_or_reason, str):
-        return functools.partial(xfail, reason=func_or_reason)
+        return functools.partial(xfail, reason=func_or_reason, when=when)
 
     func = func_or_reason
-    marker = XfailMarker(reason=reason)
+    marker = XfailMarker(reason=reason, when=when)
     if hasattr(func, "ward_meta"):
         func.ward_meta.marker = marker
     else:
@@ -141,7 +151,7 @@ class Test:
                     result = TestResult(self, TestOutcome.DRYRUN)
                 return result
 
-            if isinstance(self.marker, SkipMarker):
+            if isinstance(self.marker, SkipMarker) and self.marker.active:
                 with closing(self.sout), closing(self.serr):
                     result = TestResult(self, TestOutcome.SKIP)
                 return result
@@ -164,19 +174,17 @@ class Test:
                 # the terminal.
                 pass
             except (Exception, SystemExit) as e:
-                outcome = (
-                    TestOutcome.XFAIL
-                    if isinstance(self.marker, XfailMarker)
-                    else TestOutcome.FAIL
-                )
                 error = e
+                if isinstance(self.marker, XfailMarker) and self.marker.active:
+                    outcome = TestOutcome.XFAIL
+                else:
+                    outcome = TestOutcome.FAIL
             else:
-                outcome = (
-                    TestOutcome.XPASS
-                    if isinstance(self.marker, XfailMarker)
-                    else TestOutcome.PASS
-                )
                 error = None
+                if isinstance(self.marker, XfailMarker) and self.marker.active:
+                    outcome = TestOutcome.XPASS
+                else:
+                    outcome = TestOutcome.PASS
 
         with closing(self.sout), closing(self.serr):
             if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
@@ -233,7 +241,7 @@ class Test:
         A test is considered parameterised if any of its default arguments
         have a value that is an instance of `Each`.
         """
-        default_args = self.resolver._get_default_args()
+        default_args = self.resolver.get_default_args()
         return any(isinstance(arg, Each) for arg in default_args.values())
 
     @property
@@ -286,7 +294,7 @@ class Test:
         an equal number of items. If the current test is an invalid parameterisation,
         then a `ParameterisationError` is raised.
         """
-        default_args = self.resolver._get_default_args()
+        default_args = self.resolver.get_default_args()
         lengths = [len(arg) for _, arg in default_args.items() if isinstance(arg, Each)]
         is_valid = len(set(lengths)) in (0, 1)
         if not is_valid:
@@ -297,7 +305,7 @@ class Test:
             )
         return lengths[0]
 
-    def deps(self) -> MappingProxyType:
+    def deps(self) -> Mapping[str, inspect.Parameter]:
         return inspect.signature(self.fn).parameters
 
     def format_description(self, args: Dict[str, Any]) -> str:
@@ -354,7 +362,7 @@ class TestArgumentResolver:
     def _get_args_for_iteration(self):
         if not self.test.has_deps:
             return {}
-        default_args = self._get_default_args()
+        default_args = self.get_default_args()
         args_for_iteration: Dict[str, Any] = {}
         for name, arg in default_args.items():
             # In the case of parameterised testing, grab the arg corresponding
@@ -372,7 +380,7 @@ class TestArgumentResolver:
             if is_fixture(arg)
         }
 
-    def _get_default_args(
+    def get_default_args(
         self, func: Optional[Union[Callable, Fixture]] = None
     ) -> Dict[str, Any]:
         """
@@ -443,7 +451,7 @@ class TestArgumentResolver:
             cache.cache_fixture(fixture, scope_key)
             return fixture
 
-        children_defaults = self._get_default_args(func=arg)
+        children_defaults = self.get_default_args(func=arg)
         children_resolved = {}
         for name, child_fixture in children_defaults.items():
             child_resolved = self._resolve_single_arg(child_fixture, cache)
