@@ -17,7 +17,7 @@ from ward.testing import (
     each,
     test,
     xfail,
-    fixtures_used_directly_by_tests, TestResult, TestArgumentResolver,
+    fixtures_used_directly_by_tests, TestResult, TestArgumentResolver, skip,
 )
 
 
@@ -229,6 +229,87 @@ def _(cache=cache, when=TRUTHY_PREDICATES):
 
     assert result.test == t
     assert result.outcome == TestOutcome.XPASS
+
+
+@test("@skip decorator (no parens version) sets correct SkipMarker")
+def _():
+    @skip
+    @testable_test
+    def test_fn():
+        assert True
+
+    assert test_fn.ward_meta.marker == SkipMarker()
+    assert test_fn.ward_meta.marker.active
+
+
+@test("@xfail decorator (no parens version) sets correct XfailMarker")
+def _():
+    @xfail
+    @testable_test
+    def test_fn():
+        assert True
+
+    assert test_fn.ward_meta.marker == XfailMarker()
+
+
+@test("@skip() decorator (parens version, no args) sets correct SkipMarker")
+def _(when=FALSY_PREDICATES):
+    @skip(when=when)
+    @testable_test
+    def test_fn():
+        assert True
+
+    assert test_fn.ward_meta.marker == SkipMarker(when=when)
+
+
+@test("@xfail() decorator (parens version, no args) sets correct XfailMarker")
+def _():
+    @xfail()
+    @testable_test
+    def test_fn():
+        assert True
+
+    assert test_fn.ward_meta.marker == XfailMarker()
+
+
+@test("@skip('reason') decorator (parens version, non-kwarg) sets correct SkipMarker")
+def _(when=FALSY_PREDICATES):
+    @skip("reason", when=when)
+    @testable_test
+    def test_fn():
+        assert True
+
+    assert test_fn.ward_meta.marker == SkipMarker(reason="reason", when=when)
+
+
+@test("@xfail('reason') decorator (parens version, non-kwarg) sets correct XfailMarker")
+def _(when=FALSY_PREDICATES):
+    @xfail("reason", when=when)
+    @testable_test
+    def test_fn():
+        assert True
+
+    assert test_fn.ward_meta.marker == XfailMarker(reason="reason", when=when)
+
+
+@test("@skip(reason='reason') decorator (with kwargs) sets correct SkipMarker")
+def _(when=FALSY_PREDICATES):
+    @skip(reason="reason", when=when)
+    @testable_test
+    def test_fn():
+        assert True
+
+    assert test_fn.ward_meta.marker == SkipMarker(reason="reason", when=when)
+
+
+@test("@xfail('reason') decorator (with kwargs) sets correct XfailMarker")
+def _(when=FALSY_PREDICATES):
+    @xfail(reason="reason", when=when)
+    @testable_test
+    def test_fn():
+        assert True
+
+    assert test_fn.ward_meta.marker == XfailMarker(reason="reason", when=when)
 
 
 @test("Test.fail_with_error returns the expected TestResult")

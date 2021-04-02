@@ -305,7 +305,7 @@ class Test:
             )
         return lengths[0]
 
-    def deps(self) -> MappingProxyType:
+    def deps(self) -> Mapping[str, inspect.Parameter]:
         return inspect.signature(self.fn).parameters
 
     def format_description(self, args: Dict[str, Any]) -> str:
