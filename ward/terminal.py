@@ -1,15 +1,16 @@
+import contextlib
 import inspect
+import itertools
+import math
 import os
 import platform
 import statistics
-import time
-from collections import defaultdict
+import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from textwrap import dedent, wrap
+from textwrap import dedent
 from typing import (
-    Any,
     Dict,
     Generator,
     Iterable,
@@ -18,22 +19,15 @@ from typing import (
     Collection,
     Callable,
     Iterator,
-    Mapping,
 )
 
-import itertools
-import math
-import sys
 from rich.console import Console, ConsoleOptions, RenderResult, RenderGroup
 from rich.highlighter import NullHighlighter
-from rich.live import Live
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
 from rich.progress import (
     Progress,
-    Task,
-    TimeRemainingColumn,
     BarColumn,
     TimeElapsedColumn,
     SpinnerColumn,
@@ -133,6 +127,12 @@ def format_test_case_number(test: Test) -> str:
         iter_indicator = ""
 
     return iter_indicator
+
+
+class TestOutputStyle(str, Enum):
+    TEST_PER_LINE = "test-per-line"
+    DOTS_GLOBAL = "dots-global"
+    DOTS_MODULE = "dots-module"
 
 
 class TestProgressStyle(str, Enum):
@@ -434,9 +434,9 @@ class TestTimingStats:
 
 class TestResultWriterBase:
     runtime_output_strategies = {
-        "test-per-line": output_test_per_line,
-        "dots-global": output_dots_global,
-        "dots-module": output_dots_module,
+        TestOutputStyle.TEST_PER_LINE: output_test_per_line,
+        TestOutputStyle.DOTS_GLOBAL: output_dots_global,
+        TestOutputStyle.DOTS_MODULE: output_dots_module,
     }
 
     def __init__(
@@ -488,35 +488,43 @@ class TestResultWriterBase:
             self.test_output_style, output_test_per_line
         )
 
-        spinner = SpinnerColumn(style="pass.textonly")
-        bar = BarColumn(complete_style="pass.textonly")
-        progress = Progress(
-            spinner,
-            TimeElapsedColumn(),
-            bar,
-            "[progress.percentage]{task.percentage:>3.0f}%",
-            "[progress.percentage][{task.completed} / {task.total}]",
-            TimeRemainingColumn(),
-            console=console,
-            transient=True,
-            auto_refresh=True,
-            # TODO: figure out how to make the progress bar work with printing with end="" (for dots)
-            disable=TestProgressStyle.BAR not in self.progress_styles
-            or self.test_output_style != "test-per-line",
-        )
+        with contextlib.ExitStack() as stack:
+            if (
+                TestProgressStyle.BAR in self.progress_styles
+                and self.suite.num_tests > 0
+            ):
+                spinner = SpinnerColumn(style="pass.textonly")
+                bar = BarColumn(complete_style="pass.textonly")
+                progress = Progress(
+                    spinner,
+                    TimeElapsedColumn(),
+                    bar,
+                    "[progress.percentage]{task.percentage:>3.0f}%",
+                    "[progress.percentage][{task.completed} / {task.total}]",
+                    console=console,
+                    transient=True,
+                    auto_refresh=True,
+                    # TODO: figure out how to make the progress bar work with printing with end="" (for dots)
+                    disable=TestProgressStyle.BAR not in self.progress_styles
+                    or self.test_output_style != "test-per-line",
+                )
 
-        task = progress.add_task(
-            "Testing...", total=self.suite.num_tests_with_parameterization
-        )
+                task = progress.add_task(
+                    "Testing...", total=self.suite.num_tests_with_parameterization
+                )
 
-        def test_done() -> None:
-            progress.update(task, advance=1)
+                def test_done() -> None:
+                    progress.update(task, advance=1)
 
-        def test_fail() -> None:
-            spinner.spinner.style = "fail.textonly"
-            bar.complete_style = "fail.textonly"
+                def test_fail() -> None:
+                    spinner.spinner.style = "fail.textonly"
+                    bar.complete_style = "fail.textonly"
 
-        with progress:
+                stack.enter_context(progress)
+            else:
+                test_done = lambda: None
+                test_fail = lambda: None
+
             all_results = output_tests(
                 fail_limit,
                 self.suite.num_tests_with_parameterization,
