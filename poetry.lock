@@ -159,7 +159,7 @@ python-versions = ">=3.6, <3.7"
 
 [[package]]
 name = "docutils"
-version = "0.16"
+version = "0.17"
 description = "Docutils -- Python Documentation Utilities"
 category = "dev"
 optional = false
@@ -336,7 +336,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
 
 [[package]]
 name = "rich"
-version = "10.0.1"
+version = "10.1.0"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 category = "main"
 optional = false
@@ -663,8 +663,8 @@ dataclasses = [
     {file = "dataclasses-0.7.tar.gz", hash = "sha256:494a6dcae3b8bcf80848eea2ef64c0cc5cd307ffc263e17cdf42f3e5420808e6"},
 ]
 docutils = [
-    {file = "docutils-0.16-py2.py3-none-any.whl", hash = "sha256:0c5b78adfbf7762415433f5515cd5c9e762339e23369dbe8000d84a4bf4ab3af"},
-    {file = "docutils-0.16.tar.gz", hash = "sha256:c2de3a60e9e7d07be26b7f2b00ca0309c207e06c100f9cc2a94931fc75a478fc"},
+    {file = "docutils-0.17-py2.py3-none-any.whl", hash = "sha256:a71042bb7207c03d5647f280427f14bfbd1a65c9eb84f4b341d85fafb6bb4bdf"},
+    {file = "docutils-0.17.tar.gz", hash = "sha256:e2ffeea817964356ba4470efba7c2f42b6b0de0b04e66378507e3e2504bbff4c"},
 ]
 flake8 = [
     {file = "flake8-3.9.0-py2.py3-none-any.whl", hash = "sha256:12d05ab02614b6aee8df7c36b97d1a3b2372761222b19b58621355e82acddcff"},
@@ -824,8 +824,8 @@ requests = [
     {file = "requests-2.25.1.tar.gz", hash = "sha256:27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804"},
 ]
 rich = [
-    {file = "rich-10.0.1-py3-none-any.whl", hash = "sha256:bd13f71c32692d08489f1dd90993308f6ab10d24b1cd28a71db8af771d8ee9f9"},
-    {file = "rich-10.0.1.tar.gz", hash = "sha256:d5f620a067e5d5f9c6e8039d9b09d8bb7b730bca5c696ca7e32788b37c0b9fa5"},
+    {file = "rich-10.1.0-py3-none-any.whl", hash = "sha256:60cd6d6ea697a1704f2057e791e3062b506b5c74a6e2ad2ced71eccb37557259"},
+    {file = "rich-10.1.0.tar.gz", hash = "sha256:8f05431091601888c50341697cfc421dc398ce37b12bca0237388ef9c7e2c9e9"},
 ]
 shellingham = [
     {file = "shellingham-1.4.0-py2.py3-none-any.whl", hash = "sha256:536b67a0697f2e4af32ab176c00a50ac2899c5a05e0d8e2dadac8e58888283f9"},

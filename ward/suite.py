@@ -19,11 +19,8 @@ class Suite:
         return len(self.tests)
 
     @property
-    def num_tests_with_parameterization(self) -> int:
-        return sum(
-            test.find_number_of_instances() if test.is_parameterised else 1
-            for test in self.tests
-        )
+    def num_tests_with_parameterisation(self) -> int:
+        return sum(test.find_number_of_instances() for test in self.tests)
 
     def _test_counts_per_module(self):
         module_paths = [test.path for test in self.tests]

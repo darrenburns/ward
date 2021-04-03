@@ -303,7 +303,10 @@ class Test:
                 f"Please ensure all instances of 'each' in the test signature "
                 f"are of equal length."
             )
-        return lengths[0]
+        if len(lengths) == 0:
+            return 1
+        else:
+            return lengths[0]
 
     def deps(self) -> Mapping[str, inspect.Parameter]:
         return inspect.signature(self.fn).parameters

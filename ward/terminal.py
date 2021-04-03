@@ -506,7 +506,7 @@ class TestResultWriterBase:
                 )
 
                 task = progress.add_task(
-                    "Testing...", total=self.suite.num_tests_with_parameterization
+                    "Testing...", total=self.suite.num_tests_with_parameterisation
                 )
 
                 def test_done() -> None:
@@ -523,7 +523,7 @@ class TestResultWriterBase:
 
             all_results = output_tests(
                 fail_limit,
-                self.suite.num_tests_with_parameterization,
+                self.suite.num_tests_with_parameterisation,
                 test_results_gen,
                 self.progress_styles,
                 test_done,
