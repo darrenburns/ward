@@ -18,7 +18,7 @@ from ward.collect import (
     filter_tests,
     filter_fixtures, _build_package_name,
 )
-from ward.testing import Test, each, skip
+from ward.testing import Test, each, skip, xfail
 from ward.fixtures import Fixture
 from tests.utilities import make_project
 
@@ -266,6 +266,8 @@ def _():
 
 @test("this test module has `__package__` set as `tests`")
 def _():
+    print(sys.modules[__name__])
+    print(sys.modules[__name__].__package__)
     assert sys.modules[__name__].__package__ == "tests"
 
 
