@@ -18,7 +18,7 @@ from ward._collect import (
     filter_tests,
     filter_fixtures, _build_package_name,
 )
-from ward.testing import Test, each, skip
+from ward.testing import Test, each, skip, xfail
 from ward.fixtures import Fixture
 from tests.utilities import make_project
 
