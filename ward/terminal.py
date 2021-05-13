@@ -237,31 +237,45 @@ def output_dots_global(
         test_index = 0  # this makes sure that test_index is defined for the last end of line print after the loop
         for test_index, result in enumerate(test_results_gen):
             all_results.append(result)
+
             print_dot(result)
+
             dots_on_line += 1
             if dots_on_line == max_dots_per_line:
                 print_end_of_line_for_dots(
-                    test_index,
-                    num_tests,
-                    dots_on_line,
-                    max_dots_per_line,
-                    progress_styles,
+                    test_index=test_index,
+                    num_tests=num_tests,
+                    dots_on_line=dots_on_line,
+                    max_dots_per_line=max_dots_per_line,
+                    progress_styles=progress_styles,
                 )
                 dots_on_line = 0
+
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
                 test_failed()
+
             if num_failures == fail_limit:
                 break
+
             test_done()
+
             sys.stdout.flush()
+
         print_end_of_line_for_dots(
-            test_index, num_tests, dots_on_line, max_dots_per_line, progress_styles
+            test_index=test_index,
+            num_tests=num_tests,
+            dots_on_line=dots_on_line,
+            max_dots_per_line=max_dots_per_line,
+            progress_styles=progress_styles,
         )
     except KeyboardInterrupt:
         print_run_cancelled()
     finally:
         return all_results
+
+
+INLINE_PROGRESS_LEN = 5  # e.g. "  93%"
 
 
 def output_dots_module(
@@ -273,14 +287,15 @@ def output_dots_module(
     test_failed: ProgressCallback,
 ) -> List[TestResult]:
     current_path = Path("")
+    cwd = Path.cwd()
     dots_on_line = 0
     num_failures = 0
 
-    # subtract 2 for ": "
-    base_max_dots_per_line = get_terminal_size().width - 2
+    base_max_dots_per_line = get_terminal_size().width
     if TestProgressStyle.INLINE in progress_styles:
-        base_max_dots_per_line -= 5  # e.g. "  93%"
-    max_dots_per_line = base_max_dots_per_line - 40
+        base_max_dots_per_line -= INLINE_PROGRESS_LEN
+
+    max_dots_per_line = base_max_dots_per_line  # in case the loop below never runs
 
     all_results = []
     try:
@@ -289,49 +304,69 @@ def output_dots_module(
         test_index = 0  # this makes sure that test_index is defined for the last end of line print after the loop
         for test_index, result in enumerate(test_results_gen):
             all_results.append(result)
-            if result.test.path != current_path:
-                if test_index > 0:
+
+            if result.test.path != current_path:  # i.e., we are starting a new module
+                if test_index > 0:  # print the end-of-line for the previous module
                     print_end_of_line_for_dots(
-                        test_index,
-                        num_tests,
-                        dots_on_line,
-                        max_dots_per_line,
-                        progress_styles,
+                        test_index=test_index,
+                        num_tests=num_tests,
+                        dots_on_line=dots_on_line,
+                        max_dots_per_line=max_dots_per_line,
+                        progress_styles=progress_styles,
                     )
+
                 dots_on_line = 0
                 current_path = result.test.path
-                rel_path = str(current_path.relative_to(os.getcwd()))
-
-                max_dots_per_line = base_max_dots_per_line - len(rel_path)
+                rel_path = str(current_path.relative_to(cwd))
 
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
-                    console.print(
-                        rel_path[: final_slash_idx + 1], style="muted", end=""
+                    path_text = Text("", end="").join(
+                        [
+                            Text(rel_path[: final_slash_idx + 1], style="muted"),
+                            Text(rel_path[final_slash_idx + 1 :]),
+                            Text(": "),
+                        ]
                     )
-                    console.print(rel_path[final_slash_idx + 1 :] + ": ", end="")
                 else:
-                    console.print(f"\n{rel_path}: ", end="")
+                    path_text = Text(f"{rel_path}: ", end="")
+                console.print(path_text, end="")
+
+                max_dots_per_line = base_max_dots_per_line - path_text.cell_len
+
             print_dot(result)
+
             dots_on_line += 1
             if dots_on_line == max_dots_per_line:
                 print_end_of_line_for_dots(
-                    test_index,
-                    num_tests,
-                    dots_on_line,
-                    max_dots_per_line,
-                    progress_styles,
+                    test_index=test_index,
+                    num_tests=num_tests,
+                    dots_on_line=dots_on_line,
+                    max_dots_per_line=max_dots_per_line,
+                    progress_styles=progress_styles,
                 )
+
+                # we are now on a blank line with no other dots and no path prefix
                 dots_on_line = 0
+                max_dots_per_line = base_max_dots_per_line
+
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
                 test_failed()
+
             if num_failures == fail_limit:
                 break
+
             test_done()
+
             sys.stdout.flush()
+
         print_end_of_line_for_dots(
-            test_index, num_tests, dots_on_line, max_dots_per_line, progress_styles
+            test_index=test_index,
+            num_tests=num_tests,
+            dots_on_line=dots_on_line,
+            max_dots_per_line=max_dots_per_line,
+            progress_styles=progress_styles,
         )
     except KeyboardInterrupt:
         print_run_cancelled()
@@ -353,8 +388,7 @@ def print_end_of_line_for_dots(
 ) -> None:
     if TestProgressStyle.INLINE in progress_styles and num_tests > 0:
         console.print(
-            " " * (max_dots_per_line - dots_on_line)
-            + f" {(test_index + 1) / num_tests:>4.0%}",
+            f"{(test_index + 1) / num_tests:>{max_dots_per_line - dots_on_line + INLINE_PROGRESS_LEN}.0%}",
             style="muted",
         )
     else:
