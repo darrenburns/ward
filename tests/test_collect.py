@@ -264,7 +264,6 @@ def _():
         assert base.__module__ in sys.modules
 
 
-
 @skip("Skipped on Windows", when=platform.system() == "Windows")
 @test("_build_package_name constructs package name '{pkg}' from '{path}'")
 def _(

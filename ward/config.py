@@ -50,7 +50,9 @@ def as_list(conf: _ConfigDict):
         return [conf]
 
 
-def apply_multi_defaults(file_config: _ConfigDict, cli_config: _ConfigDict, ) -> _ConfigDict:
+def apply_multi_defaults(
+    file_config: _ConfigDict, cli_config: _ConfigDict,
+) -> _ConfigDict:
     """
     Returns all options where multiple=True that
     appeared in the config file, but weren't passed
