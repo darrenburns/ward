@@ -264,11 +264,6 @@ def _():
         assert base.__module__ in sys.modules
 
 
-@test("this test module has `__package__` set as `tests`")
-def _():
-    assert sys.modules[__name__].__package__ == "tests"
-
-
 @skip("Skipped on Windows", when=platform.system() == "Windows")
 @test("_build_package_name constructs package name '{pkg}' from '{path}'")
 def _(
