@@ -557,22 +557,6 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 brotli = ["brotlipy (>=0.6.0)"]
 
 [[package]]
-name = "ward-html"
-version = "0.1.0"
-description = ""
-category = "main"
-optional = false
-python-versions = ">=3.6"
-develop = false
-
-[package.dependencies]
-ward = "0.56.0b0"
-
-[package.source]
-type = "directory"
-url = "../ward-html"
-
-[[package]]
 name = "zipp"
 version = "3.4.1"
 description = "Backport of pathlib-compatible object wrapper for zip files"
@@ -587,7 +571,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "2baa0ea06a4f9155274421bd2f3775c06f368e7dcce7bb58dc1002c0de276bc2"
+content-hash = "c71d88e59b72e35b2edfff0f360d688c64e9cc13f33f544468df54325ef625e6"
 
 [metadata.files]
 alabaster = [
@@ -940,7 +924,6 @@ urllib3 = [
     {file = "urllib3-1.26.4-py2.py3-none-any.whl", hash = "sha256:2f4da4594db7e1e110a944bb1b551fdf4e6c136ad42e4234131391e21eb5b0df"},
     {file = "urllib3-1.26.4.tar.gz", hash = "sha256:e7b021f7241115872f92f43c6508082facffbd1c048e3c6e2bb9c2a157e28937"},
 ]
-ward-html = []
 zipp = [
     {file = "zipp-3.4.1-py3-none-any.whl", hash = "sha256:51cb66cc54621609dd593d1787f286ee42a5c0adbb4b29abea5a63edc3e03098"},
     {file = "zipp-3.4.1.tar.gz", hash = "sha256:3607921face881ba3e026887d8150cca609d517579abe052ac81fc5aeffdbd76"},
