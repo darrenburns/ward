@@ -4,7 +4,6 @@ build-backend = "poetry.masonry.api"
 
 [tool.ward]
 path = ["tests"]
-hook_module = ["tests.ward_hooks"]
 
 [tool.poetry]
 name = "ward"
