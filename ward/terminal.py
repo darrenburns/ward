@@ -334,9 +334,6 @@ def output_dots_module(
 
                 max_dots_per_line = base_max_dots_per_line - path_text.cell_len
 
-            print_dot(result)
-
-            dots_on_line += 1
             if dots_on_line == max_dots_per_line:
                 print_end_of_line_for_dots(
                     test_index=test_index,
@@ -349,6 +346,9 @@ def output_dots_module(
                 # we are now on a blank line with no other dots and no path prefix
                 dots_on_line = 0
                 max_dots_per_line = base_max_dots_per_line
+
+            print_dot(result)
+            dots_on_line += 1
 
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
