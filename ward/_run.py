@@ -1,5 +1,5 @@
+import importlib
 import pdb
-
 import sys
 from pathlib import Path
 from timeit import default_timer
@@ -11,6 +11,7 @@ import colorama
 from click_default_group import DefaultGroup
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
+from rich.console import ConsoleRenderable
 
 from ward._ward_version import __version__
 from ward._collect import (
@@ -24,14 +25,14 @@ from ward._config import set_defaults_from_config, Config
 from ward._debug import init_breakpointhooks
 from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite
-from ward.hooks import plugins
+from ward.hooks import plugins, register_hooks_in_modules
 from ward.fixtures import _DEFINED_FIXTURES
 from ward._terminal import (
     SimpleTestResultWrite,
     output_fixtures,
     get_exit_code,
     TestProgressStyle,
-    TestOutputStyle,
+    TestOutputStyle, console,
 )
 
 colorama.init()
@@ -40,7 +41,12 @@ click_completion.init()
 sys.path.append(".")
 
 
-# TODO: simplify to use invoke_without_command and ctx.forward once https://github.com/pallets/click/issues/430 is resolved
+def register_hooks(context: click.Context, param: click.Parameter, hook_module_names):
+    register_hooks_in_modules(hook_module_names)
+
+
+# TODO: simplify to use invoke_without_command and ctx.forward once
+#  https://github.com/pallets/click/issues/430 is resolved
 @click.group(
     context_settings={"max_content_width": 100},
     cls=DefaultGroup,
@@ -52,7 +58,7 @@ def run(ctx: click.Context):
     pass
 
 
-config = click.option(
+config_option = click.option(
     "--config",
     type=click.Path(
         exists=False, file_okay=True, dir_okay=False, readable=True, allow_dash=False
@@ -61,7 +67,7 @@ config = click.option(
     help="Read configuration from PATH.",
     is_eager=True,
 )
-path = click.option(
+path_option = click.option(
     "-p",
     "--path",
     type=click.Path(exists=True),
@@ -69,18 +75,26 @@ path = click.option(
     is_eager=True,
     help="Look for tests in PATH.",
 )
-exclude = click.option(
+exclude_option = click.option(
     "--exclude",
     type=click.STRING,
     multiple=True,
     help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
+hook_module = click.option(
+    "--hook-module",
+    type=click.STRING,
+    callback=register_hooks,
+    multiple=True,
+    help="Modules to search for hook implementations in.",
+)
 
 
 @run.command()
-@config
-@path
-@exclude
+@config_option
+@path_option
+@exclude_option
+@hook_module
 @click.option(
     "--search",
     help="Search test names, bodies, descriptions and module names for the search query and only keep matching tests.",
@@ -158,13 +172,14 @@ def test(
     show_slowest: int,
     show_diff_symbols: bool,
     dry_run: bool,
+    hook_module: Tuple[str],
 ):
+    """Run tests."""
     config_params = ctx.params.copy()
     config_params.pop("config")
 
     config = Config(**config_params)
 
-    """Run tests."""
     progress_styles = [TestProgressStyle(ps) for ps in progress_style]
 
     if TestProgressStyle.BAR in progress_styles and test_output_style in {
@@ -179,13 +194,13 @@ def test(
     init_breakpointhooks(pdb, sys)
     start_run = default_timer()
 
-    plugins.hook.before_session(config=config)
+    print_before: List[ConsoleRenderable] = plugins.hook.before_session(config=config)
 
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
-    modules = list(load_modules(mod_infos))
+    modules = load_modules(mod_infos)
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    filtered_tests = list(filter_tests(unfiltered_tests, query=search, tag_expr=tags,))
+    filtered_tests = filter_tests(unfiltered_tests, query=search, tag_expr=tags)
 
     tests = rewrite_assertions_in_tests(filtered_tests)
 
@@ -202,20 +217,24 @@ def test(
         show_diff_symbols=show_diff_symbols,
     )
     writer.output_header(time_to_collect=time_to_collect)
+    for renderable in print_before:
+        console.print(renderable)
     test_results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
     exit_code = get_exit_code(test_results)
     time_taken = default_timer() - start_run
 
-    plugins.hook.after_session(config=config, test_results=test_results)
+    render_afters = plugins.hook.after_session(config=config, test_results=test_results)
+    for renderable in render_afters:
+        console.print(renderable)
 
     writer.output_test_result_summary(test_results, time_taken, show_slowest)
     sys.exit(exit_code.value)
 
 
 @run.command()
-@config
-@path
-@exclude
+@config_option
+@path_option
+@exclude_option
 @click.option(
     "-f",
     "--fixture-path",

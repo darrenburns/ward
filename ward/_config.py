@@ -64,7 +64,7 @@ def apply_multi_defaults(file_config: _ConfigDict, cli_config: _ConfigDict, ) ->
         file_config_only["path"] = as_list(conf_file_paths)
 
     # TODO: Can we retrieve the list below programmatically?
-    multiple_options = ("exclude",)
+    multiple_options = ("exclude", "hook_module")
     for param in multiple_options:
         from_cli = cli_config.get(param)
         from_conf_file = file_config.get(param, "")
@@ -113,3 +113,4 @@ class Config:
     show_slowest: int
     show_diff_symbols: bool
     dry_run: bool
+    hook_module: Tuple[str]

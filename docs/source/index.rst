@@ -51,6 +51,7 @@ To run the test, simply run ``ward`` in your terminal, and Ward will let you kno
     guide/writing_tests
     guide/running_tests
     guide/fixtures
+    guide/plugins
     guide/pyproject.toml
 
 .. toctree::

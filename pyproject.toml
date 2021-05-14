@@ -4,6 +4,7 @@ build-backend = "poetry.masonry.api"
 
 [tool.ward]
 path = ["tests"]
+hook_module = ["tests.ward_hooks"]
 
 [tool.poetry]
 name = "ward"
@@ -48,6 +49,7 @@ cucumber-tag-expressions = "^2.0.0"
 click-default-group = "^1.2.2"
 click-completion = "^0.5.2"
 pluggy = "^0.13.1"
+ward-html = {path = "../ward-html"}
 
 [tool.poetry.dev-dependencies]
 black = "^19.9b0"
