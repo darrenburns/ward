@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
 
-from ward import test, using, fixture
-from ward.testing import each
 from tests.utilities import make_project
+from ward import test, using, fixture
+from ward.hooks import hook
+from ward.testing import each
 from ward.util import (
     truncate,
     find_project_root,
@@ -18,7 +19,7 @@ def s():
 
 @test("truncate('{input}', num_chars={num_chars}) returns '{expected}'")
 def _(
-    input=s, num_chars=each(20, 11, 10, 5), expected=each(s, s, "hello w...", "he...")
+        input=s, num_chars=each(20, 11, 10, 5), expected=each(s, s, "hello w...", "he...")
 ):
     result = truncate(input, num_chars)
     assert result == expected

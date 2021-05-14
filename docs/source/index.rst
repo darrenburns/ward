@@ -13,7 +13,7 @@ Features
 * Support for :ref:`testing async code<async_tests>`
 * :ref:`Parameterised testing <parameterisation>` allows you to run a single test on multiple inputs
 * Configurable with :ref:`pyproject.toml<pyproject>`, but works out-of-the-box with sensible defaults
-* Fast -- Ward's suite of ~250 tests completes in <0.3 seconds on my machine
+* Fast -- Ward's suite of ~300 tests completes in <0.4 seconds on my machine
 
 .. image:: ./_static/intro_screenshot.png
     :align: center
@@ -50,6 +50,7 @@ To run the test, simply run ``ward`` in your terminal, and Ward will let you kno
     guide/writing_tests
     guide/running_tests
     guide/fixtures
+    guide/plugins
     guide/pyproject.toml
 
 .. toctree::
