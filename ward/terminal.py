@@ -1,13 +1,15 @@
 import inspect
+import itertools
+import math
 import os
 import platform
 import statistics
+import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from textwrap import dedent, wrap
+from textwrap import dedent
 from typing import (
-    Any,
     Dict,
     Generator,
     Iterable,
@@ -16,9 +18,6 @@ from typing import (
     Collection,
 )
 
-import itertools
-import math
-import sys
 from rich.console import Console, ConsoleOptions, RenderResult, RenderGroup
 from rich.highlighter import NullHighlighter
 from rich.markdown import Markdown

@@ -1,7 +1,7 @@
 import asyncio
-import collections
 import inspect
 from contextlib import suppress
+from dataclasses import dataclass, field
 from functools import partial, wraps
 from pathlib import Path
 from typing import (
@@ -18,8 +18,6 @@ from typing import (
     Tuple,
     Collection,
 )
-
-from dataclasses import dataclass, field
 
 from ward.models import WardMeta, Scope
 

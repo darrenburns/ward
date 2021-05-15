@@ -12,7 +12,6 @@ from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
 from timeit import default_timer
-from types import MappingProxyType
 from typing import (
     Any,
     Callable,

@@ -1,14 +1,15 @@
 import platform
+import sys
 from dataclasses import dataclass
 from modulefinder import ModuleFinder
 from pathlib import Path
 from pkgutil import ModuleInfo
 from types import ModuleType
 
-import sys
 from cucumber_tag_expressions import parse
 
-from ward import fixture, raises, test
+from tests.utilities import make_project
+from ward import fixture, test
 from ward.collect import (
     _get_module_path,
     _handled_within,
@@ -18,9 +19,8 @@ from ward.collect import (
     filter_tests,
     filter_fixtures, _build_package_name,
 )
-from ward.testing import Test, each, skip, xfail
 from ward.fixtures import Fixture
-from tests.utilities import make_project
+from ward.testing import Test, each, skip
 
 
 def named():
