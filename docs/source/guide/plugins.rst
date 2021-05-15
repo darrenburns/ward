@@ -103,6 +103,30 @@ Here's how you could implement a hook in order to achieve the outcome shown abov
             )
 
 
+Filter, sort, or modify collected tests with ``preprocess_tests``
+=================================================================
+
+.. automethod:: ward.hooks::SessionHooks.preprocess_tests
+
+Example: tagging tests that span many lines
+-------------------------------------------
+
+In the code below, we implement ``preprocess_tests`` to automatically tag "big" tests which contain more than 15 lines of code.
+
+.. code-block:: python
+
+    @hook
+    def preprocess_tests(self, config: Config, collected_tests: List[Test]):
+        """
+        Attaches a tag 'big' to all tests which contain > 15 lines
+        """
+        for test in collected_tests:
+            if len(inspect.getsourcelines(test.fn)[0]) > 15:
+                test.tags.append("big")
+
+With this hook in place, we can run all tests that we consider "big" using ``ward --tags big``. We can also run tests that we don't consider
+to be "big" using ``ward --tags 'not big'``.
+
 
 Packaging your code into a plugin
 *********************************

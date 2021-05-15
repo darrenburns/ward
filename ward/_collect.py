@@ -3,6 +3,7 @@ import importlib.util
 import inspect
 import os
 import pkgutil
+import sys
 from distutils.sysconfig import get_python_lib
 from pathlib import Path
 from types import ModuleType
@@ -19,7 +20,6 @@ from typing import (
     Collection,
 )
 
-import sys
 from cucumber_tag_expressions.model import Expression
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
@@ -34,15 +34,15 @@ from ward._utilities import get_absolute_path
 Glob = str
 
 
-def is_test_module(module: ModuleType) -> bool:
+def is_test_module(module: pkgutil.ModuleInfo) -> bool:
     return is_test_module_name(module.name)
 
 
-def _get_module_path(module: ModuleType) -> Path:
+def _get_module_path(module: pkgutil.ModuleInfo) -> Path:
     return Path(module.module_finder.find_module(module.name).path)
 
 
-def _is_excluded_module(module: ModuleType, exclusions: Iterable[Glob]) -> bool:
+def _is_excluded_module(module: pkgutil.ModuleInfo, exclusions: Iterable[Glob]) -> bool:
     return _excluded(_get_module_path(module), exclusions)
 
 
@@ -71,8 +71,10 @@ def _handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
 
 def get_info_for_modules(
     paths: List[Path], exclude: Tuple[Glob],
-) -> Generator[pkgutil.ModuleInfo, None, None]:
+) -> List[pkgutil.ModuleInfo]:
     paths = _remove_excluded_paths(set(paths), exclude)
+
+    module_infos = []
 
     # Handle case where path points directly to modules
     for path in paths:
@@ -83,12 +85,12 @@ def get_info_for_modules(
             except AttributeError as e:
                 msg = f"Path {str(path)} is not a valid Python module."
                 raise CollectionError(msg) from e
-            yield mod
+            module_infos.append(mod)
 
     # Check for modules at the root of the specified path (or paths)
     for mod in pkgutil.iter_modules([str(p) for p in paths if p.is_dir()]):
         if is_test_module(mod) and not _is_excluded_module(mod, exclude):
-            yield mod
+            module_infos.append(mod)
 
     # Now check for modules in every subdirectory
     checked_dirs: Set[Path] = set(p for p in paths)
@@ -111,10 +113,13 @@ def get_info_for_modules(
                         if is_test_module(mod) and not _is_excluded_module(
                             mod, exclude
                         ):
-                            yield mod
+                            module_infos.append(mod)
+        return module_infos
 
 
-def load_modules(modules: Iterable[ModuleType]) -> Generator[Any, None, None]:
+def load_modules(modules: Iterable[ModuleSpec]) -> List[ModuleType]:
+    loaded_modules = []
+
     for m in modules:
         if hasattr(m, "module_finder"):
             file_finder: FileFinder = m.module_finder
@@ -127,7 +132,9 @@ def load_modules(modules: Iterable[ModuleType]) -> Generator[Any, None, None]:
                 sys.modules[module_name] = m
             m.__package__ = _build_package_name(m)
             m.__loader__.exec_module(m)
-            yield m
+            loaded_modules.append(m)
+
+    return loaded_modules
 
 
 def _build_package_name(module: ModuleType) -> str:
@@ -139,7 +146,8 @@ def _build_package_name(module: ModuleType) -> str:
 
 def get_tests_in_modules(
     modules: Iterable, capture_output: bool = True
-) -> Generator[Test, None, None]:
+) -> List[Test]:
+    tests = []
     for mod in modules:
         mod_name = mod.__name__
         mod_path = get_absolute_path(mod)
@@ -147,22 +155,24 @@ def get_tests_in_modules(
         if anon_tests:
             for test_fn in anon_tests:
                 meta: WardMeta = getattr(test_fn, "ward_meta")
-                yield Test(
+                tests.append(Test(
                     fn=test_fn,
                     module_name=mod_name,
                     marker=meta.marker,
                     description=meta.description or "",
                     capture_output=capture_output,
                     tags=meta.tags or [],
-                )
+                ))
+    return tests
 
 
 def filter_tests(
-    tests: Iterable[Test], query: str = "", tag_expr: Optional[Expression] = None,
-) -> Iterator[Test]:
+    tests: List[Test], query: str = "", tag_expr: Optional[Expression] = None,
+) -> List[Test]:
     if not query and not tag_expr:
-        yield from tests
+        return tests
 
+    filtered_tests = []
     for test in tests:
         description = test.description or ""
 
@@ -177,18 +187,21 @@ def filter_tests(
         matches_tags = not tag_expr or tag_expr.evaluate(test.tags)
 
         if matches_query and matches_tags:
-            yield test
+            filtered_tests.append(test)
+
+    return filtered_tests
 
 
 def filter_fixtures(
-    fixtures: Iterable[Fixture],
+    fixtures: List[Fixture],
     query: str = "",
-    paths: Optional[Collection[Path]] = None,
-) -> Iterator[Fixture]:
+    paths: Optional[Iterable[Path]] = None,
+) -> List[Fixture]:
     if paths is None:
         paths = []
     paths = {path.absolute() for path in paths}
 
+    filtered_fixtures = []
     for fixture in fixtures:
         matches_query = (
             not query
@@ -204,4 +217,6 @@ def filter_fixtures(
         )
 
         if matches_query and matches_paths:
-            yield fixture
+            filtered_fixtures.append(fixture)
+
+    return filtered_fixtures
