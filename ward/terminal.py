@@ -5,9 +5,8 @@ import statistics
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from textwrap import dedent, wrap
+from textwrap import dedent
 from typing import (
-    Any,
     Dict,
     Generator,
     Iterable,
@@ -549,7 +548,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
             captured_stderr_lines = test_result.captured_stderr.split("\n")
-            console.print(Padding(Text(f"Captured stderr"), pad=(0, 0, 1, 2)))
+            console.print(Padding(Text("Captured stderr"), pad=(0, 0, 1, 2)))
             for line in captured_stderr_lines:
                 console.print(Padding(line, pad=(0, 0, 0, 4)))
             console.print()
@@ -557,7 +556,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
             captured_stdout_lines = test_result.captured_stdout.split("\n")
-            console.print(Padding(Text(f"Captured stdout"), pad=(0, 0, 1, 2)))
+            console.print(Padding(Text("Captured stdout"), pad=(0, 0, 1, 2)))
             for line in captured_stdout_lines:
                 console.print(Padding(line, pad=(0, 0, 0, 4)))
             console.print()
@@ -711,7 +710,7 @@ def make_fixture_information_tree(
             add_fixture_usages_by_tests_to_tree(used_by_tests_node, used_by_tests)
 
         if not (used_by_tests or fixtures_to_children[fixture]):
-            root.add(f"[usedby]used by [fail]no tests or fixtures")
+            root.add("[usedby]used by [fail]no tests or fixtures")
 
     return root
 
