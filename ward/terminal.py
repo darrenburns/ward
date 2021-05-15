@@ -344,8 +344,6 @@ class TestResultWriterBase:
         self.terminal_size = get_terminal_size()
 
     def output_header(self, time_to_collect):
-        python_impl = platform.python_implementation()
-        python_version = platform.python_version()
         console.print(Rule(Text(f"Ward {__version__}", style="title")),)
         if self.config_path:
             try:
