@@ -39,7 +39,7 @@ def _breakpointhook(*args, **kwargs):
             hook = set_trace
         else:
             hook = getattr(module, funcname)
-    except:
+    except ImportError:
         warnings.warn(
             f"Ignoring unimportable $PYTHONBREAKPOINT: {hookname}", RuntimeWarning
         )
