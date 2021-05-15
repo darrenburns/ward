@@ -33,7 +33,8 @@ click_completion.init()
 sys.path.append(".")
 
 
-# TODO: simplify to use invoke_without_command and ctx.forward once https://github.com/pallets/click/issues/430 is resolved
+# TODO: simplify to use invoke_without_command and ctx.forward
+# once https://github.com/pallets/click/issues/430 is resolved
 @click.group(
     context_settings={"max_content_width": 100},
     cls=DefaultGroup,
@@ -105,7 +106,8 @@ exclude = click.option(
 @click.option(
     "--show-diff-symbols/--hide-diff-symbols",
     default=False,
-    help="If enabled, diffs will use symbols such as '?', '-', '+' and '^' instead of colours to highlight differences.",
+    help="If enabled, diffs will use symbols such as '?', '-', '+' and '^' "
+    "instead of colours to highlight differences.",
 )
 @click.option(
     "--capture-output/--no-capture-output",
@@ -200,7 +202,8 @@ def test(
 )
 @click.option(
     "--show-dependencies/--no-show-dependencies",
-    help="Display the fixtures and tests that each fixture depends on and is used by. Only displays direct dependencies; use --show-dependency-trees to show all dependency information.",
+    help="Displays direct dependencies between fixtures and tests."
+    "Use --show-dependency-trees to show detailed dependency information.",
     default=False,
 )
 @click.option(
