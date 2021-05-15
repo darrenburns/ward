@@ -1,5 +1,4 @@
 import asyncio
-import collections
 import inspect
 from contextlib import suppress
 from functools import partial, wraps
