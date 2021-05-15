@@ -1,6 +1,5 @@
 import inspect
 import os
-import platform
 import statistics
 from dataclasses import dataclass
 from enum import Enum
