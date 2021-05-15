@@ -1,11 +1,12 @@
 import importlib
+import inspect
 from typing import Iterable, Optional, List
 
 import pluggy
 from rich.console import ConsoleRenderable
 
 from ward.config import Config
-from ward.testing import TestResult
+from ward.testing import TestResult, Test
 
 PROJECT_NAME = "ward"
 
@@ -13,27 +14,25 @@ spec = pluggy.HookspecMarker(PROJECT_NAME)
 hook = pluggy.HookimplMarker(PROJECT_NAME)
 
 
-def register_hooks_in_modules(module_names: Iterable[str]):
+def register_hooks_in_modules(
+    plugin_manager: pluggy.PluginManager, module_names: Iterable[str]
+):
     for module_name in module_names:
-        _register_hooks_in_module(module_name)
+        _register_hooks_in_module(plugin_manager, module_name)
 
 
-def _register_hooks_in_module(module_name: str):
+def _register_hooks_in_module(plugin_manager: pluggy.PluginManager, module_name: str):
     module = importlib.import_module(module_name)
-    plugins.register(module)
+    plugin_manager.register(module)
 
 
 class SessionHooks:
-    """
-    The highest level of hooks offered by Ward, allowing you to run code before and
-    after a test session, or to create new command line options. You can implement these hooks to call and API before/after a test session,
-    write information about the results to a file, and more.
-    """
-
     @spec
     def before_session(self, config: Config) -> Optional[ConsoleRenderable]:
         """
-        Hook which is called immediately at the start of a test session. You can implement this hook to run some setup code.
+        Hook which is called immediately at the start of a test session (before tests are collected).
+
+        You can implement this hook to run some setup code.
 
         This hook has no default implementation. If you implement it, you will not be overriding any existing functionality.
 
@@ -63,6 +62,23 @@ class SessionHooks:
 
         If you return a `rich.console.ConsoleRenderable <https://rich.readthedocs.io/en/latest/protocol.html#console-render>`_
         from this function, it will be rendered to the terminal.
+        """
+
+    @spec
+    def preprocess_tests(self, config: Config, collected_tests: List[Test]):
+        """
+        Called before tests are filtered out by ``--search``, ``--tags``, etc, and before assertion rewriting.
+
+        Allows you to transform or filter out tests (by modifying the ``collected_tests`` list in place).
+
+        This hook has no default implementation. You can implement it without overriding existing functionality.
+
+        Examples of how you could use this hook:
+
+        * Filter out tests
+        * Reorder tests
+        * Generate statistics about tests pre-run
+        * Attach some data to each test to use later
         """
 
 

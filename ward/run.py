@@ -35,8 +35,8 @@ click_completion.init()
 sys.path.append(".")
 
 
-def register_hooks(context: click.Context, param: click.Parameter, hook_module_names):
-    register_hooks_in_modules(hook_module_names)
+def _register_hooks(context: click.Context, param: click.Parameter, hook_module_names):
+    register_hooks_in_modules(plugin_manager=plugins, module_names=hook_module_names)
 
 
 # TODO: simplify to use invoke_without_command and ctx.forward once
@@ -78,7 +78,7 @@ exclude_option = click.option(
 hook_module = click.option(
     "--hook-module",
     type=click.STRING,
-    callback=register_hooks,
+    callback=_register_hooks,
     multiple=True,
     help="Modules to search for hook implementations in.",
 )
@@ -166,12 +166,13 @@ def test(
     init_breakpointhooks(pdb, sys)
     start_run = default_timer()
 
-    print_before: List[ConsoleRenderable] = plugins.hook.before_session(config=config)
+    print_before: Tuple[ConsoleRenderable] = plugins.hook.before_session(config=config)
 
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = load_modules(mod_infos)
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
+    plugins.hook.preprocess_tests(config=config, collected_tests=unfiltered_tests)
     filtered_tests = filter_tests(unfiltered_tests, query=search, tag_expr=tags)
 
     tests = rewrite_assertions_in_tests(filtered_tests)
@@ -194,7 +195,9 @@ def test(
     exit_code = get_exit_code(test_results)
     time_taken = default_timer() - start_run
 
-    render_afters = plugins.hook.after_session(config=config, test_results=test_results)
+    render_afters: Tuple[ConsoleRenderable] = plugins.hook.after_session(
+        config=config, test_results=test_results
+    )
     for renderable in render_afters:
         console.print(renderable)
 

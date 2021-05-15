@@ -55,11 +55,9 @@ def _(tests=tests_to_search, named=named_test):
     assert list(results) == [named]
 
 
-@test("filter_tests returns an empty generator when no tests match query")
+@test("filter_tests returns an empty list when no tests match query")
 def _(tests=tests_to_search):
-    results = filter_tests(tests, query="92qj3f9i")
-    with raises(StopIteration):
-        next(results)
+    assert [] == filter_tests(tests, query="92qj3f9i")
 
 
 @test("filter_tests when tags match simple tag expression")
