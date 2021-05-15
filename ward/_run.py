@@ -1,9 +1,8 @@
-import importlib
 import pdb
 import sys
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 
 import click
 import click_completion

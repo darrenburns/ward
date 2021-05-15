@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 from contextlib import suppress
+from dataclasses import dataclass
 from functools import partial, wraps
 from pathlib import Path
 from typing import (
@@ -12,8 +13,6 @@ from typing import (
     AsyncGenerator,
     List,
 )
-
-from dataclasses import dataclass
 
 from ward.models import WardMeta, Scope
 
@@ -176,6 +175,7 @@ def using(*using_args, **using_kwargs):
     An alternative to the default param method of injecting fixtures into tests. Allows you to avoid using
     keyword arguments in your test definitions.
     """
+
     def decorator_using(func):
         signature = inspect.signature(func)
         bound_args = signature.bind_partial(*using_args, **using_kwargs)

@@ -8,16 +8,12 @@ from distutils.sysconfig import get_python_lib
 from pathlib import Path
 from types import ModuleType
 from typing import (
-    Any,
     Callable,
-    Generator,
     Iterable,
     List,
     Optional,
     Set,
     Tuple,
-    Iterator,
-    Collection,
 )
 
 from cucumber_tag_expressions.model import Expression
@@ -144,9 +140,7 @@ def _build_package_name(module: ModuleType) -> str:
     return "" if package_name == "." else package_name
 
 
-def get_tests_in_modules(
-    modules: Iterable, capture_output: bool = True
-) -> List[Test]:
+def get_tests_in_modules(modules: Iterable, capture_output: bool = True) -> List[Test]:
     tests = []
     for mod in modules:
         mod_name = mod.__name__
@@ -155,14 +149,16 @@ def get_tests_in_modules(
         if anon_tests:
             for test_fn in anon_tests:
                 meta: WardMeta = getattr(test_fn, "ward_meta")
-                tests.append(Test(
-                    fn=test_fn,
-                    module_name=mod_name,
-                    marker=meta.marker,
-                    description=meta.description or "",
-                    capture_output=capture_output,
-                    tags=meta.tags or [],
-                ))
+                tests.append(
+                    Test(
+                        fn=test_fn,
+                        module_name=mod_name,
+                        marker=meta.marker,
+                        description=meta.description or "",
+                        capture_output=capture_output,
+                        tags=meta.tags or [],
+                    )
+                )
     return tests
 
 
@@ -193,9 +189,7 @@ def filter_tests(
 
 
 def filter_fixtures(
-    fixtures: List[Fixture],
-    query: str = "",
-    paths: Optional[Iterable[Path]] = None,
+    fixtures: List[Fixture], query: str = "", paths: Optional[Iterable[Path]] = None,
 ) -> List[Fixture]:
     if paths is None:
         paths = []

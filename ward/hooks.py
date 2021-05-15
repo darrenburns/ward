@@ -1,5 +1,4 @@
 import importlib
-import inspect
 from typing import Iterable, Optional, List
 
 import pluggy
