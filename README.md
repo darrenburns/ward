@@ -9,6 +9,8 @@ Ward is a modern test framework for Python with a focus on productivity and read
 
 ## Features
 
+See the full set of features in the [**documentation**](https://ward.readthedocs.io).
+
 **Descriptive test names:** describe what your tests do using strings, not function names.
 ```python
 @test("1 + 2 == 3")
