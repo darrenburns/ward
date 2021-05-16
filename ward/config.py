@@ -116,3 +116,4 @@ class Config:
     show_diff_symbols: bool
     dry_run: bool
     hook_module: Tuple[str]
+    progress_style: Tuple[str]

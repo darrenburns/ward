@@ -267,7 +267,7 @@ class Test:
         if not self.is_parameterised:
             return [self]
 
-        number_of_instances = self._find_number_of_instances()
+        number_of_instances = self.find_number_of_instances()
 
         generated_tests = []
         for instance_index in range(number_of_instances):
@@ -284,7 +284,7 @@ class Test:
             generated_tests.append(test)
         return generated_tests
 
-    def _find_number_of_instances(self) -> int:
+    def find_number_of_instances(self) -> int:
         """
         Returns the number of instances that would be generated for the current
         parameterised test.
@@ -302,7 +302,10 @@ class Test:
                 f"Please ensure all instances of 'each' in the test signature "
                 f"are of equal length."
             )
-        return lengths[0]
+        if len(lengths) == 0:
+            return 1
+        else:
+            return lengths[0]
 
     def deps(self) -> Mapping[str, inspect.Parameter]:
         return inspect.signature(self.fn).parameters

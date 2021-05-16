@@ -2,10 +2,9 @@ import importlib
 import inspect
 import io
 import os
-import warnings
+import sys
 
 import click
-import sys
 
 from ward.config import _breakpoint_supported
 from ward.terminal import console
@@ -28,32 +27,30 @@ def _breakpointhook(*args, **kwargs):
     elif hookname == "0":
         return None
 
-    modname, dot, funcname = hookname.rpartition(".")
-    if dot == "":
-        modname = "builtins"
-
-    try:
-        module = importlib.import_module(modname)
-        if hookname == "pdb.set_trace":
-            set_trace = module.Pdb(stdout=original_stdout, skip=["ward*"]).set_trace
-            hook = set_trace
-        else:
-            hook = getattr(module, funcname)
-    except:
-        warnings.warn(
-            f"Ignoring unimportable $PYTHONBREAKPOINT: {hookname}", RuntimeWarning
-        )
-        return None
-
+    hook = _get_debugger_hook(hookname)
     context = click.get_current_context()
     capture_enabled = context.params.get("capture_output")
     capture_active = isinstance(sys.stdout, io.StringIO)
 
     if capture_enabled and capture_active:
         sys.stdout = original_stdout
-        console.print(f"Entering {modname} - output capturing disabled.", style="info")
+        console.print(f"Entering debugger - output capturing disabled.", style="info")
         return hook(*args, **kwargs)
+
     return hook(*args, **kwargs)
+
+
+def _get_debugger_hook(hookname: str):
+    modname, dot, funcname = hookname.rpartition(".")
+    if dot == "":
+        modname = "builtins"
+    module = importlib.import_module(modname)
+    if hookname == "pdb.set_trace":
+        set_trace = module.Pdb(stdout=original_stdout, skip=["ward*"]).set_trace
+        hook = set_trace
+    else:
+        hook = getattr(module, funcname)
+    return hook
 
 
 __breakpointhook__ = _breakpointhook
