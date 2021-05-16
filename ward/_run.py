@@ -1,6 +1,7 @@
 import pdb
 import sys
 from pathlib import Path
+from random import shuffle
 from timeit import default_timer
 from typing import Optional, Tuple
 
@@ -201,13 +202,15 @@ def test(
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
     plugins.hook.preprocess_tests(config=config, collected_tests=unfiltered_tests)
     filtered_tests = filter_tests(unfiltered_tests, query=search, tag_expr=tags)
+    if config.order == "random":
+        shuffle(filtered_tests)
 
     tests = rewrite_assertions_in_tests(filtered_tests)
 
     time_to_collect = default_timer() - start_run
 
     suite = Suite(tests=tests)
-    test_results = suite.generate_test_runs(order=order, dry_run=dry_run)
+    test_results = suite.generate_test_runs(dry_run=dry_run)
     writer = SimpleTestResultWrite(
         suite=suite,
         test_output_style=test_output_style,
