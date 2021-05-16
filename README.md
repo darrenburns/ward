@@ -5,7 +5,7 @@
 
 Ward is a modern test framework for Python with a focus on productivity and readability. 
 
-<img width="807" alt="image" src="https://user-images.githubusercontent.com/5740731/111924675-9937c680-8a9d-11eb-8df3-6d9c9b8807c8.png">
+<img alt="image" src="https://user-images.githubusercontent.com/5740731/118399689-39513c80-b656-11eb-94e3-a5a91db7b3ac.png">
 
 ## Features
 
