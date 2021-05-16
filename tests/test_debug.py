@@ -1,4 +1,6 @@
+import os
 from types import SimpleNamespace
+from unittest import mock
 from unittest.mock import Mock
 
 from ward import test, debug
@@ -30,3 +32,11 @@ def _():
     init_breakpointhooks(pdb_module=Mock(), sys_module=mock_sys)
     debug._breakpoint_supported = old_func
     assert not hasattr(mock_sys, "breakpointhook")
+
+
+@test("_breakpointhook returns None if PYTHONBREAKPOINT env var is '0'")
+def _():
+    with mock.patch.dict(os.environ, {"PYTHONBREAKPOINT": "0"}):
+        assert _breakpointhook() is None
+
+
