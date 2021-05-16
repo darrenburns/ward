@@ -402,7 +402,7 @@ def print_run_cancelled():
 
 
 @dataclass
-class TestTimingStats:
+class TestTimingStatsPanel:
     all_tests_in_session: List[TestResult]
     num_tests_to_show: int
 
@@ -460,6 +460,49 @@ class TestTimingStats:
         )
 
         yield panel
+
+
+@dataclass
+class TestPreludeRenderable:
+    time_to_collect_secs: float
+    num_tests_collected: int
+    num_fixtures_collected: int
+    config_path: Optional[Path]
+
+    def __rich_console__(self, c: Console, co: ConsoleOptions) -> RenderResult:
+        python_impl = platform.python_implementation()
+        python_version = platform.python_version()
+        yield Rule(
+            Text(f"Ward {__version__} | {python_impl} {python_version}", style="title",)
+        )
+        if self.config_path:
+            try:
+                path = self.config_path.relative_to(Path.cwd())
+            except ValueError:
+                path = self.config_path.name
+            yield f"Loaded config from [b]{path}[/b]."
+
+        yield (
+            f"Found [b]{self.suite.num_tests}[/b] tests "
+            f"and [b]{len(_DEFINED_FIXTURES)}[/b] fixtures "
+            f"in [b]{self.time_to_collect_secs:.2f}[/b] seconds."
+        )
+
+
+class ResultProcessor:
+    def __init__(
+        self,
+        suite: Suite,
+        test_output_style: str,
+        progress_styles: List[TestProgressStyle],
+        config_path: Optional[Path],
+        show_diff_symbols: bool = False,
+    ):
+        self.suite = suite
+        self.test_output_style = test_output_style
+        self.progress_styles = progress_styles
+        self.config_path = config_path
+        self.show_diff_symbols = show_diff_symbols
 
 
 class TestResultWriterBase:
@@ -694,7 +737,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
         if show_slowest:
-            console.print(TestTimingStats(test_results, show_slowest))
+            console.print(TestTimingStatsPanel(test_results, show_slowest))
 
         result_table = Table.grid()
         result_table.add_column(justify="right")
