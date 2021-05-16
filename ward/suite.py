@@ -29,18 +29,12 @@ class Suite:
             counts[path] += 1
         return counts
 
-    def generate_test_runs(
-        self, order="standard", dry_run=False
-    ) -> Generator[TestResult, None, None]:
+    def generate_test_runs(self, dry_run=False) -> Generator[TestResult, None, None]:
         """
         Run tests
 
         Returns a generator which yields test results
         """
-
-        if order == "random":
-            shuffle(self.tests)
-
         num_tests_per_module = self._test_counts_per_module()
         for test in self.tests:
             num_tests_per_module[test.path] -= 1
