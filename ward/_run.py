@@ -208,7 +208,6 @@ def test(
 
     suite = Suite(tests=tests)
     test_results = suite.generate_test_runs(order=order, dry_run=dry_run)
-
     writer = SimpleTestResultWrite(
         suite=suite,
         test_output_style=test_output_style,
