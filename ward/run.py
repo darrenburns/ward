@@ -3,7 +3,7 @@ import pdb
 import sys
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import click
 import click_completion
@@ -25,7 +25,13 @@ from ward.debug import init_breakpointhooks
 from ward.rewrite import rewrite_assertions_in_tests
 from ward.suite import Suite
 from ward.fixtures import _DEFINED_FIXTURES
-from ward.terminal import SimpleTestResultWrite, output_fixtures, get_exit_code
+from ward.terminal import (
+    SimpleTestResultWrite,
+    output_fixtures,
+    get_exit_code,
+    TestProgressStyle,
+    TestOutputStyle,
+)
 
 colorama.init()
 click_completion.init()
@@ -91,10 +97,20 @@ exclude = click.option(
 )
 @click.option(
     "--test-output-style",
-    type=click.Choice(
-        ["test-per-line", "dots-global", "dots-module"], case_sensitive=False,
-    ),
+    type=click.Choice(list(TestOutputStyle), case_sensitive=False),
     default="test-per-line",
+    help="The style of output for displaying individual test results during the run.",
+)
+@click.option(
+    "--progress-style",
+    type=click.Choice(list(TestProgressStyle), case_sensitive=False),
+    multiple=True,
+    default=["inline"],
+    help=f"""\
+    The style of progress indicator to use during the run.
+    Pass multiple times to enable multiple styles.
+    The '{TestProgressStyle.BAR}' style is not compatible with the '{TestOutputStyle.DOTS_GLOBAL}' and '{TestOutputStyle.DOTS_MODULE}' test output styles.
+    """,
 )
 @click.option(
     "--order",
@@ -135,6 +151,7 @@ def test(
     tags: Optional[Expression],
     fail_limit: Optional[int],
     test_output_style: str,
+    progress_style: List[str],
     order: str,
     capture_output: bool,
     show_slowest: int,
@@ -142,6 +159,17 @@ def test(
     dry_run: bool,
 ):
     """Run tests."""
+    progress_styles = [TestProgressStyle(ps) for ps in progress_style]
+
+    if TestProgressStyle.BAR in progress_styles and test_output_style in {
+        "dots-global",
+        "dots-module",
+    }:
+        raise click.BadOptionUsage(
+            "progress_style",
+            f"The '{TestProgressStyle.BAR}' progress style cannot be used with dots-based test output styles (you asked for '{test_output_style}').",
+        )
+
     init_breakpointhooks(pdb, sys)
     start_run = default_timer()
     paths = [Path(p) for p in path]
@@ -160,6 +188,7 @@ def test(
     writer = SimpleTestResultWrite(
         suite=suite,
         test_output_style=test_output_style,
+        progress_styles=progress_styles,
         config_path=config_path,
         show_diff_symbols=show_diff_symbols,
     )

@@ -5,9 +5,11 @@
 
 Ward is a modern test framework for Python with a focus on productivity and readability. 
 
-<img width="807" alt="image" src="https://user-images.githubusercontent.com/5740731/111924675-9937c680-8a9d-11eb-8df3-6d9c9b8807c8.png">
+<img alt="image" src="https://user-images.githubusercontent.com/5740731/118399779-a795ff00-b656-11eb-8fca-4ceb03151f3e.png">
 
 ## Features
+
+See the full set of features in the [**documentation**](https://ward.readthedocs.io).
 
 **Descriptive test names:** describe what your tests do using strings, not function names.
 ```python
@@ -52,16 +54,15 @@ Or use tag expressions for more powerful filtering.
 ward --tags "(unit or integration) and not slow"
 ```
 
-**Parameterised testing:** write a test once, and call it multiple times with different inputs
+**Parameterised testing:** write a test once, and run it multiple times with different inputs by writing it in a loop.
 ```python
-@test("truncate('{text}', num_chars={num_chars}) returns '{expected}'")
-def _(
-    text=s,
-    num_chars=each(20, 11, 10, 5),
-    expected=each(s, s, "hello w...", "he..."),
-):
-    result = truncate(text, num_chars)
-    assert result == expected
+  for lhs, rhs, res in [
+      (1, 1, 2),
+      (2, 3, 5),
+  ]:
+      @test("simple addition")
+      def _(left=lhs, right=rhs, result=res):
+          assert left + right == result
 ```
 
 **Cross platform:** Tested on Mac OS, Linux, and Windows.

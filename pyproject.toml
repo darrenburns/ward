@@ -7,7 +7,7 @@ path = ["tests"]
 
 [tool.poetry]
 name = "ward"
-version = "0.54.0b0"
+version = "0.55.0b0"
 description = "A modern Python testing framework"
 exclude = ["tests"]
 authors = ["Darren Burns <darrenb900@gmail.com>"]
@@ -40,7 +40,7 @@ dataclasses = { version = "^0.7", python = "3.6" }
 colorama = "^0.4.0"
 click = "^8.0.0"
 termcolor = "^1.1.0"
-rich = "^9.1.0"
+rich = "^10.0.0"
 toml = "^0.10.1"
 pygments = "^2.4.2"
 pprintpp = "^0.4.0"

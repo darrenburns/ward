@@ -15,8 +15,12 @@ class Suite:
     cache: FixtureCache = field(default_factory=FixtureCache)
 
     @property
-    def num_tests(self):
+    def num_tests(self) -> int:
         return len(self.tests)
+
+    @property
+    def num_tests_with_parameterisation(self) -> int:
+        return sum(test.find_number_of_instances() for test in self.tests)
 
     def _test_counts_per_module(self):
         module_paths = [test.path for test in self.tests]
