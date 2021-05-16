@@ -1,10 +1,12 @@
+import inspect
 import os
+from pdb import Pdb
 from types import SimpleNamespace
 from unittest import mock
 from unittest.mock import Mock
 
 from ward import test, debug
-from ward.debug import init_breakpointhooks, _breakpointhook
+from ward.debug import init_breakpointhooks, _breakpointhook, _get_debugger_hook, importlib
 
 
 @test("init_breakpointhooks always patches pdb.set_trace")
@@ -40,3 +42,19 @@ def _():
         assert _breakpointhook() is None
 
 
+@test("_get_debugger_hook returns Pdb.set_trace if hookname is 'pdb.set_trace'")
+def _():
+    assert inspect.getsource(_get_debugger_hook("pdb.set_trace")) == inspect.getsource(Pdb().set_trace)
+
+
+@test("_get_debugger_hook returns function from builtins if hookname contains no dot")
+def _():
+    def fake_hook():
+        return 1
+
+    fake_builtins = SimpleNamespace(my_function=fake_hook)
+    with mock.patch.object(importlib, "import_module", return_value=fake_builtins, autospec=True) as im:
+        hook = _get_debugger_hook("my_function")
+
+        im.assert_called_once_with("builtins")
+        assert hook == fake_hook
