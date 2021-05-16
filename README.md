@@ -52,16 +52,15 @@ Or use tag expressions for more powerful filtering.
 ward --tags "(unit or integration) and not slow"
 ```
 
-**Parameterised testing:** write a test once, and call it multiple times with different inputs
+**Parameterised testing:** write a test once, and run it multiple times with different inputs by writing it in a loop.
 ```python
-@test("truncate('{text}', num_chars={num_chars}) returns '{expected}'")
-def _(
-    text=s,
-    num_chars=each(20, 11, 10, 5),
-    expected=each(s, s, "hello w...", "he..."),
-):
-    result = truncate(text, num_chars)
-    assert result == expected
+  for lhs, rhs, res in [
+      (1, 1, 2),
+      (2, 3, 5),
+  ]:
+      @test("simple addition")
+      def _(left=lhs, right=rhs, result=res):
+          assert left + right == result
 ```
 
 **Cross platform:** Tested on Mac OS, Linux, and Windows.
