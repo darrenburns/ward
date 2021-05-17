@@ -57,14 +57,6 @@ from ward._utilities import group_by
 HORIZONTAL_PAD = (0, 1, 0, 1)
 
 INDENT = " " * 2
-BODY_INDENT_SIZE = 4
-
-
-def make_indent(depth=1):
-    return INDENT * depth
-
-
-DOUBLE_INDENT = make_indent(depth=2)
 
 theme = Theme(
     {
@@ -576,12 +568,9 @@ class TestResultWriterBase:
             console.print()
         return all_results
 
-    def print_divider(self) -> None:
+    @staticmethod
+    def print_divider() -> None:
         console.print(Rule(style="muted"))
-
-    def output_single_test_result(self, test_result: TestResult):
-        """Indicate whether a test passed, failed, was skipped etc."""
-        raise NotImplementedError()
 
     def output_why_test_failed_header(self, test_result: TestResult):
         """
