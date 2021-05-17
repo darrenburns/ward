@@ -33,7 +33,8 @@ from ward._terminal import (
     output_fixtures,
     get_exit_code,
     TestProgressStyle,
-    TestOutputStyle, console,
+    TestOutputStyle,
+    console,
 )
 
 colorama.init()
