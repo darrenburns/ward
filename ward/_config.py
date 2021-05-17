@@ -4,10 +4,10 @@ from typing import Dict, Union, Iterable
 import click
 import toml
 
-from ward.util import find_project_root
+from ward._utilities import find_project_root
 
 ConfigValue = Union[int, str, bool, Iterable[str]]
-Config = Dict[str, ConfigValue]
+ConfigDict = Dict[str, ConfigValue]
 
 CONFIG_FILE = "pyproject.toml"
 
@@ -20,7 +20,7 @@ def _breakpoint_supported() -> bool:
     return True
 
 
-def read_config_toml(project_root: Path, config_file: str) -> Config:
+def read_config_toml(project_root: Path, config_file: str) -> ConfigDict:
     path = project_root / config_file
     if not path.is_file():
         return {}
@@ -40,14 +40,16 @@ def read_config_toml(project_root: Path, config_file: str) -> Config:
     return config
 
 
-def as_list(conf: Config):
+def as_list(conf: ConfigDict):
     if isinstance(conf, list):
         return conf
     else:
         return [conf]
 
 
-def apply_multi_defaults(file_config: Config, cli_config: Config,) -> Config:
+def apply_multi_defaults(
+    file_config: ConfigDict, cli_config: ConfigDict,
+) -> ConfigDict:
     """
     Returns all options where multiple=True that
     appeared in the config file, but weren't passed

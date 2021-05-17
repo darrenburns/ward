@@ -41,19 +41,18 @@ from rich.traceback import Traceback
 from rich.tree import Tree
 
 from ward._ward_version import __version__
-from ward.diff import make_diff
+from ward._diff import make_diff
 from ward.expect import Comparison, TestFailure
 from ward.fixtures import (
     Fixture,
-    Scope,
     _DEFINED_FIXTURES,
-    fixture_parents_and_children,
-    _TYPE_FIXTURE_TO_FIXTURES,
 )
-from ward.suite import Suite
+from ward.models import Scope
+from ward._fixtures import FixtureHierarchyMapping, fixture_parents_and_children
+from ward._suite import Suite
 from ward.testing import Test, fixtures_used_directly_by_tests
 from ward.testing import TestOutcome, TestResult
-from ward.util import group_by
+from ward._utilities import group_by
 
 HORIZONTAL_PAD = (0, 1, 0, 1)
 
@@ -859,8 +858,8 @@ def output_fixtures(
 def make_fixture_information_tree(
     fixture: Fixture,
     used_by_tests: Collection[Test],
-    fixtures_to_children: _TYPE_FIXTURE_TO_FIXTURES,
-    fixtures_to_parents: _TYPE_FIXTURE_TO_FIXTURES,
+    fixtures_to_children: FixtureHierarchyMapping,
+    fixtures_to_parents: FixtureHierarchyMapping,
     show_scopes: bool,
     show_docstrings: bool,
     show_dependencies: bool,
@@ -912,7 +911,7 @@ def make_fixture_information_tree(
 def add_fixture_dependencies_to_tree(
     parent: Tree,
     fixture: Fixture,
-    fixtures_to_parents_or_children: _TYPE_FIXTURE_TO_FIXTURES,
+    fixtures_to_parents_or_children: FixtureHierarchyMapping,
     show_scopes: bool,
     max_depth: Optional[int],
     depth: int = 0,

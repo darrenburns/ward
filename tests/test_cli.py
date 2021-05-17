@@ -1,7 +1,7 @@
 from click.testing import CliRunner
 
 from ward import each, test
-from ward.run import run
+from ward._run import run
 
 
 @test("Cannot use bar progress style with {output_style} output style")

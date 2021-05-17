@@ -2,7 +2,7 @@ import ast
 
 from tests.utilities import testable_test
 from ward import test, fixture
-from ward.rewrite import (
+from ward._rewrite import (
     rewrite_assertions_in_tests,
     RewriteAssert,
     get_assertion_msg,

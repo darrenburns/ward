@@ -1,9 +1,9 @@
 from unittest import mock
 
 from ward import fixture
-from ward.errors import ParameterisationError
+from ward._errors import ParameterisationError
 from ward.models import Scope, SkipMarker
-from ward.suite import Suite
+from ward._suite import Suite
 from ward.testing import Test, skip, TestOutcome, TestResult, test, each
 from tests.utilities import NUMBER_OF_TESTS, testable_test, example_test, module
 
