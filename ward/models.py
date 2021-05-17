@@ -4,7 +4,7 @@ from inspect import BoundArguments
 from pathlib import Path
 from typing import List, Optional, Union, Callable
 
-from ward.errors import FixtureError
+from ward._errors import FixtureError
 
 
 class Scope(Enum):

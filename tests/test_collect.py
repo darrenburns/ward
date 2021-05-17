@@ -10,7 +10,7 @@ from cucumber_tag_expressions import parse
 
 from tests.utilities import make_project
 from ward import fixture, test
-from ward.collect import (
+from ward._collect import (
     _get_module_path,
     _handled_within,
     _is_excluded_module,

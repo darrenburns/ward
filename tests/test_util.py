@@ -5,7 +5,7 @@ from tests.utilities import make_project
 from ward import test, using, fixture
 from ward.hooks import hook
 from ward.testing import each
-from ward.util import (
+from ward._utilities import (
     truncate,
     find_project_root,
     group_by,

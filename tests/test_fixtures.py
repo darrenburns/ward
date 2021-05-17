@@ -2,14 +2,12 @@ from typing import List
 import sys
 
 from tests.utilities import testable_test
-from ward.fixtures import (
-    is_fixture,
-    fixture_parents_and_children,
-)
-from ward import fixture, test, Scope, raises, each
-from ward.fixtures import Fixture, FixtureCache, using
+from ward import fixture, test, raises, each
+from ward.models import Scope
+from ward.fixtures import Fixture, using
+from ward._fixtures import FixtureCache, is_fixture, fixture_parents_and_children
 from ward.testing import Test
-from ward.errors import FixtureError
+from ward._errors import FixtureError
 from tests.utilities import dummy_fixture
 
 

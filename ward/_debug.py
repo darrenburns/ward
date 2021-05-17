@@ -6,8 +6,8 @@ import sys
 
 import click
 
-from ward.config import _breakpoint_supported
-from ward.terminal import console
+from ward._config import _breakpoint_supported
+from ward._terminal import console
 
 original_stdout = sys.stdout
 

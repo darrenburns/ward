@@ -81,7 +81,36 @@ Parameterised testing
 A parameterised test is where you define a single test that runs multiple times,
 with different arguments being injected on each run.
 
-Ward supports parameterised testing by allowing multiple fixtures or
+The simplest way to parameterise tests in Ward is to write your test inside a loop. In each iteration of the loop,
+you can pass different values into the test:
+
+.. code-block:: python
+
+    for lhs, rhs, res in [
+        (1, 1, 2),
+        (2, 3, 5),
+    ]:
+        @test("simple addition")
+        def _(left=lhs, right=rhs, result=res):
+            assert left + right == result
+
+You can also make a reference to a fixture and Ward will resolve and inject it:
+
+.. code-block:: python
+
+    @fixture
+    def five():
+        yield 5
+
+    for lhs, rhs, res in [
+        (1, 1, 2),
+        (2, 3, five),
+    ]:
+        @test("simple addition")
+        def _(left=lhs, right=rhs, result=res):
+            assert left + right == result
+
+Ward also supports parameterised testing by allowing multiple fixtures or
 values to be bound as a keyword argument using the ```each`` function::
 
     from ward import each, fixture, test

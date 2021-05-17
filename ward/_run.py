@@ -14,27 +14,27 @@ from cucumber_tag_expressions.model import Expression
 from rich.console import ConsoleRenderable
 
 from ward._ward_version import __version__
-from ward.collect import (
+from ward._collect import (
     get_info_for_modules,
     get_tests_in_modules,
     load_modules,
     filter_tests,
     filter_fixtures,
 )
-from ward.config import set_defaults_from_config, Config
-from ward.debug import init_breakpointhooks
+from ward._config import set_defaults_from_config
+from ward._debug import init_breakpointhooks
+from ward._rewrite import rewrite_assertions_in_tests
+from ward._suite import Suite
+from ward.config import Config
 from ward.fixtures import _DEFINED_FIXTURES
 from ward.hooks import plugins, register_hooks_in_modules
-from ward.rewrite import rewrite_assertions_in_tests
-from ward.suite import Suite
-from ward.terminal import (
+from ward._terminal import (
     SimpleTestResultWrite,
     output_fixtures,
     get_exit_code,
     TestProgressStyle,
-    TestOutputStyle,
+    TestOutputStyle, console,
 )
-from ward.terminal import console
 
 colorama.init()
 click_completion.init()
