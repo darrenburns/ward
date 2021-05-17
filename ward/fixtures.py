@@ -14,6 +14,8 @@ from typing import (
     List,
 )
 
+from dataclasses import dataclass
+
 from ward.models import WardMeta, Scope
 
 __all__ = ["fixture", "using", "Fixture"]

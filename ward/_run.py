@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from random import shuffle
 from timeit import default_timer
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import click
 import click_completion

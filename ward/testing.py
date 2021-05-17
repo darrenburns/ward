@@ -28,7 +28,7 @@ from ward._testing import (
     Each,
     _generate_id,
     _FormatDict,
-    COLLECTED_TESTS,
+    COLLECTED_TESTS, _Timer,
 )
 from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
@@ -59,7 +59,6 @@ class Timer:
 
     def __exit__(self, *args):
         self.duration = default_timer() - self._start_time
-
 
 def each(*args):
     """
@@ -173,7 +172,7 @@ class Test:
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)
     ward_meta: WardMeta = field(default_factory=WardMeta)
-    timer: Optional["Timer"] = None
+    timer: Optional["_Timer"] = None
     tags: List[str] = field(default_factory=list)
 
     def __hash__(self):
@@ -184,7 +183,7 @@ class Test:
 
     def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
         with ExitStack() as stack:
-            self.timer = stack.enter_context(Timer())
+            self.timer = stack.enter_context(_Timer())
             if self.capture_output:
                 stack.enter_context(redirect_stdout(self.sout))
                 stack.enter_context(redirect_stderr(self.serr))

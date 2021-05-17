@@ -4,7 +4,7 @@ from typing import Iterable, Optional, List
 import pluggy
 from rich.console import ConsoleRenderable
 
-from ward.config import Config
+from ward._config import Config
 from ward.testing import TestResult, Test
 
 PROJECT_NAME = "ward"

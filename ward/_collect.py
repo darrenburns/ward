@@ -23,8 +23,8 @@ from importlib._bootstrap_external import FileFinder
 from ward._errors import CollectionError
 from ward.fixtures import Fixture
 from ward.models import WardMeta
-from ward.testing import Test, is_test_module_name
-from ward._testing import COLLECTED_TESTS
+from ward.testing import Test
+from ward._testing import is_test_module_name, COLLECTED_TESTS
 from ward._utilities import get_absolute_path
 
 Glob = str
