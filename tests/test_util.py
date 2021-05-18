@@ -18,7 +18,7 @@ def s():
 
 @test("truncate('{input}', num_chars={num_chars}) returns '{expected}'")
 def _(
-        input=s, num_chars=each(20, 11, 10, 5), expected=each(s, s, "hello w...", "he...")
+    input=s, num_chars=each(20, 11, 10, 5), expected=each(s, s, "hello w...", "he...")
 ):
     result = truncate(input, num_chars)
     assert result == expected

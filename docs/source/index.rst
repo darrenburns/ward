@@ -64,7 +64,6 @@ To run the test, simply run ``ward`` in your terminal, and Ward will let you kno
 .. toctree::
     :maxdepth: 2
     :caption: Reference
-    :glob:
 
     reference/testing.rst
     reference/fixtures.rst
