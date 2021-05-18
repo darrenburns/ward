@@ -1,7 +1,7 @@
 .. _pyproject:
 
-Configuring Ward in ``pyproject.toml``
-========================================
+Configuration
+=============
 
 How does Ward use ``pyproject.toml``?
 -------------------------------------
@@ -40,3 +40,4 @@ all of your Ward configuration should appear there:
     output-mode = "test-per-line"  # or 'dots-global', 'dot-module'
     fail-limit = 20  # stop the run if 20 fails occur
     search = "my_function"  # search in test body or description
+    progress-style = ["bar"]  # display a progress bar during the run

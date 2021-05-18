@@ -13,7 +13,7 @@ Features
 * Support for :ref:`testing async code<async_tests>`
 * :ref:`Parameterised testing <parameterisation>` allows you to run a single test on multiple inputs
 * Configurable with :ref:`pyproject.toml<pyproject>`, but works out-of-the-box with sensible defaults
-* Fast -- Ward's suite of ~250 tests completes in <0.3 seconds on my machine
+* Speedy -- Ward's suite of ~300 tests completes in ~0.4 seconds on my machine
 
 .. image:: ./_static/intro_screenshot.png
     :align: center
@@ -58,3 +58,11 @@ To run the test, simply run ``ward`` in your terminal, and Ward will let you kno
 
     tutorials/first_tests.rst
     tutorials/testing_flask.rst
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Reference
+    :glob:
+
+    reference/testing.rst
+    reference/config.rst
