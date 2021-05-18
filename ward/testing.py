@@ -426,30 +426,6 @@ class TestArgumentResolver:
                 fixture.key, fixture.scope, self.test.scope_key_from(fixture.scope)
             )
 
-        has_deps = len(fixture.deps()) > 0
-        if not has_deps:
-            try:
-                if fixture.is_generator_fixture:
-                    fixture.gen = arg()
-                    fixture.resolved_val = next(fixture.gen)
-                elif fixture.is_async_generator_fixture:
-                    fixture.gen = arg()
-                    awaitable = fixture.gen.__anext__()
-                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
-                        awaitable
-                    )
-                elif fixture.is_coroutine_fixture:
-                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
-                        arg()
-                    )
-                else:
-                    fixture.resolved_val = arg()
-            except (Exception, SystemExit) as e:
-                raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
-            scope_key = self.test.scope_key_from(fixture.scope)
-            cache.cache_fixture(fixture, scope_key)
-            return fixture
-
         children_defaults = self.get_default_args(func=arg)
         children_resolved = {}
         for name, child_fixture in children_defaults.items():
