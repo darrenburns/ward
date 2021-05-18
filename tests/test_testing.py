@@ -17,9 +17,8 @@ from ward.testing import (
     each,
     test,
     xfail,
-    TestResult, skip, fixtures_used_directly_by_tests, TestArgumentResolver,
+    TestResult, skip, fixtures_used_directly_by_tests, TestArgumentResolver, ParamMeta,
 )
-from ward._testing import ParamMeta
 
 
 def f():
