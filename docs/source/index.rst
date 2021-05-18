@@ -59,3 +59,8 @@ To run the test, simply run ``ward`` in your terminal, and Ward will let you kno
 
     tutorials/first_tests.rst
     tutorials/testing_flask.rst
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Reference
+
