@@ -135,6 +135,9 @@ category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
 
+[package.dependencies]
+toml = {version = "*", optional = true, markers = "extra == \"toml\""}
+
 [package.extras]
 toml = ["toml"]
 
@@ -553,7 +556,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "fdcec9528bdb63ea838a72ebdcc744ff80cb63610acd0180d3062f5814a1a3d9"
+content-hash = "0d15035ba304d8e366b868d0a54feeacacea587864590e63d90a3ebc3392af4e"
 
 [metadata.files]
 alabaster = [
