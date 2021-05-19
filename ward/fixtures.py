@@ -22,6 +22,14 @@ __all__ = ["fixture", "using", "Fixture"]
 
 @dataclass
 class Fixture:
+    """
+    Represents a piece of data that will be used in a test.
+
+    Attributes:
+        fn: The Python function object corresponding to this fixture.
+        gen: The generator, if applicable to this fixture.
+        resolved_val: The value returned by calling the fixture function (fn).
+    """
     fn: Callable
     gen: Union[Generator, AsyncGenerator] = None
     resolved_val: Any = None
@@ -38,6 +46,9 @@ class Fixture:
 
     @property
     def key(self) -> str:
+        """
+        A unique key used to identify fixture in the fixture cache. A string of the form '{path}::{name}'
+        """
         path = self.path
         name = self.name
         return f"{path}::{name}"
@@ -48,14 +59,23 @@ class Fixture:
 
     @property
     def name(self):
+        """
+        The name of the fixture function.
+        """
         return self.fn.__name__
 
     @property
     def path(self):
+        """
+        The pathlib.Path of the module the fixture is defined in.
+        """
         return self.fn.ward_meta.path
 
     @property
     def module_name(self):
+        """
+        The name of the module the fixture is defined in.
+        """
         return self.fn.__module__
 
     @property
@@ -65,21 +85,36 @@ class Fixture:
 
     @property
     def line_number(self) -> int:
+        """
+        The line number that the fixture is defined on.
+        """
         return inspect.getsourcelines(self.fn)[1]
 
     @property
     def is_generator_fixture(self):
+        """
+        True if the fixture is a generator function (and thus contains teardown code).
+        """
         return inspect.isgeneratorfunction(inspect.unwrap(self.fn))
 
     @property
     def is_async_generator_fixture(self):
+        """
+        True if this fixture is an async generator.
+        """
         return inspect.isasyncgenfunction(inspect.unwrap(self.fn))
 
     @property
     def is_coroutine_fixture(self):
+        """
+        True if the fixture is defined with 'async def'.
+        """
         return inspect.iscoroutinefunction(inspect.unwrap(self.fn))
 
     def deps(self):
+        """
+        The dependencies of the fixture.
+        """
         return inspect.signature(self.fn).parameters
 
     def parents(self) -> List["Fixture"]:
@@ -89,6 +124,9 @@ class Fixture:
         return [Fixture(par.default) for par in self.deps().values()]
 
     def teardown(self):
+        """
+        Tears down the fixture by calling `next` or `__anext__()`.
+        """
         # Suppress because we can't know whether there's more code
         # to execute below the yield.
         with suppress(RuntimeError, StopIteration, StopAsyncIteration):
@@ -100,6 +138,14 @@ class Fixture:
 
 
 def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
+    """
+    Decorator which will cause the wrapped function to be collected and treated as a fixture.
+
+    Args:
+        func: The wrapped function which should yield or return some data required to execute a test.
+        scope: The scope of a fixture determines how long it can be cached for (and therefore how frequently
+            the fixture should be regenerated).
+    """
     if not isinstance(scope, Scope):
         scope = Scope.from_str(scope)
 
@@ -126,6 +172,10 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
 
 
 def using(*using_args, **using_kwargs):
+    """
+    An alternative to the default param method of injecting fixtures into tests. Allows you to avoid using
+    keyword arguments in your test definitions.
+    """
     def decorator_using(func):
         signature = inspect.signature(func)
         bound_args = signature.bind_partial(*using_args, **using_kwargs)
