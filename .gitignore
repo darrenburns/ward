@@ -26,32 +26,4 @@ codealike.json
 
 # coverage
 .coverage
-htmlcov/coverage_html.js
-htmlcov/favicon_32.png
-htmlcov/index.html
-htmlcov/jquery.ba-throttle-debounce.min.js
-htmlcov/jquery.hotkeys.js
-htmlcov/jquery.isonscreen.js
-htmlcov/jquery.min.js
-htmlcov/jquery.tablesorter.min.js
-htmlcov/keybd_closed.png
-htmlcov/keybd_open.png
-htmlcov/status.json
-htmlcov/style.css
-htmlcov/ward___init___py.html
-htmlcov/ward___main___py.html
-htmlcov/ward__ward_version_py.html
-htmlcov/ward_collect_py.html
-htmlcov/ward_config_py.html
-htmlcov/ward_debug_py.html
-htmlcov/ward_diff_py.html
-htmlcov/ward_errors_py.html
-htmlcov/ward_expect_py.html
-htmlcov/ward_fixtures_py.html
-htmlcov/ward_models_py.html
-htmlcov/ward_rewrite_py.html
-htmlcov/ward_run_py.html
-htmlcov/ward_suite_py.html
-htmlcov/ward_terminal_py.html
-htmlcov/ward_testing_py.html
-htmlcov/ward_util_py.html
+htmlcov/
