@@ -1,9 +1,10 @@
-# Ward
+<img src="https://user-images.githubusercontent.com/5740731/119056107-085c6900-b9c2-11eb-9699-f54ef4945623.png" width="350px">
+
 [![Codecov](https://codecov.io/gh/darrenburns/ward/branch/master/graph/badge.svg)](https://codecov.io/gh/darrenburns/ward)
 [![Documentation Status](https://readthedocs.org/projects/ward/badge/?version=latest)](https://ward.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ward.svg)](https://badge.fury.io/py/ward)
 
-Ward is a modern test framework for Python with a focus on productivity and readability. 
+Ward is a modern test framework for Python with a focus on productivity and readability.
 
 <img alt="image" src="https://user-images.githubusercontent.com/5740731/118399779-a795ff00-b656-11eb-8fca-4ceb03151f3e.png">
 
