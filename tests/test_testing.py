@@ -6,18 +6,18 @@ from unittest import mock
 import sys
 
 from tests.utilities import FORCE_TEST_PATH, testable_test
-from ward import Scope, raises
-from ward.errors import ParameterisationError
-from ward.fixtures import FixtureCache, fixture, Fixture
-from ward.models import WardMeta, SkipMarker, XfailMarker
+from ward import raises
+from ward._errors import ParameterisationError
+from ward.fixtures import fixture, Fixture
+from ward._fixtures import FixtureCache
+from ward.models import WardMeta, SkipMarker, XfailMarker, Scope
 from ward.testing import (
-    ParamMeta,
     TestOutcome,
     Test,
     each,
     test,
     xfail,
-    fixtures_used_directly_by_tests, TestResult, TestArgumentResolver, skip,
+    TestResult, skip, fixtures_used_directly_by_tests, TestArgumentResolver, ParamMeta,
 )
 
 

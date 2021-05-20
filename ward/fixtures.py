@@ -1,31 +1,35 @@
 import asyncio
-import collections
 import inspect
 from contextlib import suppress
 from functools import partial, wraps
 from pathlib import Path
 from typing import (
     Callable,
-    Dict,
     Union,
     Optional,
     Any,
     Generator,
     AsyncGenerator,
     List,
-    Iterable,
-    Mapping,
-    Tuple,
-    Collection,
 )
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from ward.models import WardMeta, Scope
+
+__all__ = ["fixture", "using", "Fixture"]
 
 
 @dataclass
 class Fixture:
+    """
+    Represents a piece of data that will be used in a test.
+
+    Attributes:
+        fn: The Python function object corresponding to this fixture.
+        gen: The generator, if applicable to this fixture.
+        resolved_val: The value returned by calling the fixture function (fn).
+    """
     fn: Callable
     gen: Union[Generator, AsyncGenerator] = None
     resolved_val: Any = None
@@ -42,6 +46,9 @@ class Fixture:
 
     @property
     def key(self) -> str:
+        """
+        A unique key used to identify fixture in the fixture cache. A string of the form '{path}::{name}'
+        """
         path = self.path
         name = self.name
         return f"{path}::{name}"
@@ -52,14 +59,23 @@ class Fixture:
 
     @property
     def name(self):
+        """
+        The name of the fixture function.
+        """
         return self.fn.__name__
 
     @property
     def path(self):
+        """
+        The pathlib.Path of the module the fixture is defined in.
+        """
         return self.fn.ward_meta.path
 
     @property
     def module_name(self):
+        """
+        The name of the module the fixture is defined in.
+        """
         return self.fn.__module__
 
     @property
@@ -69,21 +85,36 @@ class Fixture:
 
     @property
     def line_number(self) -> int:
+        """
+        The line number that the fixture is defined on.
+        """
         return inspect.getsourcelines(self.fn)[1]
 
     @property
     def is_generator_fixture(self):
+        """
+        True if the fixture is a generator function (and thus contains teardown code).
+        """
         return inspect.isgeneratorfunction(inspect.unwrap(self.fn))
 
     @property
     def is_async_generator_fixture(self):
+        """
+        True if this fixture is an async generator.
+        """
         return inspect.isasyncgenfunction(inspect.unwrap(self.fn))
 
     @property
     def is_coroutine_fixture(self):
+        """
+        True if the fixture is defined with 'async def'.
+        """
         return inspect.iscoroutinefunction(inspect.unwrap(self.fn))
 
     def deps(self):
+        """
+        The dependencies of the fixture.
+        """
         return inspect.signature(self.fn).parameters
 
     def parents(self) -> List["Fixture"]:
@@ -93,6 +124,9 @@ class Fixture:
         return [Fixture(par.default) for par in self.deps().values()]
 
     def teardown(self):
+        """
+        Tears down the fixture by calling `next` or `__anext__()`.
+        """
         # Suppress because we can't know whether there's more code
         # to execute below the yield.
         with suppress(RuntimeError, StopIteration, StopAsyncIteration):
@@ -103,81 +137,15 @@ class Fixture:
                 asyncio.get_event_loop().run_until_complete(awaitable)
 
 
-FixtureKey = str
-TestId = str
-ScopeKey = Union[TestId, Path, Scope]
-ScopeCache = Dict[Scope, Dict[ScopeKey, Dict[FixtureKey, Fixture]]]
-
-
-def _scope_cache_factory():
-    return {scope: {} for scope in Scope}
-
-
-@dataclass
-class FixtureCache:
-    """
-    A collection of caches, each storing data for a different scope.
-
-    When a fixture is resolved, it is stored in the appropriate cache given
-    the scope of the fixture.
-
-    A lookup into this cache is a 3 stage process:
-
-    Scope -> ScopeKey -> FixtureKey
-
-    The first 2 lookups (Scope and ScopeKey) let us determine:
-        e.g. has a test-scoped fixture been cached for the current test?
-        e.g. has a module-scoped fixture been cached for the current test module?
-
-    The final lookup lets us retrieve the actual fixture given a fixture key.
-    """
-
-    _scope_cache: ScopeCache = field(default_factory=_scope_cache_factory)
-
-    def _get_subcache(self, scope: Scope) -> Dict[str, Any]:
-        return self._scope_cache[scope]
-
-    def get_fixtures_at_scope(
-        self, scope: Scope, scope_key: ScopeKey
-    ) -> Dict[FixtureKey, Fixture]:
-        subcache = self._get_subcache(scope)
-        if scope_key not in subcache:
-            subcache[scope_key] = {}
-        return subcache.get(scope_key)
-
-    def cache_fixture(self, fixture: Fixture, scope_key: ScopeKey):
-        """
-        Cache a fixture at the appropriate scope for the given test.
-        """
-        fixtures = self.get_fixtures_at_scope(fixture.scope, scope_key)
-        fixtures[fixture.key] = fixture
-
-    def teardown_fixtures_for_scope(self, scope: Scope, scope_key: ScopeKey):
-        fixture_dict = self.get_fixtures_at_scope(scope, scope_key)
-        fixtures = list(fixture_dict.values())
-        for fixture in fixtures:
-            with suppress(RuntimeError, StopIteration):
-                fixture.teardown()
-            del fixture_dict[fixture.key]
-
-    def teardown_global_fixtures(self):
-        self.teardown_fixtures_for_scope(Scope.Global, Scope.Global)
-
-    def contains(self, fixture: Fixture, scope: Scope, scope_key: ScopeKey) -> bool:
-        fixtures = self.get_fixtures_at_scope(scope, scope_key)
-        return fixture.key in fixtures
-
-    def get(
-        self, fixture_key: FixtureKey, scope: Scope, scope_key: ScopeKey
-    ) -> Fixture:
-        fixtures = self.get_fixtures_at_scope(scope, scope_key)
-        return fixtures.get(fixture_key)
-
-
-_DEFINED_FIXTURES = []
-
-
 def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
+    """
+    Decorator which will cause the wrapped function to be collected and treated as a fixture.
+
+    Args:
+        func: The wrapped function which should yield or return some data required to execute a test.
+        scope: The scope of a fixture determines how long it can be cached for (and therefore how frequently
+            the fixture should be regenerated).
+    """
     if not isinstance(scope, Scope):
         scope = Scope.from_str(scope)
 
@@ -204,6 +172,10 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
 
 
 def using(*using_args, **using_kwargs):
+    """
+    An alternative to the default param method of injecting fixtures into tests. Allows you to avoid using
+    keyword arguments in your test definitions.
+    """
     def decorator_using(func):
         signature = inspect.signature(func)
         bound_args = signature.bind_partial(*using_args, **using_kwargs)
@@ -221,32 +193,4 @@ def using(*using_args, **using_kwargs):
     return decorator_using
 
 
-def is_fixture(obj: Any) -> bool:
-    """
-    Returns True if and only if the object is a fixture function
-    (it would be False for a Fixture instance,
-    but True for the underlying function inside it).
-    """
-    return hasattr(obj, "ward_meta") and obj.ward_meta.is_fixture
-
-
-_TYPE_FIXTURE_TO_FIXTURES = Mapping[Fixture, Collection[Fixture]]
-
-
-def fixture_parents_and_children(
-    fixtures: Iterable[Fixture],
-) -> Tuple[_TYPE_FIXTURE_TO_FIXTURES, _TYPE_FIXTURE_TO_FIXTURES]:
-    """
-    Given an iterable of Fixtures, produce two dictionaries:
-    the first maps each fixture to its parents (the fixtures it depends on);
-    the second maps each fixture to its children (the fixtures that depend on it).
-    """
-    fixtures_to_parents = {fixture: fixture.parents() for fixture in fixtures}
-
-    # not a defaultdict, because we want to have empty entries if no parents when we return
-    fixtures_to_children = {fixture: [] for fixture in fixtures}
-    for fixture, parents in fixtures_to_parents.items():
-        for parent in parents:
-            fixtures_to_children[parent].append(fixture)
-
-    return fixtures_to_parents, fixtures_to_children
+_DEFINED_FIXTURES = []

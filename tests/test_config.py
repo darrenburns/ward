@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 
 from ward import test, fixture, raises, each
-from ward.config import read_config_toml, as_list, apply_multi_defaults
+from ward._config import read_config_toml, as_list, apply_multi_defaults
 
 
 def temp_conf(conf: str) -> tempfile._TemporaryFileWrapper:

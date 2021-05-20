@@ -56,7 +56,7 @@ Sphinx = "^3.5.1"
 sphinx-rtd-theme = "^0.5.1"
 
 [tool.poetry.scripts]
-ward = "ward.run:run"
+ward = "ward._run:run"
 
 [tool.coverage.report]
 exclude_lines = [

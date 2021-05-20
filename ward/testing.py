@@ -3,47 +3,72 @@ import collections
 import functools
 import inspect
 import traceback
-import uuid
 from bdb import BdbQuit
-from collections import defaultdict
 from contextlib import ExitStack, closing, redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
 from timeit import default_timer
-from types import MappingProxyType
 from typing import (
     Any,
     Callable,
     Dict,
     List,
     Optional,
-    Tuple,
     Union,
-    Iterable,
     Mapping,
+    Iterable,
     Collection,
 )
 
-from ward.errors import FixtureError, ParameterisationError
-from ward.fixtures import Fixture, FixtureCache, ScopeKey, is_fixture
+from ward._errors import FixtureError, ParameterisationError
+from ward._fixtures import ScopeKey, FixtureCache, is_fixture
+from ward._testing import (
+    Each,
+    _generate_id,
+    _FormatDict,
+    COLLECTED_TESTS,
+)
+from ward._utilities import get_absolute_path
+from ward.fixtures import Fixture
 from ward.models import Marker, Scope, SkipMarker, WardMeta, XfailMarker
-from ward.util import get_absolute_path
+
+__all__ = ["test", "skip", "xfail", "each", "Test", "TestOutcome", "TestResult", "ParamMeta", "Timer"]
+
 
 
 @dataclass
-class Each:
-    args: Tuple[Any]
+class ParamMeta:
+    instance_index: int = 0
+    group_size: int = 1
 
-    def __getitem__(self, args):
-        return self.args[args]
 
-    def __len__(self):
-        return len(self.args)
+def is_test_module_name(module_name: str) -> bool:
+    return module_name.startswith("test_") or module_name.endswith("_test")
+
+
+class Timer:
+    def __init__(self):
+        self._start_time = None
+        self.duration = None
+
+    def __enter__(self):
+        self._start_time = default_timer()
+        return self
+
+    def __exit__(self, *args):
+        self.duration = default_timer() - self._start_time
 
 
 def each(*args):
+    """
+    Used to parameterise tests.
+
+    This will likely be deprecated before Ward 1.0.
+
+    See documentation for examples.
+    """
     return Each(args)
 
 
@@ -53,6 +78,15 @@ def skip(
     reason: str = None,
     when: Union[bool, Callable] = True,
 ):
+    """
+    Decorator which can be used to optionally skip tests.
+
+    Args:
+        func_or_reason (object): The wrapped test function to skip.
+        reason: The reason the test was skipped. May appear in output.
+        when: Predicate function. Will be called immediately before the test is executed.
+            If it evaluates to True, the test will be skipped. Otherwise the test will run as normal.
+    """
     if func_or_reason is None:
         return functools.partial(skip, reason=reason, when=when)
 
@@ -79,6 +113,16 @@ def xfail(
     reason: str = None,
     when: Union[bool, Callable] = True,
 ):
+    """
+    Decorator that can be used to mark a test as "expected to fail".
+
+    Args:
+        func_or_reason: The wrapped test function to mark as an expected failure.
+        reason: The reason we expect the test to fail. May appear in output.
+        when: Predicate function. Will be called immediately before the test is executed.
+            If it evaluates to True, the test will be marked as an expected failure.
+            Otherwise the test will run as normal.
+    """
     if func_or_reason is None:
         return functools.partial(xfail, reason=reason, when=when)
 
@@ -99,30 +143,29 @@ def xfail(
     return wrapper
 
 
-def generate_id():
-    return uuid.uuid4().hex
-
-
-class FormatDict(dict):
-    def __missing__(self, key):
-        return "{" + key + "}"
-
-
-@dataclass
-class ParamMeta:
-    instance_index: int = 0
-    group_size: int = 1
-
-
 @dataclass
 class Test:
     """
-    A representation of a single Ward test.
+    Representation of a test case.
+
+    Attributes:
+        fn: The Python function object that contains the test code.
+        module_name: The name of the module the test is defined in.
+        id: A unique UUID4 used to identify the test.
+        marker: Attached by the skip and xfail decorators.
+        description: The description of the test. A format string that can contain basic Markdown syntax.
+        param_meta: If this is a parameterised test, contains info about the parameterisation.
+        capture_output: If True, output will be captured for this test.
+        sout: Buffer that fills with captured stdout as the test executes.
+        serr: Buffer that fills with captured stderr as the test executes.
+        ward_meta: Metadata that was attached to the raw functions collected by Ward's decorators.
+        timer: Timing information about the test.
+        tags: List of tags associated with the test.
     """
 
     fn: Callable
     module_name: str
-    id: str = field(default_factory=generate_id)
+    id: str = field(default_factory=_generate_id)
     marker: Optional[Marker] = None
     description: Optional[str] = None
     param_meta: Optional[ParamMeta] = field(default_factory=ParamMeta)
@@ -211,23 +254,31 @@ class Test:
 
     @property
     def name(self) -> str:
+        """The name of the Python function representing the test."""
         return self.fn.__name__
 
     @property
     def path(self) -> Path:
+        """The pathlib.Path to the test module."""
         return self.fn.ward_meta.path
 
     @property
     def qualified_name(self) -> str:
+        """{module_name}.{test_function_name}"""
         name = self.name or ""
         return f"{self.module_name}.{name}"
 
     @property
     def is_async_test(self) -> bool:
+        """True if the test is defined with 'async def'."""
         return inspect.iscoroutinefunction(inspect.unwrap(self.fn))
 
     @property
     def line_number(self) -> int:
+        """
+        The line number the test is defined on. Corresponds to the line the first decorator wrapping the
+            test appears on.
+        """
         return inspect.getsourcelines(self.fn)[1]
 
     @property
@@ -237,9 +288,9 @@ class Test:
     @property
     def is_parameterised(self) -> bool:
         """
-        Return `True` if a test is parameterised, `False` otherwise.
-        A test is considered parameterised if any of its default arguments
-        have a value that is an instance of `Each`.
+        `True` if a test is parameterised, `False` otherwise.
+            A test is considered parameterised if any of its default arguments
+            have a value that is an instance of `Each`.
         """
         default_args = self.resolver.get_default_args()
         return any(isinstance(arg, Each) for arg in default_args.values())
@@ -272,7 +323,7 @@ class Test:
 
         generated_tests = []
         for instance_index in range(number_of_instances):
-            test = Test(
+            generated_test = Test(
                 fn=self.fn,
                 module_name=self.module_name,
                 marker=self.marker,
@@ -282,7 +333,7 @@ class Test:
                 ),
                 capture_output=self.capture_output,
             )
-            generated_tests.append(test)
+            generated_tests.append(generated_test)
         return generated_tests
 
     def find_number_of_instances(self) -> int:
@@ -321,7 +372,7 @@ class Test:
         Returns the newly updated description.
         """
 
-        format_dict = FormatDict(**args)
+        format_dict = _FormatDict(**args)
         if not self.description:
             self.description = ""
 
@@ -333,9 +384,136 @@ class Test:
         return self.description
 
 
+def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
+    """
+    Decorator used to indicate that the function it wraps should be collected by Ward.
+
+    Args:
+        description: The description of the test. A format string. Resolve fixtures and default params that are injected
+            into the test will also be injected into this description before it gets output in the test report.
+            The description can contain basic Markdown syntax (bold, italic, backticks for code, etc.).
+        tags: An optional list of strings that will 'tag' the test. Many tests can share the same tag, and these
+            tags can be used to group tests in some logical manner (for example: by business domain or test type).
+            Tagged tests can be queried using the --tags option.
+    """
+    def decorator_test(func):
+        unwrapped = inspect.unwrap(func)
+        module_name: str = unwrapped.__module__
+        is_home_module: bool = "." not in module_name
+        if is_test_module_name(module_name) and is_home_module:
+            force_path: Path = kwargs.get("_force_path")
+            if force_path:
+                path = force_path.absolute()
+            else:
+                path = get_absolute_path(unwrapped)
+
+            if hasattr(unwrapped, "ward_meta"):
+                unwrapped.ward_meta.description = description
+                unwrapped.ward_meta.tags = tags
+                unwrapped.ward_meta.path = path
+            else:
+                unwrapped.ward_meta = WardMeta(
+                    description=description, tags=tags, path=path,
+                )
+
+            collect_into = kwargs.get("_collect_into", COLLECTED_TESTS)
+            collect_into[path].append(unwrapped)
+
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            return wrapper
+
+        return func
+
+    return decorator_test
+
+
+class TestOutcome(Enum):
+    """
+    Enumeration representing all possible outcomes of an attempt at running a test.
+
+    Attributes:
+        PASS: Represents a passing test outcome - no errors raised, no assertions failed, the test ran to completion.
+        FAIL: The test failed in some way - e.g. an assertion failed or an exception was raised.
+        SKIP: The test was skipped.
+        XFAIL: The test was expected to fail, and it did fail.
+        XPASS: The test was expected to fail, however it unexpectedly passed.
+        DRYRUN: The test was not executed because the test session was a dry-run.
+    """
+    PASS = auto()
+    FAIL = auto()
+    SKIP = auto()
+    XFAIL = auto()  # expected fail
+    XPASS = auto()  # unexpected pass
+    DRYRUN = auto()  # tests arent executed during dryruns
+
+    @property
+    def display_char(self):
+        display_chars = {
+            TestOutcome.PASS: ".",
+            TestOutcome.FAIL: "F",
+            TestOutcome.SKIP: "-",
+            TestOutcome.XPASS: "U",
+            TestOutcome.XFAIL: "x",
+            TestOutcome.DRYRUN: ".",
+        }
+        assert len(display_chars) == len(TestOutcome)
+        return display_chars[self]
+
+    @property
+    def display_name(self):
+        display_names = {
+            TestOutcome.PASS: "Passes",
+            TestOutcome.FAIL: "Failures",
+            TestOutcome.SKIP: "Skips",
+            TestOutcome.XPASS: "Unexpected Passes",
+            TestOutcome.XFAIL: "Expected Failures",
+            TestOutcome.DRYRUN: "Dry-runs",
+        }
+        assert len(display_names) == len(TestOutcome)
+        return display_names[self]
+
+
+@dataclass
+class TestResult:
+    """
+    Represents the result of a single test, and contains data that may have been generated as
+    part of the execution of that test (for example captured stdout and exceptions that were raised).
+
+    Attributes:
+        test: The test corresponding to this result.
+        outcome: The outcome of the test: did it pass, fail, get skipped, etc.
+        error: If an exception was raised during test execution, it is stored here.
+        message: An arbitrary message that can be associated with the result. Generally empty.
+        captured_stdout: A string containing anything that was written to stdout during the execution of the test.
+        captured_stderr: A string containing anything that was written to stderr during the execution of the test.
+    """
+    test: Test
+    outcome: TestOutcome
+    error: Optional[Exception] = None
+    message: str = ""
+    captured_stdout: str = ""
+    captured_stderr: str = ""
+
+
+def fixtures_used_directly_by_tests(
+    tests: Iterable["Test"],
+) -> Mapping[Fixture, Collection["Test"]]:
+    test_to_fixtures = {t: t.resolver.fixtures for t in tests}
+
+    fixture_to_tests = collections.defaultdict(list)
+    for test, used_fixtures in test_to_fixtures.items():
+        for fix in used_fixtures.values():
+            fixture_to_tests[fix].append(test)
+
+    return fixture_to_tests
+
+
 @dataclass
 class TestArgumentResolver:
-    test: Test
+    test: "Test"
     iteration: int
 
     def resolve_args(self, cache: FixtureCache) -> Dict[str, Any]:
@@ -483,7 +661,8 @@ class TestArgumentResolver:
         cache.cache_fixture(fixture, scope_key)
         return fixture
 
-    def _unpack_resolved(self, fixture_dict: Dict[str, Any]) -> Dict[str, Any]:
+    @staticmethod
+    def _unpack_resolved(fixture_dict: Dict[str, Any]) -> Dict[str, Any]:
         resolved_vals = {}
         for (k, arg) in fixture_dict.items():
             if isinstance(arg, Fixture):
@@ -491,122 +670,3 @@ class TestArgumentResolver:
             else:
                 resolved_vals[k] = arg
         return resolved_vals
-
-
-def fixtures_used_directly_by_tests(
-    tests: Iterable[Test],
-) -> Mapping[Fixture, Collection[Test]]:
-    test_to_fixtures = {test: test.resolver.fixtures for test in tests}
-
-    fixture_to_tests = collections.defaultdict(list)
-    for test, used_fixtures in test_to_fixtures.items():
-        for fix in used_fixtures.values():
-            fixture_to_tests[fix].append(test)
-
-    return fixture_to_tests
-
-
-def is_test_module_name(module_name: str) -> bool:
-    return module_name.startswith("test_") or module_name.endswith("_test")
-
-
-# Tests declared with the name _, and with the @test decorator
-# have to be stored in here, so that they can later be retrieved.
-# They cannot be retrieved directly from the module due to name
-# clashes. When we're later looking for tests inside the module,
-# we can retrieve any anonymous tests from this dict.
-# Map of module absolute Path to list of tests in the module
-anonymous_tests: Dict[Path, List[Callable]] = defaultdict(list)
-
-
-def test(description: str, *args, tags=None, **kwargs):
-    def decorator_test(func):
-        unwrapped = inspect.unwrap(func)
-        module_name: str = unwrapped.__module__
-        is_home_module: bool = "." not in module_name
-        if is_test_module_name(module_name) and is_home_module:
-            force_path: Path = kwargs.get("_force_path")
-            if force_path:
-                path = force_path.absolute()
-            else:
-                path = get_absolute_path(unwrapped)
-
-            if hasattr(unwrapped, "ward_meta"):
-                unwrapped.ward_meta.description = description
-                unwrapped.ward_meta.tags = tags
-                unwrapped.ward_meta.path = path
-            else:
-                unwrapped.ward_meta = WardMeta(
-                    description=description, tags=tags, path=path,
-                )
-
-            collect_into = kwargs.get("_collect_into", anonymous_tests)
-            collect_into[path].append(unwrapped)
-
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(*args, **kwargs)
-
-            return wrapper
-
-        return func
-
-    return decorator_test
-
-
-class TestOutcome(Enum):
-    PASS = auto()
-    FAIL = auto()
-    SKIP = auto()
-    XFAIL = auto()  # expected fail
-    XPASS = auto()  # unexpected pass
-    DRYRUN = auto()  # tests arent executed during dryruns
-
-    @property
-    def display_char(self):
-        display_chars = {
-            TestOutcome.PASS: ".",
-            TestOutcome.FAIL: "F",
-            TestOutcome.SKIP: "-",
-            TestOutcome.XPASS: "U",
-            TestOutcome.XFAIL: "x",
-            TestOutcome.DRYRUN: ".",
-        }
-        assert len(display_chars) == len(TestOutcome)
-        return display_chars[self]
-
-    @property
-    def display_name(self):
-        display_names = {
-            TestOutcome.PASS: "Passes",
-            TestOutcome.FAIL: "Failures",
-            TestOutcome.SKIP: "Skips",
-            TestOutcome.XPASS: "Unexpected Passes",
-            TestOutcome.XFAIL: "Expected Failures",
-            TestOutcome.DRYRUN: "Dry-runs",
-        }
-        assert len(display_names) == len(TestOutcome)
-        return display_names[self]
-
-
-@dataclass
-class TestResult:
-    test: Test
-    outcome: TestOutcome
-    error: Optional[Exception] = None
-    message: str = ""
-    captured_stdout: str = ""
-    captured_stderr: str = ""
-
-
-class Timer:
-    def __init__(self):
-        self._start_time = None
-        self.duration = None
-
-    def __enter__(self):
-        self._start_time = default_timer()
-        return self
-
-    def __exit__(self, *args):
-        self.duration = default_timer() - self._start_time

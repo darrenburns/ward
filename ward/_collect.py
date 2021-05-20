@@ -24,11 +24,12 @@ from cucumber_tag_expressions.model import Expression
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 
-from ward.errors import CollectionError
+from ward._errors import CollectionError
 from ward.fixtures import Fixture
 from ward.models import WardMeta
-from ward.testing import Test, anonymous_tests, is_test_module_name
-from ward.util import get_absolute_path
+from ward.testing import Test, is_test_module_name
+from ward._testing import COLLECTED_TESTS
+from ward._utilities import get_absolute_path
 
 Glob = str
 
@@ -142,7 +143,7 @@ def get_tests_in_modules(
     for mod in modules:
         mod_name = mod.__name__
         mod_path = get_absolute_path(mod)
-        anon_tests: List[Callable] = anonymous_tests[mod_path]
+        anon_tests: List[Callable] = COLLECTED_TESTS[mod_path]
         if anon_tests:
             for test_fn in anon_tests:
                 meta: WardMeta = getattr(test_fn, "ward_meta")
