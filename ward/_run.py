@@ -20,10 +20,11 @@ from ward._collect import (
     filter_tests,
     filter_fixtures,
 )
-from ward._config import set_defaults_from_config
+from ward._config import set_defaults_from_config, Config
 from ward._debug import init_breakpointhooks
 from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite
+from ward.hooks import plugins
 from ward.fixtures import _DEFINED_FIXTURES
 from ward._terminal import (
     SimpleTestResultWrite,
@@ -158,6 +159,11 @@ def test(
     show_diff_symbols: bool,
     dry_run: bool,
 ):
+    config_params = ctx.params.copy()
+    config_params.pop("config")
+
+    config = Config(**config_params)
+
     """Run tests."""
     progress_styles = [TestProgressStyle(ps) for ps in progress_style]
 
@@ -172,6 +178,9 @@ def test(
 
     init_breakpointhooks(pdb, sys)
     start_run = default_timer()
+
+    plugins.hook.before_session(config=config)
+
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
@@ -193,12 +202,13 @@ def test(
         show_diff_symbols=show_diff_symbols,
     )
     writer.output_header(time_to_collect=time_to_collect)
-    results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
+    test_results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
+    exit_code = get_exit_code(test_results)
     time_taken = default_timer() - start_run
-    writer.output_test_result_summary(results, time_taken, show_slowest)
 
-    exit_code = get_exit_code(results)
+    plugins.hook.after_session(config=config, test_results=test_results)
 
+    writer.output_test_result_summary(test_results, time_taken, show_slowest)
     sys.exit(exit_code.value)
 
 

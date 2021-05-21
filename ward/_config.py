@@ -1,15 +1,18 @@
+from dataclasses import dataclass
+
+from cucumber_tag_expressions.model import Expression
 from pathlib import Path
-from typing import Dict, Union, Iterable
+from typing import Dict, Union, Iterable, Optional, Tuple
 
 import click
 import toml
 
 from ward._utilities import find_project_root
 
-ConfigValue = Union[int, str, bool, Iterable[str]]
-ConfigDict = Dict[str, ConfigValue]
+_ConfigValue = Union[int, str, bool, Iterable[str]]
+_ConfigDict = Dict[str, _ConfigValue]
 
-CONFIG_FILE = "pyproject.toml"
+_CONFIG_FILE = "pyproject.toml"
 
 
 def _breakpoint_supported() -> bool:
@@ -20,7 +23,7 @@ def _breakpoint_supported() -> bool:
     return True
 
 
-def read_config_toml(project_root: Path, config_file: str) -> ConfigDict:
+def read_config_toml(project_root: Path, config_file: str) -> _ConfigDict:
     path = project_root / config_file
     if not path.is_file():
         return {}
@@ -40,16 +43,14 @@ def read_config_toml(project_root: Path, config_file: str) -> ConfigDict:
     return config
 
 
-def as_list(conf: ConfigDict):
+def as_list(conf: _ConfigDict):
     if isinstance(conf, list):
         return conf
     else:
         return [conf]
 
 
-def apply_multi_defaults(
-    file_config: ConfigDict, cli_config: ConfigDict,
-) -> ConfigDict:
+def apply_multi_defaults(file_config: _ConfigDict, cli_config: _ConfigDict, ) -> _ConfigDict:
     """
     Returns all options where multiple=True that
     appeared in the config file, but weren't passed
@@ -83,7 +84,7 @@ def set_defaults_from_config(
         search_paths = (".",)
 
     project_root = find_project_root([Path(path) for path in search_paths])
-    file_config = read_config_toml(project_root, CONFIG_FILE)
+    file_config = read_config_toml(project_root, _CONFIG_FILE)
     if file_config:
         config_path = project_root / "pyproject.toml"
     else:
@@ -95,4 +96,20 @@ def set_defaults_from_config(
         context.default_map = {}
 
     context.default_map.update(file_config)
-    return project_root
+    return config_path
+
+
+@dataclass
+class Config:
+    config_path: Optional[Path]
+    path: Tuple[str]
+    exclude: Tuple[str]
+    search: Optional[str]
+    tags: Optional[Expression]
+    fail_limit: Optional[int]
+    test_output_style: str
+    order: str
+    capture_output: bool
+    show_slowest: int
+    show_diff_symbols: bool
+    dry_run: bool
