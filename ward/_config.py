@@ -1,8 +1,5 @@
-from dataclasses import dataclass
-
-from cucumber_tag_expressions.model import Expression
 from pathlib import Path
-from typing import Dict, Union, Iterable, Optional, Tuple
+from typing import Dict, Union, Iterable
 
 import click
 import toml
@@ -50,7 +47,9 @@ def as_list(conf: _ConfigDict):
         return [conf]
 
 
-def apply_multi_defaults(file_config: _ConfigDict, cli_config: _ConfigDict, ) -> _ConfigDict:
+def apply_multi_defaults(
+    file_config: _ConfigDict, cli_config: _ConfigDict,
+) -> _ConfigDict:
     """
     Returns all options where multiple=True that
     appeared in the config file, but weren't passed
@@ -97,20 +96,3 @@ def set_defaults_from_config(
 
     context.default_map.update(file_config)
     return config_path
-
-
-@dataclass
-class Config:
-    config_path: Optional[Path]
-    path: Tuple[str]
-    exclude: Tuple[str]
-    search: Optional[str]
-    tags: Optional[Expression]
-    fail_limit: Optional[int]
-    test_output_style: str
-    order: str
-    capture_output: bool
-    show_slowest: int
-    show_diff_symbols: bool
-    dry_run: bool
-    hook_module: Tuple[str]

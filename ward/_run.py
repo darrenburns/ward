@@ -21,7 +21,8 @@ from ward._collect import (
     filter_tests,
     filter_fixtures,
 )
-from ward._config import set_defaults_from_config, Config
+from ward._config import set_defaults_from_config
+from ward.config import Config
 from ward._debug import init_breakpointhooks
 from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite

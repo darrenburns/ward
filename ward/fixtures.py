@@ -31,6 +31,7 @@ class Fixture:
         gen: The generator, if applicable to this fixture.
         resolved_val: The value returned by calling the fixture function (fn).
     """
+
     fn: Callable
     gen: Union[Generator, AsyncGenerator] = None
     resolved_val: Any = None
