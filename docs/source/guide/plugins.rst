@@ -63,6 +63,7 @@ Run code *before* the test run with ``before_session``
 ======================================================
 
 .. automethod:: ward.hooks::SessionHooks.before_session
+    :noindex:
 
 Example: printing information to the terminal
 ---------------------------------------------
@@ -94,6 +95,7 @@ Run code *after* the test run with ``after_session``
 ====================================================
 
 .. automethod:: ward.hooks::SessionHooks.after_session
+    :noindex:
 
 Example: printing information about the session to the terminal
 ---------------------------------------------------------------
@@ -140,6 +142,7 @@ Filter, sort, or modify collected tests with ``preprocess_tests``
 =================================================================
 
 .. automethod:: ward.hooks::SessionHooks.preprocess_tests
+    :noindex:
 
 Example: tagging tests that span many lines
 -------------------------------------------
