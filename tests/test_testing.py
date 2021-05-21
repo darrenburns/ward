@@ -1,23 +1,26 @@
 import asyncio
+import sys
 from collections import defaultdict
 from pathlib import Path
 from unittest import mock
 
-import sys
-
 from tests.utilities import FORCE_TEST_PATH, testable_test
 from ward import raises
 from ward._errors import ParameterisationError
-from ward.fixtures import fixture, Fixture
 from ward._fixtures import FixtureCache
-from ward.models import WardMeta, SkipMarker, XfailMarker, Scope
+from ward.fixtures import Fixture, fixture
+from ward.models import Scope, SkipMarker, WardMeta, XfailMarker
 from ward.testing import (
-    TestOutcome,
+    ParamMeta,
     Test,
+    TestArgumentResolver,
+    TestOutcome,
+    TestResult,
     each,
+    fixtures_used_directly_by_tests,
+    skip,
     test,
     xfail,
-    TestResult, skip, fixtures_used_directly_by_tests, TestArgumentResolver, ParamMeta,
 )
 
 
@@ -64,7 +67,8 @@ def _():
     @testable_test
     def test_fn():
         assert True
-    t = Test(test_fn, "",)
+
+    t = Test(test_fn, "")
 
     assert t.path == FORCE_TEST_PATH
 
@@ -90,7 +94,9 @@ def _():
     assert t.is_async_test
 
 
-@test("Test.is_async_test returns False if the wrapped function isn't a coroutine function")
+@test(
+    "Test.is_async_test returns False if the wrapped function isn't a coroutine function"
+)
 def _():
     @testable_test
     def test_fn():
@@ -320,7 +326,9 @@ def _():
     t = Test(lambda: 1, "")
     rv = t.fail_with_error(error=error)
 
-    assert rv == TestResult(test=t, outcome=TestOutcome.FAIL, error=error, message=message)
+    assert rv == TestResult(
+        test=t, outcome=TestOutcome.FAIL, error=error, message=message
+    )
 
 
 @fixture
@@ -388,7 +396,6 @@ def _():
     t = Test(test_fn, "", param_meta=ParamMeta(instance_index=123))
 
     assert t.resolver == TestArgumentResolver(t, iteration=123)
-
 
 
 @test("Test.scope_key_from(Scope.Test) returns the test ID")

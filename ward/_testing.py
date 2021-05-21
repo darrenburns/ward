@@ -2,7 +2,7 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple, Any, Dict, Callable, List
+from typing import Any, Callable, Dict, List, Tuple
 
 # Tests declared with the name _, and with the @test decorator
 # have to be stored in here, so that they can later be retrieved.
@@ -31,5 +31,3 @@ def _generate_id():
 class _FormatDict(dict):
     def __missing__(self, key):
         return "{" + key + "}"
-
-

@@ -1,7 +1,7 @@
-from ward import test, each
-from ward.testing import Test
-from ward.fixtures import Fixture
 from tests.utilities import dummy_fixture
+from ward import each, test
+from ward.fixtures import Fixture
+from ward.testing import Test
 
 
 @test("Resolver identifies arguments that are fixtures for unparameterised test")

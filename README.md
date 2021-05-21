@@ -25,7 +25,7 @@ name matching.
 @fixture
 def user():
     return User(name="darren")
-    
+
 @test("the user is called darren")
 def _(u=user):
     assert u.name == "darren"
@@ -45,7 +45,7 @@ async def _(user=user):
     assert is_recent(last_session, get_last_session_date)
 ```
 
-**Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
+**Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code
 contained in the body of the test.
 ```
 ward --search "Database.get_all_users"

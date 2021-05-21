@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Union, Iterable
+from typing import Dict, Iterable, Union
 
 import click
 import toml
@@ -47,9 +47,7 @@ def as_list(conf: ConfigDict):
         return [conf]
 
 
-def apply_multi_defaults(
-    file_config: ConfigDict, cli_config: ConfigDict,
-) -> ConfigDict:
+def apply_multi_defaults(file_config: ConfigDict, cli_config: ConfigDict) -> ConfigDict:
     """
     Returns all options where multiple=True that
     appeared in the config file, but weren't passed
@@ -74,7 +72,7 @@ def apply_multi_defaults(
 
 
 def set_defaults_from_config(
-    context: click.Context, param: click.Parameter, value: Union[str, int],
+    context: click.Context, param: click.Parameter, value: Union[str, int]
 ) -> Path:
     supplied_paths = context.params.get("path")
 

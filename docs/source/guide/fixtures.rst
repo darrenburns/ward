@@ -75,7 +75,7 @@ To make the user fixture global scope, we can change the decorator call to ``@fi
 .. code-block:: python
 
     from ward import fixture, Scope
-    
+
     @fixture(scope=Scope.Global)  # @fixture(scope="global") also works
     def user():
         return User(id=1, name="sam")
@@ -177,4 +177,3 @@ To view the dependency graph of fixtures, and detect fixtures that are unused, y
 .. image:: ../_static/ward_fixtures_dep_trees.png
     :align: center
     :alt: Output of ward fixtures show-dependency-trees command
-

@@ -3,9 +3,9 @@ from dataclasses import dataclass, field
 from random import shuffle
 from typing import Generator, List
 
-from ward.models import Scope
 from ward._errors import ParameterisationError
 from ward._fixtures import FixtureCache
+from ward.models import Scope
 from ward.testing import Test, TestResult
 
 

@@ -3,7 +3,7 @@ import tempfile
 from collections import defaultdict
 from pathlib import Path
 
-from ward import test, fixture
+from ward import fixture, test
 from ward.fixtures import Fixture
 from ward.testing import Test, is_test_module_name
 

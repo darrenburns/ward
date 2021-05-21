@@ -15,4 +15,3 @@ If you're just using Ward to write your tests, this section isn't relevant.
 .. automodule:: ward.testing
     :noindex:
     :members: Test, TestOutcome, TestResult
-

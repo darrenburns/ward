@@ -1,14 +1,10 @@
 import os
 from pathlib import Path
 
-from ward import test, using, fixture
-from ward.testing import each
 from tests.utilities import make_project
-from ward._utilities import (
-    truncate,
-    find_project_root,
-    group_by,
-)
+from ward import fixture, test, using
+from ward._utilities import find_project_root, group_by, truncate
+from ward.testing import each
 
 
 @fixture

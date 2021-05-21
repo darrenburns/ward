@@ -3,33 +3,33 @@ import importlib.util
 import inspect
 import os
 import pkgutil
+import sys
 from distutils.sysconfig import get_python_lib
+from importlib._bootstrap import ModuleSpec
+from importlib._bootstrap_external import FileFinder
 from pathlib import Path
 from types import ModuleType
 from typing import (
     Any,
     Callable,
+    Collection,
     Generator,
     Iterable,
+    Iterator,
     List,
     Optional,
     Set,
     Tuple,
-    Iterator,
-    Collection,
 )
 
-import sys
 from cucumber_tag_expressions.model import Expression
-from importlib._bootstrap import ModuleSpec
-from importlib._bootstrap_external import FileFinder
 
 from ward._errors import CollectionError
+from ward._testing import COLLECTED_TESTS
+from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
 from ward.models import WardMeta
 from ward.testing import Test, is_test_module_name
-from ward._testing import COLLECTED_TESTS
-from ward._utilities import get_absolute_path
 
 Glob = str
 
@@ -70,7 +70,7 @@ def _handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
 
 
 def get_info_for_modules(
-    paths: List[Path], exclude: Tuple[Glob],
+    paths: List[Path], exclude: Tuple[Glob]
 ) -> Generator[pkgutil.ModuleInfo, None, None]:
     paths = _remove_excluded_paths(set(paths), exclude)
 
@@ -158,7 +158,7 @@ def get_tests_in_modules(
 
 
 def filter_tests(
-    tests: Iterable[Test], query: str = "", tag_expr: Optional[Expression] = None,
+    tests: Iterable[Test], query: str = "", tag_expr: Optional[Expression] = None
 ) -> Iterator[Test]:
     if not query and not tag_expr:
         yield from tests

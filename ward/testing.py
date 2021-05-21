@@ -13,29 +13,33 @@ from timeit import default_timer
 from typing import (
     Any,
     Callable,
+    Collection,
     Dict,
+    Iterable,
     List,
+    Mapping,
     Optional,
     Union,
-    Mapping,
-    Iterable,
-    Collection,
 )
 
 from ward._errors import FixtureError, ParameterisationError
-from ward._fixtures import ScopeKey, FixtureCache, is_fixture
-from ward._testing import (
-    Each,
-    _generate_id,
-    _FormatDict,
-    COLLECTED_TESTS,
-)
+from ward._fixtures import FixtureCache, ScopeKey, is_fixture
+from ward._testing import COLLECTED_TESTS, Each, _FormatDict, _generate_id
 from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
 from ward.models import Marker, Scope, SkipMarker, WardMeta, XfailMarker
 
-__all__ = ["test", "skip", "xfail", "each", "Test", "TestOutcome", "TestResult", "ParamMeta", "Timer"]
-
+__all__ = [
+    "test",
+    "skip",
+    "xfail",
+    "each",
+    "Test",
+    "TestOutcome",
+    "TestResult",
+    "ParamMeta",
+    "Timer",
+]
 
 
 @dataclass
@@ -396,6 +400,7 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
             tags can be used to group tests in some logical manner (for example: by business domain or test type).
             Tagged tests can be queried using the --tags option.
     """
+
     def decorator_test(func):
         unwrapped = inspect.unwrap(func)
         module_name: str = unwrapped.__module__
@@ -413,7 +418,7 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
                 unwrapped.ward_meta.path = path
             else:
                 unwrapped.ward_meta = WardMeta(
-                    description=description, tags=tags, path=path,
+                    description=description, tags=tags, path=path
                 )
 
             collect_into = kwargs.get("_collect_into", COLLECTED_TESTS)
@@ -442,6 +447,7 @@ class TestOutcome(Enum):
         XPASS: The test was expected to fail, however it unexpectedly passed.
         DRYRUN: The test was not executed because the test session was a dry-run.
     """
+
     PASS = auto()
     FAIL = auto()
     SKIP = auto()
@@ -490,6 +496,7 @@ class TestResult:
         captured_stdout: A string containing anything that was written to stdout during the execution of the test.
         captured_stderr: A string containing anything that was written to stderr during the execution of the test.
     """
+
     test: Test
     outcome: TestOutcome
     error: Optional[Exception] = None

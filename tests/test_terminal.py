@@ -1,7 +1,7 @@
 from tests.utilities import example_test
 from ward import using
-from ward._terminal import outcome_to_colour, get_exit_code, ExitCode
-from ward.testing import TestOutcome, each, test, TestResult
+from ward._terminal import ExitCode, get_exit_code, outcome_to_colour
+from ward.testing import TestOutcome, TestResult, each, test
 
 
 @test(

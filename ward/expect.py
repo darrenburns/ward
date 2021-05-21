@@ -2,7 +2,7 @@ import inspect
 import types
 from dataclasses import dataclass
 from enum import Enum
-from typing import Type, Any, ContextManager, TypeVar, Generic, Optional, cast
+from typing import Any, ContextManager, Generic, Optional, Type, TypeVar, cast
 
 _E = TypeVar("_E", bound=Exception)
 

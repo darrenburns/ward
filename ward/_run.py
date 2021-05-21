@@ -1,9 +1,8 @@
 import pdb
-
 import sys
 from pathlib import Path
 from timeit import default_timer
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
 
 import click
 import click_completion
@@ -12,26 +11,26 @@ from click_default_group import DefaultGroup
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
 
-from ward._ward_version import __version__
 from ward._collect import (
+    filter_fixtures,
+    filter_tests,
     get_info_for_modules,
     get_tests_in_modules,
     load_modules,
-    filter_tests,
-    filter_fixtures,
 )
 from ward._config import set_defaults_from_config
 from ward._debug import init_breakpointhooks
 from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite
-from ward.fixtures import _DEFINED_FIXTURES
 from ward._terminal import (
     SimpleTestResultWrite,
-    output_fixtures,
-    get_exit_code,
-    TestProgressStyle,
     TestOutputStyle,
+    TestProgressStyle,
+    get_exit_code,
+    output_fixtures,
 )
+from ward._ward_version import __version__
+from ward.fixtures import _DEFINED_FIXTURES
 
 colorama.init()
 click_completion.init()
@@ -176,7 +175,7 @@ def test(
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    filtered_tests = list(filter_tests(unfiltered_tests, query=search, tag_expr=tags,))
+    filtered_tests = list(filter_tests(unfiltered_tests, query=search, tag_expr=tags))
 
     tests = rewrite_assertions_in_tests(filtered_tests)
 

@@ -1,29 +1,19 @@
 none: clean
 
 help:
-	@echo "make lint	lint (flake8)"
-	@echo "make format	run autoformatter"
 	@echo "make test	test Ward"
 	@echo
 	@echo "make prep	lint and test Ward in preparation for a pull request"
 	@echo
-	@echo "make venv	create virtual environment"
-	@echo "make clean	clean up build artifacts and automatically created venv"
+	@echo "make setup	create virtual environment and install pre-commit"
+	@echo "make update	update dependencies"
+	@echo "make clean	clean up build artifacts"
 .PHONY: help
 
-requirements:
-	poetry update
+setup:
 	poetry install
+	pre-commit install
 .PHONY: requirements
-
-lint:
-	poetry run flake8 ward --count --select=E9,F63,F7,F82 --show-source --statistics
-	poetry run flake8 ward --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
-.PHONY: lint
-
-format:
-	poetry run black ward
-.PHONY: format
 
 test:
 	poetry run ward
@@ -33,7 +23,7 @@ update:
 	poetry update
 .PHONY: update
 
-prep: requirements format test
+prep: setup update test
 .PHONY: prep
 
 clean:

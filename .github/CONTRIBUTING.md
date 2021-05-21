@@ -6,7 +6,7 @@ Contributions can come in many forms: documentation enhancements, features, bug 
 
 If you're interested in helping out, you might find some inspiration in [Discussions](https://github.com/darrenburns/ward/discussions). If you have an idea, but don't see it there, don't hesitate to open a new discussion.
 
-Before submitting a pull request, please make sure the enhancement or bugfix you've made has been discussed. 
+Before submitting a pull request, please make sure the enhancement or bugfix you've made has been discussed.
 
 This will ensure no work is duplicated, and that a general approach has been agreed.
 

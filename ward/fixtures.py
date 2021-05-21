@@ -1,21 +1,12 @@
 import asyncio
 import inspect
 from contextlib import suppress
+from dataclasses import dataclass
 from functools import partial, wraps
 from pathlib import Path
-from typing import (
-    Callable,
-    Union,
-    Optional,
-    Any,
-    Generator,
-    AsyncGenerator,
-    List,
-)
+from typing import Any, AsyncGenerator, Callable, Generator, List, Optional, Union
 
-from dataclasses import dataclass
-
-from ward.models import WardMeta, Scope
+from ward.models import Scope, WardMeta
 
 __all__ = ["fixture", "using", "Fixture"]
 
@@ -30,6 +21,7 @@ class Fixture:
         gen: The generator, if applicable to this fixture.
         resolved_val: The value returned by calling the fixture function (fn).
     """
+
     fn: Callable
     gen: Union[Generator, AsyncGenerator] = None
     resolved_val: Any = None
@@ -176,6 +168,7 @@ def using(*using_args, **using_kwargs):
     An alternative to the default param method of injecting fixtures into tests. Allows you to avoid using
     keyword arguments in your test definitions.
     """
+
     def decorator_using(func):
         signature = inspect.signature(func)
         bound_args = signature.bind_partial(*using_args, **using_kwargs)
