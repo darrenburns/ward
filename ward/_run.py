@@ -180,7 +180,7 @@ def test(
     config_params = ctx.params.copy()
     config_params.pop("config")
 
-    config = Config(**config_params)
+    config = Config(**config_params, plugin_config=config_params.get("plugins", {}))
     progress_styles = [TestProgressStyle(ps) for ps in progress_style]
 
     if TestProgressStyle.BAR in progress_styles and test_output_style in {

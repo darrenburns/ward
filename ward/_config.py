@@ -27,17 +27,15 @@ def read_config_toml(project_root: Path, config_file: str) -> _ConfigDict:
 
     try:
         pyproject_toml = toml.load(str(path))
-        config = pyproject_toml.get("tool", {}).get("ward", {})
     except (toml.TomlDecodeError, OSError) as e:
         raise click.FileError(
             filename=config_file, hint=f"Error reading {config_file}:\n{e}"
         )
 
-    if not config:
-        return {}
+    ward_config = pyproject_toml.get("tool", {}).get("ward", {})
+    ward_config = {k.replace("--", "").replace("-", "_"): v for k, v in ward_config.items()}
 
-    config = {k.replace("--", "").replace("-", "_"): v for k, v in config.items()}
-    return config
+    return ward_config
 
 
 def as_list(conf: _ConfigDict):

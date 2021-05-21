@@ -23,5 +23,5 @@ class Config:
     dry_run: bool
     hook_module: Tuple[str]
     progress_style: Tuple[str]
-    # plugin_config: Dict[str, Dict[str, Any]]
+    plugin_config: Dict[str, Dict[str, Any]]
 
