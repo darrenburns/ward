@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 
 from cucumber_tag_expressions.model import Expression
 
@@ -23,3 +23,5 @@ class Config:
     dry_run: bool
     hook_module: Tuple[str]
     progress_style: Tuple[str]
+    # plugin_config: Dict[str, Dict[str, Any]]
+

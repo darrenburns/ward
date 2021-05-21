@@ -95,4 +95,5 @@ def set_defaults_from_config(
         context.default_map = {}
 
     context.default_map.update(file_config)
+
     return config_path

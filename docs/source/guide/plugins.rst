@@ -3,42 +3,61 @@
 Extending Ward
 ##############
 
-You can have Ward call custom Python code at various points during a test session. To do this, you must provide your
-own implementation of a *hook* function, which Ward will call for you. The signature of the function must match the
-signatures listed below, and the function must be decorated with ``@hook``.
+Ward calls a series of *hook* functions throughout a test session. You can provide your own implementations of these hooks
+in order to extend Ward's behaviour. The full list of hook functions that Ward calls, along with examples of how you can implement them,
+are listed in ":ref:`hook_list`".
 
+Ward uses pluggy, which is the same plugin framework used by pytest. The `pluggy docs <https://pluggy.readthedocs.io/en/latest/>`_ offer deeper insight into
+how the plugin system works, as well as some more advanced options.
 
-You can write these hooks inside your test project, or inside a separate package. You can upload your package to PyPI in
+.. note::
+
+    Where the pluggy docs refer to ``@hookimpl``, that's what Ward calls ``@hook``.
+
+User supplied configuration
+****************************
+
+When you write a plugin, users need to be able to provide some configuration to customise it to suit their needs.
+
+Each Ward plugin gets it's own section of the ``pyproject.toml`` configuration file. Say your plugin on PyPI is called ``ward-bananas``, then
+your users will be able to configure your plugin by adding values to the ``[tool.ward.plugins.bananas]`` sections:
+
+.. code-block:: toml
+
+    [tool.ward.plugins.bananas]
+    num_bananas = 3
+
+In your plugin you can examine the configuration supplied by the user through the ``Config`` object. Here's an example of how we'd read
+the configuration above.
+
+.. code-block:: python
+
+    @hook
+    def before_session(config: Config) -> Optional[ConsoleRenderable]:
+        # Get all the config the user supplied for our plugin `ward-bananas`
+        banana_config: Dict[str, Any] = config.plugin_config.get("bananas", {})
+        # Get the specific config item `num_bananas`
+        num_bananas = banana_config.get("num_bananas")
+        # Make use of our config value to customise our plugin's behaviour!
+        if num_bananas:
+            print("banana" * num_bananas)
+
+.. _hook_list:
+
+What hooks are available?
+*************************
+
+You can write implement these hooks inside the project you're testing, or inside a separate package. You can upload your package to PyPI in
 order to share it with others.
 
 If you implement the hooks inside your test project, you'll need to register them in your ``pyproject.toml`` config file, so
 that Ward knows where to find your custom implementations:
 
-
 .. code-block:: toml
 
     hook_module = ["module.containing.hooks"]
 
-You can also tell Ward where your hook implementations via the equivalent command line option: ``--hook-module=module.containing.hooks``.
-
-You can specify multiple ``hook_module`` and they will all be loaded. If the same hook is implemented in multiple modules, they will all be called (unless configured otherwise).
-
-If you write them in a separate Python package (i.e., a plugin), then they can be registered automatically, assuming the ``setup.py`` of the package
-is configured to use the ``ward`` entry point:
-
-.. code-block:: python
-
-    entry_points={"ward": ["ward-html = ward_html"]}
-
-
-.. warning::
-
-    The plugin system of Ward is still in development. A limited selection of hooks are available to implement, but there
-    are some key missing features such as reading from config files. The documentation is also a bit lacking, and you might
-    need to dive into Ward's source code to find out how things work.
-
-What hooks are available?
-*************************
+If you write them in a separate Python package (i.e., a plugin), then the hooks will be registered automatically, as explained in ":ref:`package_code_into_plugin`".
 
 Run code *before* the test run with ``before_session``
 ======================================================
@@ -140,9 +159,10 @@ In the code below, we implement ``preprocess_tests`` to automatically tag "big" 
 With this hook in place, we can run all tests that we consider "big" using ``ward --tags big``. We can also run tests that we don't consider
 to be "big" using ``ward --tags 'not big'``.
 
+.. _package_code_into_plugin:
 
 Packaging your code into a plugin
-*********************************
+**********************************
 
 A *plugin* is a collection of hook implementations that come together to provide some functionality which can be shared with others.
 
@@ -153,4 +173,31 @@ Others can then install your plugin using a tool like ``pip`` or ``poetry``.
 
 After they install your plugin, the hooks within will be registered automatically (no need to update any config).
 
+Here's an example of a ``setup.py`` file for a plugin called ``ward-html``:
 
+.. code-block:: python
+
+    from distutils.core import setup
+
+    setup(
+        # The name must start with 'ward-'
+        name="ward-html",
+        # The version of your plugin
+        version="0.1.0",
+        # The plugin code lives in a single module: ward_html.py
+        py_modules=["ward_html"],
+        # Ward only supports 3.6+
+        python_requires=">=3.6",
+        # Choose the version of ward you wish to target
+        install_requires=[
+            "ward>=0.57.0b0",
+        ],
+        # IMPORTANT! Adding the 'ward' entry point means your plugin
+        # will be automatically registered. Users will only need to
+        # "pip install" it, and it will work having to specify it in
+        # a config file or anywhere else.
+        entry_points={"ward": ["ward-html = ward_html"]},
+    )
+
+This is a minimal example. `This page <https://docs.python.org/3/distutils/setupscript.html>`_ on the
+official Python docs offers more complete coverage on all of the functionality offered by ``setuptools``.
