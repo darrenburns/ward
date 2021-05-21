@@ -227,7 +227,7 @@ def test(
     time_taken = default_timer() - start_run
 
     render_afters: Tuple[ConsoleRenderable] = plugins.hook.after_session(
-        config=config, test_results=test_results
+        config=config, test_results=test_results, status_code=exit_code
     )
     for renderable in render_afters:
         console.print(renderable)

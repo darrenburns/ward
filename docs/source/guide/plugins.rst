@@ -7,11 +7,13 @@ You can have Ward call custom Python code at various points during a test sessio
 own implementation of a *hook* function, which Ward will call for you. The signature of the function must match the
 signatures listed below, and the function must be decorated with ``@hook``.
 
+
 You can write these hooks inside your test project, or inside a separate package. You can upload your package to PyPI in
 order to share it with others.
 
 If you implement the hooks inside your test project, you'll need to register them in your ``pyproject.toml`` config file, so
 that Ward knows where to find your custom implementations:
+
 
 .. code-block:: toml
 
@@ -22,7 +24,18 @@ You can also tell Ward where your hook implementations via the equivalent comman
 You can specify multiple ``hook_module`` and they will all be loaded. If the same hook is implemented in multiple modules, they will all be called (unless configured otherwise).
 
 If you write them in a separate Python package (i.e., a plugin), then they can be registered automatically, assuming the ``setup.py`` of the package
-is configured to use the ``ward`` entry point.
+is configured to use the ``ward`` entry point:
+
+.. code-block:: python
+
+    entry_points={"ward": ["ward-html = ward_html"]}
+
+
+.. warning::
+
+    The plugin system of Ward is still in development. A limited selection of hooks are available to implement, but there
+    are some key missing features such as reading from config files. The documentation is also a bit lacking, and you might
+    need to dive into Ward's source code to find out how things work.
 
 What hooks are available?
 *************************

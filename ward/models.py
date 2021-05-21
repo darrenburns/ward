@@ -53,3 +53,14 @@ class WardMeta:
     scope: Scope = Scope.Test
     bound_args: Optional[BoundArguments] = None
     path: Optional[Path] = None
+
+
+class ExitCode(Enum):
+    SUCCESS = 0
+    FAILED = 1
+    ERROR = 2
+    NO_TESTS_FOUND = 3
+
+    @property
+    def clean_name(self):
+        return self.name.replace("_", " ")

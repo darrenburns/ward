@@ -50,7 +50,7 @@ from ward.fixtures import (
     Fixture,
     _DEFINED_FIXTURES,
 )
-from ward.models import Scope
+from ward.models import Scope, ExitCode
 from ward.testing import Test, fixtures_used_directly_by_tests
 from ward.testing import TestOutcome, TestResult
 
@@ -988,17 +988,6 @@ def make_text_for_fixture(fixture: Fixture, show_scope: bool) -> Text:
         )
 
     return text
-
-
-class ExitCode(Enum):
-    SUCCESS = 0
-    FAILED = 1
-    ERROR = 2
-    NO_TESTS_FOUND = 3
-
-    @property
-    def clean_name(self):
-        return self.name.replace("_", " ")
 
 
 def get_exit_code(results: Iterable[TestResult]) -> ExitCode:
