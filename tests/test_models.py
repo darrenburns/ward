@@ -23,9 +23,7 @@ def _(
 
 
 @test("SkipMarker.active returns True when predicate evaluates to True")
-def _(
-    when=TRUTHY_PREDICATES,
-):
+def _(when=TRUTHY_PREDICATES):
     skip_marker = SkipMarker(when=when)
     assert skip_marker.active
 

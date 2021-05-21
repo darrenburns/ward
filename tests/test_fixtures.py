@@ -135,9 +135,7 @@ def _(cache: FixtureCache = cache, t: Test = my_test, events: List = recorded_ev
 
 
 @test("FixtureCache.teardown_fixtures_for_scope removes Module fixtures from cache")
-def _(
-    cache: FixtureCache = cache,
-):
+def _(cache: FixtureCache = cache):
     cache.teardown_fixtures_for_scope(Scope.Module, testable_test.path)
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)
