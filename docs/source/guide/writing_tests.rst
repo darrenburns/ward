@@ -8,9 +8,12 @@ Tests aren't only a great way of ensuring your code behaves correctly, they're a
 Therefore, a test framework should make describing your tests in a clear and concise manner as simple as possible.
 
 Ward lets you describe your tests using strings, allowing you to be as descriptive
-as you'd like::
+as you'd like:
+
+.. code-block:: python
 
     from ward import test
+
 
     @test("simple addition")
     def _():
@@ -18,11 +21,14 @@ as you'd like::
 
 The description of a test is a format string, and may
 refer to any of the parameters (variables or fixtures) present in the test signature. This
-makes it easy to keep your test data and test descriptions in sync::
+makes it easy to keep your test data and test descriptions in sync:
+
+.. code-block:: python
 
     @fixture
     def three():
         yield 3
+
 
     @test("{a} + {b} == {result}")
     def _(a=1, b=2, result=three):
@@ -35,7 +41,9 @@ Tests will only be collected from modules with names that start with `"test_"` o
 Tagging tests
 -------------
 
-You can tag tests using the ``tags`` keyword argument of the ``@test`` decorator::
+You can tag tests using the ``tags`` keyword argument of the ``@test`` decorator:
+
+.. code-block:: python
 
     @test("simple addition", tags=["unit", "regression"])
     def _():
@@ -90,6 +98,7 @@ you can pass different values into the test:
         (1, 1, 2),
         (2, 3, 5),
     ]:
+
         @test("simple addition")
         def _(left=lhs, right=rhs, result=res):
             assert left + right == result
@@ -102,22 +111,28 @@ You can also make a reference to a fixture and Ward will resolve and inject it:
     def five():
         yield 5
 
+
     for lhs, rhs, res in [
         (1, 1, 2),
         (2, 3, five),
     ]:
+
         @test("simple addition")
         def _(left=lhs, right=rhs, result=res):
             assert left + right == result
 
 Ward also supports parameterised testing by allowing multiple fixtures or
-values to be bound as a keyword argument using the ```each`` function::
+values to be bound as a keyword argument using the ```each`` function:
+
+.. code-block:: python
 
     from ward import each, fixture, test
+
 
     @fixture
     def six():
         return 6
+
 
     @test("an example of parameterisation")
     def _(
@@ -138,53 +153,61 @@ a fixture scoping perspective.
 
 .. warning:: All occurrences of ``each`` in a test signature must contain the same number of arguments.
 
-Using ``each`` in a test signature doesn't stop you from injecting other fixtures as normal.::
+Using ``each`` in a test signature doesn't stop you from injecting other fixtures as normal:
+
+.. code-block:: python
 
     from ward import each, fixture, test
 
+
     @fixture
     def book_api():
-       return BookApi()
+        return BookApi()
+
 
     @test("BookApi.get_book returns the correct book given an ISBN")
     def _(
-       api=book_api,
-       isbn=each("0765326353", "0765326361", "076532637X"),
-       name=each("The Way of Kings", "Words of Radiance", "Oathbringer"),
-    )
-       book: Book = api.get_book(isbn)
-       assert book.name == name
+        api=book_api,
+        isbn=each("0765326353", "0765326361", "076532637X"),
+        name=each("The Way of Kings", "Words of Radiance", "Oathbringer"),
+    ):
+        book: Book = api.get_book(isbn)
+        assert book.name == name
 
 Ward will expand the parameterised test above into 3 distinct tests.
 
-In other words, the single parameterised test above is functionally equivalent to the 3 tests shown below.::
+In other words, the single parameterised test above is functionally equivalent to the 3 tests shown below:
+
+.. code-block:: python
 
     @test("[1/3] BookApi.get_book returns the correct book given an ISBN")
     def _(
-       api=book_api,
-       isbn="0765326353",
-       name="The Way of Kings",
-    )
-       book: Book = api.get_book(isbn)
-       assert book.name == name
+        api=book_api,
+        isbn="0765326353",
+        name="The Way of Kings",
+    ):
+        book: Book = api.get_book(isbn)
+        assert book.name == name
+
 
     @test("[2/3] BookApi.get_book returns the correct book given an ISBN")
     def _(
-       api=book_api,
-       isbn="0765326361",
-       name="Words of Radiance",
-    )
-       book: Book = api.get_book(isbn)
-       assert book.name == name
+        api=book_api,
+        isbn="0765326361",
+        name="Words of Radiance",
+    ):
+        book: Book = api.get_book(isbn)
+        assert book.name == name
+
 
     @test("[3/3] BookApi.get_book returns the correct book given an ISBN")
     def _(
-       api=book_api,
-       isbn="076532637X",
-       name="Oathbringer",
-    )
-       book: Book = api.get_book(isbn)
-       assert book.name == name
+        api=book_api,
+        isbn="076532637X",
+        name="Oathbringer",
+    ):
+        book: Book = api.get_book(isbn)
+        assert book.name == name
 
 If you'd like to use the same ``book_api`` instance across each of the three generated tests,
 you'd have to increase its scope to ``module`` or ``global``.
@@ -195,20 +218,26 @@ Checking for exceptions
 -----------------------
 
 The test below will pass, because a ``ZeroDivisionError`` is raised. If a ``ZeroDivisionError`` wasn't raised,
-the test would fail.::
+the test would fail:
+
+.. code-block:: python
 
     from ward import raises, test
+
 
     @test("a ZeroDivision error is raised when we divide by 0")
     def _():
         with raises(ZeroDivisionError):
-            1/0
+            1 / 0
 
 If you need to access the exception object that your code raised, you can
-use ``with raises(<exc_type>) as <exc_object>``::
+use ``with raises(<exc_type>) as <exc_object>``:
+
+.. code-block:: python
 
     def my_func():
         raise Exception("oh no!")
+
 
     @test("the message is 'oh no!'")
     def _():
@@ -224,16 +253,20 @@ be careful with your indentation.
 Testing `async` code
 --------------------
 
-You can declare any test or fixture as ``async`` in order to test asynchronous code::
+You can declare any test or fixture as ``async`` in order to test asynchronous code:
+
+.. code-block:: python
 
     @fixture
     async def post():
         return await create_post("hello world")
 
+
     @test("a newly created post has no children")
     async def _(p=post):
         children = await p.children
         assert children == []
+
 
     @test("a newly created post has an id > 0")
     def _(p=post):
@@ -242,22 +275,27 @@ You can declare any test or fixture as ``async`` in order to test asynchronous c
 Skipping a test
 ---------------
 
-Use the ``@skip`` decorator to tell Ward not to execute a test.::
+Use the ``@skip`` decorator to tell Ward not to execute a test:
+
+.. code-block:: python
 
     from ward import skip
+
 
     @skip
     @test("I will be skipped!")
     def _():
-        # ...
+        ...
 
 You can pass a ``reason`` to the ``skip`` decorator, and it will be printed
-next to the test name/description during the run ::
+next to the test name/description during the run:
+
+.. code-block:: python
 
     @skip("not implemented yet")
     @test("everything is okay")
     def _():
-        # ...
+        ...
 
 To conditionally skip a test in some circumstances (for example, on specific OS's), you
 can supply a ``when`` predicate to the ``@skip`` decorator. This can be either a boolean
@@ -269,6 +307,7 @@ Here's an example of a test that is skipped on Windows:
 .. code-block:: python
 
     import platform
+
 
     @skip("Skipped on Windows", when=platform.system() == "Windows")
     @test("_build_package_name constructs package name '{pkg}' from '{path}'")
@@ -293,10 +332,11 @@ You can mark a test that you expect to fail with the ``@xfail`` decorator.
 
     from ward import xfail
 
+
     @xfail("its really not okay")
     @test("everything is okay")
     def _():
-        # ...
+        ...
 
 If a test decorated with ``@xfail`` *does* indeed fail as we expected, it is shown
 in the results as an ``XFAIL``.
@@ -309,10 +349,11 @@ For example, we expect the test below to fail, but *only* when it's run in a Pyt
 
     from ward import xfail
 
+
     @xfail("expected fail on Python 3.6", when=platform.python_version().startswith("3.6"))
     @test("everything is okay")
     def _():
-        # ...
+        ...
 
 If a test marked with this decorator passes unexpectedly, it is known as an ``XPASS`` (an unexpected pass).
 

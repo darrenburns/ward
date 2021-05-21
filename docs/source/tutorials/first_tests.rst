@@ -20,7 +20,8 @@ We're going to write tests for a function called ``contains``:
 
 .. code-block:: python
 
-    def contains(list_of_items, target_item)
+    def contains(list_of_items, target_item):
+        ...
 
 This function should return ``True`` if the ``target_item`` is contained within ``list_of_items``. Otherwise it should return ``False``.
 
@@ -38,6 +39,7 @@ Our test is contained within a file called ``test_contains.py``:
 
     from contains import contains
     from ward import test
+
 
     @test("contains returns True when the item is in the list")
     def _():
@@ -81,6 +83,7 @@ Lets define a fixture immediately above the tests we just wrote.
 
     from ward import fixture
 
+
     @fixture
     def list_of_ints():
         return list(range(100000))
@@ -118,6 +121,7 @@ So lets give it a global scope:
 .. code-block:: python
 
     from ward import fixture, Scope
+
 
     @fixture(scope=Scope.Global)  # or scope="global"
     def list_of_ints():

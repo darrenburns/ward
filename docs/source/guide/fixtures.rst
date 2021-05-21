@@ -16,6 +16,7 @@ We can declare a fixture using the ``@fixture`` decorator. Let's define a fixtur
 
     from ward import fixture
 
+
     @fixture
     def user():
         return User(id=1, name="sam")
@@ -25,6 +26,7 @@ Now lets add a test that will make use of the user fixture.
 .. code-block:: python
 
     from ward import test
+
 
     @test("fetch_user_by_id should return the expected User object")
     def _(expected_user=user):
@@ -46,6 +48,7 @@ Here's how we'd inject our user fixture into a test with using:
 .. code-block:: python
 
     from ward import expect, test, using
+
 
     @test("fetch_user_by_id should return the expected User object")
     @using(expected_user=user)
@@ -76,6 +79,7 @@ To make the user fixture global scope, we can change the decorator call to ``@fi
 
     from ward import fixture, Scope
 
+
     @fixture(scope=Scope.Global)  # @fixture(scope="global") also works
     def user():
         return User(id=1, name="sam")
@@ -105,9 +109,11 @@ You can inject a fixture into another fixture in the same way that you'd inject 
     def name():
         return "sam"
 
+
     @fixture
     def user(name=name):
         return {"name": name}
+
 
     @test("fixtures can be composed")
     def _(name=name, user=user):
@@ -135,6 +141,7 @@ Ward will inject the yielded value into the test, and after the test has run, al
 
     from ward import test, fixture
 
+
     @fixture
     def database():
         print("1. I'm setting up the database!")
@@ -142,6 +149,7 @@ Ward will inject the yielded value into the test, and after the test has run, al
         yield db_conn
         db_conn.close()
         print("3. I've torn down the database!")
+
 
     @test(f"Bob is one of the users contained in the database")
     def _(db=database):

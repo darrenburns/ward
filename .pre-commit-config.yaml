@@ -23,6 +23,11 @@ repos:
       - id: python-use-type-annotations
       - id: rst-directive-colons
       - id: rst-inline-touching-normal
+  - repo: https://github.com/asottile/blacken-docs
+    rev: v1.10.0
+    hooks:
+      - id: blacken-docs
+        additional_dependencies: [ black==21.5b1 ]
   - repo: https://github.com/psf/black
     rev: 21.5b1
     hooks:
