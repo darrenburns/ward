@@ -70,4 +70,5 @@ To run the test, simply run ``ward`` in your terminal, and Ward will let you kno
     reference/config.rst
     reference/hooks.rst
     reference/models.rst
+    reference/expect.rst
 
