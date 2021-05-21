@@ -13,7 +13,6 @@ from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
 from rich.console import ConsoleRenderable
 
-from ward._ward_version import __version__
 from ward._collect import (
     get_info_for_modules,
     get_tests_in_modules,
@@ -22,12 +21,9 @@ from ward._collect import (
     filter_fixtures,
 )
 from ward._config import set_defaults_from_config
-from ward.config import Config
 from ward._debug import init_breakpointhooks
 from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite
-from ward.hooks import plugins, register_hooks_in_modules
-from ward.fixtures import _DEFINED_FIXTURES
 from ward._terminal import (
     SimpleTestResultWrite,
     output_fixtures,
@@ -36,6 +32,10 @@ from ward._terminal import (
     TestOutputStyle,
     console,
 )
+from ward._ward_version import __version__
+from ward.config import Config
+from ward.fixtures import _DEFINED_FIXTURES
+from ward.hooks import plugins, register_hooks_in_modules
 
 colorama.init()
 click_completion.init()
@@ -181,7 +181,6 @@ def test(
     config_params.pop("config")
 
     config = Config(**config_params)
-
     progress_styles = [TestProgressStyle(ps) for ps in progress_style]
 
     if TestProgressStyle.BAR in progress_styles and test_output_style in {

@@ -1,8 +1,11 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple, List
+
+from typing import Optional, Tuple
 
 from cucumber_tag_expressions.model import Expression
+
+__all__ = ["Config"]
 
 
 @dataclass
@@ -20,4 +23,4 @@ class Config:
     show_diff_symbols: bool
     dry_run: bool
     hook_module: Tuple[str]
-    progress_style: List[str]
+    progress_style: Tuple[str]

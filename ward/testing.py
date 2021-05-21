@@ -28,6 +28,8 @@ from ward._testing import (
     Each,
     _generate_id,
     _FormatDict,
+    ParamMeta,
+    is_test_module_name,
     COLLECTED_TESTS,
     _Timer,
 )
@@ -44,7 +46,6 @@ __all__ = [
     "TestOutcome",
     "TestResult",
     "ParamMeta",
-    "Timer",
 ]
 
 
@@ -52,23 +53,6 @@ __all__ = [
 class ParamMeta:
     instance_index: int = 0
     group_size: int = 1
-
-
-def is_test_module_name(module_name: str) -> bool:
-    return module_name.startswith("test_") or module_name.endswith("_test")
-
-
-class Timer:
-    def __init__(self):
-        self._start_time = None
-        self.duration = None
-
-    def __enter__(self):
-        self._start_time = default_timer()
-        return self
-
-    def __exit__(self, *args):
-        self.duration = default_timer() - self._start_time
 
 
 def each(*args):
@@ -406,7 +390,6 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
             tags can be used to group tests in some logical manner (for example: by business domain or test type).
             Tagged tests can be queried using the --tags option.
     """
-
     def decorator_test(func):
         unwrapped = inspect.unwrap(func)
         module_name: str = unwrapped.__module__
@@ -453,7 +436,6 @@ class TestOutcome(Enum):
         XPASS: The test was expected to fail, however it unexpectedly passed.
         DRYRUN: The test was not executed because the test session was a dry-run.
     """
-
     PASS = auto()
     FAIL = auto()
     SKIP = auto()
@@ -502,7 +484,6 @@ class TestResult:
         captured_stdout: A string containing anything that was written to stdout during the execution of the test.
         captured_stderr: A string containing anything that was written to stderr during the execution of the test.
     """
-
     test: Test
     outcome: TestOutcome
     error: Optional[Exception] = None
