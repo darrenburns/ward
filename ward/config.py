@@ -9,6 +9,7 @@ __all__ = ["Config"]
 
 @dataclass
 class Config:
+    """Dataclass providing access to the user configuration that has been supplied to Ward"""
     config_path: Optional[Path]
     path: Tuple[str]
     exclude: Tuple[str]

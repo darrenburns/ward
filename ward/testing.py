@@ -34,7 +34,7 @@ from ward._testing import (
 )
 from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
-from ward.models import Marker, Scope, SkipMarker, WardMeta, XfailMarker
+from ward.models import Marker, Scope, SkipMarker, CollectionMetadata, XfailMarker
 
 __all__ = [
     "test",
@@ -91,7 +91,7 @@ def skip(
     if hasattr(func, "ward_meta"):
         func.ward_meta.marker = marker
     else:
-        func.ward_meta = WardMeta(marker=marker)
+        func.ward_meta = CollectionMetadata(marker=marker)
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -127,7 +127,7 @@ def xfail(
     if hasattr(func, "ward_meta"):
         func.ward_meta.marker = marker
     else:
-        func.ward_meta = WardMeta(marker=marker)
+        func.ward_meta = CollectionMetadata(marker=marker)
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -165,7 +165,7 @@ class Test:
     capture_output: bool = True
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)
-    ward_meta: WardMeta = field(default_factory=WardMeta)
+    ward_meta: CollectionMetadata = field(default_factory=CollectionMetadata)
     timer: Optional["_Timer"] = None
     tags: List[str] = field(default_factory=list)
 
@@ -406,7 +406,7 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
                 unwrapped.ward_meta.tags = tags
                 unwrapped.ward_meta.path = path
             else:
-                unwrapped.ward_meta = WardMeta(
+                unwrapped.ward_meta = CollectionMetadata(
                     description=description, tags=tags, path=path,
                 )
 

@@ -14,7 +14,7 @@ from typing import (
     List,
 )
 
-from ward.models import WardMeta, Scope
+from ward.models import CollectionMetadata, Scope
 
 __all__ = ["fixture", "using", "Fixture"]
 
@@ -160,7 +160,7 @@ def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
         func.ward_meta.is_fixture = True
         func.ward_meta.path = path
     else:
-        func.ward_meta = WardMeta(is_fixture=True, scope=scope, path=path)
+        func.ward_meta = CollectionMetadata(is_fixture=True, scope=scope, path=path)
 
     _DEFINED_FIXTURES.append(Fixture(func))
 
@@ -183,7 +183,7 @@ def using(*using_args, **using_kwargs):
         if hasattr(func, "ward_meta"):
             func.ward_meta.bound_args = bound_args
         else:
-            func.ward_meta = WardMeta(bound_args=bound_args)
+            func.ward_meta = CollectionMetadata(bound_args=bound_args)
 
         @wraps(func)
         def wrapper(*args, **kwargs):

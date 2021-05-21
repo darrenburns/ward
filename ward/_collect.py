@@ -24,7 +24,7 @@ from ward._errors import CollectionError
 from ward._testing import is_test_module_name, COLLECTED_TESTS
 from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
-from ward.models import WardMeta
+from ward.models import CollectionMetadata
 from ward.testing import Test
 
 Glob = str
@@ -148,7 +148,7 @@ def get_tests_in_modules(modules: Iterable, capture_output: bool = True) -> List
         anon_tests: List[Callable] = COLLECTED_TESTS[mod_path]
         if anon_tests:
             for test_fn in anon_tests:
-                meta: WardMeta = getattr(test_fn, "ward_meta")
+                meta: CollectionMetadata = getattr(test_fn, "ward_meta")
                 tests.append(
                     Test(
                         fn=test_fn,
