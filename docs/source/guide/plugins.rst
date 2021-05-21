@@ -113,10 +113,11 @@ Here's how you could implement a hook in order to achieve the outcome shown abov
     from rich.text import Text
     from ward.config import Config
     from ward.hooks import hook
+    from ward.models import ExitCode
     from ward.testing import TestResult
 
     @hook
-    def after_session(config: Config, results: List[TestResult]) -> Optional[ConsoleRenderable]:
+    def after_session(config: Config, results: List[TestResult], exit_code: ExitCode) -> Optional[ConsoleRenderable]:
         return SummaryPanel(test_results)
 
     class SummaryPanel:
