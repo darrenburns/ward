@@ -40,19 +40,19 @@ from rich.theme import Theme
 from rich.traceback import Traceback
 from rich.tree import Tree
 
-from ward._ward_version import __version__
 from ward._diff import make_diff
+from ward._fixtures import FixtureHierarchyMapping, fixture_parents_and_children
+from ward._suite import Suite
+from ward._utilities import group_by
+from ward._ward_version import __version__
 from ward.expect import Comparison, TestFailure
 from ward.fixtures import (
     Fixture,
     _DEFINED_FIXTURES,
 )
 from ward.models import Scope
-from ward._fixtures import FixtureHierarchyMapping, fixture_parents_and_children
-from ward._suite import Suite
 from ward.testing import Test, fixtures_used_directly_by_tests
 from ward.testing import TestOutcome, TestResult
-from ward._utilities import group_by
 
 HORIZONTAL_PAD = (0, 1, 0, 1)
 

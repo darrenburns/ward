@@ -9,7 +9,6 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
-from timeit import default_timer
 from typing import (
     Any,
     Callable,
@@ -390,6 +389,7 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
             tags can be used to group tests in some logical manner (for example: by business domain or test type).
             Tagged tests can be queried using the --tags option.
     """
+
     def decorator_test(func):
         unwrapped = inspect.unwrap(func)
         module_name: str = unwrapped.__module__
@@ -436,6 +436,7 @@ class TestOutcome(Enum):
         XPASS: The test was expected to fail, however it unexpectedly passed.
         DRYRUN: The test was not executed because the test session was a dry-run.
     """
+
     PASS = auto()
     FAIL = auto()
     SKIP = auto()
@@ -484,6 +485,7 @@ class TestResult:
         captured_stdout: A string containing anything that was written to stdout during the execution of the test.
         captured_stderr: A string containing anything that was written to stderr during the execution of the test.
     """
+
     test: Test
     outcome: TestOutcome
     error: Optional[Exception] = None

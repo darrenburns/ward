@@ -21,11 +21,11 @@ from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
 
 from ward._errors import CollectionError
+from ward._testing import is_test_module_name, COLLECTED_TESTS
+from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
 from ward.models import WardMeta
 from ward.testing import Test
-from ward._testing import is_test_module_name, COLLECTED_TESTS
-from ward._utilities import get_absolute_path
 
 Glob = str
 

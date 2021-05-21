@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 from contextlib import suppress
+from dataclasses import dataclass
 from functools import partial, wraps
 from pathlib import Path
 from typing import (
@@ -12,8 +13,6 @@ from typing import (
     AsyncGenerator,
     List,
 )
-
-from dataclasses import dataclass
 
 from ward.models import WardMeta, Scope
 
