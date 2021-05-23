@@ -14,16 +14,19 @@ Please also take time to review the [Code of Conduct](https://github.com/darrenb
 
 ## Local development setup
 
-To get started with developing Ward, you'll need to [install Poetry](https://python-poetry.org/docs/#installation). Run `poetry install` to have
-Poetry create a virtualenv for you and install everything you need into it. Any development commands
-you need from this point on can be found in the Makefile. e.g. `make test` to run the tests, `make format` to format
-your code, `make prep` to do both of those things (run this before creating a PR).
+To get started with developing Ward, you'll need to [install Poetry](https://python-poetry.org/docs/#installation).
+Then run `make install` from the repository root to create a virtual environment for Ward's development dependencies and install the [pre-commit hooks](https://pre-commit.com/).
+Any development commands you need from this point on can be also be found in the Makefile.
+For example,
+`make test` to run the tests,
+`make format` to format your code,
+`make prep` to do both of those things (run this before creating a PR).
 
 
 ## Pull request guidelines
 
 * Let us know before you start working on something! Someone else may already have started working on the same thing.
-* Prepare your code for review with `make prep` (this will format and run tests)
+* Prepare your code for review with `make prep` (this will update dependencies, run formatters and linters, and then run the test suite).
 * Ensure `README.md` is updated if necessary.
 * Tests written cover new code, and running `make test` results in a pass.
 

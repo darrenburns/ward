@@ -3,7 +3,9 @@ none: clean
 help:
 	@echo "make test	test Ward"
 	@echo
-	@echo "make prep	lint and test Ward in preparation for a pull request"
+	@echo "make format	run formatters and linters"
+	@echo "make lint	alias for format"
+	@echo "make prep	format, lint, and test Ward in preparation for a pull request"
 	@echo
 	@echo "make setup	create virtual environment and install pre-commit"
 	@echo "make update	update dependencies"
@@ -15,6 +17,13 @@ setup:
 	pre-commit install
 .PHONY: requirements
 
+format:
+	pre-commit run --all
+.PHONY: format
+
+lint: format
+.PHONY: lint
+
 test:
 	poetry run ward
 .PHONY: test
@@ -23,7 +32,7 @@ update:
 	poetry update
 .PHONY: update
 
-prep: setup update test
+prep: setup update lint test
 .PHONY: prep
 
 clean:
