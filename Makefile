@@ -14,11 +14,11 @@ help:
 
 setup:
 	poetry install
-	pre-commit install
+	poetry run pre-commit install
 .PHONY: requirements
 
 format:
-	pre-commit run --all
+	poetry run pre-commit run --all
 .PHONY: format
 
 lint: format
