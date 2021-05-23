@@ -18,6 +18,7 @@ class Scope(Enum):
         Module: A module-scoped fixture will be called at most once per test module.
         Global: A global-scoped fixture will be called at most once per invocation of ``ward``.
     """
+
     Test = "test"
     Module = "module"
     Global = "global"
@@ -49,6 +50,7 @@ class SkipMarker(Marker):
     """
     Marker that gets attached to a test (via CollectionMetadata) to indicate it should be skipped.
     """
+
     name: str = "SKIP"
 
 
@@ -57,6 +59,7 @@ class XfailMarker(Marker):
     """
     Marker that gets attached to a test (via CollectionMetadata) to indicate that we expect it to fail.
     """
+
     name: str = "XFAIL"
 
 
@@ -65,6 +68,7 @@ class CollectionMetadata:
     """
     Attached to tests and fixtures during the collection phase for later use.
     """
+
     marker: Optional[Marker] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = None
@@ -78,6 +82,7 @@ class ExitCode(Enum):
     """
     Enumeration of the possible exit codes that Ward can exit with.
     """
+
     SUCCESS = 0
     FAILED = 1
     ERROR = 2
