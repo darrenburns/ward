@@ -68,9 +68,10 @@ def _handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
     return False
 
 
+# FIXME:fix linter C901
 def get_info_for_modules(
-    paths: List[Path], exclude: Tuple[Glob],
-) -> Generator[pkgutil.ModuleInfo, None, None]:
+    paths: List[Path], exclude: Tuple[Glob]
+) -> Generator[pkgutil.ModuleInfo, None, None]:  # noqa: C901, E501
     paths = _remove_excluded_paths(set(paths), exclude)
 
     # Handle case where path points directly to modules

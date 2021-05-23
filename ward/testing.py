@@ -138,7 +138,8 @@ class Test:
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.id == other.id
 
-    def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
+    # FIXME:fix linter C901
+    def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":  # noqa: C901
         with ExitStack() as stack:
             self.timer = stack.enter_context(Timer())
             if self.capture_output:
