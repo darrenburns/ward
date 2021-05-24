@@ -27,7 +27,6 @@ from ward._testing import (
     Each,
     _generate_id,
     _FormatDict,
-    ParamMeta,
     is_test_module_name,
     COLLECTED_TESTS,
     _Timer,

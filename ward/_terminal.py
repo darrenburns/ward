@@ -48,10 +48,7 @@ from ward._suite import Suite
 from ward._utilities import group_by
 from ward._ward_version import __version__
 from ward.expect import Comparison, TestFailure
-from ward.fixtures import (
-    Fixture,
-    _DEFINED_FIXTURES,
-)
+from ward.fixtures import Fixture
 from ward.models import Scope, ExitCode
 from ward.testing import Test, fixtures_used_directly_by_tests
 from ward.testing import TestOutcome, TestResult
@@ -271,6 +268,7 @@ def output_dots_global(
 INLINE_PROGRESS_LEN = 5  # e.g. "  93%"
 
 
+# flake8: noqa: C901 - FIXME
 def output_dots_module(
     fail_limit: int,
     num_tests: int,
@@ -579,8 +577,12 @@ class TestResultWriterBase:
 
                 stack.enter_context(progress)
             else:
-                test_done = lambda: None
-                test_fail = lambda: None
+
+                def test_done():
+                    return None
+
+                def test_fail():
+                    return None
 
             all_results = output_tests(
                 fail_limit,
