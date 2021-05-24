@@ -53,6 +53,21 @@ def temp_config_file_hyphens():
     yield from temp_conf(conf)
 
 
+@fixture
+def temp_config_plugins():
+    conf = """
+[tool.ward]
+built_in_config="some-value"
+
+[tool.ward.plugins.apples]
+num_apples = 3
+
+[tool.ward.plugins.bananas]
+num_bananas = 4
+"""
+    yield from temp_conf(conf)
+
+
 @test("read_config_toml reads from only [tool.ward] section")
 def _(tmp=temp_config_file):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
@@ -79,6 +94,18 @@ def _(tmp=temp_config_file_hyphens):
     conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
     assert "some_key" in conf
     assert conf["some_key"] == "some-value"
+
+
+@test("read_config_toml reads plugin conf from [tool.ward.plugins.*]")
+def _(tmp=temp_config_plugins):
+    conf = read_config_toml(Path(tempfile.gettempdir()), tmp.name)
+    assert conf == {
+        "built_in_config": "some-value",
+        "plugins": {
+            "apples": {"num_apples": 3},
+            "bananas": {"num_bananas": 4},
+        },
+    }
 
 
 @test("read_config_toml raises click.FileError if config file syntax invalid")

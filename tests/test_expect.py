@@ -1,6 +1,3 @@
-import sys
-from typing import get_type_hints
-
 from ward import each, test
 from ward.expect import (
     TestFailure,
