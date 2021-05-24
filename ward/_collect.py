@@ -110,7 +110,8 @@ def get_info_for_modules(
                             mod, exclude
                         ):
                             module_infos.append(mod)
-        return module_infos
+
+    return module_infos
 
 
 def load_modules(modules: Iterable[ModuleSpec]) -> List[ModuleType]:
