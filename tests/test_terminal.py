@@ -1,20 +1,17 @@
-from unittest import mock
-
 from pathlib import Path
 from rich.console import RenderGroup
 from rich.padding import Padding
 from rich.panel import Panel
-
 from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
 from tests.utilities import example_test
 from ward import using, fixture
-from ward._terminal import outcome_to_colour, get_exit_code, SessionPrelude, TestTimingStatsPanel
+from ward._terminal import get_exit_code, SessionPrelude, TestTimingStatsPanel, outcome_to_style
 from ward._testing import _Timer
 from ward.models import ExitCode
-from ward.testing import TestOutcome, each, test, TestResult, Test
+from ward.testing import TestOutcome, test, TestResult, Test
 
 
 @test(
@@ -50,19 +47,17 @@ def _(example=example_test):
     assert exit_code == ExitCode.FAILED
 
 
-@test("outcome_to_colour({outcome}) returns '{colour}'")
-def _(
-    outcome=each(
-        TestOutcome.PASS,
-        TestOutcome.SKIP,
-        TestOutcome.FAIL,
-        TestOutcome.XFAIL,
-        TestOutcome.XPASS,
-        TestOutcome.DRYRUN,
-    ),
-    colour=each("green", "blue", "red", "magenta", "yellow", "green"),
-):
-    assert outcome_to_colour(outcome) == colour
+for test_outcome, output_style in [
+    (TestOutcome.PASS, "pass"),
+    (TestOutcome.SKIP, "skip"),
+    (TestOutcome.FAIL, "fail"),
+    (TestOutcome.XFAIL, "xfail"),
+    (TestOutcome.XPASS, "xpass"),
+    (TestOutcome.DRYRUN, "dryrun"),
+]:
+    @test("outcome_to_style({outcome}) returns '{style}'")
+    def _(outcome=test_outcome, style=output_style):
+        assert outcome_to_style(outcome) == style
 
 
 @fixture

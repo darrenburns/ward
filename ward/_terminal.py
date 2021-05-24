@@ -816,17 +816,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
         }
 
 
-def outcome_to_colour(outcome: TestOutcome) -> str:
-    return {
-        TestOutcome.PASS: "green",
-        TestOutcome.SKIP: "blue",
-        TestOutcome.FAIL: "red",
-        TestOutcome.XFAIL: "magenta",
-        TestOutcome.XPASS: "yellow",
-        TestOutcome.DRYRUN: "green",
-    }[outcome]
-
-
 def outcome_to_style(outcome: TestOutcome) -> str:
     return {
         TestOutcome.PASS: "pass",
