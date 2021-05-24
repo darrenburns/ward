@@ -156,7 +156,11 @@ def output_test_result_line(
     grid.add_column()
     columns = [
         Padding(outcome_tag, style=test_style, pad=(0, 1, 0, 1)),
-        Padding(f"{test_location}{test_case_number}", style="muted", pad=(0, 1, 0, 1)),
+        Padding(
+            f"[link=pycharm://open?file={test.path.absolute()}&line={test.line_number}]{test_location}{test_case_number}[/link]",
+            style="muted",
+            pad=(0, 1, 0, 1),
+        ),
         Padding(
             Markdown(test.description, inline_code_theme="ansi_dark"), pad=(0, 1, 0, 0)
         ),
@@ -368,7 +372,14 @@ def output_dots_module(
 
 def print_dot(result: TestResult) -> None:
     style = outcome_to_style(result.outcome)
-    console.print(result.outcome.display_char, style=style, end="")
+    if result.outcome == TestOutcome.FAIL:
+        console.print(
+            f"[link=pycharm://open?file={result.test.path}&line={result.test.line_number}]{result.outcome.display_char}",
+            style=style,
+            end="",
+        )
+    else:
+        console.print(result.outcome.display_char, style=style, end="")
 
 
 def print_end_of_line_for_dots(
