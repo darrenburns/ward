@@ -1,5 +1,5 @@
-Running Tests
-=============
+Running Tests via the CLI
+=========================
 
 To find and run tests in your project, you can run ``ward`` without any arguments.
 
@@ -121,6 +121,26 @@ If that is still too verbose, you may wish to represent every test outcome with 
 .. image:: ../_static/dots_global.png
     :align: center
     :alt: Output using dots-global mode
+
+Displaying test session progress with ``--progress-style``
+----------------------------------------------------------
+
+Ward offers two ways of informing you of progress through a test run: inline progress percentage (on by default), and/or a dynamic progress bar.
+
+By default, the percentage progress through a test run will appear at the right hand side of the output, which corresponds to ``--progress-style inline``.
+
+You can also have Ward display a dynamic progress bar during the test run, using the ``--progress-style bar`` option.
+
+.. image:: ../_static/ward_progress_bar.gif
+    :align: center
+    :alt: Example of progress-style of bar
+
+If you wish, can pass supply ``--progress-style`` with multiple times (to display a progress bar and inline progress, for example).
+
+.. warning::
+
+    The progress bar is currently only available with the default output mode (``--test-output-style test-per-line``).
+
 
 Output capturing
 ----------------

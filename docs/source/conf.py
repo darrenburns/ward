@@ -10,9 +10,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +22,7 @@ copyright = '2021, Darren Burns'
 author = 'Darren Burns'
 
 # The full version, including alpha/beta/rc tags
-release = '0.54.0b0'
+release = '0.57.0b0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,7 +31,10 @@ release = '0.54.0b0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autosectionlabel',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.napoleon",
+    "sphinx_copybutton",
 ]
 
 autosectionlabel_prefix_document = True
@@ -53,7 +56,7 @@ exclude_patterns = []
 #
 import sphinx_rtd_theme
 html_theme = 'sphinx_rtd_theme'
-html_logo = './_static/ward_logo.png'
+html_logo = './_static/ward_logo_light_outline.png'
 
 html_theme_options = {
     "logo_only": True,

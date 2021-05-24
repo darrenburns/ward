@@ -1,23 +1,24 @@
-Ward - A modern Python test framework
-=====================================
+Ward
+====
 
-Ward is a modern test framework for Python with a focus on productivity and readability.
+`Ward` is a Python testing framework with a focus on productivity and readability. It gives you the tools you need to write **well-documented** and **scalable** tests.
+
+.. image:: ./_static/intro_screenshot.png
+    :align: center
+    :alt: An example output from Ward
 
 Features
 --------
 * Describe your tests using strings instead of function names
 * Use plain ``assert`` statements, with no need to remember ``assert*`` method names
 * Beautiful output that focuses on readability
-* Supported on MacOS, Linux, and Windows
 * Manage test dependencies using a simple but powerful :ref:`fixture system <fixtures>`
-* Support for :ref:`testing async code<async_tests>`
 * :ref:`Parameterised testing <parameterisation>` allows you to run a single test on multiple inputs
+* Support for :ref:`testing async code<async_tests>`
+* Supported on MacOS, Linux, and Windows
 * Configurable with :ref:`pyproject.toml<pyproject>`, but works out-of-the-box with sensible defaults
-* Fast -- Ward's suite of ~250 tests completes in <0.3 seconds on my machine
-
-.. image:: ./_static/intro_screenshot.png
-    :align: center
-    :alt: An example output from Ward
+* Extendable via a plugin system (coming soon)
+* Speedy -- Ward's suite of ~300 tests completes in ~0.4 seconds on my machine
 
 Installation
 ------------
@@ -50,6 +51,7 @@ To run the test, simply run ``ward`` in your terminal, and Ward will let you kno
     guide/writing_tests
     guide/running_tests
     guide/fixtures
+    guide/plugins
     guide/pyproject.toml
 
 .. toctree::
@@ -58,3 +60,15 @@ To run the test, simply run ``ward`` in your terminal, and Ward will let you kno
 
     tutorials/first_tests.rst
     tutorials/testing_flask.rst
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Reference
+
+    reference/testing.rst
+    reference/fixtures.rst
+    reference/config.rst
+    reference/hooks.rst
+    reference/models.rst
+    reference/expect.rst
+

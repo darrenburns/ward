@@ -1,7 +1,14 @@
+import platform
+
+import abc
+import contextlib
 import inspect
+import itertools
+import math
 import os
 import statistics
-from dataclasses import dataclass
+import sys
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent
@@ -12,16 +19,21 @@ from typing import (
     List,
     Optional,
     Collection,
+    Callable,
+    Iterator,
 )
 
-import itertools
-import math
-import sys
 from rich.console import Console, ConsoleOptions, RenderResult, RenderGroup
 from rich.highlighter import NullHighlighter
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
+from rich.progress import (
+    Progress,
+    BarColumn,
+    TimeElapsedColumn,
+    SpinnerColumn,
+)
 from rich.rule import Rule
 from rich.syntax import Syntax
 from rich.table import Table
@@ -30,31 +42,23 @@ from rich.theme import Theme
 from rich.traceback import Traceback
 from rich.tree import Tree
 
+from ward._diff import make_diff
+from ward._fixtures import FixtureHierarchyMapping, fixture_parents_and_children
+from ward._suite import Suite
+from ward._utilities import group_by
 from ward._ward_version import __version__
-from ward.diff import make_diff
 from ward.expect import Comparison, TestFailure
 from ward.fixtures import (
     Fixture,
-    Scope,
     _DEFINED_FIXTURES,
-    fixture_parents_and_children,
-    _TYPE_FIXTURE_TO_FIXTURES,
 )
+from ward.models import Scope, ExitCode
 from ward.testing import Test, fixtures_used_directly_by_tests
 from ward.testing import TestOutcome, TestResult
-from ward.util import group_by
 
 HORIZONTAL_PAD = (0, 1, 0, 1)
 
 INDENT = " " * 2
-BODY_INDENT_SIZE = 4
-
-
-def make_indent(depth=1):
-    return INDENT * depth
-
-
-DOUBLE_INDENT = make_indent(depth=2)
 
 theme = Theme(
     {
@@ -118,7 +122,24 @@ def format_test_case_number(test: Test) -> str:
     return iter_indicator
 
 
-def output_test_result_line(test_result: TestResult):
+class TestOutputStyle(str, Enum):
+    TEST_PER_LINE = "test-per-line"
+    DOTS_GLOBAL = "dots-global"
+    DOTS_MODULE = "dots-module"
+
+
+class TestProgressStyle(str, Enum):
+    INLINE = "inline"
+    BAR = "bar"
+    NONE = "none"
+
+
+def output_test_result_line(
+    test_result: TestResult,
+    idx: int,
+    num_tests: int,
+    progress_styles: List[TestProgressStyle],
+):
     """
     Outputs a single test result to the terminal in Ward's standard output
     format which outputs a single test per line.
@@ -130,139 +151,251 @@ def output_test_result_line(test_result: TestResult):
     test_case_number = format_test_case_number(test)
     test_style = outcome_to_style(test_result.outcome)
 
-    # Skip/Xfail tests may have a reason note attached that we'll print
-    if hasattr(test.marker, "reason") and test.marker.active:
-        reason = test.marker.reason
-    else:
-        reason = ""
-
     grid = Table.grid(expand=True)
     grid.add_column()
     grid.add_column()
     grid.add_column()
-    common_columns = (
+    columns = [
         Padding(outcome_tag, style=test_style, pad=(0, 1, 0, 1)),
         Padding(f"{test_location}{test_case_number}", style="muted", pad=(0, 1, 0, 1)),
         Padding(
             Markdown(test.description, inline_code_theme="ansi_dark"), pad=(0, 1, 0, 0)
         ),
-    )
+    ]
 
-    if reason:
+    # Skip/Xfail tests may have a reason note attached that we'll print
+    reason = getattr(test.marker, "reason", "")
+    if reason and test.marker.active:
         grid.add_column(justify="center", style=test_style)
-        grid.add_row(
-            *common_columns, Padding(reason, pad=(0, 1, 0, 1)),
-        )
-    else:
-        grid.add_row(*common_columns)
+        columns.append(Padding(reason, pad=(0, 1, 0, 1)))
+
+    if TestProgressStyle.INLINE in progress_styles:
+        grid.add_column(justify="right", style="muted")
+        columns.append(f"{idx / num_tests:>4.0%}")
+
+    grid.add_row(*columns)
 
     console.print(grid)
 
 
-def output_test_per_line(fail_limit, test_results_gen):
+ProgressCallback = Callable[[], None]
+
+
+def output_test_per_line(
+    fail_limit: int,
+    num_tests: int,
+    test_results_gen: Iterator[TestResult],
+    progress_styles: List[TestProgressStyle],
+    test_done: ProgressCallback,
+    test_failed: ProgressCallback,
+):
     num_failures = 0
     all_results = []
 
     console.print()
 
     try:
-        for result in test_results_gen:
-            output_test_result_line(result)
+        for idx, result in enumerate(test_results_gen):
+            output_test_result_line(result, idx, num_tests, progress_styles)
             all_results.append(result)
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
+                test_failed()
             if num_failures == fail_limit:
                 break
+            test_done()
     except KeyboardInterrupt:
-        output_run_cancelled()
+        print_run_cancelled()
     finally:
         return all_results
 
 
 def output_dots_global(
-    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+    fail_limit: int,
+    num_tests: int,
+    test_results_gen: Iterator[TestResult],
+    progress_styles: List[TestProgressStyle],
+    test_done: ProgressCallback,
+    test_failed: ProgressCallback,
 ) -> List[TestResult]:
-    column = 0
+    dots_on_line = 0
     num_failures = 0
     all_results = []
+    max_dots_per_line = get_terminal_size().width
+    if TestProgressStyle.INLINE in progress_styles:
+        max_dots_per_line -= 5  # e.g. "  93%"
     try:
         console.print()
-        for result in test_results_gen:
+
+        test_index = 0  # this makes sure that test_index is defined for the last end of line print after the loop
+        for test_index, result in enumerate(test_results_gen):
             all_results.append(result)
+
             print_dot(result)
-            column += 1
-            if column == get_terminal_size().width:
-                console.print()
-                column = 0
+
+            dots_on_line += 1
+            if dots_on_line == max_dots_per_line:
+                print_end_of_line_for_dots(
+                    test_index=test_index,
+                    num_tests=num_tests,
+                    dots_on_line=dots_on_line,
+                    max_dots_per_line=max_dots_per_line,
+                    progress_styles=progress_styles,
+                )
+                dots_on_line = 0
+
             if result.outcome == TestOutcome.FAIL:
                 num_failures += 1
+                test_failed()
+
             if num_failures == fail_limit:
                 break
+
+            test_done()
+
             sys.stdout.flush()
-        console.print()
+
+        print_end_of_line_for_dots(
+            test_index=test_index,
+            num_tests=num_tests,
+            dots_on_line=dots_on_line,
+            max_dots_per_line=max_dots_per_line,
+            progress_styles=progress_styles,
+        )
     except KeyboardInterrupt:
-        output_run_cancelled()
+        print_run_cancelled()
     finally:
         return all_results
 
 
-def print_dot(result):
+INLINE_PROGRESS_LEN = 5  # e.g. "  93%"
+
+
+def output_dots_module(
+    fail_limit: int,
+    num_tests: int,
+    test_results_gen: Iterator[TestResult],
+    progress_styles: List[TestProgressStyle],
+    test_done: ProgressCallback,
+    test_failed: ProgressCallback,
+) -> List[TestResult]:
+    current_path = Path("")
+    cwd = Path.cwd()
+    dots_on_line = 0
+    num_failures = 0
+
+    base_max_dots_per_line = get_terminal_size().width
+    if TestProgressStyle.INLINE in progress_styles:
+        base_max_dots_per_line -= INLINE_PROGRESS_LEN
+
+    max_dots_per_line = base_max_dots_per_line  # in case the loop below never runs
+
+    all_results = []
+    try:
+        console.print()
+
+        test_index = 0  # this makes sure that test_index is defined for the last end of line print after the loop
+        for test_index, result in enumerate(test_results_gen):
+            all_results.append(result)
+
+            if result.test.path != current_path:  # i.e., we are starting a new module
+                if test_index > 0:  # print the end-of-line for the previous module
+                    print_end_of_line_for_dots(
+                        test_index=test_index,
+                        num_tests=num_tests,
+                        dots_on_line=dots_on_line,
+                        max_dots_per_line=max_dots_per_line,
+                        progress_styles=progress_styles,
+                    )
+
+                dots_on_line = 0
+                current_path = result.test.path
+                rel_path = str(current_path.relative_to(cwd))
+
+                final_slash_idx = rel_path.rfind("/")
+                if final_slash_idx != -1:
+                    path_text = Text("", end="").join(
+                        [
+                            Text(rel_path[: final_slash_idx + 1], style="muted"),
+                            Text(rel_path[final_slash_idx + 1 :]),
+                            Text(": "),
+                        ]
+                    )
+                else:
+                    path_text = Text(f"{rel_path}: ", end="")
+                console.print(path_text, end="")
+
+                max_dots_per_line = base_max_dots_per_line - path_text.cell_len
+
+            if dots_on_line == max_dots_per_line:
+                print_end_of_line_for_dots(
+                    test_index=test_index,
+                    num_tests=num_tests,
+                    dots_on_line=dots_on_line,
+                    max_dots_per_line=max_dots_per_line,
+                    progress_styles=progress_styles,
+                )
+
+                # we are now on a blank line with no other dots and no path prefix
+                dots_on_line = 0
+                max_dots_per_line = base_max_dots_per_line
+
+            print_dot(result)
+            dots_on_line += 1
+
+            if result.outcome == TestOutcome.FAIL:
+                num_failures += 1
+                test_failed()
+
+            if num_failures == fail_limit:
+                break
+
+            test_done()
+
+            sys.stdout.flush()
+
+        print_end_of_line_for_dots(
+            test_index=test_index,
+            num_tests=num_tests,
+            dots_on_line=dots_on_line,
+            max_dots_per_line=max_dots_per_line,
+            progress_styles=progress_styles,
+        )
+    except KeyboardInterrupt:
+        print_run_cancelled()
+    finally:
+        return all_results
+
+
+def print_dot(result: TestResult) -> None:
     style = outcome_to_style(result.outcome)
     console.print(result.outcome.display_char, style=style, end="")
 
 
-def output_dots_module(
-    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
-) -> List[TestResult]:
-    current_path = Path("")
-    rel_path = ""
-    dots_on_line = 0
-    num_failures = 0
-    max_dots_per_line = get_terminal_size().width - 40
-    all_results = []
-    try:
-        for result in test_results_gen:
-            all_results.append(result)
-            if result.test.path != current_path:
-                dots_on_line = 0
-                console.print()
-                current_path = result.test.path
-                rel_path = str(current_path.relative_to(os.getcwd()))
-                max_dots_per_line = (
-                    get_terminal_size().width - len(rel_path) - 2
-                )  # subtract 2 for ": "
-                final_slash_idx = rel_path.rfind("/")
-                if final_slash_idx != -1:
-                    console.print(
-                        rel_path[: final_slash_idx + 1], style="muted", end=""
-                    )
-                    console.print(rel_path[final_slash_idx + 1 :] + ": ", end="")
-                else:
-                    console.print(f"\n{rel_path}: ", end="")
-            print_dot(result)
-            dots_on_line += 1
-            if dots_on_line == max_dots_per_line:
-                console.print("\n" + " " * (len(rel_path) + 2), end="")
-                dots_on_line = 0
-            if result.outcome == TestOutcome.FAIL:
-                num_failures += 1
-            if num_failures == fail_limit:
-                break
+def print_end_of_line_for_dots(
+    test_index: int,
+    num_tests: int,
+    dots_on_line: int,
+    max_dots_per_line: int,
+    progress_styles: List[TestProgressStyle],
+) -> None:
+    if TestProgressStyle.INLINE in progress_styles and num_tests > 0:
+        console.print(
+            f"{(test_index + 1) / num_tests:>{max_dots_per_line - dots_on_line + INLINE_PROGRESS_LEN}.0%}",
+            style="muted",
+        )
+    else:
         console.print()
-    except KeyboardInterrupt:
-        output_run_cancelled()
-    finally:
-        return all_results
 
 
-def output_run_cancelled():
+def print_run_cancelled():
     console.print(
         "Run cancelled - results for tests that ran shown below.", style="info",
     )
 
 
 @dataclass
-class TestTimingStats:
+class TestTimingStatsPanel:
     all_tests_in_session: List[TestResult]
     num_tests_to_show: int
 
@@ -271,11 +404,11 @@ class TestTimingStats:
         return [r.test.timer.duration for r in self.all_tests_in_session]
 
     @property
-    def median_secs(self):
+    def _median_secs(self):
         return statistics.median(self._raw_test_durations_secs)
 
     @property
-    def percentile99_secs(self):
+    def _percentile99_secs(self):
         data = self._raw_test_durations_secs
         size = len(data)
         percentile = 99
@@ -307,9 +440,9 @@ class TestTimingStats:
         panel = Panel(
             RenderGroup(
                 Padding(
-                    f"Median: [b]{self.median_secs * 1000:.2f}[/b]ms"
+                    f"Median: [b]{self._median_secs * 1000:.2f}[/b]ms"
                     f" [muted]|[/muted] "
-                    f"99th Percentile: [b]{self.percentile99_secs * 1000:.2f}[/b]ms",
+                    f"99th Percentile: [b]{self._percentile99_secs * 1000:.2f}[/b]ms",
                     pad=(0, 0, 1, 0),
                 ),
                 grid,
@@ -322,39 +455,84 @@ class TestTimingStats:
         yield panel
 
 
-class TestResultWriterBase:
-    runtime_output_strategies = {
-        "test-per-line": output_test_per_line,
-        "dots-global": output_dots_global,
-        "dots-module": output_dots_module,
-    }
+@dataclass
+class SessionPrelude:
+    time_to_collect_secs: float
+    num_tests_collected: int
+    num_fixtures_collected: int
+    config_path: Optional[Path]
+    python_impl: str = field(default=platform.python_implementation())
+    python_version: str = field(default=platform.python_version())
+    ward_version: str = field(default=__version__)
 
-    def __init__(
-        self,
-        suite,
-        test_output_style: str,
-        config_path: Optional[Path],
-        show_diff_symbols: bool = False,
-    ):
-        self.suite = suite
-        self.test_output_style = test_output_style
-        self.config_path = config_path
-        self.show_diff_symbols = show_diff_symbols
-        self.terminal_size = get_terminal_size()
-
-    def output_header(self, time_to_collect):
-        console.print(Rule(Text(f"Ward {__version__}", style="title")),)
+    def __rich_console__(self, c: Console, co: ConsoleOptions) -> RenderResult:
+        yield Rule(
+            Text(
+                f"Ward {self.ward_version} | {self.python_impl} {self.python_version}",
+                style="title",
+            )
+        )
         if self.config_path:
             try:
                 path = self.config_path.relative_to(Path.cwd())
             except ValueError:
                 path = self.config_path.name
-            console.print(f"Loaded config from [b]{path}[/b].")
-        console.print(
-            f"Found [b]{self.suite.num_tests}[/b] tests "
-            f"and [b]{len(_DEFINED_FIXTURES)}[/b] fixtures "
-            f"in [b]{time_to_collect:.2f}[/b] seconds."
+            yield f"Loaded config from [b]{path}[/b]."
+
+        yield (
+            f"Found [b]{self.num_tests_collected}[/b] tests "
+            f"and [b]{self.num_fixtures_collected}[/b] fixtures "
+            f"in [b]{self.time_to_collect_secs:.2f}[/b] seconds."
         )
+
+
+class ResultProcessor(abc.ABC):
+    @abc.abstractmethod
+    def handle_result(self, test_result: TestResult):
+        pass
+
+
+class TerminalResultProcessor(ResultProcessor):
+    def __init__(
+        self,
+        suite: Suite,
+        test_output_style: str,
+        progress_styles: List[TestProgressStyle],
+        config_path: Optional[Path],
+        show_diff_symbols: bool = False,
+    ):
+        self.suite = suite
+        self.test_output_style = test_output_style
+        self.progress_styles = progress_styles
+        self.config_path = config_path
+        self.show_diff_symbols = show_diff_symbols
+
+    def handle_result(self, test_result: TestResult):
+        # Make the actual output of the result a pluggy hook, so that users can implement their own version
+        pass
+
+
+class TestResultWriterBase:
+    runtime_output_strategies = {
+        TestOutputStyle.TEST_PER_LINE: output_test_per_line,
+        TestOutputStyle.DOTS_GLOBAL: output_dots_global,
+        TestOutputStyle.DOTS_MODULE: output_dots_module,
+    }
+
+    def __init__(
+        self,
+        suite: Suite,
+        test_output_style: str,
+        progress_styles: List[TestProgressStyle],
+        config_path: Optional[Path],
+        show_diff_symbols: bool = False,
+    ):
+        self.suite = suite
+        self.test_output_style = test_output_style
+        self.progress_styles = progress_styles
+        self.config_path = config_path
+        self.show_diff_symbols = show_diff_symbols
+        self.terminal_size = get_terminal_size()
 
     def output_all_test_results(
         self,
@@ -366,7 +544,53 @@ class TestResultWriterBase:
         output_tests = self.runtime_output_strategies.get(
             self.test_output_style, output_test_per_line
         )
-        all_results = output_tests(fail_limit, test_results_gen)
+
+        with contextlib.ExitStack() as stack:
+            if (
+                TestProgressStyle.BAR in self.progress_styles
+                and self.suite.num_tests > 0
+            ):
+                spinner = SpinnerColumn(style="pass.textonly")
+                bar = BarColumn(complete_style="pass.textonly")
+                progress = Progress(
+                    spinner,
+                    TimeElapsedColumn(),
+                    bar,
+                    "[progress.percentage]{task.percentage:>3.0f}%",
+                    "[progress.percentage][{task.completed} / {task.total}]",
+                    console=console,
+                    transient=True,
+                    auto_refresh=True,
+                    # TODO: figure out how to make the progress bar work with printing with end="" (for dots)
+                    disable=TestProgressStyle.BAR not in self.progress_styles
+                    or self.test_output_style != "test-per-line",
+                )
+
+                task = progress.add_task(
+                    "Testing...", total=self.suite.num_tests_with_parameterisation
+                )
+
+                def test_done() -> None:
+                    progress.update(task, advance=1)
+
+                def test_fail() -> None:
+                    spinner.spinner.style = "fail.textonly"
+                    bar.complete_style = "fail.textonly"
+
+                stack.enter_context(progress)
+            else:
+                test_done = lambda: None
+                test_fail = lambda: None
+
+            all_results = output_tests(
+                fail_limit,
+                self.suite.num_tests_with_parameterisation,
+                test_results_gen,
+                self.progress_styles,
+                test_done,
+                test_fail,
+            )
+
         failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
         for failure in failed_test_results:
             self.output_why_test_failed_header(failure)
@@ -380,12 +604,9 @@ class TestResultWriterBase:
             console.print()
         return all_results
 
-    def print_divider(self) -> None:
+    @staticmethod
+    def print_divider() -> None:
         console.print(Rule(style="muted"))
-
-    def output_single_test_result(self, test_result: TestResult):
-        """Indicate whether a test passed, failed, was skipped etc."""
-        raise NotImplementedError()
 
     def output_why_test_failed_header(self, test_result: TestResult):
         """
@@ -497,7 +718,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
         if show_slowest:
-            console.print(TestTimingStats(test_results, show_slowest))
+            console.print(TestTimingStatsPanel(test_results, show_slowest))
 
         result_table = Table.grid()
         result_table.add_column(justify="right")
@@ -596,17 +817,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
         }
 
 
-def outcome_to_colour(outcome: TestOutcome) -> str:
-    return {
-        TestOutcome.PASS: "green",
-        TestOutcome.SKIP: "blue",
-        TestOutcome.FAIL: "red",
-        TestOutcome.XFAIL: "magenta",
-        TestOutcome.XPASS: "yellow",
-        TestOutcome.DRYRUN: "green",
-    }[outcome]
-
-
 def outcome_to_style(outcome: TestOutcome) -> str:
     return {
         TestOutcome.PASS: "pass",
@@ -662,8 +872,8 @@ def output_fixtures(
 def make_fixture_information_tree(
     fixture: Fixture,
     used_by_tests: Collection[Test],
-    fixtures_to_children: _TYPE_FIXTURE_TO_FIXTURES,
-    fixtures_to_parents: _TYPE_FIXTURE_TO_FIXTURES,
+    fixtures_to_children: FixtureHierarchyMapping,
+    fixtures_to_parents: FixtureHierarchyMapping,
     show_scopes: bool,
     show_docstrings: bool,
     show_dependencies: bool,
@@ -715,7 +925,7 @@ def make_fixture_information_tree(
 def add_fixture_dependencies_to_tree(
     parent: Tree,
     fixture: Fixture,
-    fixtures_to_parents_or_children: _TYPE_FIXTURE_TO_FIXTURES,
+    fixtures_to_parents_or_children: FixtureHierarchyMapping,
     show_scopes: bool,
     max_depth: Optional[int],
     depth: int = 0,
@@ -760,17 +970,6 @@ def make_text_for_fixture(fixture: Fixture, show_scope: bool) -> Text:
         )
 
     return text
-
-
-class ExitCode(Enum):
-    SUCCESS = 0
-    FAILED = 1
-    ERROR = 2
-    NO_TESTS_FOUND = 3
-
-    @property
-    def clean_name(self):
-        return self.name.replace("_", " ")
 
 
 def get_exit_code(results: Iterable[TestResult]) -> ExitCode:

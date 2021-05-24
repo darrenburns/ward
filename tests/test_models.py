@@ -1,7 +1,7 @@
 from tests.test_testing import TRUTHY_PREDICATES, FALSY_PREDICATES
-from ward import test, each, Scope, raises
-from ward.errors import FixtureError
-from ward.models import SkipMarker, XfailMarker
+from ward import test, each, raises
+from ward._errors import FixtureError
+from ward.models import SkipMarker, XfailMarker, Scope
 
 
 @test("Scope.from_str('{string}') returns {scope}")

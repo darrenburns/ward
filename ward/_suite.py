@@ -1,11 +1,12 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from random import shuffle
-from typing import Generator, List
+from pathlib import Path
 
-from ward import Scope
-from ward.errors import ParameterisationError
-from ward.fixtures import FixtureCache
+from typing import Generator, List, Dict
+
+from ward._errors import ParameterisationError
+from ward._fixtures import FixtureCache
+from ward.models import Scope
 from ward.testing import Test, TestResult
 
 
@@ -15,10 +16,23 @@ class Suite:
     cache: FixtureCache = field(default_factory=FixtureCache)
 
     @property
-    def num_tests(self):
+    def num_tests(self) -> int:
+        """
+        Returns: The number of tests in the suite, *before* taking parameterisation into account.
+        """
         return len(self.tests)
 
-    def _test_counts_per_module(self):
+    @property
+    def num_tests_with_parameterisation(self) -> int:
+        """
+        Returns: The number of tests in the suite, *after* taking parameterisation into account.
+        """
+        return sum(test.find_number_of_instances() for test in self.tests)
+
+    def _test_counts_per_module(self) -> Dict[Path, int]:
+        """
+        Returns: A dictionary mapping a module Path to the number of tests that can be found within that module.
+        """
         module_paths = [test.path for test in self.tests]
         counts = defaultdict(int)
         for path in module_paths:
@@ -26,17 +40,13 @@ class Suite:
         return counts
 
     def generate_test_runs(
-        self, order="standard", dry_run=False
+        self, dry_run: bool = False
     ) -> Generator[TestResult, None, None]:
         """
         Run tests
 
         Returns a generator which yields test results
         """
-
-        if order == "random":
-            shuffle(self.tests)
-
         num_tests_per_module = self._test_counts_per_module()
         for test in self.tests:
             num_tests_per_module[test.path] -= 1

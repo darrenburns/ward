@@ -42,7 +42,7 @@ def build_symbolic_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
     diff = raw_unified_diff(lhs_repr, rhs_repr)
     output_lines = []
     last_line_colour = "grey"
-    for line_idx, line in enumerate(diff):
+    for line in diff:
         if line.startswith("- "):
             last_line_colour = "green"
             output_lines.append(colored(f"+ {line[2:]}", color=last_line_colour))
@@ -66,7 +66,7 @@ def build_unified_diff(lhs_repr: str, rhs_repr: str) -> str:  # noqa: C901
     diff = raw_unified_diff(lhs_repr, rhs_repr)
     output_lines = []
     prev_marker = ""
-    for line_idx, line in enumerate(diff):
+    for line in diff:
         if line.startswith("- "):
             output_lines.append(colored(line[2:], color="green"))
         elif line.startswith("+ "):
