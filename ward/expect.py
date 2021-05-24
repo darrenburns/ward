@@ -202,8 +202,8 @@ def assert_is_not(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Check the object identity via ``lhs_val is not rhs_val``. Raises ``TestFailure`` if identical.
 
     Args:
-        lhs_val: The value on the left side of ``is``
-        rhs_val: The value on the right side of ``is``
+        lhs_val: The value on the left side of ``is not``
+        rhs_val: The value on the right side of ``is not``
         assert_msg: The assertion message from the ``assert`` statement
 
     Returns: None
@@ -226,8 +226,8 @@ def assert_less_than(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Check lhs_val is less than the rhs_val via ``lhs_val < rhs_val``. Raises ``TestFailure`` if not.
 
     Args:
-        lhs_val: The value on the left side of ``is``
-        rhs_val: The value on the right side of ``is``
+        lhs_val: The value on the left side of ``<``
+        rhs_val: The value on the right side of ``<``
         assert_msg: The assertion message from the ``assert`` statement
 
     Returns: None
@@ -250,8 +250,8 @@ def assert_less_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) -> No
     Check lhs_val is less than or equal to the rhs_val via ``lhs_val <= rhs_val``. Raises ``TestFailure`` if not.
 
     Args:
-        lhs_val: The value on the left side of ``is``
-        rhs_val: The value on the right side of ``is``
+        lhs_val: The value on the left side of ``<=``
+        rhs_val: The value on the right side of ``<=``
         assert_msg: The assertion message from the ``assert`` statement
 
     Returns: None
@@ -274,8 +274,8 @@ def assert_greater_than(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Check lhs_val is greater than the rhs_val via ``lhs_val > rhs_val``. Raises ``TestFailure`` if not.
 
     Args:
-        lhs_val: The value on the left side of ``is``
-        rhs_val: The value on the right side of ``is``
+        lhs_val: The value on the left side of ``>``
+        rhs_val: The value on the right side of ``>``
         assert_msg: The assertion message from the ``assert`` statement
 
     Returns: None
@@ -295,11 +295,11 @@ def assert_greater_than(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
 
 def assert_greater_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     """
-    Check lhs_val is greater than or equal to the rhs_val via ``lhs_val > rhs_val``. Raises ``TestFailure`` if not.
+    Check lhs_val is greater than or equal to the rhs_val via ``lhs_val >= rhs_val``. Raises ``TestFailure`` if not.
 
     Args:
-        lhs_val: The value on the left side of ``is``
-        rhs_val: The value on the right side of ``is``
+        lhs_val: The value on the left side of ``>=``
+        rhs_val: The value on the right side of ``>=``
         assert_msg: The assertion message from the ``assert`` statement
 
     Returns: None
