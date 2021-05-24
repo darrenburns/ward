@@ -102,9 +102,9 @@ def _(prelude: SessionPrelude = prelude):
 @fixture
 def timing_stats_panel():
     return TestTimingStatsPanel([
-        TestResult(test=Test(timer=_Timer(duration=5.0), fn=lambda: 1, description="test1", module_name="mod1"), outcome=TestOutcome.PASS),
-        TestResult(test=Test(timer=_Timer(duration=4.0), fn=lambda: 1, description="test2", module_name="mod2"), outcome=TestOutcome.FAIL),
-        TestResult(test=Test(timer=_Timer(duration=3.0), fn=lambda: 1, description="test3", module_name="mod3"), outcome=TestOutcome.FAIL),
+        TestResult(test=Test(timer=_Timer(duration=4.0), fn=lambda: 1, description="test1", module_name="mod1"), outcome=TestOutcome.FAIL),
+        TestResult(test=Test(timer=_Timer(duration=3.0), fn=lambda: 1, description="test2", module_name="mod2"), outcome=TestOutcome.FAIL),
+        TestResult(test=Test(timer=_Timer(duration=5.0), fn=lambda: 1, description="test3", module_name="mod3"), outcome=TestOutcome.PASS),
     ], num_tests_to_show=3)
 
 
@@ -115,9 +115,9 @@ def timing_stats_expected_table():
     expected_table.add_column()
     expected_table.add_column()
 
-    expected_table.add_row("[b]5000[/b]ms", Text("mod:123"), "test1")
-    expected_table.add_row("[b]4000[/b]ms", Text("mod:123"), "test2")
-    expected_table.add_row("[b]3000[/b]ms", Text("mod:123"), "test3")
+    expected_table.add_row("[b]5000[/b]ms", Text("mod:123"), "test3")
+    expected_table.add_row("[b]4000[/b]ms", Text("mod:123"), "test1")
+    expected_table.add_row("[b]3000[/b]ms", Text("mod:123"), "test2")
 
     return expected_table
 
@@ -127,9 +127,9 @@ def timing_stats_expected_panel(expected_table=timing_stats_expected_table):
     return Panel(
         RenderGroup(
             Padding(
-                f"Median: [b]4.00[/b]ms"
+                f"Median: [b]4000.00[/b]ms"
                 f" [muted]|[/muted] "
-                f"99th Percentile: [b]5.00[/b]ms",
+                f"99th Percentile: [b]5000.00[/b]ms",
                 pad=(0, 0, 1, 0),
         ), expected_table),
         title="[b white]3 Slowest Tests[/b white]",
@@ -150,15 +150,34 @@ def _(
     assert panel.style == expected_panel.style
 
 
-@test("TestTimingStatsPanel has correct header and styling")
+@test("TestTimingStatsPanel displays correct summary stats")
 def _(
         timing_stats_panel=timing_stats_panel,
         expected_panel=timing_stats_expected_panel
 ):
-    panel = next(timing_stats_panel.__rich_console__(None, None))
+    panel: Panel = next(timing_stats_panel.__rich_console__(None, None))
 
-    assert panel.title == expected_panel.title
-    assert panel.border_style == expected_panel.border_style
-    assert panel.style == expected_panel.style
+    render_group: RenderGroup = panel.renderable
+    padding: Padding = render_group.renderables[0]
+    assert padding.renderable == expected_panel.renderable.renderables[0].renderable
 
 
+@test("TestTimingStatsPanel displays correct table listing slowest tests")
+def _(timing_stats_panel=timing_stats_panel):
+    panel: Panel = next(timing_stats_panel.__rich_console__(None, None))
+
+    render_group: RenderGroup = panel.renderable
+    table: Table = render_group.renderables[1]
+
+    assert len(table.rows) == 3
+    expected_durations = [
+        "[b]5000[/b]ms",
+        "[b]4000[/b]ms",
+        "[b]3000[/b]ms",
+    ]
+    expected_test_descriptions = [
+        "test3", "test1", "test2"
+    ]
+    assert table.columns[0]._cells == expected_durations
+    assert len(table.columns[1]._cells) == 3
+    assert table.columns[2]._cells == expected_test_descriptions
