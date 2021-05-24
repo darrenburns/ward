@@ -213,13 +213,6 @@ def test(
 
     suite = Suite(tests=tests)
     test_results = suite.generate_test_runs(dry_run=dry_run)
-    writer = SimpleTestResultWrite(
-        suite=suite,
-        test_output_style=test_output_style,
-        progress_styles=progress_styles,
-        config_path=config_path,
-        show_diff_symbols=show_diff_symbols,
-    )
     console.print(
         SessionPrelude(
             time_to_collect_secs=time_to_collect_secs,
@@ -228,7 +221,13 @@ def test(
             config_path=config_path,
         )
     )
-    # writer.output_header(time_to_collect=time_to_collect_secs)
+    writer = SimpleTestResultWrite(
+        suite=suite,
+        test_output_style=test_output_style,
+        progress_styles=progress_styles,
+        config_path=config_path,
+        show_diff_symbols=show_diff_symbols,
+    )
     for renderable in print_before:
         console.print(renderable)
     test_results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
