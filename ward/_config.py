@@ -6,10 +6,10 @@ import toml
 
 from ward._utilities import find_project_root
 
-ConfigValue = Union[int, str, bool, Iterable[str]]
-ConfigDict = Dict[str, ConfigValue]
+_ConfigValue = Union[int, str, bool, Iterable[str]]
+_ConfigDict = Dict[str, _ConfigValue]
 
-CONFIG_FILE = "pyproject.toml"
+_CONFIG_FILE = "pyproject.toml"
 
 
 def _breakpoint_supported() -> bool:
@@ -20,27 +20,27 @@ def _breakpoint_supported() -> bool:
     return True
 
 
-def read_config_toml(project_root: Path, config_file: str) -> ConfigDict:
+def read_config_toml(project_root: Path, config_file: str) -> _ConfigDict:
     path = project_root / config_file
     if not path.is_file():
         return {}
 
     try:
         pyproject_toml = toml.load(str(path))
-        config = pyproject_toml.get("tool", {}).get("ward", {})
     except (toml.TomlDecodeError, OSError) as e:
         raise click.FileError(
             filename=config_file, hint=f"Error reading {config_file}:\n{e}"
         )
 
-    if not config:
-        return {}
+    ward_config = pyproject_toml.get("tool", {}).get("ward", {})
+    ward_config = {
+        k.replace("--", "").replace("-", "_"): v for k, v in ward_config.items()
+    }
 
-    config = {k.replace("--", "").replace("-", "_"): v for k, v in config.items()}
-    return config
+    return ward_config
 
 
-def as_list(conf: ConfigDict):
+def as_list(conf: _ConfigDict):
     if isinstance(conf, list):
         return conf
     else:
@@ -48,8 +48,8 @@ def as_list(conf: ConfigDict):
 
 
 def apply_multi_defaults(
-    file_config: ConfigDict, cli_config: ConfigDict,
-) -> ConfigDict:
+    file_config: _ConfigDict, cli_config: _ConfigDict,
+) -> _ConfigDict:
     """
     Returns all options where multiple=True that
     appeared in the config file, but weren't passed
@@ -63,7 +63,7 @@ def apply_multi_defaults(
         file_config_only["path"] = as_list(conf_file_paths)
 
     # TODO: Can we retrieve the list below programmatically?
-    multiple_options = ("exclude",)
+    multiple_options = ("exclude", "hook_module")
     for param in multiple_options:
         from_cli = cli_config.get(param)
         from_conf_file = file_config.get(param, "")
@@ -83,7 +83,7 @@ def set_defaults_from_config(
         search_paths = (".",)
 
     project_root = find_project_root([Path(path) for path in search_paths])
-    file_config = read_config_toml(project_root, CONFIG_FILE)
+    file_config = read_config_toml(project_root, _CONFIG_FILE)
     if file_config:
         config_path = project_root / "pyproject.toml"
     else:
@@ -95,4 +95,5 @@ def set_defaults_from_config(
         context.default_map = {}
 
     context.default_map.update(file_config)
-    return project_root
+
+    return config_path

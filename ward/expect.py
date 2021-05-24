@@ -1,8 +1,23 @@
-import inspect
-import types
 from dataclasses import dataclass
 from enum import Enum
+
+import inspect
+import types
 from typing import Type, Any, ContextManager, TypeVar, Generic, Optional, cast
+
+__all__ = [
+    "raises",
+    "assert_equal",
+    "assert_not_equal",
+    "assert_in",
+    "assert_not_in",
+    "assert_is",
+    "assert_is_not",
+    "assert_less_than",
+    "assert_less_than_equal_to",
+    "assert_greater_than",
+    "assert_greater_than_equal_to",
+]
 
 _E = TypeVar("_E", bound=Exception)
 
@@ -62,7 +77,17 @@ class TestFailure(Exception):
         self.assert_msg = assert_msg
 
 
-def assert_equal(lhs_val, rhs_val, assert_msg):
+def assert_equal(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check whether two objects are equal. Raises a ``TestFailure`` if not.
+    Args:
+        lhs_val: The value on the left side of ``==``
+        rhs_val: The value on the right side of ``==``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val != rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
@@ -75,7 +100,18 @@ def assert_equal(lhs_val, rhs_val, assert_msg):
         )
 
 
-def assert_not_equal(lhs_val, rhs_val, assert_msg):
+def assert_not_equal(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check whether two objects are not equal to each other. Raises a ``TestFailure`` if not.
+
+    Args:
+        lhs_val: The value on the left side of ``!=``
+        rhs_val: The value on the right side of ``!=``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val == rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
@@ -88,7 +124,18 @@ def assert_not_equal(lhs_val, rhs_val, assert_msg):
         )
 
 
-def assert_in(lhs_val, rhs_val, assert_msg):
+def assert_in(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check if an object is contained within another via ``lhs_val in rhs_val``. Raises ``TestFailure`` if not.
+
+    Args:
+        lhs_val: The value on the left side of ``in``
+        rhs_val: The value on the right side of ``in``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val not in rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
@@ -101,7 +148,19 @@ def assert_in(lhs_val, rhs_val, assert_msg):
         )
 
 
-def assert_not_in(lhs_val, rhs_val, assert_msg):
+def assert_not_in(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check if an object is not contained within another via ``lhs_val not in rhs_val``.
+    Raises ``TestFailure`` if lhs is contained within rhs.
+
+    Args:
+        lhs_val: The value on the left side of ``not in``
+        rhs_val: The value on the right side of ``not in``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val in rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
@@ -114,7 +173,18 @@ def assert_not_in(lhs_val, rhs_val, assert_msg):
         )
 
 
-def assert_is(lhs_val, rhs_val, assert_msg):
+def assert_is(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check the object identity via ``lhs_val is rhs_val``. Raises ``TestFailure`` if not identical.
+
+    Args:
+        lhs_val: The value on the left side of ``is``
+        rhs_val: The value on the right side of ``is``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val is not rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
@@ -127,7 +197,18 @@ def assert_is(lhs_val, rhs_val, assert_msg):
         )
 
 
-def assert_is_not(lhs_val, rhs_val, assert_msg):
+def assert_is_not(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check the object identity via ``lhs_val is not rhs_val``. Raises ``TestFailure`` if identical.
+
+    Args:
+        lhs_val: The value on the left side of ``is not``
+        rhs_val: The value on the right side of ``is not``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val is rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
@@ -140,7 +221,18 @@ def assert_is_not(lhs_val, rhs_val, assert_msg):
         )
 
 
-def assert_less_than(lhs_val, rhs_val, assert_msg):
+def assert_less_than(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check lhs_val is less than the rhs_val via ``lhs_val < rhs_val``. Raises ``TestFailure`` if not.
+
+    Args:
+        lhs_val: The value on the left side of ``<``
+        rhs_val: The value on the right side of ``<``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val >= rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
@@ -153,7 +245,18 @@ def assert_less_than(lhs_val, rhs_val, assert_msg):
         )
 
 
-def assert_less_than_equal_to(lhs_val, rhs_val, assert_msg):
+def assert_less_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check lhs_val is less than or equal to the rhs_val via ``lhs_val <= rhs_val``. Raises ``TestFailure`` if not.
+
+    Args:
+        lhs_val: The value on the left side of ``<=``
+        rhs_val: The value on the right side of ``<=``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val > rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
@@ -166,7 +269,18 @@ def assert_less_than_equal_to(lhs_val, rhs_val, assert_msg):
         )
 
 
-def assert_greater_than(lhs_val, rhs_val, assert_msg):
+def assert_greater_than(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check lhs_val is greater than the rhs_val via ``lhs_val > rhs_val``. Raises ``TestFailure`` if not.
+
+    Args:
+        lhs_val: The value on the left side of ``>``
+        rhs_val: The value on the right side of ``>``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val <= rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(
@@ -179,7 +293,18 @@ def assert_greater_than(lhs_val, rhs_val, assert_msg):
         )
 
 
-def assert_greater_than_equal_to(lhs_val, rhs_val, assert_msg):
+def assert_greater_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
+    """
+    Check lhs_val is greater than or equal to the rhs_val via ``lhs_val >= rhs_val``. Raises ``TestFailure`` if not.
+
+    Args:
+        lhs_val: The value on the left side of ``>=``
+        rhs_val: The value on the right side of ``>=``
+        assert_msg: The assertion message from the ``assert`` statement
+
+    Returns: None
+    Raises: TestFailure
+    """
     if lhs_val < rhs_val:
         error_line_no = inspect.currentframe().f_back.f_lineno
         raise TestFailure(

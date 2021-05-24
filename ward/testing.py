@@ -9,7 +9,6 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from io import StringIO
 from pathlib import Path
-from timeit import default_timer
 from typing import (
     Any,
     Callable,
@@ -28,37 +27,31 @@ from ward._testing import (
     Each,
     _generate_id,
     _FormatDict,
+    ParamMeta,
+    is_test_module_name,
     COLLECTED_TESTS,
+    _Timer,
 )
 from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
-from ward.models import Marker, Scope, SkipMarker, WardMeta, XfailMarker
+from ward.models import Marker, Scope, SkipMarker, CollectionMetadata, XfailMarker
 
-__all__ = ["test", "skip", "xfail", "each", "Test", "TestOutcome", "TestResult", "ParamMeta", "Timer"]
-
+__all__ = [
+    "test",
+    "skip",
+    "xfail",
+    "each",
+    "Test",
+    "TestOutcome",
+    "TestResult",
+    "ParamMeta",
+]
 
 
 @dataclass
 class ParamMeta:
     instance_index: int = 0
     group_size: int = 1
-
-
-def is_test_module_name(module_name: str) -> bool:
-    return module_name.startswith("test_") or module_name.endswith("_test")
-
-
-class Timer:
-    def __init__(self):
-        self._start_time = None
-        self.duration = None
-
-    def __enter__(self):
-        self._start_time = default_timer()
-        return self
-
-    def __exit__(self, *args):
-        self.duration = default_timer() - self._start_time
 
 
 def each(*args):
@@ -98,7 +91,7 @@ def skip(
     if hasattr(func, "ward_meta"):
         func.ward_meta.marker = marker
     else:
-        func.ward_meta = WardMeta(marker=marker)
+        func.ward_meta = CollectionMetadata(marker=marker)
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -134,7 +127,7 @@ def xfail(
     if hasattr(func, "ward_meta"):
         func.ward_meta.marker = marker
     else:
-        func.ward_meta = WardMeta(marker=marker)
+        func.ward_meta = CollectionMetadata(marker=marker)
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -172,8 +165,8 @@ class Test:
     capture_output: bool = True
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)
-    ward_meta: WardMeta = field(default_factory=WardMeta)
-    timer: Optional["Timer"] = None
+    ward_meta: CollectionMetadata = field(default_factory=CollectionMetadata)
+    timer: Optional["_Timer"] = None
     tags: List[str] = field(default_factory=list)
 
     def __hash__(self):
@@ -184,7 +177,7 @@ class Test:
 
     def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
         with ExitStack() as stack:
-            self.timer = stack.enter_context(Timer())
+            self.timer = stack.enter_context(_Timer())
             if self.capture_output:
                 stack.enter_context(redirect_stdout(self.sout))
                 stack.enter_context(redirect_stderr(self.serr))
@@ -396,6 +389,7 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
             tags can be used to group tests in some logical manner (for example: by business domain or test type).
             Tagged tests can be queried using the --tags option.
     """
+
     def decorator_test(func):
         unwrapped = inspect.unwrap(func)
         module_name: str = unwrapped.__module__
@@ -412,7 +406,7 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
                 unwrapped.ward_meta.tags = tags
                 unwrapped.ward_meta.path = path
             else:
-                unwrapped.ward_meta = WardMeta(
+                unwrapped.ward_meta = CollectionMetadata(
                     description=description, tags=tags, path=path,
                 )
 
@@ -442,6 +436,7 @@ class TestOutcome(Enum):
         XPASS: The test was expected to fail, however it unexpectedly passed.
         DRYRUN: The test was not executed because the test session was a dry-run.
     """
+
     PASS = auto()
     FAIL = auto()
     SKIP = auto()
@@ -490,6 +485,7 @@ class TestResult:
         captured_stdout: A string containing anything that was written to stdout during the execution of the test.
         captured_stderr: A string containing anything that was written to stderr during the execution of the test.
     """
+
     test: Test
     outcome: TestOutcome
     error: Optional[Exception] = None

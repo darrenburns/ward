@@ -1,3 +1,4 @@
+import abc
 import contextlib
 import inspect
 import itertools
@@ -6,7 +7,7 @@ import os
 import platform
 import statistics
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent
@@ -40,19 +41,19 @@ from rich.theme import Theme
 from rich.traceback import Traceback
 from rich.tree import Tree
 
-from ward._ward_version import __version__
 from ward._diff import make_diff
+from ward._fixtures import FixtureHierarchyMapping, fixture_parents_and_children
+from ward._suite import Suite
+from ward._utilities import group_by
+from ward._ward_version import __version__
 from ward.expect import Comparison, TestFailure
 from ward.fixtures import (
     Fixture,
     _DEFINED_FIXTURES,
 )
-from ward.models import Scope
-from ward._fixtures import FixtureHierarchyMapping, fixture_parents_and_children
-from ward._suite import Suite
+from ward.models import Scope, ExitCode
 from ward.testing import Test, fixtures_used_directly_by_tests
 from ward.testing import TestOutcome, TestResult
-from ward._utilities import group_by
 
 HORIZONTAL_PAD = (0, 1, 0, 1)
 
@@ -393,7 +394,7 @@ def print_run_cancelled():
 
 
 @dataclass
-class TestTimingStats:
+class TestTimingStatsPanel:
     all_tests_in_session: List[TestResult]
     num_tests_to_show: int
 
@@ -402,11 +403,11 @@ class TestTimingStats:
         return [r.test.timer.duration for r in self.all_tests_in_session]
 
     @property
-    def median_secs(self):
+    def _median_secs(self):
         return statistics.median(self._raw_test_durations_secs)
 
     @property
-    def percentile99_secs(self):
+    def _percentile99_secs(self):
         data = self._raw_test_durations_secs
         size = len(data)
         percentile = 99
@@ -438,9 +439,9 @@ class TestTimingStats:
         panel = Panel(
             RenderGroup(
                 Padding(
-                    f"Median: [b]{self.median_secs * 1000:.2f}[/b]ms"
+                    f"Median: [b]{self._median_secs * 1000:.2f}[/b]ms"
                     f" [muted]|[/muted] "
-                    f"99th Percentile: [b]{self.percentile99_secs * 1000:.2f}[/b]ms",
+                    f"99th Percentile: [b]{self._percentile99_secs * 1000:.2f}[/b]ms",
                     pad=(0, 0, 1, 0),
                 ),
                 grid,
@@ -451,6 +452,63 @@ class TestTimingStats:
         )
 
         yield panel
+
+
+@dataclass
+class SessionPrelude:
+    time_to_collect_secs: float
+    num_tests_collected: int
+    num_fixtures_collected: int
+    config_path: Optional[Path]
+    python_impl: str = field(default=platform.python_implementation())
+    python_version: str = field(default=platform.python_version())
+    ward_version: str = field(default=__version__)
+
+    def __rich_console__(self, c: Console, co: ConsoleOptions) -> RenderResult:
+        yield Rule(
+            Text(
+                f"Ward {self.ward_version} | {self.python_impl} {self.python_version}",
+                style="title",
+            )
+        )
+        if self.config_path:
+            try:
+                path = self.config_path.relative_to(Path.cwd())
+            except ValueError:
+                path = self.config_path.name
+            yield f"Loaded config from [b]{path}[/b]."
+
+        yield (
+            f"Found [b]{self.num_tests_collected}[/b] tests "
+            f"and [b]{self.num_fixtures_collected}[/b] fixtures "
+            f"in [b]{self.time_to_collect_secs:.2f}[/b] seconds."
+        )
+
+
+class ResultProcessor(abc.ABC):
+    @abc.abstractmethod
+    def handle_result(self, test_result: TestResult):
+        pass
+
+
+class TerminalResultProcessor(ResultProcessor):
+    def __init__(
+        self,
+        suite: Suite,
+        test_output_style: str,
+        progress_styles: List[TestProgressStyle],
+        config_path: Optional[Path],
+        show_diff_symbols: bool = False,
+    ):
+        self.suite = suite
+        self.test_output_style = test_output_style
+        self.progress_styles = progress_styles
+        self.config_path = config_path
+        self.show_diff_symbols = show_diff_symbols
+
+    def handle_result(self, test_result: TestResult):
+        # Make the actual output of the result a pluggy hook, so that users can implement their own version
+        pass
 
 
 class TestResultWriterBase:
@@ -474,29 +532,6 @@ class TestResultWriterBase:
         self.config_path = config_path
         self.show_diff_symbols = show_diff_symbols
         self.terminal_size = get_terminal_size()
-
-    def output_header(self, time_to_collect):
-        python_impl = platform.python_implementation()
-        python_version = platform.python_version()
-        console.print(
-            Rule(
-                Text(
-                    f"Ward {__version__} | {python_impl} {python_version}",
-                    style="title",
-                )
-            )
-        )
-        if self.config_path:
-            try:
-                path = self.config_path.relative_to(Path.cwd())
-            except ValueError:
-                path = self.config_path.name
-            console.print(f"Loaded config from [b]{path}[/b].")
-        console.print(
-            f"Found [b]{self.suite.num_tests}[/b] tests "
-            f"and [b]{len(_DEFINED_FIXTURES)}[/b] fixtures "
-            f"in [b]{time_to_collect:.2f}[/b] seconds."
-        )
 
     def output_all_test_results(
         self,
@@ -682,7 +717,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
         if show_slowest:
-            console.print(TestTimingStats(test_results, show_slowest))
+            console.print(TestTimingStatsPanel(test_results, show_slowest))
 
         result_table = Table.grid()
         result_table.add_column(justify="right")
@@ -779,17 +814,6 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 [r for r in test_results if r.outcome == TestOutcome.DRYRUN]
             ),
         }
-
-
-def outcome_to_colour(outcome: TestOutcome) -> str:
-    return {
-        TestOutcome.PASS: "green",
-        TestOutcome.SKIP: "blue",
-        TestOutcome.FAIL: "red",
-        TestOutcome.XFAIL: "magenta",
-        TestOutcome.XPASS: "yellow",
-        TestOutcome.DRYRUN: "green",
-    }[outcome]
 
 
 def outcome_to_style(outcome: TestOutcome) -> str:
@@ -945,17 +969,6 @@ def make_text_for_fixture(fixture: Fixture, show_scope: bool) -> Text:
         )
 
     return text
-
-
-class ExitCode(Enum):
-    SUCCESS = 0
-    FAILED = 1
-    ERROR = 2
-    NO_TESTS_FOUND = 3
-
-    @property
-    def clean_name(self):
-        return self.name.replace("_", " ")
 
 
 def get_exit_code(results: Iterable[TestResult]) -> ExitCode:

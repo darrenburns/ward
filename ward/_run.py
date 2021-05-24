@@ -1,7 +1,7 @@
 import pdb
-
 import sys
 from pathlib import Path
+from random import shuffle
 from timeit import default_timer
 from typing import Optional, Tuple, List
 
@@ -11,8 +11,8 @@ import colorama
 from click_default_group import DefaultGroup
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
+from rich.console import ConsoleRenderable
 
-from ward._ward_version import __version__
 from ward._collect import (
     get_info_for_modules,
     get_tests_in_modules,
@@ -24,14 +24,19 @@ from ward._config import set_defaults_from_config
 from ward._debug import init_breakpointhooks
 from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite
-from ward.fixtures import _DEFINED_FIXTURES
 from ward._terminal import (
     SimpleTestResultWrite,
     output_fixtures,
     get_exit_code,
     TestProgressStyle,
     TestOutputStyle,
+    console,
+    SessionPrelude,
 )
+from ward._ward_version import __version__
+from ward.config import Config
+from ward.fixtures import _DEFINED_FIXTURES
+from ward.hooks import plugins, register_hooks_in_modules
 
 colorama.init()
 click_completion.init()
@@ -39,7 +44,12 @@ click_completion.init()
 sys.path.append(".")
 
 
-# TODO: simplify to use invoke_without_command and ctx.forward once https://github.com/pallets/click/issues/430 is resolved
+def _register_hooks(context: click.Context, param: click.Parameter, hook_module_names):
+    register_hooks_in_modules(plugin_manager=plugins, module_names=hook_module_names)
+
+
+# TODO: simplify to use invoke_without_command and ctx.forward once
+#  https://github.com/pallets/click/issues/430 is resolved
 @click.group(
     context_settings={"max_content_width": 100},
     cls=DefaultGroup,
@@ -51,7 +61,7 @@ def run(ctx: click.Context):
     pass
 
 
-config = click.option(
+config_option = click.option(
     "--config",
     type=click.Path(
         exists=False, file_okay=True, dir_okay=False, readable=True, allow_dash=False
@@ -60,7 +70,7 @@ config = click.option(
     help="Read configuration from PATH.",
     is_eager=True,
 )
-path = click.option(
+path_option = click.option(
     "-p",
     "--path",
     type=click.Path(exists=True),
@@ -68,18 +78,26 @@ path = click.option(
     is_eager=True,
     help="Look for tests in PATH.",
 )
-exclude = click.option(
+exclude_option = click.option(
     "--exclude",
     type=click.STRING,
     multiple=True,
     help="Paths to ignore while searching for tests. Accepts glob patterns.",
 )
+hook_module = click.option(
+    "--hook-module",
+    type=click.STRING,
+    callback=_register_hooks,
+    multiple=True,
+    help="Modules to search for hook implementations in.",
+)
 
 
 @run.command()
-@config
-@path
-@exclude
+@config_option
+@path_option
+@exclude_option
+@hook_module
 @click.option(
     "--search",
     help="Search test names, bodies, descriptions and module names for the search query and only keep matching tests.",
@@ -157,8 +175,13 @@ def test(
     show_slowest: int,
     show_diff_symbols: bool,
     dry_run: bool,
+    hook_module: Tuple[str],
 ):
     """Run tests."""
+    config_params = ctx.params.copy()
+    config_params.pop("config")
+
+    config = Config(**config_params, plugin_config=config_params.get("plugins", {}))
     progress_styles = [TestProgressStyle(ps) for ps in progress_style]
 
     if TestProgressStyle.BAR in progress_styles and test_output_style in {
@@ -172,19 +195,32 @@ def test(
 
     init_breakpointhooks(pdb, sys)
     start_run = default_timer()
+
+    print_before: Tuple[ConsoleRenderable] = plugins.hook.before_session(config=config)
+
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
-    modules = list(load_modules(mod_infos))
+    modules = load_modules(mod_infos)
     unfiltered_tests = get_tests_in_modules(modules, capture_output)
-    filtered_tests = list(filter_tests(unfiltered_tests, query=search, tag_expr=tags,))
+    plugins.hook.preprocess_tests(config=config, collected_tests=unfiltered_tests)
+    filtered_tests = filter_tests(unfiltered_tests, query=search, tag_expr=tags)
+    if config.order == "random":
+        shuffle(filtered_tests)
 
     tests = rewrite_assertions_in_tests(filtered_tests)
 
-    time_to_collect = default_timer() - start_run
+    time_to_collect_secs = default_timer() - start_run
 
     suite = Suite(tests=tests)
-    test_results = suite.generate_test_runs(order=order, dry_run=dry_run)
-
+    test_results = suite.generate_test_runs(dry_run=dry_run)
+    console.print(
+        SessionPrelude(
+            time_to_collect_secs=time_to_collect_secs,
+            num_tests_collected=suite.num_tests_with_parameterisation,
+            num_fixtures_collected=len(_DEFINED_FIXTURES),
+            config_path=config_path,
+        )
+    )
     writer = SimpleTestResultWrite(
         suite=suite,
         test_output_style=test_output_style,
@@ -192,20 +228,26 @@ def test(
         config_path=config_path,
         show_diff_symbols=show_diff_symbols,
     )
-    writer.output_header(time_to_collect=time_to_collect)
-    results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
+    for renderable in print_before:
+        console.print(renderable)
+    test_results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
+    exit_code = get_exit_code(test_results)
     time_taken = default_timer() - start_run
-    writer.output_test_result_summary(results, time_taken, show_slowest)
 
-    exit_code = get_exit_code(results)
+    render_afters: Tuple[ConsoleRenderable] = plugins.hook.after_session(
+        config=config, test_results=test_results, status_code=exit_code
+    )
+    for renderable in render_afters:
+        console.print(renderable)
 
+    writer.output_test_result_summary(test_results, time_taken, show_slowest)
     sys.exit(exit_code.value)
 
 
 @run.command()
-@config
-@path
-@exclude
+@config_option
+@path_option
+@exclude_option
 @click.option(
     "-f",
     "--fixture-path",

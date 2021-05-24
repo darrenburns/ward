@@ -1,5 +1,5 @@
-Running Tests
-=============
+Running Tests via the CLI
+=========================
 
 To find and run tests in your project, you can run ``ward`` without any arguments.
 

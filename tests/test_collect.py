@@ -1,14 +1,15 @@
 import platform
+import sys
 from dataclasses import dataclass
 from modulefinder import ModuleFinder
 from pathlib import Path
 from pkgutil import ModuleInfo
 from types import ModuleType
 
-import sys
 from cucumber_tag_expressions import parse
 
-from ward import fixture, raises, test
+from tests.utilities import make_project
+from ward import fixture, test
 from ward._collect import (
     _get_module_path,
     _handled_within,
@@ -18,9 +19,8 @@ from ward._collect import (
     filter_tests,
     filter_fixtures, _build_package_name,
 )
-from ward.testing import Test, each, skip
 from ward.fixtures import Fixture
-from tests.utilities import make_project
+from ward.testing import Test, each, skip
 
 
 def named():
@@ -55,11 +55,9 @@ def _(tests=tests_to_search, named=named_test):
     assert list(results) == [named]
 
 
-@test("filter_tests returns an empty generator when no tests match query")
+@test("filter_tests returns an empty list when no tests match query")
 def _(tests=tests_to_search):
-    results = filter_tests(tests, query="92qj3f9i")
-    with raises(StopIteration):
-        next(results)
+    assert [] == filter_tests(tests, query="92qj3f9i")
 
 
 @test("filter_tests when tags match simple tag expression")

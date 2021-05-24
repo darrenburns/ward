@@ -2,7 +2,8 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple, Any, Dict, Callable, List
+from timeit import default_timer
+from typing import Tuple, Any, Dict, Callable, List, Optional
 
 # Tests declared with the name _, and with the @test decorator
 # have to be stored in here, so that they can later be retrieved.
@@ -33,3 +34,24 @@ class _FormatDict(dict):
         return "{" + key + "}"
 
 
+@dataclass
+class ParamMeta:
+    instance_index: int = 0
+    group_size: int = 1
+
+
+def is_test_module_name(module_name: str) -> bool:
+    return module_name.startswith("test_") or module_name.endswith("_test")
+
+
+class _Timer:
+    def __init__(self, duration: Optional[float] = None):
+        self._start_time = None
+        self.duration = duration
+
+    def __enter__(self):
+        self._start_time = default_timer()
+        return self
+
+    def __exit__(self, *args):
+        self.duration = default_timer() - self._start_time

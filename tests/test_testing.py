@@ -10,7 +10,7 @@ from ward import raises
 from ward._errors import ParameterisationError
 from ward.fixtures import fixture, Fixture
 from ward._fixtures import FixtureCache
-from ward.models import WardMeta, SkipMarker, XfailMarker, Scope
+from ward.models import CollectionMetadata, SkipMarker, XfailMarker, Scope
 from ward.testing import (
     TestOutcome,
     Test,
@@ -19,6 +19,7 @@ from ward.testing import (
     xfail,
     TestResult, skip, fixtures_used_directly_by_tests, TestArgumentResolver, ParamMeta,
 )
+from ward._testing import ParamMeta
 
 
 def f():
@@ -492,11 +493,11 @@ def example_test():
     return func
 
 
-@test("@test attaches correct WardMeta to test function it wraps")
+@test("@test attaches correct CollectionMetadata to test function it wraps")
 def _(func=example_test):
     out_func = testable_test(func)
 
-    assert out_func.ward_meta == WardMeta(
+    assert out_func.ward_meta == CollectionMetadata(
         marker=None,
         description="testable test description",
         is_fixture=False,
@@ -506,7 +507,7 @@ def _(func=example_test):
     )
 
 
-@test("@test doesn't attach WardMeta to functions in non-test modules")
+@test("@test doesn't attach CollectionMetadata to functions in non-test modules")
 def _(func=example_test):
     func.__module__ = "blah"
     out_func = test("test")(func)
@@ -514,7 +515,7 @@ def _(func=example_test):
     assert not hasattr(out_func, "ward_meta")
 
 
-@test("@test attaches WardMeta to functions in modules ending in '_test'")
+@test("@test attaches CollectionMetadata to functions in modules ending in '_test'")
 def _(func=example_test):
     func.__module__ = "its_a_test"
     out_func = test("test")(func)
@@ -522,7 +523,7 @@ def _(func=example_test):
     assert hasattr(out_func, "ward_meta")
 
 
-@test("@test doesn't attach WardMeta to tests from imported modules")
+@test("@test doesn't attach CollectionMetadata to tests from imported modules")
 def _(func=example_test):
     # There is an underlying assumption here that a test from an
     # imported module will always have a __module__ containing a "."
