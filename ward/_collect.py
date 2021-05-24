@@ -112,7 +112,7 @@ def get_info_for_modules(
                         ):
                             module_infos.append(mod)
 
-        return module_infos
+    return module_infos
 
 
 def load_modules(modules: Iterable[ModuleSpec]) -> List[ModuleType]:
