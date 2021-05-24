@@ -403,11 +403,11 @@ class TestTimingStatsPanel:
         return [r.test.timer.duration for r in self.all_tests_in_session]
 
     @property
-    def median_secs(self):
+    def _median_secs(self):
         return statistics.median(self._raw_test_durations_secs)
 
     @property
-    def percentile99_secs(self):
+    def _percentile99_secs(self):
         data = self._raw_test_durations_secs
         size = len(data)
         percentile = 99
@@ -439,9 +439,9 @@ class TestTimingStatsPanel:
         panel = Panel(
             RenderGroup(
                 Padding(
-                    f"Median: [b]{self.median_secs * 1000:.2f}[/b]ms"
+                    f"Median: [b]{self._median_secs * 1000:.2f}[/b]ms"
                     f" [muted]|[/muted] "
-                    f"99th Percentile: [b]{self.percentile99_secs * 1000:.2f}[/b]ms",
+                    f"99th Percentile: [b]{self._percentile99_secs * 1000:.2f}[/b]ms",
                     pad=(0, 0, 1, 0),
                 ),
                 grid,
@@ -466,7 +466,10 @@ class SessionPrelude:
 
     def __rich_console__(self, c: Console, co: ConsoleOptions) -> RenderResult:
         yield Rule(
-            Text(f"Ward {self.ward_version} | {self.python_impl} {self.python_version}", style="title",)
+            Text(
+                f"Ward {self.ward_version} | {self.python_impl} {self.python_version}",
+                style="title",
+            )
         )
         if self.config_path:
             try:
