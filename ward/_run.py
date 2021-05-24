@@ -31,6 +31,7 @@ from ward._terminal import (
     TestProgressStyle,
     TestOutputStyle,
     console,
+    SessionPrelude,
 )
 from ward._ward_version import __version__
 from ward.config import Config
@@ -208,7 +209,7 @@ def test(
 
     tests = rewrite_assertions_in_tests(filtered_tests)
 
-    time_to_collect = default_timer() - start_run
+    time_to_collect_secs = default_timer() - start_run
 
     suite = Suite(tests=tests)
     test_results = suite.generate_test_runs(dry_run=dry_run)
@@ -219,7 +220,15 @@ def test(
         config_path=config_path,
         show_diff_symbols=show_diff_symbols,
     )
-    writer.output_header(time_to_collect=time_to_collect)
+    console.print(
+        SessionPrelude(
+            time_to_collect_secs=time_to_collect_secs,
+            num_tests_collected=suite.num_tests_with_parameterisation,
+            num_fixtures_collected=len(_DEFINED_FIXTURES),
+            config_path=config_path,
+        )
+    )
+    # writer.output_header(time_to_collect=time_to_collect_secs)
     for renderable in print_before:
         console.print(renderable)
     test_results = writer.output_all_test_results(test_results, fail_limit=fail_limit)

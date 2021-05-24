@@ -1,3 +1,4 @@
+import abc
 import contextlib
 import inspect
 import itertools
@@ -6,7 +7,7 @@ import os
 import platform
 import statistics
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent
@@ -454,17 +455,18 @@ class TestTimingStatsPanel:
 
 
 @dataclass
-class TestPreludeRenderable:
+class SessionPrelude:
     time_to_collect_secs: float
     num_tests_collected: int
     num_fixtures_collected: int
     config_path: Optional[Path]
+    python_impl: str = field(default=platform.python_implementation())
+    python_version: str = field(default=platform.python_version())
+    ward_version: str = field(default=__version__)
 
     def __rich_console__(self, c: Console, co: ConsoleOptions) -> RenderResult:
-        python_impl = platform.python_implementation()
-        python_version = platform.python_version()
         yield Rule(
-            Text(f"Ward {__version__} | {python_impl} {python_version}", style="title",)
+            Text(f"Ward {self.ward_version} | {self.python_impl} {self.python_version}", style="title",)
         )
         if self.config_path:
             try:
@@ -474,13 +476,19 @@ class TestPreludeRenderable:
             yield f"Loaded config from [b]{path}[/b]."
 
         yield (
-            f"Found [b]{self.suite.num_tests}[/b] tests "
-            f"and [b]{len(_DEFINED_FIXTURES)}[/b] fixtures "
+            f"Found [b]{self.num_tests_collected}[/b] tests "
+            f"and [b]{self.num_fixtures_collected}[/b] fixtures "
             f"in [b]{self.time_to_collect_secs:.2f}[/b] seconds."
         )
 
 
-class ResultProcessor:
+class ResultProcessor(abc.ABC):
+    @abc.abstractmethod
+    def handle_result(self, test_result: TestResult):
+        pass
+
+
+class TerminalResultProcessor(ResultProcessor):
     def __init__(
         self,
         suite: Suite,
@@ -494,6 +502,10 @@ class ResultProcessor:
         self.progress_styles = progress_styles
         self.config_path = config_path
         self.show_diff_symbols = show_diff_symbols
+
+    def handle_result(self, test_result: TestResult):
+        # Make the actual output of the result a pluggy hook, so that users can implement their own version
+        pass
 
 
 class TestResultWriterBase:
@@ -517,29 +529,6 @@ class TestResultWriterBase:
         self.config_path = config_path
         self.show_diff_symbols = show_diff_symbols
         self.terminal_size = get_terminal_size()
-
-    def output_header(self, time_to_collect):
-        python_impl = platform.python_implementation()
-        python_version = platform.python_version()
-        console.print(
-            Rule(
-                Text(
-                    f"Ward {__version__} | {python_impl} {python_version}",
-                    style="title",
-                )
-            )
-        )
-        if self.config_path:
-            try:
-                path = self.config_path.relative_to(Path.cwd())
-            except ValueError:
-                path = self.config_path.name
-            console.print(f"Loaded config from [b]{path}[/b].")
-        console.print(
-            f"Found [b]{self.suite.num_tests}[/b] tests "
-            f"and [b]{len(_DEFINED_FIXTURES)}[/b] fixtures "
-            f"in [b]{time_to_collect:.2f}[/b] seconds."
-        )
 
     def output_all_test_results(
         self,

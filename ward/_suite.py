@@ -1,6 +1,8 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Generator, List
+from pathlib import Path
+
+from typing import Generator, List, Dict
 
 from ward._errors import ParameterisationError
 from ward._fixtures import FixtureCache
@@ -15,20 +17,31 @@ class Suite:
 
     @property
     def num_tests(self) -> int:
+        """
+        Returns: The number of tests in the suite, *before* taking parameterisation into account.
+        """
         return len(self.tests)
 
     @property
     def num_tests_with_parameterisation(self) -> int:
+        """
+        Returns: The number of tests in the suite, *after* taking parameterisation into account.
+        """
         return sum(test.find_number_of_instances() for test in self.tests)
 
-    def _test_counts_per_module(self):
+    def _test_counts_per_module(self) -> Dict[Path, int]:
+        """
+        Returns: A dictionary mapping a module Path to the number of tests that can be found within that module.
+        """
         module_paths = [test.path for test in self.tests]
         counts = defaultdict(int)
         for path in module_paths:
             counts[path] += 1
         return counts
 
-    def generate_test_runs(self, dry_run=False) -> Generator[TestResult, None, None]:
+    def generate_test_runs(
+        self, dry_run: bool = False
+    ) -> Generator[TestResult, None, None]:
         """
         Run tests
 
