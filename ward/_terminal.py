@@ -7,6 +7,7 @@ import os
 import platform
 import statistics
 import sys
+import time
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -24,6 +25,7 @@ from typing import (
 
 from rich.console import Console, ConsoleOptions, RenderResult, RenderGroup
 from rich.highlighter import NullHighlighter
+from rich.live import Live
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
@@ -32,6 +34,7 @@ from rich.progress import (
     BarColumn,
     TimeElapsedColumn,
     SpinnerColumn,
+    RenderableColumn,
 )
 from rich.rule import Rule
 from rich.syntax import Syntax
@@ -125,6 +128,7 @@ class TestOutputStyle(str, Enum):
     TEST_PER_LINE = "test-per-line"
     DOTS_GLOBAL = "dots-global"
     DOTS_MODULE = "dots-module"
+    LIVE = "live"
 
 
 class TestProgressStyle(str, Enum):
@@ -133,7 +137,7 @@ class TestProgressStyle(str, Enum):
     NONE = "none"
 
 
-def output_test_result_line(
+def get_test_result_line(
     test_result: TestResult,
     idx: int,
     num_tests: int,
@@ -174,217 +178,31 @@ def output_test_result_line(
 
     grid.add_row(*columns)
 
-    console.print(grid)
-
-
-ProgressCallback = Callable[[], None]
-
-
-def output_test_per_line(
-    fail_limit: int,
-    num_tests: int,
-    test_results_gen: Iterator[TestResult],
-    progress_styles: List[TestProgressStyle],
-    test_done: ProgressCallback,
-    test_failed: ProgressCallback,
-):
-    num_failures = 0
-    all_results = []
-
-    console.print()
-
-    try:
-        for idx, result in enumerate(test_results_gen):
-            output_test_result_line(result, idx, num_tests, progress_styles)
-            all_results.append(result)
-            if result.outcome == TestOutcome.FAIL:
-                num_failures += 1
-                test_failed()
-            if num_failures == fail_limit:
-                break
-            test_done()
-    except KeyboardInterrupt:
-        print_run_cancelled()
-    finally:
-        return all_results
-
-
-def output_dots_global(
-    fail_limit: int,
-    num_tests: int,
-    test_results_gen: Iterator[TestResult],
-    progress_styles: List[TestProgressStyle],
-    test_done: ProgressCallback,
-    test_failed: ProgressCallback,
-) -> List[TestResult]:
-    dots_on_line = 0
-    num_failures = 0
-    all_results = []
-    max_dots_per_line = get_terminal_size().width
-    if TestProgressStyle.INLINE in progress_styles:
-        max_dots_per_line -= 5  # e.g. "  93%"
-    try:
-        console.print()
-
-        test_index = 0  # this makes sure that test_index is defined for the last end of line print after the loop
-        for test_index, result in enumerate(test_results_gen):
-            all_results.append(result)
-
-            print_dot(result)
-
-            dots_on_line += 1
-            if dots_on_line == max_dots_per_line:
-                print_end_of_line_for_dots(
-                    test_index=test_index,
-                    num_tests=num_tests,
-                    dots_on_line=dots_on_line,
-                    max_dots_per_line=max_dots_per_line,
-                    progress_styles=progress_styles,
-                )
-                dots_on_line = 0
-
-            if result.outcome == TestOutcome.FAIL:
-                num_failures += 1
-                test_failed()
-
-            if num_failures == fail_limit:
-                break
-
-            test_done()
-
-            sys.stdout.flush()
-
-        print_end_of_line_for_dots(
-            test_index=test_index,
-            num_tests=num_tests,
-            dots_on_line=dots_on_line,
-            max_dots_per_line=max_dots_per_line,
-            progress_styles=progress_styles,
-        )
-    except KeyboardInterrupt:
-        print_run_cancelled()
-    finally:
-        return all_results
+    return grid
 
 
 INLINE_PROGRESS_LEN = 5  # e.g. "  93%"
 
 
-def output_dots_module(
-    fail_limit: int,
-    num_tests: int,
-    test_results_gen: Iterator[TestResult],
-    progress_styles: List[TestProgressStyle],
-    test_done: ProgressCallback,
-    test_failed: ProgressCallback,
-) -> List[TestResult]:
-    current_path = Path("")
-    cwd = Path.cwd()
-    dots_on_line = 0
-    num_failures = 0
-
-    base_max_dots_per_line = get_terminal_size().width
-    if TestProgressStyle.INLINE in progress_styles:
-        base_max_dots_per_line -= INLINE_PROGRESS_LEN
-
-    max_dots_per_line = base_max_dots_per_line  # in case the loop below never runs
-
-    all_results = []
-    try:
-        console.print()
-
-        test_index = 0  # this makes sure that test_index is defined for the last end of line print after the loop
-        for test_index, result in enumerate(test_results_gen):
-            all_results.append(result)
-
-            if result.test.path != current_path:  # i.e., we are starting a new module
-                if test_index > 0:  # print the end-of-line for the previous module
-                    print_end_of_line_for_dots(
-                        test_index=test_index,
-                        num_tests=num_tests,
-                        dots_on_line=dots_on_line,
-                        max_dots_per_line=max_dots_per_line,
-                        progress_styles=progress_styles,
-                    )
-
-                dots_on_line = 0
-                current_path = result.test.path
-                rel_path = str(current_path.relative_to(cwd))
-
-                final_slash_idx = rel_path.rfind("/")
-                if final_slash_idx != -1:
-                    path_text = Text("", end="").join(
-                        [
-                            Text(rel_path[: final_slash_idx + 1], style="muted"),
-                            Text(rel_path[final_slash_idx + 1 :]),
-                            Text(": "),
-                        ]
-                    )
-                else:
-                    path_text = Text(f"{rel_path}: ", end="")
-                console.print(path_text, end="")
-
-                max_dots_per_line = base_max_dots_per_line - path_text.cell_len
-
-            if dots_on_line == max_dots_per_line:
-                print_end_of_line_for_dots(
-                    test_index=test_index,
-                    num_tests=num_tests,
-                    dots_on_line=dots_on_line,
-                    max_dots_per_line=max_dots_per_line,
-                    progress_styles=progress_styles,
-                )
-
-                # we are now on a blank line with no other dots and no path prefix
-                dots_on_line = 0
-                max_dots_per_line = base_max_dots_per_line
-
-            print_dot(result)
-            dots_on_line += 1
-
-            if result.outcome == TestOutcome.FAIL:
-                num_failures += 1
-                test_failed()
-
-            if num_failures == fail_limit:
-                break
-
-            test_done()
-
-            sys.stdout.flush()
-
-        print_end_of_line_for_dots(
-            test_index=test_index,
-            num_tests=num_tests,
-            dots_on_line=dots_on_line,
-            max_dots_per_line=max_dots_per_line,
-            progress_styles=progress_styles,
-        )
-    except KeyboardInterrupt:
-        print_run_cancelled()
-    finally:
-        return all_results
-
-
-def print_dot(result: TestResult) -> None:
+def get_dot(result: TestResult) -> Text:
     style = outcome_to_style(result.outcome)
-    console.print(result.outcome.display_char, style=style, end="")
+    return Text(result.outcome.display_char, style=style, end="")
 
 
-def print_end_of_line_for_dots(
+def get_end_of_line_for_dots(
     test_index: int,
     num_tests: int,
     dots_on_line: int,
     max_dots_per_line: int,
     progress_styles: List[TestProgressStyle],
-) -> None:
+) -> Text:
     if TestProgressStyle.INLINE in progress_styles and num_tests > 0:
-        console.print(
-            f"{(test_index + 1) / num_tests:>{max_dots_per_line - dots_on_line + INLINE_PROGRESS_LEN}.0%}",
+        return Text(
+            f"{(test_index + 1) / num_tests:>{max_dots_per_line - dots_on_line + INLINE_PROGRESS_LEN}.0%}\n",
             style="muted",
         )
     else:
-        console.print()
+        return Text("\n")
 
 
 def print_run_cancelled():
@@ -511,17 +329,233 @@ class TerminalResultProcessor(ResultProcessor):
         pass
 
 
+class Component:
+    def __init__(self, num_tests, progress_styles):
+        self.num_tests = num_tests
+        self.progress_styles = progress_styles
+
+    def after_test(self, idx: int, result: TestResult):
+        pass
+
+    def footer(self, results: List[TestResult]):
+        pass
+
+
+class ProgressBar(Component):
+    def __init__(self, num_tests, progress_styles):
+        super().__init__(num_tests, progress_styles)
+
+        self.spinner = SpinnerColumn(style="pass.textonly")
+        self.bar = BarColumn(complete_style="pass.textonly")
+        self.progress = Progress(
+            self.spinner,
+            TimeElapsedColumn(),
+            self.bar,
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            "[progress.percentage][{task.completed} / {task.total}]",
+            console=console,
+        )
+        self.task = self.progress.add_task("Testing...", total=num_tests)
+
+    def after_test(self, idx: int, result: TestResult):
+        self.progress.update(self.task, advance=1)
+
+        if result.outcome is TestOutcome.FAIL:
+            self.spinner.spinner.style = "fail.textonly"
+            self.bar.complete_style = "fail.textonly"
+
+        if idx == self.num_tests - 1:
+            self.progress.stop()
+
+    def footer(self, results: List[TestResult]):
+        return self.progress
+
+
+class TestPerLine(Component):
+    def after_test(self, idx: int, result: TestResult):
+        console.print(
+            get_test_result_line(result, idx, self.num_tests, self.progress_styles)
+        )
+
+
+class DotsPerModule(Component):
+    def __init__(self, num_tests, progress_styles):
+        super().__init__(num_tests, progress_styles)
+
+        self.current_path = Path("")
+        self.cwd = Path.cwd()
+        self.dots_on_line = 0
+
+        self.base_max_dots_per_line = get_terminal_size().width
+        if TestProgressStyle.INLINE in progress_styles:
+            self.base_max_dots_per_line -= INLINE_PROGRESS_LEN
+
+        self.max_dots_per_line = self.base_max_dots_per_line
+
+        self.footer_text = Text()
+
+    def footer(self, results: List[TestResult]):
+        return self.footer_text
+
+    def after_test(self, idx: int, result: TestResult):
+        if result.test.path != self.current_path:  # i.e., we are starting a new module
+            if idx > 0:  # print the end-of-line for the previous module
+                self.footer_text.append(
+                    get_end_of_line_for_dots(
+                        test_index=idx,
+                        num_tests=self.num_tests,
+                        dots_on_line=self.dots_on_line,
+                        max_dots_per_line=self.max_dots_per_line,
+                        progress_styles=self.progress_styles,
+                    )
+                )
+
+            self.dots_on_line = 0
+            self.current_path = result.test.path
+            rel_path = str(self.current_path.relative_to(self.cwd))
+
+            final_slash_idx = rel_path.rfind("/")
+            if final_slash_idx != -1:
+                path_text = Text("", end="").join(
+                    [
+                        Text(rel_path[: final_slash_idx + 1], style="muted"),
+                        Text(rel_path[final_slash_idx + 1 :]),
+                        Text(": "),
+                    ]
+                )
+            else:
+                path_text = Text(f"{rel_path}: ", end="")
+            self.footer_text.append(path_text)
+
+            self.max_dots_per_line = self.base_max_dots_per_line - path_text.cell_len
+
+        if self.dots_on_line == self.max_dots_per_line:
+            self.footer_text.append(
+                get_end_of_line_for_dots(
+                    test_index=idx,
+                    num_tests=self.num_tests,
+                    dots_on_line=self.dots_on_line,
+                    max_dots_per_line=self.max_dots_per_line,
+                    progress_styles=self.progress_styles,
+                )
+            )
+
+            # we are now on a blank line with no other dots and no path prefix
+            self.dots_on_line = 0
+            self.max_dots_per_line = self.base_max_dots_per_line
+
+        self.footer_text.append(get_dot(result))
+        self.dots_on_line += 1
+
+
+class DotsGlobal(Component):
+    def __init__(self, num_tests, progress_styles):
+        super().__init__(num_tests, progress_styles)
+
+        self.dots_on_line = 0
+
+        self.max_dots_per_line = get_terminal_size().width
+        if TestProgressStyle.INLINE in progress_styles:
+            self.max_dots_per_line -= INLINE_PROGRESS_LEN
+
+        self.footer_text = Text()
+
+    def footer(self, results: List[TestResult]):
+        return self.footer_text
+
+    def after_test(self, idx: int, result: TestResult):
+        self.footer_text.append(get_dot(result))
+
+        self.dots_on_line += 1
+        if self.dots_on_line == self.max_dots_per_line:
+            self.footer_text.append(
+                get_end_of_line_for_dots(
+                    test_index=idx,
+                    num_tests=self.num_tests,
+                    dots_on_line=self.dots_on_line,
+                    max_dots_per_line=self.max_dots_per_line,
+                    progress_styles=self.progress_styles,
+                )
+            )
+
+
+class LiveTest(Component):
+    def __init__(self, num_tests, progress_styles):
+        super().__init__(num_tests, progress_styles)
+
+        self.spinner = SpinnerColumn(style="pass.textonly")
+        self.bar = BarColumn(complete_style="pass.textonly")
+        self.col = RenderableColumn(Text(""))
+        self.progress = Progress(
+            self.spinner, self.col, console=console, transient=True,
+        )
+        self.task = self.progress.add_task("", total=num_tests)
+
+    def after_test(self, idx: int, result: TestResult):
+        self.progress.update(self.task, advance=1)
+        self.col.renderable = get_test_result_line(
+            result, idx, self.num_tests, self.progress_styles
+        )
+
+        if idx == self.num_tests - 1:
+            self.col.renderable = Text("")
+
+    def footer(self, results: List[TestResult]):
+        return self.progress
+
+
+class TerminalResultsWriter:
+    def __init__(self, suite: Suite, progress_styles, components):
+        self.suite = suite
+        self.components = [
+            component(suite.num_tests_with_parameterisation, progress_styles)
+            for component in components
+        ]
+        self.live = Live(console=console, renderable=self.footer([]))
+
+    def footer(self, results):
+        footers = [component.footer(results) for component in self.components]
+        return RenderGroup(*(f for f in footers if f is not None))
+
+    def run(self, test_results_gen, fail_limit: int):
+        num_failures = 0
+        results = []
+
+        with self.live as live:
+            console.print()
+            try:
+                for idx, result in enumerate(test_results_gen):
+                    for component in self.components:
+                        component.after_test(idx, result)
+
+                    live.update(self.footer(results))
+                    live.refresh()
+
+                    results.append(result)
+
+                    if result.outcome is TestOutcome.FAIL:
+                        num_failures += 1
+
+                    if num_failures == fail_limit:
+                        break
+            except KeyboardInterrupt:
+                print_run_cancelled()
+            finally:
+                return results
+
+
 class TestResultWriterBase:
     runtime_output_strategies = {
-        TestOutputStyle.TEST_PER_LINE: output_test_per_line,
-        TestOutputStyle.DOTS_GLOBAL: output_dots_global,
-        TestOutputStyle.DOTS_MODULE: output_dots_module,
+        TestOutputStyle.TEST_PER_LINE: TestPerLine,
+        TestOutputStyle.DOTS_GLOBAL: DotsGlobal,
+        TestOutputStyle.DOTS_MODULE: DotsPerModule,
+        TestOutputStyle.LIVE: LiveTest,
     }
 
     def __init__(
         self,
         suite: Suite,
-        test_output_style: str,
+        test_output_style: TestOutputStyle,
         progress_styles: List[TestProgressStyle],
         config_path: Optional[Path],
         show_diff_symbols: bool = False,
@@ -540,55 +574,16 @@ class TestResultWriterBase:
     ) -> List[TestResult]:
         if not self.suite.num_tests:
             return []
-        output_tests = self.runtime_output_strategies.get(
-            self.test_output_style, output_test_per_line
-        )
 
-        with contextlib.ExitStack() as stack:
-            if (
-                TestProgressStyle.BAR in self.progress_styles
-                and self.suite.num_tests > 0
-            ):
-                spinner = SpinnerColumn(style="pass.textonly")
-                bar = BarColumn(complete_style="pass.textonly")
-                progress = Progress(
-                    spinner,
-                    TimeElapsedColumn(),
-                    bar,
-                    "[progress.percentage]{task.percentage:>3.0f}%",
-                    "[progress.percentage][{task.completed} / {task.total}]",
-                    console=console,
-                    transient=True,
-                    auto_refresh=True,
-                    # TODO: figure out how to make the progress bar work with printing with end="" (for dots)
-                    disable=TestProgressStyle.BAR not in self.progress_styles
-                    or self.test_output_style != "test-per-line",
-                )
+        components = [self.runtime_output_strategies[self.test_output_style]]
+        if TestProgressStyle.BAR in self.progress_styles:
+            components.append(ProgressBar)
 
-                task = progress.add_task(
-                    "Testing...", total=self.suite.num_tests_with_parameterisation
-                )
-
-                def test_done() -> None:
-                    progress.update(task, advance=1)
-
-                def test_fail() -> None:
-                    spinner.spinner.style = "fail.textonly"
-                    bar.complete_style = "fail.textonly"
-
-                stack.enter_context(progress)
-            else:
-                test_done = lambda: None
-                test_fail = lambda: None
-
-            all_results = output_tests(
-                fail_limit,
-                self.suite.num_tests_with_parameterisation,
-                test_results_gen,
-                self.progress_styles,
-                test_done,
-                test_fail,
-            )
+        all_results = TerminalResultsWriter(
+            suite=self.suite,
+            progress_styles=self.progress_styles,
+            components=components,
+        ).run(test_results_gen, fail_limit)
 
         failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
         for failure in failed_test_results:
