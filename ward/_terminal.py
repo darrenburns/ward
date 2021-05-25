@@ -261,6 +261,7 @@ def output_dots_global(
 INLINE_PROGRESS_LEN = 5  # e.g. "  93%"
 
 
+# flake8: noqa: C901 - FIXME
 def output_dots_module(
     fail_limit: int,
     num_tests: int,
@@ -570,8 +571,12 @@ class TestResultWriterBase:
 
                 stack.enter_context(progress)
             else:
-                test_done = lambda: None
-                test_fail = lambda: None
+
+                def test_done():
+                    return None
+
+                def test_fail():
+                    return None
 
             all_results = output_tests(
                 fail_limit,
@@ -757,7 +762,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
             captured_stderr_lines = test_result.captured_stderr.split("\n")
-            console.print(Padding(Text(f"Captured stderr"), pad=(0, 0, 1, 2)))
+            console.print(Padding(Text("Captured stderr"), pad=(0, 0, 1, 2)))
             for line in captured_stderr_lines:
                 console.print(Padding(line, pad=(0, 0, 0, 4)))
             console.print()
@@ -765,7 +770,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
             captured_stdout_lines = test_result.captured_stdout.split("\n")
-            console.print(Padding(Text(f"Captured stdout"), pad=(0, 0, 1, 2)))
+            console.print(Padding(Text("Captured stdout"), pad=(0, 0, 1, 2)))
             for line in captured_stdout_lines:
                 console.print(Padding(line, pad=(0, 0, 0, 4)))
             console.print()
@@ -908,7 +913,7 @@ def make_fixture_information_tree(
             add_fixture_usages_by_tests_to_tree(used_by_tests_node, used_by_tests)
 
         if not (used_by_tests or fixtures_to_children[fixture]):
-            root.add(f"[usedby]used by [fail]no tests or fixtures")
+            root.add("[usedby]used by [fail]no tests or fixtures")
 
     return root
 

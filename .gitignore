@@ -23,3 +23,7 @@ share/
 .vscode/
 codealike.json
 .python-version
+
+# coverage
+.coverage
+htmlcov/

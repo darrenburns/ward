@@ -34,12 +34,6 @@ class _FormatDict(dict):
         return "{" + key + "}"
 
 
-@dataclass
-class ParamMeta:
-    instance_index: int = 0
-    group_size: int = 1
-
-
 def is_test_module_name(module_name: str) -> bool:
     return module_name.startswith("test_") or module_name.endswith("_test")
 

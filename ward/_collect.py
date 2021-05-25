@@ -58,6 +58,7 @@ def _handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
     return False
 
 
+# flake8: noqa: C901 - FIXME
 def get_info_for_modules(
     paths: List[Path],
     exclude: Tuple[Glob],

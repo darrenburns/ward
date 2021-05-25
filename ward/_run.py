@@ -48,8 +48,8 @@ def _register_hooks(context: click.Context, param: click.Parameter, hook_module_
     register_hooks_in_modules(plugin_manager=plugins, module_names=hook_module_names)
 
 
-# TODO: simplify to use invoke_without_command and ctx.forward once
-#  https://github.com/pallets/click/issues/430 is resolved
+# TODO: simplify to use invoke_without_command and ctx.forward
+# once https://github.com/pallets/click/issues/430 is resolved
 @click.group(
     context_settings={"max_content_width": 100},
     cls=DefaultGroup,
@@ -127,7 +127,8 @@ hook_module = click.option(
     help=f"""\
     The style of progress indicator to use during the run.
     Pass multiple times to enable multiple styles.
-    The '{TestProgressStyle.BAR}' style is not compatible with the '{TestOutputStyle.DOTS_GLOBAL}' and '{TestOutputStyle.DOTS_MODULE}' test output styles.
+    The '{TestProgressStyle.BAR}' style is not compatible with the
+    '{TestOutputStyle.DOTS_GLOBAL}' and '{TestOutputStyle.DOTS_MODULE}' test output styles.
     """,
 )
 @click.option(
@@ -139,7 +140,10 @@ hook_module = click.option(
 @click.option(
     "--show-diff-symbols/--hide-diff-symbols",
     default=False,
-    help="If enabled, diffs will use symbols such as '?', '-', '+' and '^' instead of colours to highlight differences.",
+    help="""\
+    If enabled, diffs will use symbols such as '?', '-', '+' and '^'
+    instead of colours to highlight differences.
+    """,
 )
 @click.option(
     "--capture-output/--no-capture-output",
@@ -190,7 +194,8 @@ def test(
     }:
         raise click.BadOptionUsage(
             "progress_style",
-            f"The '{TestProgressStyle.BAR}' progress style cannot be used with dots-based test output styles (you asked for '{test_output_style}').",
+            f"The '{TestProgressStyle.BAR}' progress style cannot be used with dots-based "
+            f"test output styles (you asked for '{test_output_style}').",
         )
 
     init_breakpointhooks(pdb, sys)
@@ -271,7 +276,8 @@ def test(
 )
 @click.option(
     "--show-dependencies/--no-show-dependencies",
-    help="Display the fixtures and tests that each fixture depends on and is used by. Only displays direct dependencies; use --show-dependency-trees to show all dependency information.",
+    help="Displays direct dependencies between fixtures and tests."
+    "Use --show-dependency-trees to show detailed dependency information.",
     default=False,
 )
 @click.option(

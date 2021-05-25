@@ -68,7 +68,10 @@ def _():
     def test_fn():
         assert True
 
-    t = Test(test_fn, "")
+    t = Test(
+        test_fn,
+        "",
+    )
 
     assert t.path == FORCE_TEST_PATH
 
@@ -435,7 +438,6 @@ def _():
         pass
 
     t = Test(fn=test, module_name=mod, capture_output=False)
-
     assert t.get_parameterised_instances() == [
         Test(
             id=mock.ANY,
