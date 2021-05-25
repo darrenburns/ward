@@ -16,9 +16,9 @@ See the full set of features in the [**documentation**](https://ward.readthedocs
 
 **Descriptive test names:** describe what your tests do using strings, not function names.
 ```python
-@test("1 + 2 == 3")
+@test("simple addition")  # you can use markdown in these descriptions!
 def _():
-    assert 1 + 2 == 3
+    assert 1 + 2 == 3  # you can use plain assert statements!
 ```
 
 **Modular test dependencies:** manage test setup/teardown code using fixtures that rely on Python's import system, not
@@ -73,6 +73,8 @@ ward --tags "(unit or integration) and not slow"
 **Speedy:** Ward's suite of ~320 tests run in less than half a second on my machine.
 
 **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started. Can be configured using `pyproject.toml` or the command line if required.
+
+**Extendable:** Ward has a plugin system built with pluggy, the same framework used by pytest.
 
 **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
 
