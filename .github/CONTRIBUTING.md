@@ -15,7 +15,7 @@ Please also take time to review the [Code of Conduct](https://github.com/darrenb
 ## Local development setup
 
 To get started with developing Ward, you'll need to [install Poetry](https://python-poetry.org/docs/#installation).
-Then run `make install` from the repository root to create a virtual environment for Ward's development dependencies and install the [pre-commit hooks](https://pre-commit.com/).
+Then run `make setup` from the repository root to create a virtual environment for Ward's development dependencies and install the [pre-commit hooks](https://pre-commit.com/).
 Any development commands you need from this point on can be also be found in the Makefile.
 For example,
 `make test` to run the tests,
