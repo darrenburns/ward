@@ -5,8 +5,13 @@ from types import SimpleNamespace
 from unittest import mock
 from unittest.mock import Mock
 
-from ward import test, _debug
-from ward._debug import init_breakpointhooks, _breakpointhook, _get_debugger_hook, importlib
+from ward import _debug, test
+from ward._debug import (
+    _breakpointhook,
+    _get_debugger_hook,
+    importlib,
+    init_breakpointhooks,
+)
 
 
 @test("init_breakpointhooks always patches pdb.set_trace")
@@ -44,7 +49,9 @@ def _():
 
 @test("_get_debugger_hook returns Pdb.set_trace if hookname is 'pdb.set_trace'")
 def _():
-    assert inspect.getsource(_get_debugger_hook("pdb.set_trace")) == inspect.getsource(Pdb().set_trace)
+    assert inspect.getsource(_get_debugger_hook("pdb.set_trace")) == inspect.getsource(
+        Pdb().set_trace
+    )
 
 
 @test("_get_debugger_hook returns function from builtins if hookname contains no dot")
@@ -53,7 +60,9 @@ def _():
         return 1
 
     fake_builtins = SimpleNamespace(my_function=fake_hook)
-    with mock.patch.object(importlib, "import_module", return_value=fake_builtins, autospec=True) as im:
+    with mock.patch.object(
+        importlib, "import_module", return_value=fake_builtins, autospec=True
+    ) as im:
         hook = _get_debugger_hook("my_function")
 
         im.assert_called_once_with("builtins")

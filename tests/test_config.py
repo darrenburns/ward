@@ -3,8 +3,8 @@ from pathlib import Path
 
 import click
 
-from ward import test, fixture, raises, each
-from ward._config import read_config_toml, as_list, apply_multi_defaults
+from ward import each, fixture, raises, test
+from ward._config import apply_multi_defaults, as_list, read_config_toml
 
 
 def temp_conf(conf: str) -> tempfile._TemporaryFileWrapper:
@@ -39,7 +39,7 @@ hello="world"
 def temp_config_invalid():
     conf = """
 [tool.ward
-path="section header is invalid"    
+path="section header is invalid"
 """
     yield from temp_conf(conf)
 
@@ -104,7 +104,7 @@ def _(tmp=temp_config_plugins):
         "plugins": {
             "apples": {"num_apples": 3},
             "bananas": {"num_bananas": 4},
-        }
+        },
     }
 
 

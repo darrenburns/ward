@@ -80,9 +80,11 @@ Here's how you could implement a hook in order to achieve the outcome shown abov
     from ward.config import Config
     from ward.hooks import hook
 
+
     @hook
     def before_session(config: Config) -> Optional[ConsoleRenderable]:
         return WillPrintBefore()
+
 
     class WillPrintBefore:
         def __rich_console__(
@@ -118,9 +120,13 @@ Here's how you could implement a hook in order to achieve the outcome shown abov
     from ward.models import ExitCode
     from ward.testing import TestResult
 
+
     @hook
-    def after_session(config: Config, results: List[TestResult], exit_code: ExitCode) -> Optional[ConsoleRenderable]:
+    def after_session(
+        config: Config, results: List[TestResult], exit_code: ExitCode
+    ) -> Optional[ConsoleRenderable]:
         return SummaryPanel(test_results)
+
 
     class SummaryPanel:
         def __init__(self, results: List[TestResult]):

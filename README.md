@@ -16,9 +16,9 @@ See the full set of features in the [**documentation**](https://ward.readthedocs
 
 **Descriptive test names:** describe what your tests do using strings, not function names.
 ```python
-@test("1 + 2 == 3")
+@test("simple addition")  # you can use markdown in these descriptions!
 def _():
-    assert 1 + 2 == 3
+    assert 1 + 2 == 3  # you can use plain assert statements!
 ```
 
 **Modular test dependencies:** manage test setup/teardown code using fixtures that rely on Python's import system, not
@@ -27,7 +27,8 @@ name matching.
 @fixture
 def user():
     return User(name="darren")
-    
+
+
 @test("the user is called darren")
 def _(u=user):
     assert u.name == "darren"
@@ -41,13 +42,14 @@ async def user():
     u = await create_user()
     return await u.login()
 
+
 @test("the logged in user has a last session date")
 async def _(user=user):
     last_session = await get_last_session_date(user.id)
     assert is_recent(last_session, get_last_session_date)
 ```
 
-**Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
+**Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code
 contained in the body of the test.
 ```
 ward --search "Database.get_all_users"
@@ -59,13 +61,14 @@ ward --tags "(unit or integration) and not slow"
 
 **Parameterised testing:** write a test once, and run it multiple times with different inputs by writing it in a loop.
 ```python
-  for lhs, rhs, res in [
-      (1, 1, 2),
-      (2, 3, 5),
-  ]:
-      @test("simple addition")
-      def _(left=lhs, right=rhs, result=res):
-          assert left + right == result
+for lhs, rhs, res in [
+    (1, 1, 2),
+    (2, 3, 5),
+]:
+
+    @test("simple addition")
+    def _(left=lhs, right=rhs, result=res):
+        assert left + right == result
 ```
 
 **Cross platform:** Tested on Mac OS, Linux, and Windows.
@@ -73,6 +76,8 @@ ward --tags "(unit or integration) and not slow"
 **Speedy:** Ward's suite of ~320 tests run in less than half a second on my machine.
 
 **Zero config:** Sensible defaults mean running `ward` with no arguments is enough to get started. Can be configured using `pyproject.toml` or the command line if required.
+
+**Extendable:** Ward has a plugin system built with pluggy, the same framework used by pytest.
 
 **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
 

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple, Dict, Any
+from typing import Any, Dict, Optional, Tuple
 
 from cucumber_tag_expressions.model import Expression
 

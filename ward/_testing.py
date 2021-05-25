@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from timeit import default_timer
-from typing import Tuple, Any, Dict, Callable, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Tests declared with the name _, and with the @test decorator
 # have to be stored in here, so that they can later be retrieved.
@@ -32,12 +32,6 @@ def _generate_id():
 class _FormatDict(dict):
     def __missing__(self, key):
         return "{" + key + "}"
-
-
-@dataclass
-class ParamMeta:
-    instance_index: int = 0
-    group_size: int = 1
 
 
 def is_test_module_name(module_name: str) -> bool:

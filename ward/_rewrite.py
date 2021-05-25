@@ -6,15 +6,15 @@ from typing import Iterable, List
 
 from ward.expect import (
     assert_equal,
-    assert_not_equal,
+    assert_greater_than,
+    assert_greater_than_equal_to,
     assert_in,
-    assert_not_in,
     assert_is,
     assert_is_not,
-    assert_less_than_equal_to,
     assert_less_than,
-    assert_greater_than_equal_to,
-    assert_greater_than,
+    assert_less_than_equal_to,
+    assert_not_equal,
+    assert_not_in,
 )
 from ward.testing import Test
 
@@ -62,7 +62,7 @@ def is_comparison_type(node: ast.expr, type) -> bool:
 
 
 class RewriteAssert(ast.NodeTransformer):
-    def visit_Assert(self, node):
+    def visit_Assert(self, node):  # noqa: C901 - no chance to reduce complexity
         if is_binary_comparison(node):
             if is_comparison_type(node, ast.Eq):
                 return make_call_node(node, assert_equal.__name__)
@@ -135,7 +135,8 @@ def rewrite_assertion(test: Test) -> Test:
             )
             new_test_func.ward_meta = test.fn.ward_meta
             return Test(
-                **{k: vars(test)[k] for k in vars(test) if k != "fn"}, fn=new_test_func,
+                **{k: vars(test)[k] for k in vars(test) if k != "fn"},
+                fn=new_test_func,
             )
 
     return test

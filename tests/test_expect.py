@@ -1,17 +1,17 @@
-from ward import test, each
+from ward import each, test
 from ward.expect import (
-    assert_not_equal,
     TestFailure,
-    raises,
     assert_equal,
+    assert_greater_than,
+    assert_greater_than_equal_to,
     assert_in,
-    assert_not_in,
-    assert_is_not,
     assert_is,
+    assert_is_not,
     assert_less_than,
     assert_less_than_equal_to,
-    assert_greater_than_equal_to,
-    assert_greater_than,
+    assert_not_equal,
+    assert_not_in,
+    raises,
 )
 
 

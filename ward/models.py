@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from inspect import BoundArguments
 from pathlib import Path
-from typing import List, Optional, Union, Callable
+from typing import Callable, List, Optional, Union
 
 from ward._errors import FixtureError
 
