@@ -127,6 +127,7 @@ def get_test_result_line(
     idx: int,
     num_tests: int,
     progress_styles: List[TestProgressStyle],
+    extra_left_pad: int = 0,
 ):
     """
     Outputs a single test result to the terminal in Ward's standard output
@@ -144,7 +145,7 @@ def get_test_result_line(
     grid.add_column()
     grid.add_column()
     columns = [
-        Padding(outcome_tag, style=test_style, pad=(0, 1, 0, 1)),
+        Padding(outcome_tag, style=test_style, pad=(0, 1, 0, 1 + extra_left_pad)),
         Padding(f"{test_location}{test_case_number}", style="muted", pad=(0, 1, 0, 1)),
         Padding(
             Markdown(test.description, inline_code_theme="ansi_dark"), pad=(0, 1, 0, 0)
@@ -492,6 +493,13 @@ class LiveTest(Component):
             result, idx, self.num_tests, self.progress_styles
         )
 
+        if result.outcome is TestOutcome.FAIL:
+            console.print(
+                get_test_result_line(
+                    result, idx, self.num_tests, self.progress_styles, extra_left_pad=2
+                )
+            )
+
     def after_suite(self, results: List[TestResult]):
         self.progress = None
 
@@ -532,6 +540,10 @@ class TerminalResultsWriter:
 
                     if num_failures == fail_limit:
                         break
+
+                    import time
+
+                    time.sleep(0.01)
             except KeyboardInterrupt:
                 was_cancelled = True
             finally:
