@@ -1,14 +1,14 @@
 import ast
 
 from tests.utilities import testable_test
-from ward import test, fixture
+from ward import fixture, test
 from ward._rewrite import (
-    rewrite_assertions_in_tests,
     RewriteAssert,
     get_assertion_msg,
-    make_call_node,
     is_binary_comparison,
     is_comparison_type,
+    make_call_node,
+    rewrite_assertions_in_tests,
 )
 from ward.testing import Test, each
 
@@ -25,16 +25,12 @@ def failing_fn():
 
 @fixture
 def passing():
-    yield Test(
-        fn=passing_fn, module_name="m", id="id-pass",
-    )
+    yield Test(fn=passing_fn, module_name="m", id="id-pass")
 
 
 @fixture
 def failing():
-    yield Test(
-        fn=failing_fn, module_name="m", id="id-fail",
-    )
+    yield Test(fn=failing_fn, module_name="m", id="id-fail")
 
 
 @test("rewrite_assertions_in_tests returns all tests, keeping metadata")

@@ -4,15 +4,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from functools import partial, wraps
 from pathlib import Path
-from typing import (
-    Callable,
-    Union,
-    Optional,
-    Any,
-    Generator,
-    AsyncGenerator,
-    List,
-)
+from typing import Any, AsyncGenerator, Callable, Generator, List, Optional, Union
 
 from ward.models import CollectionMetadata, Scope
 

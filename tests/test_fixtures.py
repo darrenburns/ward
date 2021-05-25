@@ -1,14 +1,13 @@
-from typing import List
 import sys
+from typing import List
 
-from tests.utilities import testable_test
-from ward import fixture, test, raises, each
-from ward.models import Scope
-from ward.fixtures import Fixture, using
-from ward._fixtures import FixtureCache, is_fixture, fixture_parents_and_children
-from ward.testing import Test
+from tests.utilities import dummy_fixture, testable_test
+from ward import each, fixture, raises, test
 from ward._errors import FixtureError
-from tests.utilities import dummy_fixture
+from ward._fixtures import FixtureCache, fixture_parents_and_children, is_fixture
+from ward.fixtures import Fixture, using
+from ward.models import Scope
+from ward.testing import Test
 
 
 @fixture
@@ -136,7 +135,7 @@ def _(cache: FixtureCache = cache, t: Test = my_test, events: List = recorded_ev
 
 
 @test("FixtureCache.teardown_fixtures_for_scope removes Module fixtures from cache")
-def _(cache: FixtureCache = cache,):
+def _(cache: FixtureCache = cache):
     cache.teardown_fixtures_for_scope(Scope.Module, testable_test.path)
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)
@@ -152,7 +151,7 @@ def _(cache: FixtureCache = cache, events: List = recorded_events):
 
 
 @test("FixtureCache.teardown_global_fixtures removes Global fixtures from cache")
-def _(cache: FixtureCache = cache,):
+def _(cache: FixtureCache = cache):
     cache.teardown_global_fixtures()
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Global, Scope.Global)

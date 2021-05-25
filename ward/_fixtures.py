@@ -1,7 +1,7 @@
 from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Union, Dict, Any, Mapping, Collection, Iterable, Tuple
+from typing import Any, Collection, Dict, Iterable, Mapping, Tuple, Union
 
 from ward.fixtures import Fixture
 from ward.models import Scope

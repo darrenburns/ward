@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from timeit import default_timer
-from typing import Tuple, Any, Dict, Callable, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Tests declared with the name _, and with the @test decorator
 # have to be stored in here, so that they can later be retrieved.

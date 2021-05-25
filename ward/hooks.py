@@ -1,12 +1,12 @@
 import importlib
-from typing import Iterable, Optional, List
+from typing import Iterable, List, Optional
 
 import pluggy
 from rich.console import ConsoleRenderable
-from ward.models import ExitCode
 
 from ward.config import Config
-from ward.testing import TestResult, Test
+from ward.models import ExitCode
+from ward.testing import Test, TestResult
 
 PROJECT_NAME = "ward"
 
@@ -49,7 +49,10 @@ class SessionHooks:
 
     @spec
     def after_session(
-        self, config: Config, test_results: List[TestResult], status_code: ExitCode,
+        self,
+        config: Config,
+        test_results: List[TestResult],
+        status_code: ExitCode,
     ) -> Optional[ConsoleRenderable]:
         """
         Hook that runs right before a test session ends (just before the result summary is printed to the terminal).

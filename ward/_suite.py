@@ -1,8 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-
-from typing import Generator, List, Dict
+from typing import Dict, Generator, List
 
 from ward._errors import ParameterisationError
 from ward._fixtures import FixtureCache

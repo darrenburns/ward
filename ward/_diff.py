@@ -2,7 +2,7 @@ import difflib
 from typing import Iterator
 
 import pprintpp
-from colorama import Style, Fore
+from colorama import Fore, Style
 from termcolor import colored
 
 

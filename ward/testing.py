@@ -12,28 +12,28 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Collection,
     Dict,
+    Iterable,
     List,
+    Mapping,
     Optional,
     Union,
-    Mapping,
-    Iterable,
-    Collection,
 )
 
 from ward._errors import FixtureError, ParameterisationError
-from ward._fixtures import ScopeKey, FixtureCache, is_fixture
+from ward._fixtures import FixtureCache, ScopeKey, is_fixture
 from ward._testing import (
-    Each,
-    _generate_id,
-    _FormatDict,
-    is_test_module_name,
     COLLECTED_TESTS,
+    Each,
+    _FormatDict,
+    _generate_id,
     _Timer,
+    is_test_module_name,
 )
 from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
-from ward.models import Marker, Scope, SkipMarker, CollectionMetadata, XfailMarker
+from ward.models import CollectionMetadata, Marker, Scope, SkipMarker, XfailMarker
 
 __all__ = [
     "test",
@@ -407,7 +407,9 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
                 unwrapped.ward_meta.path = path
             else:
                 unwrapped.ward_meta = CollectionMetadata(
-                    description=description, tags=tags, path=path,
+                    description=description,
+                    tags=tags,
+                    path=path,
                 )
 
             collect_into = kwargs.get("_collect_into", COLLECTED_TESTS)

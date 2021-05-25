@@ -27,7 +27,8 @@ name matching.
 @fixture
 def user():
     return User(name="darren")
-    
+
+
 @test("the user is called darren")
 def _(u=user):
     assert u.name == "darren"
@@ -41,13 +42,14 @@ async def user():
     u = await create_user()
     return await u.login()
 
+
 @test("the logged in user has a last session date")
 async def _(user=user):
     last_session = await get_last_session_date(user.id)
     assert is_recent(last_session, get_last_session_date)
 ```
 
-**Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code 
+**Powerful test selection:** limit your test run not only by matching test names/descriptions, but also on the code
 contained in the body of the test.
 ```
 ward --search "Database.get_all_users"
@@ -59,13 +61,14 @@ ward --tags "(unit or integration) and not slow"
 
 **Parameterised testing:** write a test once, and run it multiple times with different inputs by writing it in a loop.
 ```python
-  for lhs, rhs, res in [
-      (1, 1, 2),
-      (2, 3, 5),
-  ]:
-      @test("simple addition")
-      def _(left=lhs, right=rhs, result=res):
-          assert left + right == result
+for lhs, rhs, res in [
+    (1, 1, 2),
+    (2, 3, 5),
+]:
+
+    @test("simple addition")
+    def _(left=lhs, right=rhs, result=res):
+        assert left + right == result
 ```
 
 **Cross platform:** Tested on Mac OS, Linux, and Windows.

@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from random import shuffle
 from timeit import default_timer
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
 
 import click
 import click_completion
@@ -14,24 +14,24 @@ from cucumber_tag_expressions.model import Expression
 from rich.console import ConsoleRenderable
 
 from ward._collect import (
+    filter_fixtures,
+    filter_tests,
     get_info_for_modules,
     get_tests_in_modules,
     load_modules,
-    filter_tests,
-    filter_fixtures,
 )
 from ward._config import set_defaults_from_config
 from ward._debug import init_breakpointhooks
 from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite
 from ward._terminal import (
-    SimpleTestResultWrite,
-    output_fixtures,
-    get_exit_code,
-    TestProgressStyle,
-    TestOutputStyle,
-    console,
     SessionPrelude,
+    SimpleTestResultWrite,
+    TestOutputStyle,
+    TestProgressStyle,
+    console,
+    get_exit_code,
+    output_fixtures,
 )
 from ward._ward_version import __version__
 from ward.config import Config

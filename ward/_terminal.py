@@ -1,11 +1,10 @@
-import platform
-
 import abc
 import contextlib
 import inspect
 import itertools
 import math
 import os
+import platform
 import statistics
 import sys
 from dataclasses import dataclass, field
@@ -13,27 +12,22 @@ from enum import Enum
 from pathlib import Path
 from textwrap import dedent
 from typing import (
+    Callable,
+    Collection,
     Dict,
     Generator,
     Iterable,
+    Iterator,
     List,
     Optional,
-    Collection,
-    Callable,
-    Iterator,
 )
 
-from rich.console import Console, ConsoleOptions, RenderResult, RenderGroup
+from rich.console import Console, ConsoleOptions, RenderGroup, RenderResult
 from rich.highlighter import NullHighlighter
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
-from rich.progress import (
-    Progress,
-    BarColumn,
-    TimeElapsedColumn,
-    SpinnerColumn,
-)
+from rich.progress import BarColumn, Progress, SpinnerColumn, TimeElapsedColumn
 from rich.rule import Rule
 from rich.syntax import Syntax
 from rich.table import Table
@@ -49,9 +43,8 @@ from ward._utilities import group_by
 from ward._ward_version import __version__
 from ward.expect import Comparison, TestFailure
 from ward.fixtures import Fixture
-from ward.models import Scope, ExitCode
-from ward.testing import Test, fixtures_used_directly_by_tests
-from ward.testing import TestOutcome, TestResult
+from ward.models import ExitCode, Scope
+from ward.testing import Test, TestOutcome, TestResult, fixtures_used_directly_by_tests
 
 HORIZONTAL_PAD = (0, 1, 0, 1)
 
@@ -388,7 +381,8 @@ def print_end_of_line_for_dots(
 
 def print_run_cancelled():
     console.print(
-        "Run cancelled - results for tests that ran shown below.", style="info",
+        "Run cancelled - results for tests that ran shown below.",
+        style="info",
     )
 
 
