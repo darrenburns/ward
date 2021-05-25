@@ -84,12 +84,10 @@ def prelude():
 def _(prelude: SessionPrelude = prelude):
     render_iter = prelude.__rich_console__(None, None)
     assert vars(next(render_iter)) == vars(
-        Rule(Text(f"Ward 1.0.0dev1 | CPython 4.2", style="title"))
+        Rule(Text("Ward 1.0.0dev1 | CPython 4.2", style="title"))
     )
     assert next(render_iter) == (
-        f"Found [b]123[/b] tests "
-        f"and [b]456[/b] fixtures "
-        f"in [b]1.23[/b] seconds."
+        "Found [b]123[/b] tests " "and [b]456[/b] fixtures " "in [b]1.23[/b] seconds."
     )
 
 
@@ -156,9 +154,9 @@ def timing_stats_expected_panel(expected_table=timing_stats_expected_table):
     return Panel(
         RenderGroup(
             Padding(
-                f"Median: [b]4000.00[/b]ms"
-                f" [muted]|[/muted] "
-                f"99th Percentile: [b]5000.00[/b]ms",
+                "Median: [b]4000.00[/b]ms"
+                " [muted]|[/muted] "
+                "99th Percentile: [b]5000.00[/b]ms",
                 pad=(0, 0, 1, 0),
             ),
             expected_table,
