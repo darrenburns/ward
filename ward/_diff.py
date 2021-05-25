@@ -2,7 +2,7 @@ import difflib
 from typing import Iterator
 
 import pprintpp
-from colorama import Style, Fore
+from colorama import Fore, Style
 from termcolor import colored
 
 
@@ -61,7 +61,8 @@ def build_symbolic_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
     return "\n".join(output_lines)
 
 
-def build_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
+# FIXME:fix linter C901
+def build_unified_diff(lhs_repr: str, rhs_repr: str) -> str:  # noqa: C901
     diff = raw_unified_diff(lhs_repr, rhs_repr)
     output_lines = []
     prev_marker = ""

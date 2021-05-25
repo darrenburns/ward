@@ -11,13 +11,14 @@ from cucumber_tag_expressions import parse
 from tests.utilities import make_project
 from ward import fixture, test
 from ward._collect import (
+    _build_package_name,
     _get_module_path,
     _handled_within,
     _is_excluded_module,
-    is_test_module,
     _remove_excluded_paths,
+    filter_fixtures,
     filter_tests,
-    filter_fixtures, _build_package_name,
+    is_test_module,
 )
 from ward.fixtures import Fixture
 from ward.testing import Test, each, skip
@@ -175,9 +176,7 @@ def _(path=each(THIS_FILE.parent / "the-fixture-is-not-in-this-file.py")):
 
 
 @test("is_test_module(<module: '{module_name}'>) returns {rv}")
-def _(
-    module_name=each("test_apples", "apples"), rv=each(True, False),
-):
+def _(module_name=each("test_apples", "apples"), rv=each(True, False)):
     module = ModuleInfo(ModuleFinder(), module_name, False)
     assert is_test_module(module) == rv
 
@@ -209,7 +208,7 @@ def _(mod=test_module):
 def _(
     mod=test_module,
     excludes=each(
-        "*", "*/**.py", str(PATH), "**/test_mod.py", "path/to/*", "path/*/*.py",
+        "*", "*/**.py", str(PATH), "**/test_mod.py", "path/to/*", "path/*/*.py"
     ),
 ):
     assert _is_excluded_module(mod, [excludes])
@@ -222,10 +221,7 @@ def _(mod=test_module, excludes=each("abc", str(PATH.parent))):
 
 @test("remove_excluded_paths removes exclusions from list of paths")
 def _():
-    paths = [
-        Path("/a/b/c.py"),
-        Path("/a/b/"),
-    ]
+    paths = [Path("/a/b/c.py"), Path("/a/b/")]
     excludes = ["**/*.py"]
     assert _remove_excluded_paths(paths, excludes) == [paths[1]]
 
@@ -237,7 +233,7 @@ def project():
 
 @test("handled_within({mod}, {search}) is True")
 def _(
-    root: Path = project, search=each("", "/", "a", "a/b", "a/b/c"), mod="a/b/c/d/e.py",
+    root: Path = project, search=each("", "/", "a", "a/b", "a/b/c"), mod="a/b/c/d/e.py"
 ):
     module_path = root / mod
     assert _handled_within(module_path, [root / search])
@@ -265,8 +261,7 @@ def _():
 @skip("Skipped on Windows", when=platform.system() == "Windows")
 @test("_build_package_name constructs package name '{pkg}' from '{path}'")
 def _(
-    pkg=each("", "foo", "foo.bar"),
-    path=each("foo.py", "foo/bar.py", "foo/bar/baz.py"),
+    pkg=each("", "foo", "foo.bar"), path=each("foo.py", "foo/bar.py", "foo/bar/baz.py")
 ):
     m = ModuleType(name="")
     m.__file__ = path

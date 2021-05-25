@@ -1,12 +1,12 @@
 import importlib
-from typing import Iterable, Optional, List
+from typing import Iterable, List, Optional
 
 import pluggy
 from rich.console import ConsoleRenderable
-from ward.models import ExitCode
 
 from ward.config import Config
-from ward.testing import TestResult, Test
+from ward.models import ExitCode
+from ward.testing import Test, TestResult
 
 PROJECT_NAME = "ward"
 
@@ -34,25 +34,31 @@ class SessionHooks:
 
         You can implement this hook to run some setup code.
 
-        This hook has no default implementation. If you implement it, you will not be overriding any existing functionality.
+        This hook has no default implementation. If you implement it, you will not be
+        overriding any existing functionality.
 
         Examples of how you could use this hook:
 
         * Printing some information to the terminal about your plugin.
         * Creating a file on disk which you'll write to in other hooks.
 
-        If you return a `rich.console.ConsoleRenderable <https://rich.readthedocs.io/en/latest/protocol.html#console-render>`_
+        If you return a
+        `rich.console.ConsoleRenderable<https://rich.readthedocs.io/en/latest/protocol.html#console-render>`_
         from this function, it will be rendered to the terminal.
         """
 
     @spec
     def after_session(
-        self, config: Config, test_results: List[TestResult], status_code: ExitCode,
+        self,
+        config: Config,
+        test_results: List[TestResult],
+        status_code: ExitCode,
     ) -> Optional[ConsoleRenderable]:
         """
         Hook that runs right before a test session ends (just before the result summary is printed to the terminal).
 
-        This hook has no default implementation. If you implement it, you will not be overriding any existing functionality.
+        This hook has no default implementation. If you implement it, you will not be
+        overriding any existing functionality.
 
         Examples of how you could use this hook:
 
@@ -60,7 +66,8 @@ class SessionHooks:
         * Writing a file (e.g. an HTML report) to disk containing the results from the test session.
         * Sending a file containing the results off somewhere for storage/processing.
 
-        If you return a `rich.console.ConsoleRenderable <https://rich.readthedocs.io/en/latest/protocol.html#console-render>`_
+        If you return a
+        `rich.console.ConsoleRenderable <https://rich.readthedocs.io/en/latest/protocol.html#console-render>`_
         from this function, it will be rendered to the terminal.
         """
 

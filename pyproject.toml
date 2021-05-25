@@ -7,7 +7,7 @@ path = ["tests"]
 
 [tool.poetry]
 name = "ward"
-version = "0.57.1b0"
+version = "0.57.2b0"
 description = "A modern Python testing framework"
 exclude = ["tests"]
 authors = ["Darren Burns <darrenb900@gmail.com>"]
@@ -35,7 +35,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.6.1"
 dataclasses = { version = "^0.7", python = "3.6" }
 colorama = "^0.4.0"
 click = "^8.0.0"
@@ -52,9 +52,10 @@ pluggy = "^0.13.1"
 [tool.poetry.dev-dependencies]
 black = "^19.9b0"
 flake8 = "^3.7.0"
-coverage = "^5.1"
 Sphinx = "^3.5.1"
 sphinx-rtd-theme = "^0.5.1"
+coverage = {version = "^5.1", extras = ["toml"]}
+pre-commit = "^2.13.0"
 
 [tool.poetry.scripts]
 ward = "ward._run:run"
@@ -76,6 +77,10 @@ branch = true
 include = [
     "ward/*",
 ]
-omit = [
-    "ward/tests/*",
-]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+line_length = 88

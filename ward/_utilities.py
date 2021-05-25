@@ -1,7 +1,7 @@
 import collections
 import inspect
 from pathlib import Path
-from typing import Iterable, Any, Callable, Hashable, TypeVar, Dict, List
+from typing import Any, Callable, Dict, Hashable, Iterable, List, TypeVar
 
 
 def truncate(s: str, num_chars: int) -> str:

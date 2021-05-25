@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from random import shuffle
 from timeit import default_timer
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
 
 import click
 import click_completion
@@ -14,24 +14,24 @@ from cucumber_tag_expressions.model import Expression
 from rich.console import ConsoleRenderable
 
 from ward._collect import (
+    filter_fixtures,
+    filter_tests,
     get_info_for_modules,
     get_tests_in_modules,
     load_modules,
-    filter_tests,
-    filter_fixtures,
 )
 from ward._config import set_defaults_from_config
 from ward._debug import init_breakpointhooks
 from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite
 from ward._terminal import (
-    SimpleTestResultWrite,
-    output_fixtures,
-    get_exit_code,
-    TestProgressStyle,
-    TestOutputStyle,
-    console,
     SessionPrelude,
+    SimpleTestResultWrite,
+    TestOutputStyle,
+    TestProgressStyle,
+    console,
+    get_exit_code,
+    output_fixtures,
 )
 from ward._ward_version import __version__
 from ward.config import Config
@@ -48,8 +48,8 @@ def _register_hooks(context: click.Context, param: click.Parameter, hook_module_
     register_hooks_in_modules(plugin_manager=plugins, module_names=hook_module_names)
 
 
-# TODO: simplify to use invoke_without_command and ctx.forward once
-#  https://github.com/pallets/click/issues/430 is resolved
+# TODO: simplify to use invoke_without_command and ctx.forward
+# once https://github.com/pallets/click/issues/430 is resolved
 @click.group(
     context_settings={"max_content_width": 100},
     cls=DefaultGroup,
@@ -127,7 +127,8 @@ hook_module = click.option(
     help=f"""\
     The style of progress indicator to use during the run.
     Pass multiple times to enable multiple styles.
-    The '{TestProgressStyle.BAR}' style is not compatible with the '{TestOutputStyle.DOTS_GLOBAL}' and '{TestOutputStyle.DOTS_MODULE}' test output styles.
+    The '{TestProgressStyle.BAR}' style is not compatible with the
+    '{TestOutputStyle.DOTS_GLOBAL}' and '{TestOutputStyle.DOTS_MODULE}' test output styles.
     """,
 )
 @click.option(
@@ -139,7 +140,10 @@ hook_module = click.option(
 @click.option(
     "--show-diff-symbols/--hide-diff-symbols",
     default=False,
-    help="If enabled, diffs will use symbols such as '?', '-', '+' and '^' instead of colours to highlight differences.",
+    help="""\
+    If enabled, diffs will use symbols such as '?', '-', '+' and '^'
+    instead of colours to highlight differences.
+    """,
 )
 @click.option(
     "--capture-output/--no-capture-output",
@@ -190,7 +194,8 @@ def test(
     }:
         raise click.BadOptionUsage(
             "progress_style",
-            f"The '{TestProgressStyle.BAR}' progress style cannot be used with dots-based test output styles (you asked for '{test_output_style}').",
+            f"The '{TestProgressStyle.BAR}' progress style cannot be used with dots-based "
+            f"test output styles (you asked for '{test_output_style}').",
         )
 
     init_breakpointhooks(pdb, sys)
@@ -271,7 +276,8 @@ def test(
 )
 @click.option(
     "--show-dependencies/--no-show-dependencies",
-    help="Display the fixtures and tests that each fixture depends on and is used by. Only displays direct dependencies; use --show-dependency-trees to show all dependency information.",
+    help="Displays direct dependencies between fixtures and tests."
+    "Use --show-dependency-trees to show detailed dependency information.",
     default=False,
 )
 @click.option(

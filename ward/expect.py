@@ -1,9 +1,8 @@
-from dataclasses import dataclass
-from enum import Enum
-
 import inspect
 import types
-from typing import Type, Any, ContextManager, TypeVar, Generic, Optional, cast
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, ContextManager, Generic, Optional, Type, TypeVar, cast
 
 __all__ = [
     "raises",

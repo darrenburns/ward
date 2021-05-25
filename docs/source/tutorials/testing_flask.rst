@@ -9,14 +9,15 @@ If you run this app with ``python -m app``, then visit ``localhost:5000/users/al
 .. code-block:: python
 
     # file: app.py
-
     from flask import Flask
 
     app = Flask(__name__)
 
+
     @app.route("/users/<string:username>")
     def get_user(username: str):
         return f"The user is {username}"
+
 
     if __name__ == "__main__":
         app.run()
@@ -39,9 +40,10 @@ We'll inject this fixture into each of our tests, and this will allow us to send
     from ward import fixture
     from app import app
 
+
     @fixture(scope="global")
     def test_client():
-        app.config['TESTING'] = True  # For better error reports
+        app.config["TESTING"] = True  # For better error reports
         with app.test_client() as client:
             yield client
 
@@ -60,11 +62,13 @@ The status code we expect to see in this case is an ``HTTP 200 (OK)``.
     from ward import fixture, test
     from app import app
 
+
     @fixture(scope="global")
     def test_client():
-        app.config['TESTING'] = True  # For better error reports
+        app.config["TESTING"] = True  # For better error reports
         with app.test_client() as client:
             yield client
+
 
     @test("/users/alice returns an 200 OK")
     def _(client=test_client):

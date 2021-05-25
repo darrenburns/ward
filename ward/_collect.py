@@ -5,23 +5,16 @@ import os
 import pkgutil
 import sys
 from distutils.sysconfig import get_python_lib
-from pathlib import Path
-from types import ModuleType
-from typing import (
-    Callable,
-    Iterable,
-    List,
-    Optional,
-    Set,
-    Tuple,
-)
-
-from cucumber_tag_expressions.model import Expression
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
+from pathlib import Path
+from types import ModuleType
+from typing import Callable, Iterable, List, Optional, Set, Tuple
+
+from cucumber_tag_expressions.model import Expression
 
 from ward._errors import CollectionError
-from ward._testing import is_test_module_name, COLLECTED_TESTS
+from ward._testing import COLLECTED_TESTS, is_test_module_name
 from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
 from ward.models import CollectionMetadata
@@ -65,8 +58,10 @@ def _handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
     return False
 
 
+# flake8: noqa: C901 - FIXME
 def get_info_for_modules(
-    paths: List[Path], exclude: Tuple[Glob],
+    paths: List[Path],
+    exclude: Tuple[Glob],
 ) -> List[pkgutil.ModuleInfo]:
     paths = _remove_excluded_paths(set(paths), exclude)
 
@@ -164,7 +159,9 @@ def get_tests_in_modules(modules: Iterable, capture_output: bool = True) -> List
 
 
 def filter_tests(
-    tests: List[Test], query: str = "", tag_expr: Optional[Expression] = None,
+    tests: List[Test],
+    query: str = "",
+    tag_expr: Optional[Expression] = None,
 ) -> List[Test]:
     if not query and not tag_expr:
         return tests
@@ -190,7 +187,9 @@ def filter_tests(
 
 
 def filter_fixtures(
-    fixtures: List[Fixture], query: str = "", paths: Optional[Iterable[Path]] = None,
+    fixtures: List[Fixture],
+    query: str = "",
+    paths: Optional[Iterable[Path]] = None,
 ) -> List[Fixture]:
     if paths is None:
         paths = []

@@ -34,6 +34,7 @@ Here's a simple example of a test written using Ward:
     # file: test_example.py
     from ward import test
 
+
     @test("the list contains 42")
     def _():
         assert 42 in [-21, 42, 999]
@@ -71,4 +72,3 @@ To run the test, simply run ``ward`` in your terminal, and Ward will let you kno
     reference/hooks.rst
     reference/models.rst
     reference/expect.rst
-
