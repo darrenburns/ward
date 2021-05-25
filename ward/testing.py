@@ -27,7 +27,6 @@ from ward._testing import (
     Each,
     _generate_id,
     _FormatDict,
-    ParamMeta,
     is_test_module_name,
     COLLECTED_TESTS,
     _Timer,
@@ -175,7 +174,8 @@ class Test:
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.id == other.id
 
-    def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
+    # FIXME:fix linter C901
+    def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":  # noqa: C901
         with ExitStack() as stack:
             self.timer = stack.enter_context(_Timer())
             if self.capture_output:
@@ -603,30 +603,6 @@ class TestArgumentResolver:
             return cache.get(
                 fixture.key, fixture.scope, self.test.scope_key_from(fixture.scope)
             )
-
-        has_deps = len(fixture.deps()) > 0
-        if not has_deps:
-            try:
-                if fixture.is_generator_fixture:
-                    fixture.gen = arg()
-                    fixture.resolved_val = next(fixture.gen)
-                elif fixture.is_async_generator_fixture:
-                    fixture.gen = arg()
-                    awaitable = fixture.gen.__anext__()
-                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
-                        awaitable
-                    )
-                elif fixture.is_coroutine_fixture:
-                    fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
-                        arg()
-                    )
-                else:
-                    fixture.resolved_val = arg()
-            except (Exception, SystemExit) as e:
-                raise FixtureError(f"Unable to resolve fixture '{fixture.name}'") from e
-            scope_key = self.test.scope_key_from(fixture.scope)
-            cache.cache_fixture(fixture, scope_key)
-            return fixture
 
         children_defaults = self.get_default_args(func=arg)
         children_resolved = {}

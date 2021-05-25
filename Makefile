@@ -29,6 +29,11 @@ test:
 	poetry run ward
 .PHONY: test
 
+coverage:
+	poetry run coverage run -m ward
+	poetry run coverage html -i
+.PHONY: coverage
+
 update:
 	poetry update
 .PHONY: update

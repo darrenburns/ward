@@ -34,7 +34,7 @@ def _breakpointhook(*args, **kwargs):
 
     if capture_enabled and capture_active:
         sys.stdout = original_stdout
-        console.print(f"Entering debugger - output capturing disabled.", style="info")
+        console.print("Entering debugger - output capturing disabled.", style="info")
         return hook(*args, **kwargs)
 
     return hook(*args, **kwargs)

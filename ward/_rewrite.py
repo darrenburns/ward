@@ -62,7 +62,7 @@ def is_comparison_type(node: ast.expr, type) -> bool:
 
 
 class RewriteAssert(ast.NodeTransformer):
-    def visit_Assert(self, node):
+    def visit_Assert(self, node):  # noqa: C901 - no chance to reduce complexity
         if is_binary_comparison(node):
             if is_comparison_type(node, ast.Eq):
                 return make_call_node(node, assert_equal.__name__)
