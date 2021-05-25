@@ -540,10 +540,6 @@ class TerminalResultsWriter:
 
                     if num_failures == fail_limit:
                         break
-
-                    import time
-
-                    time.sleep(0.01)
             except KeyboardInterrupt:
                 was_cancelled = True
             finally:
