@@ -4,7 +4,7 @@ Contributions to Ward are encouraged and very welcome!
 
 Contributions can come in many forms: documentation enhancements, features, bug fixes, creating issues, and participating in the community.
 
-If you're interested in helping out, you might find some inspiration in [Discussions](https://github.com/darrenburns/ward/discussions). If you have an idea, but don't see it there, don't hesitate to open a new discussion.
+If you're interested in helping out, you might find some inspiration in [Issues](https://github.com/darrenburns/ward/issues) or [Discussions](https://github.com/darrenburns/ward/discussions). If you have an idea, but don't see it there, don't hesitate to open a new discussion.
 
 Before submitting a pull request, please make sure the enhancement or bugfix you've made has been discussed.
 
