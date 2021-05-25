@@ -113,6 +113,7 @@ class TestOutputStyle(str, Enum):
     DOTS_GLOBAL = "dots-global"
     DOTS_MODULE = "dots-module"
     LIVE = "live"
+    NONE = "none"
 
 
 class TestProgressStyle(str, Enum):
@@ -319,10 +320,13 @@ class Component:
         self.num_tests = num_tests
         self.progress_styles = progress_styles
 
+    def footer(self, results: List[TestResult]):
+        pass
+
     def after_test(self, idx: int, result: TestResult):
         pass
 
-    def footer(self, results: List[TestResult]):
+    def after_suite(self, results: List[TestResult]):
         pass
 
 
@@ -342,6 +346,9 @@ class ProgressBar(Component):
         )
         self.task = self.progress.add_task("Testing...", total=num_tests)
 
+    def footer(self, results: List[TestResult]):
+        return self.progress
+
     def after_test(self, idx: int, result: TestResult):
         self.progress.update(self.task, advance=1)
 
@@ -349,11 +356,8 @@ class ProgressBar(Component):
             self.spinner.spinner.style = "fail.textonly"
             self.bar.complete_style = "fail.textonly"
 
-        if idx == self.num_tests - 1:
-            self.progress.stop()
-
-    def footer(self, results: List[TestResult]):
-        return self.progress
+    def after_suite(self, results: List[TestResult]):
+        self.progress = None
 
 
 class TestPerLine(Component):
@@ -470,26 +474,26 @@ class LiveTest(Component):
 
         self.spinner = SpinnerColumn(style="pass.textonly")
         self.bar = BarColumn(complete_style="pass.textonly")
-        self.col = RenderableColumn(Text(""))
+        self.test_description = RenderableColumn(Text(""))
         self.progress = Progress(
             self.spinner,
-            self.col,
+            self.test_description,
             console=console,
             transient=True,
         )
         self.task = self.progress.add_task("", total=num_tests)
 
+    def footer(self, results: List[TestResult]):
+        return self.progress
+
     def after_test(self, idx: int, result: TestResult):
         self.progress.update(self.task, advance=1)
-        self.col.renderable = get_test_result_line(
+        self.test_description.renderable = get_test_result_line(
             result, idx, self.num_tests, self.progress_styles
         )
 
-        if idx == self.num_tests - 1:
-            self.col.renderable = Text("")
-
-    def footer(self, results: List[TestResult]):
-        return self.progress
+    def after_suite(self, results: List[TestResult]):
+        self.progress = None
 
 
 class TerminalResultsWriter:
@@ -508,6 +512,11 @@ class TerminalResultsWriter:
     def run(self, test_results_gen, fail_limit: int):
         num_failures = 0
         results = []
+        was_cancelled = False
+
+        def refresh_footer():
+            live.update(self.footer(results))
+            live.refresh()
 
         with self.live as live:
             console.print()
@@ -515,9 +524,6 @@ class TerminalResultsWriter:
                 for idx, result in enumerate(test_results_gen):
                     for component in self.components:
                         component.after_test(idx, result)
-
-                    live.update(self.footer(results))
-                    live.refresh()
 
                     results.append(result)
 
@@ -527,9 +533,14 @@ class TerminalResultsWriter:
                     if num_failures == fail_limit:
                         break
             except KeyboardInterrupt:
-                print_run_cancelled()
+                was_cancelled = True
             finally:
-                return results
+                for component in self.components:
+                    component.after_suite(results)
+
+                refresh_footer()
+
+                return results, was_cancelled
 
 
 class TestResultWriterBase:
@@ -538,6 +549,7 @@ class TestResultWriterBase:
         TestOutputStyle.DOTS_GLOBAL: DotsGlobal,
         TestOutputStyle.DOTS_MODULE: DotsPerModule,
         TestOutputStyle.LIVE: LiveTest,
+        TestOutputStyle.NONE: Component,
     }
 
     def __init__(
@@ -567,11 +579,14 @@ class TestResultWriterBase:
         if TestProgressStyle.BAR in self.progress_styles:
             components.append(ProgressBar)
 
-        all_results = TerminalResultsWriter(
+        all_results, was_cancelled = TerminalResultsWriter(
             suite=self.suite,
             progress_styles=self.progress_styles,
             components=components,
         ).run(test_results_gen, fail_limit)
+
+        if was_cancelled:
+            print_run_cancelled()
 
         failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
         for failure in failed_test_results:
