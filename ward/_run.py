@@ -140,8 +140,10 @@ hook_module = click.option(
 @click.option(
     "--show-diff-symbols/--hide-diff-symbols",
     default=False,
-    help="If enabled, diffs will use symbols such as '?', '-', '+' and '^' "
-    "instead of colours to highlight differences.",
+    help="""\
+    If enabled, diffs will use symbols such as '?', '-', '+' and '^'
+    instead of colours to highlight differences.
+    """,
 )
 @click.option(
     "--capture-output/--no-capture-output",
