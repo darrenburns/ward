@@ -53,7 +53,7 @@ pluggy = "^0.13.1"
 coverage = "^5.1"
 Sphinx = "^3.5.1"
 sphinx-rtd-theme = "^0.5.1"
-pre-commit = "^2.12.1"
+pre-commit = "^2.13.0"
 
 [tool.poetry.scripts]
 ward = "ward._run:run"

@@ -8,7 +8,6 @@ from tests.utilities import FORCE_TEST_PATH, testable_test
 from ward import raises
 from ward._errors import ParameterisationError
 from ward._fixtures import FixtureCache
-from ward._testing import ParamMeta
 from ward.fixtures import Fixture, fixture
 from ward.models import CollectionMetadata, Scope, SkipMarker, XfailMarker
 from ward.testing import (
@@ -69,10 +68,7 @@ def _():
     def test_fn():
         assert True
 
-    t = Test(
-        test_fn,
-        "",
-    )
+    t = Test(test_fn, "")
 
     assert t.path == FORCE_TEST_PATH
 
@@ -378,7 +374,7 @@ def _():
 
     t = Test(fn=parameterised_test, module_name=mod)
 
-    assert t.is_parameterised == True
+    assert t.is_parameterised
 
 
 @test("Test.is_parameterised should return False for standard tests")
@@ -439,6 +435,7 @@ def _():
         pass
 
     t = Test(fn=test, module_name=mod, capture_output=False)
+
     assert t.get_parameterised_instances() == [
         Test(
             id=mock.ANY,

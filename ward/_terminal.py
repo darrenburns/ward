@@ -42,7 +42,7 @@ from ward._suite import Suite
 from ward._utilities import group_by
 from ward._ward_version import __version__
 from ward.expect import Comparison, TestFailure
-from ward.fixtures import _DEFINED_FIXTURES, Fixture
+from ward.fixtures import Fixture
 from ward.models import ExitCode, Scope
 from ward.testing import Test, TestOutcome, TestResult, fixtures_used_directly_by_tests
 

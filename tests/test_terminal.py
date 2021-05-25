@@ -84,12 +84,7 @@ def prelude():
 def _(prelude: SessionPrelude = prelude):
     render_iter = prelude.__rich_console__(None, None)
     assert vars(next(render_iter)) == vars(
-        Rule(
-            Text(
-                f"Ward 1.0.0dev1 | CPython 4.2",
-                style="title",
-            )
-        )
+        Rule(Text(f"Ward 1.0.0dev1 | CPython 4.2", style="title"))
     )
     assert next(render_iter) == (
         f"Found [b]123[/b] tests "
