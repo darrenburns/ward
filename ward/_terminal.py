@@ -316,7 +316,7 @@ class TerminalResultProcessor(ResultProcessor):
         pass
 
 
-class Component:
+class TestResultDisplayWidget:
     def __init__(self, num_tests, progress_styles):
         self.num_tests = num_tests
         self.progress_styles = progress_styles
@@ -331,7 +331,7 @@ class Component:
         pass
 
 
-class ProgressBar(Component):
+class SuiteProgressBar(TestResultDisplayWidget):
     def __init__(self, num_tests, progress_styles):
         super().__init__(num_tests, progress_styles)
 
@@ -361,14 +361,14 @@ class ProgressBar(Component):
         self.progress = None
 
 
-class TestPerLine(Component):
+class TestPerLine(TestResultDisplayWidget):
     def after_test(self, idx: int, result: TestResult):
         console.print(
             get_test_result_line(result, idx, self.num_tests, self.progress_styles)
         )
 
 
-class DotsPerModule(Component):
+class DotsPerModule(TestResultDisplayWidget):
     def __init__(self, num_tests, progress_styles):
         super().__init__(num_tests, progress_styles)
 
@@ -438,7 +438,7 @@ class DotsPerModule(Component):
         self.dots_on_line += 1
 
 
-class DotsGlobal(Component):
+class DotsGlobal(TestResultDisplayWidget):
     def __init__(self, num_tests, progress_styles):
         super().__init__(num_tests, progress_styles)
 
@@ -469,7 +469,7 @@ class DotsGlobal(Component):
             )
 
 
-class LiveTest(Component):
+class LiveTestBar(TestResultDisplayWidget):
     def __init__(self, num_tests, progress_styles):
         super().__init__(num_tests, progress_styles)
 
@@ -560,8 +560,8 @@ class TestResultWriterBase:
         TestOutputStyle.TEST_PER_LINE: TestPerLine,
         TestOutputStyle.DOTS_GLOBAL: DotsGlobal,
         TestOutputStyle.DOTS_MODULE: DotsPerModule,
-        TestOutputStyle.LIVE: LiveTest,
-        TestOutputStyle.NONE: Component,
+        TestOutputStyle.LIVE: LiveTestBar,
+        TestOutputStyle.NONE: TestResultDisplayWidget,
     }
 
     def __init__(
@@ -589,7 +589,7 @@ class TestResultWriterBase:
 
         components = [self.runtime_output_strategies[self.test_output_style]]
         if TestProgressStyle.BAR in self.progress_styles:
-            components.append(ProgressBar)
+            components.append(SuiteProgressBar)
 
         all_results, was_cancelled = TerminalResultsWriter(
             suite=self.suite,
