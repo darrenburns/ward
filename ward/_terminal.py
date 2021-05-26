@@ -530,6 +530,10 @@ class TerminalResultsWriter:
             console.print()
             try:
                 for idx, result in enumerate(test_results_gen):
+                    # We need to re-enable the Live here in case
+                    # it was disabled by the breakpoint debugger hook.
+                    live.start(refresh=True)
+
                     for component in self.components:
                         component.after_test(idx, result)
 
