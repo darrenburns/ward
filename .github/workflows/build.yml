@@ -34,7 +34,10 @@ jobs:
           virtualenvs-create: true
 
       - name: Install dependencies
-        run: poetry install --no-interaction
+        run: |
+          poetry config experimental.new-installer false
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
 
       - name: Run tests with Ward
         run: |
