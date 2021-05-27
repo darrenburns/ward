@@ -4,14 +4,32 @@ import itertools
 import math
 import os
 import platform
+import random
 import statistics
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent
-from typing import Collection, Dict, Generator, Iterable, List, Optional
+from typing import (
+    Collection,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+)
 
-from rich.console import Console, ConsoleOptions, RenderGroup, RenderResult
+from rich._spinners import SPINNERS
+from rich.console import (
+    Console,
+    ConsoleOptions,
+    ConsoleRenderable,
+    RenderGroup,
+    RenderResult,
+)
 from rich.highlighter import NullHighlighter
 from rich.live import Live
 from rich.markdown import Markdown
@@ -317,22 +335,54 @@ class TerminalResultProcessor(ResultProcessor):
 
 
 class TestResultDisplayWidget:
-    def __init__(self, num_tests, progress_styles):
+    def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
+        self.console = console
         self.num_tests = num_tests
         self.progress_styles = progress_styles
 
-    def footer(self, results: List[TestResult]):
+    def footer(self, results: List[TestResult]) -> Optional[ConsoleRenderable]:
+        """
+        This method should return an object that can be rendered by Rich.
+        It will be inserted into the "footer" of the test suite result display,
+        which hugs the bottom of the terminal as the suite runs.
+
+        This method may be called at any time to refresh the state of the footer,
+        so it should be a pure function.
+
+        If this function returns ``None``, it will not cause anything to be
+        rendered in the footer. You can use this to "hide" the footer based
+        on state captured during the suite.
+        """
         pass
 
-    def after_test(self, idx: int, result: TestResult):
+    def after_test(self, idx: int, result: TestResult) -> None:
+        """
+        This method is called after each test is executed,
+        with the results of that test and the index of that test in the suite.
+
+        Some ways you can use this method:
+         - Capture state for use in other methods of your widget.
+         - Print to the terminal using the attached Console (``self.console``).
+           Anything printed this way will appear above the footer
+           and will persist after the suite is done.
+        """
         pass
 
-    def after_suite(self, results: List[TestResult]):
+    def after_suite(self, results: List[TestResult]) -> None:
+        """
+        This method is called after the suite is done executing
+        (or is cancelled, or aborts mid-run, etc.),
+        with results for all of the tests that have been run.
+
+        Some ways you can use this method:
+         - Change the return value of your footer to None to prevent it
+           from appearing in the final persistent output.
+        """
         pass
 
 
 class SuiteProgressBar(TestResultDisplayWidget):
-    def __init__(self, num_tests, progress_styles):
+    def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
         super().__init__(num_tests, progress_styles)
 
         self.spinner = SpinnerColumn(style="pass.textonly")
@@ -343,7 +393,7 @@ class SuiteProgressBar(TestResultDisplayWidget):
             self.bar,
             "[progress.percentage]{task.percentage:>3.0f}%",
             "[progress.percentage][{task.completed} / {task.total}]",
-            console=console,
+            console=self.console,
         )
         self.task = self.progress.add_task("Testing...", total=num_tests)
 
@@ -363,13 +413,13 @@ class SuiteProgressBar(TestResultDisplayWidget):
 
 class TestPerLine(TestResultDisplayWidget):
     def after_test(self, idx: int, result: TestResult):
-        console.print(
+        self.console.print(
             get_test_result_line(result, idx, self.num_tests, self.progress_styles)
         )
 
 
 class DotsPerModule(TestResultDisplayWidget):
-    def __init__(self, num_tests, progress_styles):
+    def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
         super().__init__(num_tests, progress_styles)
 
         self.current_path = Path("")
@@ -439,7 +489,7 @@ class DotsPerModule(TestResultDisplayWidget):
 
 
 class DotsGlobal(TestResultDisplayWidget):
-    def __init__(self, num_tests, progress_styles):
+    def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
         super().__init__(num_tests, progress_styles)
 
         self.dots_on_line = 0
@@ -469,20 +519,37 @@ class DotsGlobal(TestResultDisplayWidget):
             )
 
 
+LENGTH_ONE_SPINNERS = [
+    spinner_name
+    for spinner_name, data in SPINNERS.items()
+    if len(data["frames"][0]) == 1
+]
+GOOD_EMOJI = list(set("😃😊😍😇😎😘😁"))
+BAD_EMOJI = list(set("😡😖😒😩😭😫😩😵"))
+
+
 class LiveTestBar(TestResultDisplayWidget):
-    def __init__(self, num_tests, progress_styles):
+    def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
         super().__init__(num_tests, progress_styles)
 
-        self.spinner = SpinnerColumn(style="pass.textonly")
+        self.spinner = SpinnerColumn(
+            spinner_name=random.choice(LENGTH_ONE_SPINNERS), style="pass.textonly"
+        )
+
+        self.good_smiley = Text(random.choice(GOOD_EMOJI))
+        self.bad_smiley = Text(random.choice(BAD_EMOJI))
+
+        self.smiley = RenderableColumn(self.good_smiley)
         self.bar = BarColumn(complete_style="pass.textonly")
         self.test_description = RenderableColumn(Text(""))
         self.progress = Progress(
             self.spinner,
+            self.smiley,
             self.test_description,
             console=console,
-            transient=True,
         )
         self.task = self.progress.add_task("", total=num_tests)
+        self.has_failed = False
 
     def footer(self, results: List[TestResult]):
         return self.progress
@@ -494,48 +561,59 @@ class LiveTestBar(TestResultDisplayWidget):
         )
 
         if result.outcome is TestOutcome.FAIL:
-            console.print(
+            self.console.print(
                 get_test_result_line(
-                    result, idx, self.num_tests, self.progress_styles, extra_left_pad=2
+                    result, idx, self.num_tests, self.progress_styles, extra_left_pad=5
                 )
             )
+            self.smiley.renderable = self.bad_smiley
 
     def after_suite(self, results: List[TestResult]):
         self.progress = None
 
 
 class TerminalResultsWriter:
-    def __init__(self, suite: Suite, progress_styles, components):
-        self.suite = suite
-        self.components = [
-            component(suite.num_tests_with_parameterisation, progress_styles)
-            for component in components
+    def __init__(
+        self,
+        num_tests: int,
+        progress_styles: List[TestProgressStyle],
+        widget_types: Iterable[Type[TestResultDisplayWidget]],
+    ):
+        self.widgets = [
+            widgets(num_tests=num_tests, progress_styles=progress_styles)
+            for widgets in widget_types
         ]
-        self.live = Live(console=console, renderable=self.footer([]))
+        self.live = Live(
+            console=console, renderable=self.footer(results=[]), refresh_per_second=10
+        )
 
-    def footer(self, results):
-        footers = [component.footer(results) for component in self.components]
+    def footer(self, results: List[TestResult]) -> RenderGroup:
+        footers = [component.footer(results) for component in self.widgets]
         return RenderGroup(*(f for f in footers if f is not None))
 
-    def run(self, test_results_gen, fail_limit: int):
+    def run(
+        self, test_results: Iterator[TestResult], fail_limit: int
+    ) -> Tuple[List[TestResult], bool]:
+        """
+        Execute the test suite, returning the list of test results
+        and a boolean that is true if the run was cancelled and false otherwise.
+        """
         num_failures = 0
         results = []
         was_cancelled = False
 
-        def refresh_footer():
-            live.update(self.footer(results))
-            live.refresh()
-
         with self.live as live:
             console.print()
             try:
-                for idx, result in enumerate(test_results_gen):
+                for idx, result in enumerate(test_results):
                     # We need to re-enable the Live here in case
                     # it was disabled by the breakpoint debugger hook.
                     live.start(refresh=True)
 
-                    for component in self.components:
+                    for component in self.widgets:
                         component.after_test(idx, result)
+
+                    live.update(self.footer(results))
 
                     results.append(result)
 
@@ -547,10 +625,10 @@ class TerminalResultsWriter:
             except KeyboardInterrupt:
                 was_cancelled = True
             finally:
-                for component in self.components:
+                for component in self.widgets:
                     component.after_suite(results)
 
-                refresh_footer()
+                live.update(self.footer(results), refresh=True)
 
                 return results, was_cancelled
 
@@ -587,18 +665,21 @@ class TestResultWriterBase:
         if not self.suite.num_tests:
             return []
 
-        components = [self.runtime_output_strategies[self.test_output_style]]
+        widget_types = [self.runtime_output_strategies[self.test_output_style]]
         if TestProgressStyle.BAR in self.progress_styles:
-            components.append(SuiteProgressBar)
+            widget_types.append(SuiteProgressBar)
 
         all_results, was_cancelled = TerminalResultsWriter(
-            suite=self.suite,
+            num_tests=self.suite.num_tests_with_parameterisation,
             progress_styles=self.progress_styles,
-            components=components,
+            widget_types=widget_types,
         ).run(test_results_gen, fail_limit)
 
         if was_cancelled:
-            print_run_cancelled()
+            console.print(
+                "Run cancelled - results for tests that ran shown below.",
+                style="info",
+            )
 
         failed_test_results = [r for r in all_results if r.outcome == TestOutcome.FAIL]
         for failure in failed_test_results:
