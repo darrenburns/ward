@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        python-version: [ 3.6, 3.7, 3.8, 3.9, 3.10.0-beta.1 ]
     defaults:
       run:
         shell: bash
@@ -34,7 +34,10 @@ jobs:
           virtualenvs-create: true
 
       - name: Install dependencies
-        run: poetry install --no-interaction
+        run: |
+          poetry config experimental.new-installer false
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
 
       - name: Run tests with Ward
         run: |
@@ -45,11 +48,3 @@ jobs:
         run: |
           bash <(curl -s https://codecov.io/bash) -f coverage.xml
         shell: bash
-
-# TODO: Update to use the Makefile and actually enforce this.
-#    - name: Lint with flake8 (CONFIG OUTDATED)
-#      run: |
-#        # stop the build if there are Python syntax errors or undefined names
-#        python3.7 -m poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-#        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-#        python3.7 -m poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
