@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        python-version: [ 3.6, 3.7, 3.8, 3.9, 3.10.0-beta.1 ]
     defaults:
       run:
         shell: bash
@@ -30,7 +30,10 @@ jobs:
           virtualenvs-create: true
 
       - name: Install dependencies
-        run: poetry install --no-interaction
+        run: |
+          poetry config experimental.new-installer false
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
 
       - name: Run tests with Ward
         run: |
