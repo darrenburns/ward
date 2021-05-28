@@ -261,7 +261,6 @@ def output_dots_global(
 INLINE_PROGRESS_LEN = 5  # e.g. "  93%"
 
 
-# flake8: noqa: C901 - FIXME
 def output_dots_module(
     fail_limit: int,
     num_tests: int,
@@ -304,16 +303,17 @@ def output_dots_module(
                 rel_path = str(current_path.relative_to(cwd))
 
                 final_slash_idx = rel_path.rfind("/")
-                if final_slash_idx != -1:
-                    path_text = Text("", end="").join(
+                path_text = (
+                    Text("", end="").join(
                         [
                             Text(rel_path[: final_slash_idx + 1], style="muted"),
                             Text(rel_path[final_slash_idx + 1 :]),
                             Text(": "),
                         ]
                     )
-                else:
-                    path_text = Text(f"{rel_path}: ", end="")
+                    if final_slash_idx != -1
+                    else Text(f"{rel_path}: ", end="")
+                )
                 console.print(path_text, end="")
 
                 max_dots_per_line = base_max_dots_per_line - path_text.cell_len
