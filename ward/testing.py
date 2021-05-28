@@ -174,71 +174,65 @@ class Test:
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.id == other.id
 
-    # FIXME:fix linter C901
-    def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":  # noqa: C901
+    def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":
+        def _is_active(marker):
+            return isinstance(self.marker, marker) and self.marker.active
+
         with ExitStack() as stack:
+
             self.timer = stack.enter_context(_Timer())
             if self.capture_output:
                 stack.enter_context(redirect_stdout(self.sout))
                 stack.enter_context(redirect_stderr(self.serr))
 
-            if dry_run:
-                with closing(self.sout), closing(self.serr):
-                    result = TestResult(self, TestOutcome.DRYRUN)
-                return result
-
-            if isinstance(self.marker, SkipMarker) and self.marker.active:
-                with closing(self.sout), closing(self.serr):
-                    result = TestResult(self, TestOutcome.SKIP)
-                return result
-
             try:
                 resolved_args = self.resolver.resolve_args(cache)
                 self.format_description(resolved_args)
-                if self.is_async_test:
-                    coro = self.fn(**resolved_args)
-                    asyncio.get_event_loop().run_until_complete(coro)
-                else:
-                    self.fn(**resolved_args)
-            except FixtureError as e:
-                outcome = TestOutcome.FAIL
-                error: Optional[Exception] = e
+                self.fn_run(resolved_args)
             except BdbQuit:
                 # We don't want to treat the user quitting the debugger
                 # as an exception, so we'll ignore BdbQuit. This will
                 # also prevent a large pdb-internal stack trace flooding
                 # the terminal.
                 pass
-            except (Exception, SystemExit) as e:
-                error = e
-                if isinstance(self.marker, XfailMarker) and self.marker.active:
-                    outcome = TestOutcome.XFAIL
-                else:
-                    outcome = TestOutcome.FAIL
+            except (Exception, SystemExit) as exc:
+                error = exc
+                outcome = (
+                    TestOutcome.XFAIL if _is_active(XfailMarker) else TestOutcome.FAIL
+                )
             else:
                 error = None
-                if isinstance(self.marker, XfailMarker) and self.marker.active:
-                    outcome = TestOutcome.XPASS
-                else:
-                    outcome = TestOutcome.PASS
-
-        with closing(self.sout), closing(self.serr):
-            if outcome in (TestOutcome.PASS, TestOutcome.SKIP):
-                result = TestResult(self, outcome)
-            else:
-                if isinstance(error, AssertionError):
-                    error.error_line = traceback.extract_tb(
-                        error.__traceback__, limit=-1
-                    )[0].lineno
-                result = TestResult(
-                    self,
-                    outcome,
-                    error,
-                    captured_stdout=self.sout.getvalue(),
-                    captured_stderr=self.serr.getvalue(),
+                outcome = (
+                    TestOutcome.XPASS if _is_active(XfailMarker) else TestOutcome.PASS
                 )
 
-        return result
+        if isinstance(error, AssertionError):
+            error.error_line = traceback.extract_tb(error.__traceback__, limit=-1)[
+                0
+            ].lineno
+
+        with closing(self.sout), closing(self.serr):
+            if dry_run:
+                return TestResult(self, TestOutcome.DRYRUN)
+            if _is_active(SkipMarker):
+                return TestResult(self, TestOutcome.SKIP)
+            if outcome == TestOutcome.PASS:
+                return TestResult(self, TestOutcome.PASS)
+            return TestResult(
+                self,
+                outcome,
+                error,
+                captured_stdout=self.sout.getvalue(),
+                captured_stderr=self.serr.getvalue(),
+            )
+
+    def fn_run(self, resolved_args):
+        """Runs the function in a separate thread."""
+        if self.is_async_test:
+            coro = self.fn(**resolved_args)
+            asyncio.get_event_loop().run_until_complete(coro)
+        else:
+            self.fn(**resolved_args)
 
     def fail_with_error(self, error: Exception) -> "TestResult":
         return TestResult(
