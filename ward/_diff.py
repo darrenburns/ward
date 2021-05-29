@@ -49,13 +49,13 @@ class Diff:
         marker_style_map = {
             "-": {
                 " ": "green",
-                "-": "bold green on green",
-                "^": "bold green on green",
+                "-": "white on green",
+                "^": "white on green",
             },
             "+": {
                 " ": "red",
-                "+": "bold red on red",
-                "^": "bold red on red",
+                "+": "white on red",
+                "^": "white on red",
             },
         }
         new_line = Text("")
@@ -107,4 +107,4 @@ class Diff:
             result = self.build_symbolic_unified_diff()
         else:
             result = self.build_unified_diff()
-        return result
+        yield from result
