@@ -209,13 +209,6 @@ def get_end_of_line_for_dots(
         return Text("\n")
 
 
-def print_run_cancelled():
-    console.print(
-        "Run cancelled - results for tests that ran shown below.",
-        style="info",
-    )
-
-
 @dataclass
 class TestTimingStatsPanel:
     all_tests_in_session: List[TestResult]
@@ -344,7 +337,7 @@ class TestResultDisplayWidget:
         """
         This method should return an object that can be rendered by Rich.
         It will be inserted into the "footer" of the test suite result display,
-        which hugs the bottom of the terminal as the suite runs.
+        which hugs the bottom of the output as the suite runs.
 
         This method may be called at any time to refresh the state of the footer,
         so it should be a pure function.
@@ -397,22 +390,22 @@ class SuiteProgressBar(TestResultDisplayWidget):
         )
         self.task = self.progress.add_task("Testing...", total=num_tests)
 
-    def footer(self, results: List[TestResult]):
+    def footer(self, results: List[TestResult]) -> ConsoleRenderable:
         return self.progress
 
-    def after_test(self, idx: int, result: TestResult):
+    def after_test(self, idx: int, result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
 
         if result.outcome is TestOutcome.FAIL:
             self.spinner.spinner.style = "fail.textonly"
             self.bar.complete_style = "fail.textonly"
 
-    def after_suite(self, results: List[TestResult]):
+    def after_suite(self, results: List[TestResult]) -> None:
         self.progress = None
 
 
 class TestPerLine(TestResultDisplayWidget):
-    def after_test(self, idx: int, result: TestResult):
+    def after_test(self, idx: int, result: TestResult) -> None:
         self.console.print(
             get_test_result_line(result, idx, self.num_tests, self.progress_styles)
         )
@@ -434,10 +427,10 @@ class DotsPerModule(TestResultDisplayWidget):
 
         self.footer_text = Text()
 
-    def footer(self, results: List[TestResult]):
+    def footer(self, results: List[TestResult]) -> ConsoleRenderable:
         return self.footer_text
 
-    def after_test(self, idx: int, result: TestResult):
+    def after_test(self, idx: int, result: TestResult) -> None:
         if result.test.path != self.current_path:  # i.e., we are starting a new module
             if idx > 0:  # print the end-of-line for the previous module
                 self.footer_text.append(
@@ -500,10 +493,10 @@ class DotsGlobal(TestResultDisplayWidget):
 
         self.footer_text = Text()
 
-    def footer(self, results: List[TestResult]):
+    def footer(self, results: List[TestResult]) -> ConsoleRenderable:
         return self.footer_text
 
-    def after_test(self, idx: int, result: TestResult):
+    def after_test(self, idx: int, result: TestResult) -> None:
         self.footer_text.append(get_dot(result))
 
         self.dots_on_line += 1
@@ -517,6 +510,7 @@ class DotsGlobal(TestResultDisplayWidget):
                     progress_styles=self.progress_styles,
                 )
             )
+            self.dots_on_line = 0
 
 
 LENGTH_ONE_SPINNERS = [
@@ -549,12 +543,11 @@ class LiveTestBar(TestResultDisplayWidget):
             console=console,
         )
         self.task = self.progress.add_task("", total=num_tests)
-        self.has_failed = False
 
-    def footer(self, results: List[TestResult]):
+    def footer(self, results: List[TestResult]) -> ConsoleRenderable:
         return self.progress
 
-    def after_test(self, idx: int, result: TestResult):
+    def after_test(self, idx: int, result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
         self.test_description.renderable = get_test_result_line(
             result, idx, self.num_tests, self.progress_styles
@@ -568,7 +561,7 @@ class LiveTestBar(TestResultDisplayWidget):
             )
             self.smiley.renderable = self.bad_smiley
 
-    def after_suite(self, results: List[TestResult]):
+    def after_suite(self, results: List[TestResult]) -> None:
         self.progress = None
 
 
@@ -584,15 +577,20 @@ class TerminalResultsWriter:
             for widgets in widget_types
         ]
         self.live = Live(
-            console=console, renderable=self.footer(results=[]), refresh_per_second=10
+            console=console,
+            renderable=self.footer(results=[]),
+            refresh_per_second=10,
         )
 
     def footer(self, results: List[TestResult]) -> RenderGroup:
-        footers = [component.footer(results) for component in self.widgets]
-        return RenderGroup(*(f for f in footers if f is not None))
+        return RenderGroup(
+            *filter(None, (component.footer(results) for component in self.widgets))
+        )
 
     def run(
-        self, test_results: Iterator[TestResult], fail_limit: int
+        self,
+        test_results: Iterator[TestResult],
+        fail_limit: int,
     ) -> Tuple[List[TestResult], bool]:
         """
         Execute the test suite, returning the list of test results
