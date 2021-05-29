@@ -3,12 +3,9 @@ import tempfile
 from collections import defaultdict
 from pathlib import Path
 
-from rich.console import ConsoleRenderable
-
 from ward import fixture, test
 from ward._testing import is_test_module_name
 from ward.fixtures import Fixture
-from ward.terminal import console
 from ward.testing import Test
 
 NUMBER_OF_TESTS = 5
@@ -95,10 +92,3 @@ def make_project(root_file: str):
     with open(root_file, "w+", encoding="utf-8"):
         yield tempdir / "project"
     shutil.rmtree(tempdir / "project")
-
-
-def print_to_string(renderable: ConsoleRenderable) -> str:
-    # https://rich.readthedocs.io/en/latest/console.html#capturing-output
-    with console.capture() as capture:
-        console.print(renderable)
-    return capture.get()

@@ -142,11 +142,11 @@ class TestProgressStyle(str, Enum):
 
 def get_test_result_line(
     test_result: TestResult,
-    idx: int,
+    test_index: int,
     num_tests: int,
     progress_styles: List[TestProgressStyle],
     extra_left_pad: int = 0,
-):
+) -> Table:
     """
     Outputs a single test result to the terminal in Ward's standard output
     format which outputs a single test per line.
@@ -178,19 +178,19 @@ def get_test_result_line(
 
     if TestProgressStyle.INLINE in progress_styles:
         grid.add_column(justify="right", style="muted")
-        columns.append(f"{idx / num_tests:>4.0%}")
+        columns.append(f"{(test_index + 1) / num_tests:>4.0%}")
 
     grid.add_row(*columns)
 
     return grid
 
 
-INLINE_PROGRESS_LEN = 5  # e.g. "  93%"
-
-
 def get_dot(result: TestResult) -> Text:
     style = outcome_to_style(result.outcome)
     return Text(result.outcome.display_char, style=style, end="")
+
+
+INLINE_PROGRESS_LEN = 5  # e.g. "  93%"
 
 
 def get_end_of_line_for_dots(
@@ -333,7 +333,7 @@ class TestResultDisplayWidget:
         self.num_tests = num_tests
         self.progress_styles = progress_styles
 
-    def footer(self, results: List[TestResult]) -> Optional[ConsoleRenderable]:
+    def footer(self, test_results: List[TestResult]) -> Optional[ConsoleRenderable]:
         """
         This method should return an object that can be rendered by Rich.
         It will be inserted into the "footer" of the test suite result display,
@@ -348,7 +348,7 @@ class TestResultDisplayWidget:
         """
         pass
 
-    def after_test(self, idx: int, result: TestResult) -> None:
+    def after_test(self, test_index: int, test_result: TestResult) -> None:
         """
         This method is called after each test is executed,
         with the results of that test and the index of that test in the suite.
@@ -361,7 +361,7 @@ class TestResultDisplayWidget:
         """
         pass
 
-    def after_suite(self, results: List[TestResult]) -> None:
+    def after_suite(self, test_results: List[TestResult]) -> None:
         """
         This method is called after the suite is done executing
         (or is cancelled, or aborts mid-run, etc.),
@@ -390,24 +390,26 @@ class SuiteProgressBar(TestResultDisplayWidget):
         )
         self.task = self.progress.add_task("Testing...", total=num_tests)
 
-    def footer(self, results: List[TestResult]) -> ConsoleRenderable:
+    def footer(self, test_results: List[TestResult]) -> ConsoleRenderable:
         return self.progress
 
-    def after_test(self, idx: int, result: TestResult) -> None:
+    def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
 
-        if result.outcome is TestOutcome.FAIL:
+        if test_result.outcome is TestOutcome.FAIL:
             self.spinner.spinner.style = "fail.textonly"
             self.bar.complete_style = "fail.textonly"
 
-    def after_suite(self, results: List[TestResult]) -> None:
+    def after_suite(self, test_results: List[TestResult]) -> None:
         self.progress = None
 
 
 class TestPerLine(TestResultDisplayWidget):
-    def after_test(self, idx: int, result: TestResult) -> None:
+    def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.console.print(
-            get_test_result_line(result, idx, self.num_tests, self.progress_styles)
+            get_test_result_line(
+                test_result, test_index, self.num_tests, self.progress_styles
+            )
         )
 
 
@@ -427,15 +429,17 @@ class DotsPerModule(TestResultDisplayWidget):
 
         self.footer_text = Text()
 
-    def footer(self, results: List[TestResult]) -> ConsoleRenderable:
+    def footer(self, test_results: List[TestResult]) -> ConsoleRenderable:
         return self.footer_text
 
-    def after_test(self, idx: int, result: TestResult) -> None:
-        if result.test.path != self.current_path:  # i.e., we are starting a new module
-            if idx > 0:  # print the end-of-line for the previous module
+    def after_test(self, test_index: int, test_result: TestResult) -> None:
+        if (
+            test_result.test.path != self.current_path
+        ):  # i.e., we are starting a new module
+            if test_index > 0:  # print the end-of-line for the previous module
                 self.footer_text.append(
                     get_end_of_line_for_dots(
-                        test_index=idx,
+                        test_index=test_index,
                         num_tests=self.num_tests,
                         dots_on_line=self.dots_on_line,
                         max_dots_per_line=self.max_dots_per_line,
@@ -444,7 +448,7 @@ class DotsPerModule(TestResultDisplayWidget):
                 )
 
             self.dots_on_line = 0
-            self.current_path = result.test.path
+            self.current_path = test_result.test.path
             rel_path = str(self.current_path.relative_to(self.cwd))
 
             final_slash_idx = rel_path.rfind("/")
@@ -465,7 +469,7 @@ class DotsPerModule(TestResultDisplayWidget):
         if self.dots_on_line == self.max_dots_per_line:
             self.footer_text.append(
                 get_end_of_line_for_dots(
-                    test_index=idx,
+                    test_index=test_index,
                     num_tests=self.num_tests,
                     dots_on_line=self.dots_on_line,
                     max_dots_per_line=self.max_dots_per_line,
@@ -477,7 +481,7 @@ class DotsPerModule(TestResultDisplayWidget):
             self.dots_on_line = 0
             self.max_dots_per_line = self.base_max_dots_per_line
 
-        self.footer_text.append(get_dot(result))
+        self.footer_text.append(get_dot(test_result))
         self.dots_on_line += 1
 
 
@@ -493,17 +497,17 @@ class DotsGlobal(TestResultDisplayWidget):
 
         self.footer_text = Text()
 
-    def footer(self, results: List[TestResult]) -> ConsoleRenderable:
+    def footer(self, test_results: List[TestResult]) -> ConsoleRenderable:
         return self.footer_text
 
-    def after_test(self, idx: int, result: TestResult) -> None:
-        self.footer_text.append(get_dot(result))
+    def after_test(self, test_index: int, test_result: TestResult) -> None:
+        self.footer_text.append(get_dot(test_result))
 
         self.dots_on_line += 1
         if self.dots_on_line == self.max_dots_per_line:
             self.footer_text.append(
                 get_end_of_line_for_dots(
-                    test_index=idx,
+                    test_index=test_index,
                     num_tests=self.num_tests,
                     dots_on_line=self.dots_on_line,
                     max_dots_per_line=self.max_dots_per_line,
@@ -544,24 +548,31 @@ class LiveTestBar(TestResultDisplayWidget):
         )
         self.task = self.progress.add_task("", total=num_tests)
 
-    def footer(self, results: List[TestResult]) -> ConsoleRenderable:
+    def footer(self, test_results: List[TestResult]) -> ConsoleRenderable:
         return self.progress
 
-    def after_test(self, idx: int, result: TestResult) -> None:
+    def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
         self.test_description.renderable = get_test_result_line(
-            result, idx, self.num_tests, self.progress_styles
+            test_result=test_result,
+            test_index=test_index,
+            num_tests=self.num_tests,
+            progress_styles=self.progress_styles,
         )
 
-        if result.outcome is TestOutcome.FAIL:
+        if test_result.outcome is TestOutcome.FAIL:
             self.console.print(
                 get_test_result_line(
-                    result, idx, self.num_tests, self.progress_styles, extra_left_pad=5
+                    test_result=test_result,
+                    test_index=test_index,
+                    num_tests=self.num_tests,
+                    progress_styles=self.progress_styles,
+                    extra_left_pad=5,
                 )
             )
             self.smiley.renderable = self.bad_smiley
 
-    def after_suite(self, results: List[TestResult]) -> None:
+    def after_suite(self, test_results: List[TestResult]) -> None:
         self.progress = None
 
 
