@@ -22,11 +22,19 @@ from typing import (
     Optional,
 )
 
-from rich.console import Console, ConsoleOptions, RenderGroup, RenderResult
+from rich._inspect import Inspect
+from rich.console import (
+    Console,
+    ConsoleOptions,
+    ConsoleRenderable,
+    RenderGroup,
+    RenderResult,
+)
 from rich.highlighter import NullHighlighter
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
+from rich.pretty import Pretty
 from rich.progress import BarColumn, Progress, SpinnerColumn, TimeElapsedColumn
 from rich.rule import Rule
 from rich.syntax import Syntax
@@ -680,12 +688,22 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 src = Padding(src, (1, 0, 1, 4))
                 console.print(src)
 
-                if err.operator == Comparison.Equals:
-                    self.print_failure_equals(err)
+                self.print_pretty_failure(err)
         else:
             self.print_traceback(err)
 
-    def print_failure_equals(self, err: TestFailure):
+    def print_pretty_failure(self, err: TestFailure) -> None:
+        pretty = None
+
+        if err.operator is Comparison.Equals:
+            pretty = self.get_pretty_failure_for_equals(err)
+        elif err.operator in {Comparison.In, Comparison.NotIn}:
+            pretty = self.get_pretty_failure_for_in(err)
+
+        if pretty:
+            console.print(pretty)
+
+    def get_pretty_failure_for_equals(self, err: TestFailure) -> ConsoleRenderable:
         diff_msg = Text("LHS", style="pass.textonly")
         diff_msg.append(" vs ", style="default")
         diff_msg.append("RHS", style="fail.textonly")
@@ -697,7 +715,30 @@ class SimpleTestResultWrite(TestResultWriterBase):
             width=self.terminal_size.width - 24,
             show_symbols=self.show_diff_symbols,
         )
-        console.print(Padding(diff, pad=(0, 0, 1, 4)))
+        return Padding(diff, pad=(0, 0, 1, 4))
+
+    def get_pretty_failure_for_in(self, err: TestFailure) -> ConsoleRenderable:
+        before = Text.assemble(
+            ("The ", "default"),
+            ("item", "pass.textonly"),
+            (" (a ", "default"),
+            (type(err.lhs).__name__, "bold default"),
+            (")", "default"),
+        )
+        lhs = Panel(Pretty(err.lhs), border_style="pass.textonly")
+        middle = Text.assemble(
+            (
+                f"{'was not' if err.operator is Comparison.In else 'was'}",
+                "bold default",
+            ),
+            (" found in the", "default"),
+            (" container", "fail.textonly"),
+            (" (a ", "default"),
+            (type(err.rhs).__name__, "bold default"),
+            (")", "default"),
+        )
+        rhs = Panel(Pretty(err.rhs, expand_all=True), border_style="fail.textonly")
+        return Padding(RenderGroup(before, lhs, middle, rhs), pad=(0, 0, 1, 2))
 
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
