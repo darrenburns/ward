@@ -20,8 +20,6 @@ from ward.fixtures import Fixture
 from ward.models import CollectionMetadata
 from ward.testing import Test
 
-Glob = str
-
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:
     return is_test_module_name(module.name)
@@ -31,17 +29,31 @@ def _get_module_path(module: pkgutil.ModuleInfo) -> Path:
     return Path(module.module_finder.find_module(module.name).path)
 
 
-def _is_excluded_module(module: pkgutil.ModuleInfo, exclusions: Iterable[Glob]) -> bool:
+def _is_excluded_module(module: pkgutil.ModuleInfo, exclusions: Iterable[str]) -> bool:
     return _excluded(_get_module_path(module), exclusions)
 
 
-def _excluded(path: Path, exclusions: Iterable[Glob]) -> bool:
-    """Return True if path matches any of the glob patterns in exclusions. False otherwise."""
-    return any(path.match(pattern) for pattern in exclusions)
+def _excluded(path: Path, exclusions: Iterable[str]) -> bool:
+    """Return True if path matches any of the `exclude` paths passed by the user. False otherwise."""
+    for exclude in exclusions:
+        exclusion_path = Path(exclude)
+        if exclusion_path == path:
+            return True
+
+        try:
+            path.relative_to(exclusion_path)
+        except ValueError:
+            # We need to look at the rest of the exclusions
+            # to see if they match, so move on to the next one.
+            continue
+        else:
+            return True
+
+    return False
 
 
 def _remove_excluded_paths(
-    paths: Iterable[Path], exclusions: Iterable[Glob]
+    paths: Iterable[Path], exclusions: Iterable[str]
 ) -> List[Path]:
     return [p for p in paths if not _excluded(p, exclusions)]
 
@@ -61,7 +73,7 @@ def _handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
 # flake8: noqa: C901 - FIXME
 def get_info_for_modules(
     paths: List[Path],
-    exclude: Tuple[Glob],
+    exclude: Tuple[str],
 ) -> List[pkgutil.ModuleInfo]:
     paths = _remove_excluded_paths(set(paths), exclude)
 

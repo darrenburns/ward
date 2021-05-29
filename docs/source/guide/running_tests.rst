@@ -41,16 +41,16 @@ Ward will run all tests it finds across all given paths. If one of the specified
 Excluding modules or paths with ``--exclude``
 ---------------------------------------------
 
-``ward --exclude glob1 --exclude glob2``
+You can tell Ward to ignore specific modules or directories using the ``--exclude`` command line option. For example:
 
-You can tell Ward to ignore specific modules or directories using the ``--exclude`` command line option. This option can be supplied multiple times, and supports glob patterns.
+``ward --exclude path/to/dir1 --exclude path/to/dir2``
 
 You can also exclude paths using ``pyproject.toml``:
 
 .. code-block:: toml
 
    [tool.ward]
-   exclude = ["glob1", "glob2"]
+   exclude = ["tests/resources", "tests/utilities.py"]
 
 Selecting tagged tests with ``--tags``
 --------------------------------------

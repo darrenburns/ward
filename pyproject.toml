@@ -4,6 +4,7 @@ build-backend = "poetry.masonry.api"
 
 [tool.ward]
 path = ["tests"]
+exclude = ["tests/resources/"]
 
 [tool.poetry]
 name = "ward"

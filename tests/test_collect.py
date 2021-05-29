@@ -207,23 +207,53 @@ def _(mod=test_module):
 @test("is_excluded_module({mod.name}) is True for {excludes}")
 def _(
     mod=test_module,
-    excludes=each(
-        "*", "*/**.py", str(PATH), "**/test_mod.py", "path/to/*", "path/*/*.py"
-    ),
+    excludes=str(PATH),
 ):
     assert _is_excluded_module(mod, [excludes])
 
 
 @test("is_excluded_module({mod.name}) is False for {excludes}")
-def _(mod=test_module, excludes=each("abc", str(PATH.parent))):
-    assert not _is_excluded_module(mod, [excludes])
+def _(mod=test_module, excludes=each("abc", "/path/to", "/path")):
+    assert not _is_excluded_module(mod, exclusions=[excludes])
 
 
-@test("remove_excluded_paths removes exclusions from list of paths")
-def _():
-    paths = [Path("/a/b/c.py"), Path("/a/b/")]
-    excludes = ["**/*.py"]
-    assert _remove_excluded_paths(paths, excludes) == [paths[1]]
+@fixture
+def paths_to_py_files():
+    return [
+        Path("/a/b/c.py"),
+        Path("/a/b/d/e.py"),
+        Path("/a/b/d/f/g/h.py"),
+    ]
+
+
+for path_to_exclude in ["/a", "/a/", "/a/b", "/a/b/"]:
+
+    @test("remove_excluded_paths removes {exclude} from list of paths")
+    def _(exclude=path_to_exclude, paths=paths_to_py_files):
+        assert _remove_excluded_paths(paths, [exclude]) == []
+
+
+@test(
+    "remove_excluded_paths removes correct files when exclusions relative to each other"
+)
+def _(paths=paths_to_py_files):
+    assert _remove_excluded_paths(paths, ["/a/b/d", "/a/b/d/", "/a/b/d/f"]) == [
+        Path("/a/b/c.py")
+    ]
+
+
+@test("remove_excluded_paths removes individually specified files")
+def _(paths=paths_to_py_files):
+    assert _remove_excluded_paths(paths, ["/a/b/d/e.py", "/a/b/d/f/g/h.py"]) == [
+        Path("/a/b/c.py")
+    ]
+
+
+@test("remove_excluded_paths can remove mixture of files and dirs")
+def _(paths=paths_to_py_files):
+    assert _remove_excluded_paths(paths, ["/a/b/d/e.py", "/a/b/d/f/g/"]) == [
+        Path("/a/b/c.py")
+    ]
 
 
 @fixture
