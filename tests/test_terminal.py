@@ -7,12 +7,14 @@ from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
-from tests.utilities import example_test
+from tests.utilities import example_test, print_to_string
 from ward import fixture, using
 from ward._terminal import (
     SessionPrelude,
+    TestProgressStyle,
     TestTimingStatsPanel,
     get_exit_code,
+    get_test_result_line,
     outcome_to_style,
 )
 from ward._testing import _Timer
@@ -206,3 +208,31 @@ def _(timing_stats_panel=timing_stats_panel):
     assert table.columns[0]._cells == expected_durations
     assert len(table.columns[1]._cells) == 3
     assert table.columns[2]._cells == expected_test_descriptions
+
+
+@fixture
+def test_result() -> TestResult:
+    return TestResult(
+        test=Test(
+            timer=_Timer(duration=4.0),
+            fn=lambda: 1,
+            description="test1",
+            module_name="mod1",
+        ),
+        outcome=TestOutcome.FAIL,
+    )
+
+
+for idx, num_tests in [(0, 2)]:
+
+    @test("get_test_result_line emits correct inline progress display")
+    def _(idx=idx, num_tests=num_tests, test_result=test_result):
+        output = print_to_string(
+            get_test_result_line(
+                test_result=test_result,
+                idx=idx,
+                num_tests=num_tests,
+                progress_styles=[TestProgressStyle.INLINE],
+            )
+        )
+        assert " 0%" in output
