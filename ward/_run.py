@@ -73,7 +73,7 @@ config_option = click.option(
 path_option = click.option(
     "-p",
     "--path",
-    type=click.Path(exists=True),
+    type=click.STRING,
     multiple=True,
     is_eager=True,
     help="Look for tests in PATH.",
@@ -82,7 +82,7 @@ exclude_option = click.option(
     "--exclude",
     type=click.STRING,
     multiple=True,
-    help="Paths to ignore while searching for tests. Accepts glob patterns.",
+    help="Paths to ignore while searching for tests.",
 )
 hook_module = click.option(
     "--hook-module",
@@ -166,7 +166,7 @@ hook_module = click.option(
 def test(
     ctx: click.Context,
     config: str,
-    config_path: Optional[Path],
+    config_path: Optional[Path],  # added by callback on '--config' option
     path: Tuple[str],
     exclude: Tuple[str],
     search: Optional[str],

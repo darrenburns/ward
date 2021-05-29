@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Iterable, Union
+from typing import Dict, Iterable, List, Union
 
 import click
 import toml
@@ -63,7 +63,7 @@ def apply_multi_defaults(
     if conf_file_paths and not cli_paths:
         file_config_only["path"] = as_list(conf_file_paths)
 
-    # TODO: Can we retrieve the list below programmatically?
+    # TODO: Can we retrieve the tuple below programmatically?
     multiple_options = ("exclude", "hook_module")
     for param in multiple_options:
         from_cli = cli_config.get(param)
@@ -74,14 +74,20 @@ def apply_multi_defaults(
     return file_config_only
 
 
+def _make_all_relative_to(
+    str_paths: Iterable[str], relative_to_path: Path
+) -> List[Path]:
+    return [str_path / relative_to_path for str_path in str_paths]
+
+
 def set_defaults_from_config(
     context: click.Context,
     param: click.Parameter,
     value: Union[str, int],
 ) -> Path:
-    supplied_paths = context.params.get("path")
+    paths_supplied_via_cli = context.params.get("path")
 
-    search_paths = supplied_paths
+    search_paths = paths_supplied_via_cli
     if not search_paths:
         search_paths = (".",)
 
@@ -92,10 +98,25 @@ def set_defaults_from_config(
     else:
         config_path = None
     context.params["config_path"] = config_path
-    file_config = apply_multi_defaults(file_config, context.params)
 
     if context.default_map is None:
         context.default_map = {}
+
+    multi_defaults = apply_multi_defaults(file_config, context.params)
+    file_config.update(multi_defaults)
+
+    # Paths supplied via the CLI should be treated as relative to pwd
+    # However, paths supplied via the pyproject.toml should be relative
+    # to the directory that file is contained in.
+    path_config_keys = ["path", "exclude"]
+    for conf_key, paths in file_config.items():
+        if conf_key in path_config_keys:
+            relative_path_strs = []
+            for path_str in paths:
+                relative_path_strs.append(
+                    str((project_root / path_str).relative_to(Path.cwd()))
+                )
+            file_config[conf_key] = tuple(relative_path_strs)
 
     context.default_map.update(file_config)
 
