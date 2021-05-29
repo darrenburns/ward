@@ -22,7 +22,6 @@ from typing import (
     Optional,
 )
 
-from rich._inspect import Inspect
 from rich.console import (
     Console,
     ConsoleOptions,
