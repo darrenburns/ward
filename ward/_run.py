@@ -26,7 +26,7 @@ from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite
 from ward._terminal import (
     SessionPrelude,
-    SimpleTestResultWrite,
+    SimpleTestResultWriter,
     TestOutputStyle,
     TestProgressStyle,
     console,
@@ -226,7 +226,7 @@ def test(
             config_path=config_path,
         )
     )
-    writer = SimpleTestResultWrite(
+    writer = SimpleTestResultWriter(
         suite=suite,
         test_output_style=test_output_style,
         progress_styles=progress_styles,

@@ -655,7 +655,7 @@ def get_terminal_size() -> TerminalSize:
     return TerminalSize(height=24, width=80)
 
 
-class SimpleTestResultWrite(TestResultWriterBase):
+class SimpleTestResultWriter(TestResultWriterBase):
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
         console.print(
@@ -687,11 +687,11 @@ class SimpleTestResultWrite(TestResultWriterBase):
                 src = Padding(src, (1, 0, 1, 4))
                 console.print(src)
 
-                self.print_pretty_failure(err)
+                self.print_pretty_comparison_failure(err)
         else:
             self.print_traceback(err)
 
-    def print_pretty_failure(self, err: TestFailure) -> None:
+    def print_pretty_comparison_failure(self, err: TestFailure) -> None:
         pretty = None
 
         if err.operator is Comparison.Equals:
