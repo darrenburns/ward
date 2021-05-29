@@ -29,7 +29,13 @@ def _():
 
 @fixture
 def fake_project_pyproject():
-    yield from make_project("pyproject.toml")
+    content = """
+    [tool.ward]
+    path = ["a/", "x/y"]
+    exclude = ["a/b/"]
+    some_other_config = ["hello", "world"]
+    """
+    yield from make_project("pyproject.toml", content)
 
 
 @fixture

@@ -1,0 +1,2 @@
+[tool.ward]
+path = ["my_tests"]

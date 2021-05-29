@@ -93,10 +93,12 @@ def set_defaults_from_config(
 
     project_root = find_project_root([Path(path) for path in search_paths])
     file_config = read_config_toml(project_root, _CONFIG_FILE)
+
     if file_config:
-        config_path = project_root / "pyproject.toml"
+        config_path = project_root / _CONFIG_FILE
     else:
         config_path = None
+
     context.params["config_path"] = config_path
 
     if context.default_map is None:
@@ -113,9 +115,7 @@ def set_defaults_from_config(
         if conf_key in path_config_keys:
             relative_path_strs = []
             for path_str in paths:
-                relative_path_strs.append(
-                    str((project_root / path_str).relative_to(Path.cwd()))
-                )
+                relative_path_strs.append(str((project_root / path_str)))
             file_config[conf_key] = tuple(relative_path_strs)
 
     context.default_map.update(file_config)

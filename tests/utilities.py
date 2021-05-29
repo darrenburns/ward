@@ -78,17 +78,20 @@ def example_test(module=module, fixtures=fixtures):
     return Test(fn=t, module_name=module)
 
 
-def make_project(root_file: str):
+def make_project(root_file: str, file_content: str = ""):
     tempdir = Path(tempfile.gettempdir())
     paths = [
         tempdir / "project/a/b/c",
         tempdir / "project/a/d",
         tempdir / "project/a",
+        tempdir / "project/x/y/z",
     ]
     for path in paths:
         path.mkdir(parents=True, exist_ok=True)
 
     root_file = tempdir / f"project/{root_file}"
-    with open(root_file, "w+", encoding="utf-8"):
-        yield tempdir / "project"
+    with open(root_file, "w+", encoding="utf-8") as f:
+        f.write(file_content)
+        f.flush()
+        yield (tempdir / "project").resolve()
     shutil.rmtree(tempdir / "project")
