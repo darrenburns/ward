@@ -1,7 +1,7 @@
 import collections
 import inspect
 from pathlib import Path
-from typing import Any, Callable, Dict, Hashable, Iterable, List, TypeVar
+from typing import Any, Callable, Dict, Hashable, Iterable, List, Optional, TypeVar
 
 
 def truncate(s: str, num_chars: int) -> str:
@@ -9,9 +9,9 @@ def truncate(s: str, num_chars: int) -> str:
     return s[: num_chars - len(suffix)] + suffix
 
 
-def find_project_root(paths: Iterable[Path]) -> Path:
+def find_project_root(paths: Iterable[Path]) -> Optional[Path]:
     if not paths:
-        return Path("/").resolve()
+        return None
 
     common_base = min(path.resolve() for path in paths)
     if common_base.is_dir():
@@ -26,8 +26,6 @@ def find_project_root(paths: Iterable[Path]) -> Path:
             return directory
         if (directory / ".hg").is_dir():
             return directory
-
-    return directory
 
 
 def get_absolute_path(object: Any) -> Path:
