@@ -147,3 +147,27 @@ def _(lhs=molecule_man, rhs=molecule_woman):
         "    'secretIdentity': 'Dan Jukes',",
         "}",
     ]
+
+
+@test("Diff renders symbolic multiline diff correctly, when lines in common")
+def _(lhs=molecule_man, rhs=molecule_woman):
+    diff = Diff(lhs, rhs, 80, show_symbols=True)
+    diff_lines: List[Text] = list(diff.__rich_console__(None, None))
+
+    assert diff_lines == [
+        Text("  {"),
+        Text("      'age': 29,"),
+        Text(
+            "+     'name': 'Molecule Man',",
+        ),
+        Text("?                       ^"),
+        Text(
+            "-     'name': 'Molecule Woman',",
+        ),
+        Text(
+            "?                       ^^^",
+        ),
+        Text("      'powers': ['Turning tiny', 'Radiation blast'],"),
+        Text("      'secretIdentity': 'Dan Jukes',"),
+        Text("  }"),
+    ]
