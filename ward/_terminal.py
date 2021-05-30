@@ -720,11 +720,17 @@ class SimpleTestResultWriter(TestResultWriterBase):
         before = Text.assemble(
             ("The ", "default"),
             ("item", "pass.textonly"),
-            (" (a ", "default"),
+            (" (of type ", "default"),
             (type(err.lhs).__name__, "bold default"),
             (")", "default"),
         )
-        lhs = Panel(Pretty(err.lhs), border_style="pass.textonly")
+        lhs = Panel(
+            Pretty(err.lhs),
+            title=before,
+            title_align="left",
+            border_style="pass.textonly",
+            padding=1,
+        )
         middle = Text.assemble(
             (
                 f"{'was not' if err.operator is Comparison.In else 'was'}",
@@ -732,12 +738,18 @@ class SimpleTestResultWriter(TestResultWriterBase):
             ),
             (" found in the", "default"),
             (" container", "fail.textonly"),
-            (" (a ", "default"),
+            (" (of type ", "default"),
             (type(err.rhs).__name__, "bold default"),
             (")", "default"),
         )
-        rhs = Panel(Pretty(err.rhs, expand_all=True), border_style="fail.textonly")
-        return Padding(RenderGroup(before, lhs, middle, rhs), pad=(0, 0, 1, 2))
+        rhs = Panel(
+            Pretty(err.rhs),
+            title=middle,
+            title_align="left",
+            border_style="fail.textonly",
+            padding=1,
+        )
+        return Padding(RenderGroup(lhs, rhs), pad=(0, 0, 1, 2))
 
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
