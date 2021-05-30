@@ -7,7 +7,6 @@ from typing import List, Optional, Tuple
 
 import click
 import click_completion
-import colorama
 from click_default_group import DefaultGroup
 from cucumber_tag_expressions import parse as parse_tags
 from cucumber_tag_expressions.model import Expression
@@ -38,7 +37,6 @@ from ward.config import Config
 from ward.fixtures import _DEFINED_FIXTURES
 from ward.hooks import plugins, register_hooks_in_modules
 
-colorama.init()
 click_completion.init()
 
 sys.path.append(".")
