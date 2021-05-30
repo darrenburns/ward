@@ -313,4 +313,4 @@ def _():
     with patch_is_dir, patch_exists:
         pkg_data = _build_package_data(m)
         assert pkg_data.pkg_name == "bar.baz"
-        assert str(pkg_data.pkg_root).endswith(":/foo")
+        assert str(pkg_data.pkg_root).endswith("foo")
