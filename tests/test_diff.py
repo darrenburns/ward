@@ -1,6 +1,8 @@
+from typing import List
+
 from rich.text import Span, Text
 
-from ward import test
+from ward import fixture, test
 from ward._diff import Diff
 
 
@@ -95,3 +97,53 @@ def _():
         rhs,
         spans=[Span(0, 16, "red"), Span(16, 19, "white on red"), Span(19, 44, "red")],
     )
+
+
+@fixture
+def molecule_man():
+    return {
+        "name": "Molecule Man",
+        "age": 29,
+        "secretIdentity": "Dan Jukes",
+        "powers": [
+            "Turning tiny",
+            "Radiation blast",
+        ],
+    }
+
+
+@fixture
+def molecule_woman(man=molecule_man):
+    copied = man.copy()
+    copied["name"] = "Molecule Woman"
+    return copied
+
+
+@test("Diff renders multiline diff correctly, when lines in common")
+def _(lhs=molecule_man, rhs=molecule_woman):
+    diff = Diff(lhs, rhs, 80)
+    diff_lines: List[Text] = list(diff.__rich_console__(None, None))
+
+    assert diff_lines == [
+        "{",
+        "    'age': 29,",
+        Text(
+            "    'name': 'Molecule Man',",
+            spans=[
+                Span(0, 22, "green"),
+                Span(22, 23, "white on green"),
+                Span(23, 27, "green"),
+            ],
+        ),
+        Text(
+            "    'name': 'Molecule Woman',",
+            spans=[
+                Span(0, 22, "red"),
+                Span(22, 25, "white on red"),
+                Span(25, 29, "red"),
+            ],
+        ),
+        "    'powers': ['Turning tiny', 'Radiation blast'],",
+        "    'secretIdentity': 'Dan Jukes',",
+        "}",
+    ]
