@@ -165,7 +165,7 @@ hook_module = click.option(
 @click.pass_context
 def test(
     ctx: click.Context,
-    config: str,
+    config: Optional[Path],
     config_path: Optional[Path],  # added by callback on '--config' option
     path: Tuple[str],
     exclude: Tuple[str],

@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 from tests.utilities import make_project
 from ward import fixture, test, using
 from ward._utilities import find_project_root, group_by, truncate
@@ -20,11 +17,10 @@ def _(
     assert result == expected
 
 
-@test("find_project_root returns the root dir if no paths supplied")
+@test("find_project_root returns None if no paths supplied")
 def _():
     project_root = find_project_root([])
-    fs_root = os.path.normpath(os.path.abspath(os.sep))
-    assert project_root == Path(fs_root)
+    assert project_root is None
 
 
 @fixture

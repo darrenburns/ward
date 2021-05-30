@@ -301,7 +301,7 @@ def output_dots_module(
 
                 dots_on_line = 0
                 current_path = result.test.path
-                rel_path = str(current_path.relative_to(cwd))
+                rel_path = str(os.path.relpath(current_path, cwd))
 
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:

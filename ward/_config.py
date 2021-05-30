@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Iterable, List, Union
+from typing import Dict, Iterable, Optional, Union
 
 import click
 import toml
@@ -74,24 +74,26 @@ def apply_multi_defaults(
     return file_config_only
 
 
-def _make_all_relative_to(
-    str_paths: Iterable[str], relative_to_path: Path
-) -> List[Path]:
-    return [str_path / relative_to_path for str_path in str_paths]
-
-
 def set_defaults_from_config(
     context: click.Context,
     param: click.Parameter,
     value: Union[str, int],
-) -> Path:
+) -> Optional[Path]:
     paths_supplied_via_cli = context.params.get("path")
 
     search_paths = paths_supplied_via_cli
     if not search_paths:
         search_paths = (".",)
 
+    if not context.default_map:
+        context.default_map = {}
+
     project_root = find_project_root([Path(path) for path in search_paths])
+    if not project_root:
+        context.params["config_path"] = None
+        context.default_map.update({"path": (".",)})
+        return Path.cwd()
+
     file_config = read_config_toml(project_root, _CONFIG_FILE)
 
     if file_config:
@@ -100,9 +102,6 @@ def set_defaults_from_config(
         config_path = None
 
     context.params["config_path"] = config_path
-
-    if context.default_map is None:
-        context.default_map = {}
 
     multi_defaults = apply_multi_defaults(file_config, context.params)
     file_config.update(multi_defaults)
