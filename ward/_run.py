@@ -14,6 +14,7 @@ from cucumber_tag_expressions.model import Expression
 from rich.console import ConsoleRenderable
 
 from ward._collect import (
+    configure_path,
     filter_fixtures,
     filter_tests,
     get_info_for_modules,
@@ -40,8 +41,6 @@ from ward.hooks import plugins, register_hooks_in_modules
 
 colorama.init()
 click_completion.init()
-
-sys.path.append(".")
 
 
 def _register_hooks(context: click.Context, param: click.Parameter, hook_module_names):
@@ -73,7 +72,7 @@ config_option = click.option(
 path_option = click.option(
     "-p",
     "--path",
-    type=click.Path(exists=True),
+    type=click.STRING,
     multiple=True,
     is_eager=True,
     help="Look for tests in PATH.",
@@ -82,7 +81,7 @@ exclude_option = click.option(
     "--exclude",
     type=click.STRING,
     multiple=True,
-    help="Paths to ignore while searching for tests. Accepts glob patterns.",
+    help="Paths to ignore while searching for tests.",
 )
 hook_module = click.option(
     "--hook-module",
@@ -163,8 +162,9 @@ hook_module = click.option(
 @click.pass_context
 def test(
     ctx: click.Context,
-    config: str,
-    config_path: Optional[Path],
+    config: Optional[Path],
+    project_root: Optional[Path],  # None if the project root cant be found
+    config_path: Optional[Path],  # added by callback on '--config' option
     path: Tuple[str],
     exclude: Tuple[str],
     search: Optional[str],
@@ -193,6 +193,7 @@ def test(
 
     print_before: Tuple[ConsoleRenderable] = plugins.hook.before_session(config=config)
 
+    configure_path(project_root)
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = load_modules(mod_infos)

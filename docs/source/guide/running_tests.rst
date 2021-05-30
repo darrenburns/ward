@@ -3,7 +3,7 @@ Running Tests via the CLI
 
 To find and run tests in your project, you can run ``ward`` without any arguments.
 
-This will recursively search through the current directory for modules with a name starting with ``test_`` or ending with ``_test``,
+This will recursively search through the project for modules with a name starting with ``test_`` or ending with ``_test``,
 and execute any tests contained in the modules it finds.
 
 Test outcomes
@@ -28,9 +28,14 @@ run completes or is cancelled.
 Specifying test paths with ``--path``
 -------------------------------------
 
-You can run tests in a specific directory or module using the ``--path`` option. For example, to run all tests inside a directory named ``tests``: ``ward --path tests``
+You can run tests in a specific directory or module using the ``--path`` option. For example, to run all tests inside a directory named ``tests``: ``ward --path tests``.
 
-To run tests in the current directory, you can just type ``ward``, which is functionally equivalent to ``ward --path .``.
+To run all the tests in your project, you can just type ``ward`` from anywhere inside your project.
+
+Ward considers your project to be the directory containing your ``pyproject.toml`` config file and all directories within. If you don't have a ``pyproject.toml`` file, then
+Ward will look for a ``.git`` or ``.hg`` folder/file and consider that as your project root.
+
+If Ward cannot find a project root, the running ``ward`` without a ``--path`` is equivalent to running ``ward --path .``.
 
 You can directly specify a test module, for example: ``ward --path tests/api/test_get_user.py``.
 
@@ -41,16 +46,16 @@ Ward will run all tests it finds across all given paths. If one of the specified
 Excluding modules or paths with ``--exclude``
 ---------------------------------------------
 
-``ward --exclude glob1 --exclude glob2``
+You can tell Ward to ignore specific modules or directories using the ``--exclude`` command line option. For example:
 
-You can tell Ward to ignore specific modules or directories using the ``--exclude`` command line option. This option can be supplied multiple times, and supports glob patterns.
+``ward --exclude path/to/dir1 --exclude path/to/dir2``
 
 You can also exclude paths using ``pyproject.toml``:
 
 .. code-block:: toml
 
    [tool.ward]
-   exclude = ["glob1", "glob2"]
+   exclude = ["tests/resources", "tests/utilities.py"]
 
 Selecting tagged tests with ``--tags``
 --------------------------------------

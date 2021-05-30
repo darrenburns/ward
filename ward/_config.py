@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Iterable, Union
+from typing import Dict, Iterable, Optional, Union
 
 import click
 import toml
@@ -63,7 +63,7 @@ def apply_multi_defaults(
     if conf_file_paths and not cli_paths:
         file_config_only["path"] = as_list(conf_file_paths)
 
-    # TODO: Can we retrieve the list below programmatically?
+    # TODO: Can we retrieve the tuple below programmatically?
     multiple_options = ("exclude", "hook_module")
     for param in multiple_options:
         from_cli = cli_config.get(param)
@@ -78,24 +78,46 @@ def set_defaults_from_config(
     context: click.Context,
     param: click.Parameter,
     value: Union[str, int],
-) -> Path:
-    supplied_paths = context.params.get("path")
+) -> Optional[Path]:
+    paths_supplied_via_cli = context.params.get("path")
 
-    search_paths = supplied_paths
+    search_paths = paths_supplied_via_cli
     if not search_paths:
         search_paths = (".",)
 
+    if not context.default_map:
+        context.default_map = {"path": (".",)}
+
     project_root = find_project_root([Path(path) for path in search_paths])
+    if project_root:
+        context.params["project_root"] = project_root
+    else:
+        context.params["project_root"] = None
+        context.params["config_path"] = None
+        return Path.cwd()
+
     file_config = read_config_toml(project_root, _CONFIG_FILE)
+
     if file_config:
-        config_path = project_root / "pyproject.toml"
+        config_path = project_root / _CONFIG_FILE
     else:
         config_path = None
-    context.params["config_path"] = config_path
-    file_config = apply_multi_defaults(file_config, context.params)
 
-    if context.default_map is None:
-        context.default_map = {}
+    context.params["config_path"] = config_path
+
+    multi_defaults = apply_multi_defaults(file_config, context.params)
+    file_config.update(multi_defaults)
+
+    # Paths supplied via the CLI should be treated as relative to pwd
+    # However, paths supplied via the pyproject.toml should be relative
+    # to the directory that file is contained in.
+    path_config_keys = ["path", "exclude"]
+    for conf_key, paths in file_config.items():
+        if conf_key in path_config_keys:
+            relative_path_strs = []
+            for path_str in paths:
+                relative_path_strs.append(str((project_root / path_str)))
+            file_config[conf_key] = tuple(relative_path_strs)
 
     context.default_map.update(file_config)
 
