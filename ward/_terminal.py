@@ -4,7 +4,6 @@ import itertools
 import math
 import os
 import platform
-import random
 import statistics
 from dataclasses import dataclass, field
 from enum import Enum
@@ -22,7 +21,6 @@ from typing import (
     Type,
 )
 
-from rich._spinners import SPINNERS
 from rich.console import (
     Console,
     ConsoleOptions,
@@ -482,33 +480,19 @@ class DotsPerModule(DotsDisplayWidget):
 GREEN_CHECK = Text("✔", style="pass.textonly")
 RED_X = Text("✘", style="fail.textonly")
 
-LENGTH_ONE_SPINNERS = [
-    spinner_name
-    for spinner_name, data in SPINNERS.items()
-    if len(data["frames"][0]) == 1
-]
-GOOD_EMOJI = list(set("😃😊😍😇😎😘😁"))
-BAD_EMOJI = list(set("😡😖😒😩😭😫😩😵"))
-
 
 class LiveTestBar(TestResultDisplayWidget):
     def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
         super().__init__(num_tests, progress_styles)
 
-        self.good_emoji = Text(random.choice(GOOD_EMOJI))
-        self.bad_emoji = Text(random.choice(BAD_EMOJI))
-
         self.spinner_column = SpinnerColumn(
-            spinner_name=random.choice(LENGTH_ONE_SPINNERS),
             style="pass.textonly",
             finished_text=GREEN_CHECK,
         )
-        self.emoji_column = RenderableColumn(self.good_emoji)
         self.test_description_column = RenderableColumn(Text(""))
 
         self.progress = Progress(
             self.spinner_column,
-            self.emoji_column,
             self.test_description_column,
             console=console,
         )
@@ -527,20 +511,19 @@ class LiveTestBar(TestResultDisplayWidget):
             progress_styles=self.progress_styles,
         )
 
-        if test_result.outcome is TestOutcome.FAIL:
+        if test_result.outcome.is_bad:
             self.console.print(
                 get_test_result_line(
                     test_result=test_result,
                     test_index=test_index,
                     num_tests=self.num_tests,
                     progress_styles=self.progress_styles,
-                    extra_left_pad=5,  # length of the spinner + emoji + spaces
+                    extra_left_pad=2,  # account for the spinner
                 )
             )
 
             self.spinner_column.finished_text = RED_X
             self.spinner_column.spinner.style = "fail.textonly"
-            self.emoji_column.renderable = self.bad_emoji
 
 
 class SuiteProgressBar(TestResultDisplayWidget):
@@ -548,10 +531,12 @@ class SuiteProgressBar(TestResultDisplayWidget):
         super().__init__(num_tests, progress_styles)
 
         self.spinner_column = SpinnerColumn(
-            style="pass.textonly", finished_text=GREEN_CHECK
+            style="pass.textonly",
+            finished_text=GREEN_CHECK,
         )
         self.bar_column = BarColumn(
-            complete_style="pass.textonly", finished_style="pass.textonly"
+            complete_style="pass.textonly",
+            finished_style="pass.textonly",
         )
 
         self.progress = Progress(
@@ -571,7 +556,7 @@ class SuiteProgressBar(TestResultDisplayWidget):
     def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
 
-        if test_result.outcome is TestOutcome.FAIL:
+        if test_result.outcome.is_bad:
             self.spinner_column.finished_text = RED_X
             self.spinner_column.spinner.style = "fail.textonly"
             self.bar_column.complete_style = "fail.textonly"
