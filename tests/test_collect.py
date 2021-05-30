@@ -1,17 +1,18 @@
 import platform
-import sys
 from dataclasses import dataclass
 from modulefinder import ModuleFinder
 from pathlib import Path
 from pkgutil import ModuleInfo
 from types import ModuleType
+from unittest import mock
 
 from cucumber_tag_expressions import parse
 
 from tests.utilities import make_project
 from ward import fixture, test
 from ward._collect import (
-    _build_package_name,
+    PackageData,
+    _build_package_data,
     _get_module_path,
     _handled_within,
     _is_excluded_module,
@@ -207,23 +208,53 @@ def _(mod=test_module):
 @test("is_excluded_module({mod.name}) is True for {excludes}")
 def _(
     mod=test_module,
-    excludes=each(
-        "*", "*/**.py", str(PATH), "**/test_mod.py", "path/to/*", "path/*/*.py"
-    ),
+    excludes=str(PATH),
 ):
     assert _is_excluded_module(mod, [excludes])
 
 
 @test("is_excluded_module({mod.name}) is False for {excludes}")
-def _(mod=test_module, excludes=each("abc", str(PATH.parent))):
-    assert not _is_excluded_module(mod, [excludes])
+def _(mod=test_module, excludes=each("abc", "/path/to", "/path")):
+    assert not _is_excluded_module(mod, exclusions=[excludes])
 
 
-@test("remove_excluded_paths removes exclusions from list of paths")
-def _():
-    paths = [Path("/a/b/c.py"), Path("/a/b/")]
-    excludes = ["**/*.py"]
-    assert _remove_excluded_paths(paths, excludes) == [paths[1]]
+@fixture
+def paths_to_py_files():
+    return [
+        Path("/a/b/c.py"),
+        Path("/a/b/d/e.py"),
+        Path("/a/b/d/f/g/h.py"),
+    ]
+
+
+for path_to_exclude in ["/a", "/a/", "/a/b", "/a/b/"]:
+
+    @test("remove_excluded_paths removes {exclude} from list of paths")
+    def _(exclude=path_to_exclude, paths=paths_to_py_files):
+        assert _remove_excluded_paths(paths, [exclude]) == []
+
+
+@test(
+    "remove_excluded_paths removes correct files when exclusions relative to each other"
+)
+def _(paths=paths_to_py_files):
+    assert _remove_excluded_paths(paths, ["/a/b/d", "/a/b/d/", "/a/b/d/f"]) == [
+        Path("/a/b/c.py")
+    ]
+
+
+@test("remove_excluded_paths removes individually specified files")
+def _(paths=paths_to_py_files):
+    assert _remove_excluded_paths(paths, ["/a/b/d/e.py", "/a/b/d/f/g/h.py"]) == [
+        Path("/a/b/c.py")
+    ]
+
+
+@test("remove_excluded_paths can remove mixture of files and dirs")
+def _(paths=paths_to_py_files):
+    assert _remove_excluded_paths(paths, ["/a/b/d/e.py", "/a/b/d/f/g/"]) == [
+        Path("/a/b/c.py")
+    ]
 
 
 @fixture
@@ -249,31 +280,37 @@ def _(
     assert not _handled_within(module_path, [root / search])
 
 
-@test("test modules and mro chain are added to sys.modules")
-def _():
-    class Abc:
-        x: int
-
-    for base in reversed(Abc.__mro__):
-        assert base.__module__ in sys.modules
-
-
 @skip("Skipped on Windows", when=platform.system() == "Windows")
-@test("_build_package_name constructs package name '{pkg}' from '{path}'")
-def _(
-    pkg=each("", "foo", "foo.bar"), path=each("foo.py", "foo/bar.py", "foo/bar/baz.py")
-):
+@test("_build_package_data constructs correct package data")
+def _():
+    from ward._collect import Path as ImportedPath
+
     m = ModuleType(name="")
-    m.__file__ = path
-    assert _build_package_name(m) == pkg
+    m.__file__ = "/foo/bar/baz/test_something.py"
+    patch_is_dir = mock.patch.object(ImportedPath, "is_dir", return_value=True)
+    # The intention of the side_effects below is to make `baz` and `bar` directories
+    # contain __init__.py files. It's not clean, but it does test the behaviour well.
+    patch_exists = mock.patch.object(
+        ImportedPath, "exists", side_effect=[True, True, False]
+    )
+    with patch_is_dir, patch_exists:
+        assert _build_package_data(m) == PackageData(
+            pkg_name="bar.baz", pkg_root=Path("/foo")
+        )
 
 
 @skip("Skipped on Unix", when=platform.system() != "Windows")
-@test("_build_package_name constructs package name '{pkg}' from '{path}'")
-def _(
-    pkg=each("", "foo", "foo.bar"),
-    path=each("foo.py", "foo\\bar.py", "foo\\bar\\baz.py"),
-):
+@test("_build_package_data constructs package name '{pkg}' from '{path}'")
+def _():
+    from ward._collect import Path as ImportedPath
+
     m = ModuleType(name="")
-    m.__file__ = path
-    assert _build_package_name(m) == pkg
+    m.__file__ = "\\foo\\bar\\baz\\test_something.py"
+    patch_is_dir = mock.patch.object(ImportedPath, "is_dir", return_value=True)
+    patch_exists = mock.patch.object(
+        ImportedPath, "exists", side_effect=[True, True, False]
+    )
+    with patch_is_dir, patch_exists:
+        pkg_data = _build_package_data(m)
+        assert pkg_data.pkg_name == "bar.baz"
+        assert str(pkg_data.pkg_root).endswith("foo")

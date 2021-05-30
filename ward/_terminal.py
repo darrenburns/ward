@@ -301,7 +301,7 @@ def output_dots_module(
 
                 dots_on_line = 0
                 current_path = result.test.path
-                rel_path = str(current_path.relative_to(cwd))
+                rel_path = str(os.path.relpath(current_path, cwd))
 
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
@@ -782,7 +782,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             console.print(
                 Padding(
                     Text(
-                        f"Failed at {test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}"
+                        f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}:{test_result.error.error_line}"
                     ),
                     pad=(1, 0, 0, 2),
                 )

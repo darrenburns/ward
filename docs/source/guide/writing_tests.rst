@@ -310,14 +310,14 @@ Here's an example of a test that is skipped on Windows:
 
 
     @skip("Skipped on Windows", when=platform.system() == "Windows")
-    @test("_build_package_name constructs package name '{pkg}' from '{path}'")
+    @test("_build_package_data constructs package name '{pkg}' from '{path}'")
     def _(
         pkg=each("", "foo", "foo.bar"),
         path=each("foo.py", "foo/bar.py", "foo/bar/baz.py"),
     ):
         m = ModuleType(name="")
         m.__file__ = path
-        assert _build_package_name(m) == pkg
+        assert _build_package_data(m) == pkg
 
 .. image:: ../_static/conditional_skip.png
     :align: center

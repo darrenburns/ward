@@ -4,6 +4,7 @@ import inspect
 import os
 import pkgutil
 import sys
+from dataclasses import dataclass
 from distutils.sysconfig import get_python_lib
 from importlib._bootstrap import ModuleSpec
 from importlib._bootstrap_external import FileFinder
@@ -20,8 +21,6 @@ from ward.fixtures import Fixture
 from ward.models import CollectionMetadata
 from ward.testing import Test
 
-Glob = str
-
 
 def is_test_module(module: pkgutil.ModuleInfo) -> bool:
     return is_test_module_name(module.name)
@@ -31,17 +30,31 @@ def _get_module_path(module: pkgutil.ModuleInfo) -> Path:
     return Path(module.module_finder.find_module(module.name).path)
 
 
-def _is_excluded_module(module: pkgutil.ModuleInfo, exclusions: Iterable[Glob]) -> bool:
+def _is_excluded_module(module: pkgutil.ModuleInfo, exclusions: Iterable[str]) -> bool:
     return _excluded(_get_module_path(module), exclusions)
 
 
-def _excluded(path: Path, exclusions: Iterable[Glob]) -> bool:
-    """Return True if path matches any of the glob patterns in exclusions. False otherwise."""
-    return any(path.match(pattern) for pattern in exclusions)
+def _excluded(path: Path, exclusions: Iterable[str]) -> bool:
+    """Return True if path matches any of the `exclude` paths passed by the user. False otherwise."""
+    for exclude in exclusions:
+        exclusion_path = Path(exclude)
+        if exclusion_path == path:
+            return True
+
+        try:
+            path.resolve().relative_to(exclusion_path.resolve())
+        except ValueError:
+            # We need to look at the rest of the exclusions
+            # to see if they match, so move on to the next one.
+            continue
+        else:
+            return True
+
+    return False
 
 
 def _remove_excluded_paths(
-    paths: Iterable[Path], exclusions: Iterable[Glob]
+    paths: Iterable[Path], exclusions: Iterable[str]
 ) -> List[Path]:
     return [p for p in paths if not _excluded(p, exclusions)]
 
@@ -58,10 +71,16 @@ def _handled_within(module_path: Path, search_paths: Iterable[Path]) -> bool:
     return False
 
 
+def configure_path(project_root: Optional[Path]) -> None:
+    sys.path.append(".")
+    if project_root:
+        sys.path.append(str(project_root.resolve()))
+
+
 # flake8: noqa: C901 - FIXME
 def get_info_for_modules(
     paths: List[Path],
-    exclude: Tuple[Glob],
+    exclude: Tuple[str],
 ) -> List[pkgutil.ModuleInfo]:
     paths = _remove_excluded_paths(set(paths), exclude)
 
@@ -109,7 +128,13 @@ def get_info_for_modules(
     return module_infos
 
 
-def load_modules(modules: Iterable[ModuleSpec]) -> List[ModuleType]:
+@dataclass
+class PackageData:
+    pkg_name: str
+    pkg_root: Path
+
+
+def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> List[ModuleType]:
     loaded_modules = []
 
     for m in modules:
@@ -120,20 +145,27 @@ def load_modules(modules: Iterable[ModuleSpec]) -> List[ModuleType]:
 
         module_name = m.__name__
         if is_test_module_name(module_name):
-            if module_name not in sys.modules:
-                sys.modules[module_name] = m
-            m.__package__ = _build_package_name(m)
+            pkg_data = _build_package_data(m)
+            if pkg_data.pkg_root not in sys.path:
+                sys.path.append(str(pkg_data.pkg_root))
+            m.__package__ = pkg_data.pkg_name
             m.__loader__.exec_module(m)
             loaded_modules.append(m)
 
     return loaded_modules
 
 
-def _build_package_name(module: ModuleType) -> str:
-    path_without_ext: str = module.__file__.rpartition(".")[0]
-    path_with_dots: str = path_without_ext.replace(os.path.sep, ".")
-    package_name: str = path_with_dots.rpartition(".")[0]
-    return "" if package_name == "." else package_name
+def _build_package_data(module: ModuleType) -> PackageData:
+    path = Path(module.__file__).resolve().parent
+    package_parts = []
+    while path.is_dir() and (path / "__init__.py").exists():
+        package_parts.append(path.stem)
+        path = path.parent
+    package_name = ".".join(reversed(package_parts))
+    return PackageData(
+        pkg_name="" if package_name == "." else package_name,
+        pkg_root=path.resolve(),
+    )
 
 
 def get_tests_in_modules(modules: Iterable, capture_output: bool = True) -> List[Test]:

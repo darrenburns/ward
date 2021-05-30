@@ -1,10 +1,18 @@
 import tempfile
-from pathlib import Path
+import types
+from unittest import mock
 
 import click
 
+from tests.test_util import fake_project_pyproject
 from ward import each, fixture, raises, test
-from ward._config import apply_multi_defaults, as_list, read_config_toml
+from ward._config import (
+    Path,
+    apply_multi_defaults,
+    as_list,
+    read_config_toml,
+    set_defaults_from_config,
+)
 
 
 def temp_conf(conf: str) -> tempfile._TemporaryFileWrapper:
@@ -145,3 +153,27 @@ def _(opt=each("exclude")):
     file_config = {opt: ["a", "b", "c"]}
     cli_config = {opt: ["a"]}
     assert apply_multi_defaults(file_config, cli_config) == {"path": ["."]}
+
+
+@test("set_defaults_from_config sets config defaults map correctly")
+def _(project_root: Path = fake_project_pyproject):
+    """
+    This test checks the situation where we're currently
+    present in a child directory of the project root.
+    The paths in the default map should be configured to be
+    relative to the project root, and NOT from the current
+    working directory.
+    """
+    fake_context = types.SimpleNamespace(
+        params={"path": (str(project_root),)},
+        default_map={},
+    )
+    with mock.patch.object(Path, "cwd", return_value=project_root / "a" / "d"):
+        set_defaults_from_config(fake_context, None, None)
+
+    assert fake_context.default_map == {
+        "exclude": (str(project_root / "a" / "b"),),
+        "path": (str(project_root / "a"), str(project_root / "x" / "y")),
+        "some_other_config": ["hello", "world"],
+    }
+    assert fake_context.params["config_path"] == project_root / "pyproject.toml"
