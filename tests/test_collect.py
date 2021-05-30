@@ -1,17 +1,18 @@
 import platform
-import sys
 from dataclasses import dataclass
 from modulefinder import ModuleFinder
 from pathlib import Path
 from pkgutil import ModuleInfo
 from types import ModuleType
+from unittest import mock
 
 from cucumber_tag_expressions import parse
 
 from tests.utilities import make_project
 from ward import fixture, test
 from ward._collect import (
-    _build_package_name,
+    PackageData,
+    _build_package_data,
     _get_module_path,
     _handled_within,
     _is_excluded_module,
@@ -279,31 +280,37 @@ def _(
     assert not _handled_within(module_path, [root / search])
 
 
-@test("test modules and mro chain are added to sys.modules")
-def _():
-    class Abc:
-        x: int
-
-    for base in reversed(Abc.__mro__):
-        assert base.__module__ in sys.modules
-
-
 @skip("Skipped on Windows", when=platform.system() == "Windows")
-@test("_build_package_name constructs package name '{pkg}' from '{path}'")
-def _(
-    pkg=each("", "foo", "foo.bar"), path=each("foo.py", "foo/bar.py", "foo/bar/baz.py")
-):
+@test("_build_package_data constructs correct package data")
+def _():
+    from ward._collect import Path as ImportedPath
+
     m = ModuleType(name="")
-    m.__file__ = path
-    assert _build_package_name(m) == pkg
+    m.__file__ = "/foo/bar/baz/test_something.py"
+    patch_is_dir = mock.patch.object(ImportedPath, "is_dir", return_value=True)
+    # The intention of the side_effects below is to make `baz` and `bar` directories
+    # contain __init__.py files. It's not clean, but it does test the behaviour well.
+    patch_exists = mock.patch.object(
+        ImportedPath, "exists", side_effect=[True, True, False]
+    )
+    with patch_is_dir, patch_exists:
+        assert _build_package_data(m) == PackageData(
+            pkg_name="bar.baz", pkg_root=Path("/foo")
+        )
 
 
 @skip("Skipped on Unix", when=platform.system() != "Windows")
-@test("_build_package_name constructs package name '{pkg}' from '{path}'")
-def _(
-    pkg=each("", "foo", "foo.bar"),
-    path=each("foo.py", "foo\\bar.py", "foo\\bar\\baz.py"),
-):
+@test("_build_package_data constructs package name '{pkg}' from '{path}'")
+def _():
+    from ward._collect import Path as ImportedPath
+
     m = ModuleType(name="")
-    m.__file__ = path
-    assert _build_package_name(m) == pkg
+    m.__file__ = "\\foo\\bar\\baz\\test_something.py"
+    patch_is_dir = mock.patch.object(ImportedPath, "is_dir", return_value=True)
+    patch_exists = mock.patch.object(
+        ImportedPath, "exists", side_effect=[True, True, False]
+    )
+    with patch_is_dir, patch_exists:
+        assert _build_package_data(m) == PackageData(
+            pkg_name="bar.baz", pkg_root=Path("\\foo")
+        )

@@ -86,12 +86,14 @@ def set_defaults_from_config(
         search_paths = (".",)
 
     if not context.default_map:
-        context.default_map = {}
+        context.default_map = {"path": (".",)}
 
     project_root = find_project_root([Path(path) for path in search_paths])
-    if not project_root:
+    if project_root:
+        context.params["project_root"] = project_root
+    else:
+        context.params["project_root"] = None
         context.params["config_path"] = None
-        context.default_map.update({"path": (".",)})
         return Path.cwd()
 
     file_config = read_config_toml(project_root, _CONFIG_FILE)

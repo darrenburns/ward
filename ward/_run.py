@@ -14,6 +14,7 @@ from cucumber_tag_expressions.model import Expression
 from rich.console import ConsoleRenderable
 
 from ward._collect import (
+    configure_path,
     filter_fixtures,
     filter_tests,
     get_info_for_modules,
@@ -40,8 +41,6 @@ from ward.hooks import plugins, register_hooks_in_modules
 
 colorama.init()
 click_completion.init()
-
-sys.path.append(".")
 
 
 def _register_hooks(context: click.Context, param: click.Parameter, hook_module_names):
@@ -166,6 +165,7 @@ hook_module = click.option(
 def test(
     ctx: click.Context,
     config: Optional[Path],
+    project_root: Optional[Path],  # None if the project root cant be found
     config_path: Optional[Path],  # added by callback on '--config' option
     path: Tuple[str],
     exclude: Tuple[str],
@@ -203,6 +203,7 @@ def test(
 
     print_before: Tuple[ConsoleRenderable] = plugins.hook.before_session(config=config)
 
+    configure_path(project_root)
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = load_modules(mod_infos)
