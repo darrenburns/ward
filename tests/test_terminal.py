@@ -7,9 +7,10 @@ from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
-from tests.utilities import example_test
+from tests.utilities import example_test, testable_test
 from ward import fixture, using
 from ward._terminal import (
+    LiveTestBar,
     SessionPrelude,
     TestProgressStyle,
     TestTimingStatsPanel,
@@ -213,10 +214,14 @@ def _(timing_stats_panel=timing_stats_panel):
 
 @fixture
 def test_result() -> TestResult:
+    @testable_test
+    def _():
+        assert True
+
     return TestResult(
         test=Test(
             timer=_Timer(duration=4.0),
-            fn=lambda: 1,
+            fn=_,
             description="test1",
             module_name="mod1",
         ),
@@ -273,3 +278,25 @@ for outcome, expected_output in [
                 outcome=outcome,
             )
         )
+
+
+@test(f"{LiveTestBar.__name__}'s emoji changes the first time a test fails")
+def _():
+    widget = LiveTestBar(num_tests=5, progress_styles=[])
+    before = widget.emoji_column.renderable
+
+    widget.after_test(
+        0,
+        TestResult(
+            test=Test(
+                timer=_Timer(duration=4.0),
+                fn=_,
+                description="test1",
+                module_name="mod1",
+            ),
+            outcome=TestOutcome.FAIL,
+        ),
+    )
+
+    after = widget.emoji_column.renderable
+    assert after is not before

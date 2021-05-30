@@ -26,7 +26,7 @@ from rich._spinners import SPINNERS
 from rich.console import (
     Console,
     ConsoleOptions,
-    ConsoleRenderable,
+    RenderableType,
     RenderGroup,
     RenderResult,
 )
@@ -185,28 +185,12 @@ def get_test_result_line(
     return grid
 
 
-def get_dot(result: TestResult) -> Text:
-    style = outcome_to_style(result.outcome)
-    return Text(result.outcome.display_char, style=style, end="")
-
-
 INLINE_PROGRESS_LEN = 5  # e.g. "  93%"
 
 
-def get_end_of_line_for_dots(
-    test_index: int,
-    num_tests: int,
-    dots_on_line: int,
-    max_dots_per_line: int,
-    progress_styles: List[TestProgressStyle],
-) -> Text:
-    if TestProgressStyle.INLINE in progress_styles and num_tests > 0:
-        return Text(
-            f"{(test_index + 1) / num_tests:>{max_dots_per_line - dots_on_line + INLINE_PROGRESS_LEN}.0%}\n",
-            style="muted",
-        )
-    else:
-        return Text("\n")
+def get_dot(result: TestResult) -> Text:
+    style = outcome_to_style(result.outcome)
+    return Text(result.outcome.display_char, style=style, end="")
 
 
 @dataclass
@@ -333,7 +317,7 @@ class TestResultDisplayWidget:
         self.num_tests = num_tests
         self.progress_styles = progress_styles
 
-    def footer(self, test_results: List[TestResult]) -> Optional[ConsoleRenderable]:
+    def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
         """
         This method should return an object that can be rendered by Rich.
         It will be inserted into the "footer" of the test suite result display,
@@ -374,36 +358,6 @@ class TestResultDisplayWidget:
         pass
 
 
-class SuiteProgressBar(TestResultDisplayWidget):
-    def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
-        super().__init__(num_tests, progress_styles)
-
-        self.spinner = SpinnerColumn(style="pass.textonly")
-        self.bar = BarColumn(complete_style="pass.textonly")
-        self.progress = Progress(
-            self.spinner,
-            TimeElapsedColumn(),
-            self.bar,
-            "[progress.percentage]{task.percentage:>3.0f}%",
-            "[progress.percentage][{task.completed} / {task.total}]",
-            console=self.console,
-        )
-        self.task = self.progress.add_task("Testing...", total=num_tests)
-
-    def footer(self, test_results: List[TestResult]) -> ConsoleRenderable:
-        return self.progress
-
-    def after_test(self, test_index: int, test_result: TestResult) -> None:
-        self.progress.update(self.task, advance=1)
-
-        if test_result.outcome is TestOutcome.FAIL:
-            self.spinner.spinner.style = "fail.textonly"
-            self.bar.complete_style = "fail.textonly"
-
-    def after_suite(self, test_results: List[TestResult]) -> None:
-        self.progress = None
-
-
 class TestPerLine(TestResultDisplayWidget):
     def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.console.print(
@@ -413,41 +367,87 @@ class TestPerLine(TestResultDisplayWidget):
         )
 
 
-class DotsPerModule(TestResultDisplayWidget):
+class DotsDisplayWidget(TestResultDisplayWidget, abc.ABC):
     def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
         super().__init__(num_tests, progress_styles)
-
-        self.current_path = Path("")
-        self.cwd = Path.cwd()
-        self.dots_on_line = 0
 
         self.base_max_dots_per_line = get_terminal_size().width
         if TestProgressStyle.INLINE in progress_styles:
             self.base_max_dots_per_line -= INLINE_PROGRESS_LEN
 
-        self.max_dots_per_line = self.base_max_dots_per_line
+        self.dots_on_line = 0
+        self.footer_text = self.get_blank_footer_text()
 
-        self.footer_text = Text()
-
-    def footer(self, test_results: List[TestResult]) -> ConsoleRenderable:
+    def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
         return self.footer_text
 
-    def after_test(self, test_index: int, test_result: TestResult) -> None:
-        if (
-            test_result.test.path != self.current_path
-        ):  # i.e., we are starting a new module
-            if test_index > 0:  # print the end-of-line for the previous module
-                self.footer_text.append(
-                    get_end_of_line_for_dots(
-                        test_index=test_index,
-                        num_tests=self.num_tests,
-                        dots_on_line=self.dots_on_line,
-                        max_dots_per_line=self.max_dots_per_line,
-                        progress_styles=self.progress_styles,
-                    )
-                )
+    def get_blank_footer_text(self) -> Text:
+        return Text("", end="")
 
-            self.dots_on_line = 0
+    @property
+    @abc.abstractmethod
+    def max_dots_for_current_line(self) -> int:
+        raise NotImplementedError()
+
+    def end_of_line(self, test_index):
+        self.footer_text.append(self.get_end_of_line_for_dots(test_index=test_index))
+        self.console.print(self.footer_text, end="")
+
+        self.dots_on_line = 0
+        self.footer_text = self.get_blank_footer_text()
+
+    def get_end_of_line_for_dots(
+        self,
+        test_index: int,
+    ) -> Text:
+        if TestProgressStyle.INLINE in self.progress_styles and self.num_tests > 0:
+            fill = (
+                self.max_dots_for_current_line - self.dots_on_line + INLINE_PROGRESS_LEN
+            )
+            return Text(
+                f"{(test_index + 1) / self.num_tests:>{fill}.0%}\n",
+                style="muted",
+            )
+        else:
+            return Text("\n")
+
+    def after_suite(self, test_results: List[TestResult]) -> None:
+        self.end_of_line(test_index=len(test_results) - 1)
+
+
+class DotsGlobal(DotsDisplayWidget):
+    @property
+    def max_dots_for_current_line(self) -> int:
+        return self.base_max_dots_per_line
+
+    def after_test(self, test_index: int, test_result: TestResult) -> None:
+        self.footer_text.append(get_dot(test_result))
+
+        self.dots_on_line += 1
+        if self.dots_on_line == self.max_dots_for_current_line:
+            self.end_of_line(test_index)
+
+
+class DotsPerModule(DotsDisplayWidget):
+    def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
+        super().__init__(num_tests, progress_styles)
+
+        self.current_path = Path("")
+        self.cwd = Path.cwd()
+
+        self._max_dots_for_current_line = self.base_max_dots_per_line
+
+    @property
+    def max_dots_for_current_line(self) -> int:
+        return self._max_dots_for_current_line
+
+    def after_test(self, test_index: int, test_result: TestResult) -> None:
+        # if we are starting a new module
+        if test_result.test.path != self.current_path:
+            # if this isn't the first module, add the end-of-line for the previous module
+            if test_index > 0:
+                self.end_of_line(test_index)
+
             self.current_path = test_result.test.path
             rel_path = str(self.current_path.relative_to(self.cwd))
 
@@ -462,60 +462,25 @@ class DotsPerModule(TestResultDisplayWidget):
                 )
             else:
                 path_text = Text(f"{rel_path}: ", end="")
+
             self.footer_text.append(path_text)
 
-            self.max_dots_per_line = self.base_max_dots_per_line - path_text.cell_len
-
-        if self.dots_on_line == self.max_dots_per_line:
-            self.footer_text.append(
-                get_end_of_line_for_dots(
-                    test_index=test_index,
-                    num_tests=self.num_tests,
-                    dots_on_line=self.dots_on_line,
-                    max_dots_per_line=self.max_dots_per_line,
-                    progress_styles=self.progress_styles,
-                )
+            self._max_dots_for_current_line = (
+                self.base_max_dots_per_line - path_text.cell_len
             )
 
-            # we are now on a blank line with no other dots and no path prefix
-            self.dots_on_line = 0
-            self.max_dots_per_line = self.base_max_dots_per_line
+        if self.dots_on_line == self.max_dots_for_current_line:
+            self.end_of_line(test_index)
+
+            # we are now on a blank line with no path prefix
+            self._max_dots_for_current_line = self.base_max_dots_per_line
 
         self.footer_text.append(get_dot(test_result))
         self.dots_on_line += 1
 
 
-class DotsGlobal(TestResultDisplayWidget):
-    def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
-        super().__init__(num_tests, progress_styles)
-
-        self.dots_on_line = 0
-
-        self.max_dots_per_line = get_terminal_size().width
-        if TestProgressStyle.INLINE in progress_styles:
-            self.max_dots_per_line -= INLINE_PROGRESS_LEN
-
-        self.footer_text = Text()
-
-    def footer(self, test_results: List[TestResult]) -> ConsoleRenderable:
-        return self.footer_text
-
-    def after_test(self, test_index: int, test_result: TestResult) -> None:
-        self.footer_text.append(get_dot(test_result))
-
-        self.dots_on_line += 1
-        if self.dots_on_line == self.max_dots_per_line:
-            self.footer_text.append(
-                get_end_of_line_for_dots(
-                    test_index=test_index,
-                    num_tests=self.num_tests,
-                    dots_on_line=self.dots_on_line,
-                    max_dots_per_line=self.max_dots_per_line,
-                    progress_styles=self.progress_styles,
-                )
-            )
-            self.dots_on_line = 0
-
+GREEN_CHECK = Text("✔", style="pass.textonly")
+RED_X = Text("✘", style="fail.textonly")
 
 LENGTH_ONE_SPINNERS = [
     spinner_name
@@ -530,30 +495,32 @@ class LiveTestBar(TestResultDisplayWidget):
     def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
         super().__init__(num_tests, progress_styles)
 
-        self.spinner = SpinnerColumn(
-            spinner_name=random.choice(LENGTH_ONE_SPINNERS), style="pass.textonly"
+        self.good_emoji = Text(random.choice(GOOD_EMOJI))
+        self.bad_emoji = Text(random.choice(BAD_EMOJI))
+
+        self.spinner_column = SpinnerColumn(
+            spinner_name=random.choice(LENGTH_ONE_SPINNERS),
+            style="pass.textonly",
+            finished_text=GREEN_CHECK,
         )
+        self.emoji_column = RenderableColumn(self.good_emoji)
+        self.test_description_column = RenderableColumn(Text(""))
 
-        self.good_smiley = Text(random.choice(GOOD_EMOJI))
-        self.bad_smiley = Text(random.choice(BAD_EMOJI))
-
-        self.smiley = RenderableColumn(self.good_smiley)
-        self.bar = BarColumn(complete_style="pass.textonly")
-        self.test_description = RenderableColumn(Text(""))
         self.progress = Progress(
-            self.spinner,
-            self.smiley,
-            self.test_description,
+            self.spinner_column,
+            self.emoji_column,
+            self.test_description_column,
             console=console,
         )
+
         self.task = self.progress.add_task("", total=num_tests)
 
-    def footer(self, test_results: List[TestResult]) -> ConsoleRenderable:
+    def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
         return self.progress
 
     def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
-        self.test_description.renderable = get_test_result_line(
+        self.test_description_column.renderable = get_test_result_line(
             test_result=test_result,
             test_index=test_index,
             num_tests=self.num_tests,
@@ -567,10 +534,48 @@ class LiveTestBar(TestResultDisplayWidget):
                     test_index=test_index,
                     num_tests=self.num_tests,
                     progress_styles=self.progress_styles,
-                    extra_left_pad=5,
+                    extra_left_pad=5,  # length of the spinner + emoji + spaces
                 )
             )
-            self.smiley.renderable = self.bad_smiley
+
+            self.spinner_column.finished_text = RED_X
+            self.spinner_column.spinner.style = "fail.textonly"
+            self.emoji_column.renderable = self.bad_emoji
+
+
+class SuiteProgressBar(TestResultDisplayWidget):
+    def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
+        super().__init__(num_tests, progress_styles)
+
+        self.spinner_column = SpinnerColumn(
+            style="pass.textonly", finished_text=GREEN_CHECK
+        )
+        self.bar_column = BarColumn(
+            complete_style="pass.textonly", finished_style="pass.textonly"
+        )
+
+        self.progress = Progress(
+            self.spinner_column,
+            TimeElapsedColumn(),
+            self.bar_column,
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            "[progress.percentage][{task.completed} / {task.total}]",
+            console=self.console,
+        )
+
+        self.task = self.progress.add_task("Testing...", total=num_tests)
+
+    def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
+        return self.progress
+
+    def after_test(self, test_index: int, test_result: TestResult) -> None:
+        self.progress.update(self.task, advance=1)
+
+        if test_result.outcome is TestOutcome.FAIL:
+            self.spinner_column.finished_text = RED_X
+            self.spinner_column.spinner.style = "fail.textonly"
+            self.bar_column.complete_style = "fail.textonly"
+            self.bar_column.finished_style = "fail.textonly"
 
     def after_suite(self, test_results: List[TestResult]) -> None:
         self.progress = None
@@ -590,18 +595,22 @@ class TerminalResultsWriter:
         self.live = Live(
             console=console,
             renderable=self.footer(results=[]),
-            refresh_per_second=10,
         )
 
-    def footer(self, results: List[TestResult]) -> RenderGroup:
-        return RenderGroup(
-            *filter(None, (component.footer(results) for component in self.widgets))
-        )
+    def footer(self, results: List[TestResult]) -> RenderableType:
+        table = Table.grid()
+        table.add_column()
+        for f in filter(
+            None, (component.footer(results) for component in self.widgets)
+        ):
+            table.add_row(f)
+
+        return table
 
     def run(
         self,
         test_results: Iterator[TestResult],
-        fail_limit: int,
+        fail_limit: Optional[int],
     ) -> Tuple[List[TestResult], bool]:
         """
         Execute the test suite, returning the list of test results
@@ -611,8 +620,8 @@ class TerminalResultsWriter:
         results = []
         was_cancelled = False
 
+        console.print()
         with self.live as live:
-            console.print()
             try:
                 for idx, result in enumerate(test_results):
                     # We need to re-enable the Live here in case

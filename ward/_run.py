@@ -115,13 +115,13 @@ hook_module = click.option(
 )
 @click.option(
     "--test-output-style",
-    type=click.Choice(list(TestOutputStyle), case_sensitive=False),
+    type=click.Choice([s.value for s in TestOutputStyle], case_sensitive=False),
     default="test-per-line",
     help="The style of output for displaying individual test results during the run.",
 )
 @click.option(
     "--progress-style",
-    type=click.Choice(list(TestProgressStyle), case_sensitive=False),
+    type=click.Choice([s.value for s in TestProgressStyle], case_sensitive=False),
     multiple=True,
     default=["inline"],
     help="""\
@@ -184,6 +184,8 @@ def test(
     config_params.pop("config")
 
     config = Config(**config_params, plugin_config=config_params.get("plugins", {}))
+
+    test_output_style = TestOutputStyle(test_output_style)
     progress_styles = [TestProgressStyle(ps) for ps in progress_style]
 
     init_breakpointhooks(pdb, sys)
