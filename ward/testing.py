@@ -473,8 +473,12 @@ class TestOutcome(Enum):
         return display_names[self]
 
     @property
-    def is_bad(self) -> bool:
+    def will_fail_session(self) -> bool:
         return self in {TestOutcome.FAIL, TestOutcome.XPASS}
+
+    @property
+    def wont_fail_session(self) -> bool:
+        return not self.will_fail_session
 
 
 @dataclass

@@ -511,7 +511,7 @@ class LiveTestBar(TestResultDisplayWidget):
             progress_styles=self.progress_styles,
         )
 
-        if test_result.outcome.is_bad:
+        if test_result.outcome.will_fail_session:
             self.console.print(
                 get_test_result_line(
                     test_result=test_result,
@@ -556,7 +556,7 @@ class SuiteProgressBar(TestResultDisplayWidget):
     def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
 
-        if test_result.outcome.is_bad:
+        if test_result.outcome.will_fail_session:
             self.spinner_column.finished_text = RED_X
             self.spinner_column.spinner.style = "fail.textonly"
             self.bar_column.complete_style = "fail.textonly"
