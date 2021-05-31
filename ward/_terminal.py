@@ -20,12 +20,13 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Tuple,
 )
 
 from rich.console import (
     Console,
     ConsoleOptions,
-    ConsoleRenderable,
+    RenderableType,
     RenderGroup,
     RenderResult,
 )
@@ -671,85 +672,88 @@ class SimpleTestResultWriter(TestResultWriterBase):
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
         if isinstance(err, TestFailure):
-            src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
-
             if err.operator in Comparison:
-                src = "".join(src_lines)
-                src = Syntax(
-                    src,
-                    "python",
-                    start_line=line_num,
-                    line_numbers=True,
-                    highlight_lines={err.error_line},
-                    background_color="default",
-                    theme="ansi_dark",
-                )
-                src = Padding(src, (1, 0, 1, 4))
-                console.print(src)
-
-                self.print_pretty_comparison_failure(err)
+                console.print(self.get_source(err, test_result))
+                console.print(self.get_pretty_comparison_failure(err))
         else:
             self.print_traceback(err)
 
-    def print_pretty_comparison_failure(self, err: TestFailure) -> None:
-        pretty = None
+    def get_source(self, err: TestFailure, test_result: TestResult) -> RenderableType:
+        src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
+        src = Syntax(
+            "".join(src_lines),
+            "python",
+            start_line=line_num,
+            line_numbers=True,
+            highlight_lines={err.error_line},
+            background_color="default",
+            theme="ansi_dark",
+        )
 
+        return Padding(src, (1, 0, 1, 4))
+
+    def get_pretty_comparison_failure(self, err: TestFailure) -> RenderableType:
         if err.operator is Comparison.Equals:
-            pretty = self.get_pretty_failure_for_equals(err)
+            return self.get_pretty_failure_for_equals(err)
         elif err.operator in {Comparison.In, Comparison.NotIn}:
-            pretty = self.get_pretty_failure_for_in(err)
+            return self.get_pretty_failure_for_in(err)
+        else:
+            return Text("", end="")
 
-        if pretty:
-            console.print(pretty)
+    def get_pretty_failure_for_equals(self, err: TestFailure) -> RenderableType:
+        diff_msg = Text.assemble(
+            ("LHS ", "pass.textonly"),
+            ("vs ", "default"),
+            ("RHS ", "fail.textonly"),
+            ("shown below", "default"),
+        )
 
-    def get_pretty_failure_for_equals(self, err: TestFailure) -> ConsoleRenderable:
-        diff_msg = Text("LHS", style="pass.textonly")
-        diff_msg.append(" vs ", style="default")
-        diff_msg.append("RHS", style="fail.textonly")
-        diff_msg.append(" shown below", style="default")
-        console.print(Padding(diff_msg, pad=(0, 0, 1, 2)))
         diff = make_diff(
             err.lhs,
             err.rhs,
             width=self.terminal_size.width - 24,
             show_symbols=self.show_diff_symbols,
         )
-        return Padding(diff, pad=(0, 0, 1, 4))
 
-    def get_pretty_failure_for_in(self, err: TestFailure) -> ConsoleRenderable:
-        before = Text.assemble(
+        return RenderGroup(
+            Padding(diff_msg, pad=(0, 0, 1, 2)),
+            Padding(diff, pad=(0, 0, 1, 4)),
+        )
+
+    def get_pretty_failure_for_in(self, err: TestFailure) -> RenderableType:
+        lhs_msg = Text.assemble(
             ("The ", "default"),
-            ("item", "pass.textonly"),
-            (" (of type ", "default"),
-            (type(err.lhs).__name__, "bold default"),
-            (")", "default"),
+            ("item ", "pass.textonly"),
+            *self.of_type(err.lhs),
         )
         lhs = Panel(
             Pretty(err.lhs),
-            title=before,
+            title=lhs_msg,
             title_align="left",
             border_style="pass.textonly",
             padding=1,
         )
-        middle = Text.assemble(
-            (
-                f"{'was not' if err.operator is Comparison.In else 'was'}",
-                "bold default",
-            ),
-            (" found in the", "default"),
-            (" container", "fail.textonly"),
-            (" (of type ", "default"),
-            (type(err.rhs).__name__, "bold default"),
-            (")", "default"),
+
+        rhs_msg = Text.assemble(
+            ("was not " if err.operator is Comparison.In else "was ", "bold default"),
+            ("found in the ", "default"),
+            ("container ", "fail.textonly"),
+            *self.of_type(err.rhs),
         )
         rhs = Panel(
             Pretty(err.rhs),
-            title=middle,
+            title=rhs_msg,
             title_align="left",
             border_style="fail.textonly",
             padding=1,
         )
+
         return Padding(RenderGroup(lhs, rhs), pad=(0, 0, 1, 2))
+
+    def of_type(self, obj: object) -> Iterator[Tuple[str, str]]:
+        yield "(of type ", "default"
+        yield type(obj).__name__, "bold default"
+        yield ")", "default"
 
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
