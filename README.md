@@ -8,7 +8,7 @@
 
 _Ward_ is a Python testing framework with a focus on productivity and readability. It gives you the tools you need to write **well-documented** and **scalable** tests.
 
-<img alt="image" src="https://user-images.githubusercontent.com/5740731/118399779-a795ff00-b656-11eb-8fca-4ceb03151f3e.png">
+<img alt="Ward typical test output example" src="https://user-images.githubusercontent.com/5740731/118399779-a795ff00-b656-11eb-8fca-4ceb03151f3e.png">
 
 ## Features
 
@@ -80,6 +80,8 @@ for lhs, rhs, res in [
 **Extendable:** Ward has a plugin system built with pluggy, the same framework used by pytest.
 
 **Colourful, human readable output:** quickly pinpoint and fix issues with detailed output for failing tests.
+
+<img alt="Ward failing test output example" src="https://user-images.githubusercontent.com/5740731/120125898-5dfaf780-c1b2-11eb-9acd-b9cd0ff24110.png">
 
 ## Getting Started
 

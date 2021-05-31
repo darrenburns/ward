@@ -2,131 +2,109 @@ import difflib
 from typing import Iterator
 
 import pprintpp
-from colorama import Fore, Style
-from termcolor import colored
+from rich.console import Console, ConsoleOptions, RenderResult
+from rich.text import Text
 
 
-def make_diff(lhs, rhs, width=80, show_symbols=False):
-    """Transform input into best format for diffing, then return output diff."""
-    if isinstance(lhs, str):
-        lhs_repr = lhs
-    else:
-        lhs_repr = pprintpp.pformat(lhs, width=width)
+class Diff:
+    """Constructs a Diff object to render diff-highlighted code."""
 
-    if isinstance(rhs, str):
-        rhs_repr = rhs
-    else:
-        rhs_repr = pprintpp.pformat(rhs, width=width)
+    def __init__(self, lhs, rhs, width, show_symbols=False) -> None:
+        self.width = width
+        self.lhs = lhs if isinstance(lhs, str) else pprintpp.pformat(lhs, width=width)
+        self.rhs = rhs if isinstance(rhs, str) else pprintpp.pformat(rhs, width=width)
+        self.show_symbols = show_symbols
 
-    if show_symbols:
-        return build_symbolic_unified_diff(lhs_repr, rhs_repr)
-    return build_unified_diff(lhs_repr, rhs_repr)
+    def raw_unified_diff(self) -> Iterator[str]:
+        differ = difflib.Differ()
+        lines_lhs = self.lhs.splitlines()
+        lines_rhs = self.rhs.splitlines()
+        return differ.compare(lines_lhs, lines_rhs)
 
+    def build_symbolic_unified_diff(self) -> RenderResult:
+        diff = self.raw_unified_diff()
+        output_lines = []
+        style = "grey"
+        last_style = style
+        for line in diff:
+            if line.startswith("- "):
+                style = "green"
+                output_line = f"+ {line[2:]}"
+            elif line.startswith("+ "):
+                style = "red"
+                output_line = f"- {line[2:]}"
+            elif line.startswith("? "):
+                if last_style == "red":
+                    output_line = line[:-1].replace("+", "-")
+                elif last_style == "green":
+                    output_line = line[:-1].replace("-", "+")
+            else:
+                output_line = line
+                style = "gray"
+            output_lines.append(Text(output_line, style=style))
+            last_style = style if style != "gray" else last_style
+        return output_lines
 
-def bright_red(s: str) -> str:
-    return f"{Fore.LIGHTRED_EX}{s}{Style.RESET_ALL}"
-
-
-def bright_green(s: str) -> str:
-    return f"{Fore.LIGHTGREEN_EX}{s}{Style.RESET_ALL}"
-
-
-def raw_unified_diff(lhs_repr: str, rhs_repr: str) -> Iterator[str]:
-    differ = difflib.Differ()
-    lines_lhs = lhs_repr.splitlines()
-    lines_rhs = rhs_repr.splitlines()
-    return differ.compare(lines_lhs, lines_rhs)
-
-
-def build_symbolic_unified_diff(lhs_repr: str, rhs_repr: str) -> str:
-    diff = raw_unified_diff(lhs_repr, rhs_repr)
-    output_lines = []
-    last_line_colour = "grey"
-    for line in diff:
-        if line.startswith("- "):
-            last_line_colour = "green"
-            output_lines.append(colored(f"+ {line[2:]}", color=last_line_colour))
-        elif line.startswith("+ "):
-            last_line_colour = "red"
-            output_lines.append(colored(f"- {line[2:]}", color=last_line_colour))
-        elif line.startswith("? "):
-            output_line = line[:-1]
-            if last_line_colour == "red":
-                output_line = output_line.replace("+", "-")
-            elif last_line_colour == "green":
-                output_line = output_line.replace("-", "+")
-            output_lines.append(colored(output_line, color=last_line_colour))
-        else:
-            output_lines.append(line)
-    return "\n".join(output_lines)
-
-
-# FIXME:fix linter C901
-def build_unified_diff(lhs_repr: str, rhs_repr: str) -> str:  # noqa: C901
-    diff = raw_unified_diff(lhs_repr, rhs_repr)
-    output_lines = []
-    prev_marker = ""
-    for line in diff:
-        if line.startswith("- "):
-            output_lines.append(colored(line[2:], color="green"))
-        elif line.startswith("+ "):
-            output_lines.append(colored(line[2:], color="red"))
-        elif line.startswith("? "):
-            last_output_idx = len(output_lines) - 1
-            # Remove the 5 char escape code from the line
-            esc_code_length = 5
-            line_to_rewrite = output_lines[last_output_idx][esc_code_length:]
-            output_lines[
-                last_output_idx
-            ] = ""  # We'll rewrite the prev line with highlights
-            current_span = ""
-            index = 2  # Differ lines start with a 2 letter code, so skip past that
-            char = line[index]
+    def rewrite_line(self, line, line_to_rewrite, prev_marker):
+        marker_style_map = {
+            "-": {
+                " ": "green",
+                "-": "white on green",
+                "^": "white on green",
+            },
+            "+": {
+                " ": "red",
+                "+": "white on red",
+                "^": "white on red",
+            },
+        }
+        new_line = Text("")
+        current_span = []
+        # Differ lines start with a 2 letter code, so skip past that
+        prev_char = line[2]
+        for idx, char in enumerate(line[2:], start=2):
+            if prev_marker in ("+", "-"):
+                if char != prev_char:
+                    style = marker_style_map.get(prev_marker, {}).get(prev_char, None)
+                    if style is not None:
+                        new_line.append_text(Text("".join(current_span), style=style))
+                    current_span = []
+                if idx - 2 < len(line_to_rewrite):
+                    current_span.append(line_to_rewrite[idx - 2])
             prev_char = char
-            while index < len(line):
-                char = line[index]
-                if prev_marker in "+-":
-                    if char != prev_char:
-                        if prev_char == " " and prev_marker == "+":
-                            output_lines[last_output_idx] += colored(
-                                current_span, color="red"
-                            )
-                        elif prev_char == " " and prev_marker == "-":
-                            output_lines[last_output_idx] += colored(
-                                current_span, color="green"
-                            )
-                        elif prev_char in "+^" and prev_marker == "+":
-                            output_lines[last_output_idx] += bright_red(
-                                colored(current_span, on_color="on_red", attrs=["bold"])
-                            )
-                        elif prev_char in "-^" and prev_marker == "-":
-                            output_lines[last_output_idx] += bright_green(
-                                colored(
-                                    current_span, on_color="on_green", attrs=["bold"]
-                                )
-                            )
-                        current_span = ""
-                    # Subtract 2 to account for code at start of line
-                    current_span += line_to_rewrite[index - 2]
-                prev_char = char
-                index += 1
 
-            # Lines starting with ? aren't guaranteed to be the same length as the lines before them
-            #  so some characters may be left over. Add any leftover characters to the output
+        # Lines starting with ? aren't guaranteed to be the same length as the lines before them
+        #  so some characters may be left over. Add any leftover characters to the output.
+        # subtract 2 for code at start
+        remaining_index = idx - 2
+        if prev_marker == "+":
+            new_line.append_text(Text(line_to_rewrite[remaining_index:], style="red"))
+        elif prev_marker == "-":
+            new_line.append_text(Text(line_to_rewrite[remaining_index:], style="green"))
+        return new_line
 
-            # subtract 2 for code at start, and 1 to remove the newline char
-            remaining_index = index - 3
-            if prev_marker == "+":
-                output_lines[last_output_idx] += colored(
-                    line_to_rewrite[remaining_index:], color="red"
-                )
-            elif prev_marker == "-":
-                output_lines[last_output_idx] += colored(
-                    line_to_rewrite[remaining_index:], color="green"
-                )
+    def build_unified_diff(self) -> RenderResult:
+        diff = self.raw_unified_diff()
+        prev_marker = ""
+        output_lines = []
+        for line in diff:
+            if line.startswith("- "):
+                output_lines.append(Text(line[2:], style="green"))
+            elif line.startswith("+ "):
+                output_lines.append(Text(line[2:], style="red"))
+            elif line.startswith("? "):
+                line_to_rewrite = output_lines[-1].plain
+                output_lines[-1] = self.rewrite_line(line, line_to_rewrite, prev_marker)
+            else:
+                output_lines.append(line[2:])
+            prev_marker = line[0]
+        return output_lines
 
+    def __rich_console__(
+        self, console: Console, options: ConsoleOptions
+    ) -> RenderResult:
+        if self.show_symbols:
+            result = self.build_symbolic_unified_diff()
         else:
-            output_lines.append(line[2:])
-        prev_marker = line[0]
-
-    return "\n".join(output_lines)
+            result = self.build_unified_diff()
+        yield from result

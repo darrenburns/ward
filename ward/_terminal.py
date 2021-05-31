@@ -44,7 +44,7 @@ from rich.theme import Theme
 from rich.traceback import Traceback
 from rich.tree import Tree
 
-from ward._diff import make_diff
+from ward._diff import Diff
 from ward._fixtures import FixtureHierarchyMapping, fixture_parents_and_children
 from ward._suite import Suite
 from ward._utilities import group_by
@@ -708,7 +708,7 @@ class SimpleTestResultWriter(TestResultWriterBase):
             ("shown below", "default"),
         )
 
-        diff = make_diff(
+        diff = Diff(
             err.lhs,
             err.rhs,
             width=self.terminal_size.width - 24,
