@@ -94,7 +94,9 @@ def rewrite_assertions_in_tests(tests: Iterable[Test]) -> List[Test]:
 
 def rewrite_assertion(test: Test) -> Test:
     # Get the old code and code object
-    code = inspect.getsource(test.fn)
+    code_lines, line_no = inspect.getsourcelines(test.fn)
+
+    code = "".join(code_lines)
     indents = textwrap._leading_whitespace_re.findall(code)
     col_offset = len(indents[0]) if len(indents) > 0 else 0
     code = textwrap.dedent(code)
@@ -102,7 +104,6 @@ def rewrite_assertion(test: Test) -> Test:
 
     # Rewrite the AST of the code
     tree = ast.parse(code)
-    line_no = inspect.getsourcelines(test.fn)[1]
     ast.increment_lineno(tree, line_no - 1)
 
     new_tree = RewriteAssert().visit(tree)
