@@ -472,6 +472,14 @@ class TestOutcome(Enum):
         assert len(display_names) == len(TestOutcome)
         return display_names[self]
 
+    @property
+    def will_fail_session(self) -> bool:
+        return self in {TestOutcome.FAIL, TestOutcome.XPASS}
+
+    @property
+    def wont_fail_session(self) -> bool:
+        return not self.will_fail_session
+
 
 @dataclass
 class TestResult:

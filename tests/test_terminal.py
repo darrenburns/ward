@@ -7,12 +7,15 @@ from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
-from tests.utilities import example_test
+from tests.utilities import example_test, testable_test
 from ward import fixture, using
 from ward._terminal import (
     SessionPrelude,
+    TestProgressStyle,
     TestTimingStatsPanel,
+    get_dot,
     get_exit_code,
+    get_test_result_line,
     outcome_to_style,
 )
 from ward._testing import _Timer
@@ -206,3 +209,71 @@ def _(timing_stats_panel=timing_stats_panel):
     assert table.columns[0]._cells == expected_durations
     assert len(table.columns[1]._cells) == 3
     assert table.columns[2]._cells == expected_test_descriptions
+
+
+@fixture
+def test_result() -> TestResult:
+    @testable_test
+    def _():
+        assert True
+
+    return TestResult(
+        test=Test(
+            timer=_Timer(duration=4.0),
+            fn=_,
+            description="test1",
+            module_name="mod1",
+        ),
+        outcome=TestOutcome.FAIL,
+    )
+
+
+for idx, num_tests, expected_output in [
+    (0, 2, " 50%"),
+    (1, 2, "100%"),
+    (1, 3, " 67%"),
+    (2, 3, "100%"),
+    (16, 17, "100%"),
+]:
+
+    @test(
+        "get_test_result_line with inline progress for test {idx} with {num_tests} tests emits {expected_output!r}"
+    )
+    def _(
+        idx=idx,
+        num_tests=num_tests,
+        expected_output=expected_output,
+        test_result=test_result,
+    ):
+        output = get_test_result_line(
+            test_result=test_result,
+            test_index=idx,
+            num_tests=num_tests,
+            progress_styles=[TestProgressStyle.INLINE],
+        )
+
+        assert expected_output == list(output.columns[-1].cells)[0]
+
+
+for outcome, expected_output in [
+    (TestOutcome.PASS, Text(".", style="pass")),
+    (TestOutcome.FAIL, Text("F", style="fail")),
+    (TestOutcome.SKIP, Text("-", style="skip")),
+    (TestOutcome.XPASS, Text("U", style="xpass")),
+    (TestOutcome.XFAIL, Text("x", style="xfail")),
+    (TestOutcome.DRYRUN, Text(".", style="dryrun")),
+]:
+
+    @test("get_dot emits {expected_output!r} for test outcome {outcome}")
+    def _(outcome=outcome, expected_output=expected_output):
+        assert expected_output == get_dot(
+            TestResult(
+                test=Test(
+                    timer=_Timer(duration=4.0),
+                    fn=lambda: 1,
+                    description="test1",
+                    module_name="mod1",
+                ),
+                outcome=outcome,
+            )
+        )

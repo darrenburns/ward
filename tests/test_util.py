@@ -62,7 +62,7 @@ def square(x):
     return x ** 2
 
 
-@test("group {items!r} by {key} returns {result}")
+@test("group {items!r} by {key.__name__} returns {result}")
 def _(
     items=each(range(5), "echolocation", [-2, 3, 4, -3, 2, 3]),
     key=each(is_even, is_vowel, square),

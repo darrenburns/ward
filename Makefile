@@ -30,7 +30,8 @@ test:
 
 coverage:
 	poetry run coverage run -m ward
-	poetry run coverage html -i
+	poetry run coverage report --skip-empty --show-missing --sort=-cover
+	poetry run coverage html
 .PHONY: coverage
 
 update:
