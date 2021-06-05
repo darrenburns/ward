@@ -7,7 +7,7 @@ import sys
 import click
 
 from ward._config import _breakpoint_supported
-from ward._terminal import console
+from ward._terminal import rich_console
 
 original_stdout = sys.stdout
 
@@ -35,14 +35,14 @@ def _breakpointhook(*args, **kwargs):
     # Stop an active Live.
     # It is the responsibility of the test executor
     # to re-enable the Live.
-    live = console._live
+    live = rich_console._live
     if live is not None:
         live.refresh()
         live.stop()
 
     if capture_enabled and capture_active:
         sys.stdout = original_stdout
-        console.print(
+        rich_console.print(
             f"Entering debugger [bold]{hookname}[/] - output capturing disabled.",
             style="info",
         )

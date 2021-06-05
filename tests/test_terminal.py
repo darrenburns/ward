@@ -1,6 +1,7 @@
 from pathlib import Path
+from unittest.mock import Mock
 
-from rich.console import RenderGroup
+from rich.console import Console, ConsoleRenderable, RenderGroup
 from rich.padding import Padding
 from rich.panel import Panel
 from rich.rule import Rule
@@ -9,9 +10,12 @@ from rich.text import Text
 
 from tests.utilities import example_test, testable_test
 from ward import fixture, using
+from ward._suite import Suite
 from ward._terminal import (
     SessionPrelude,
+    TestOutputStyle,
     TestProgressStyle,
+    TestResultWriter,
     TestTimingStatsPanel,
     get_dot,
     get_exit_code,
@@ -19,6 +23,7 @@ from ward._terminal import (
     outcome_to_style,
 )
 from ward._testing import _Timer
+from ward.expect import Comparison, TestFailure
 from ward.models import ExitCode
 from ward.testing import Test, TestOutcome, TestResult, test
 
@@ -277,3 +282,114 @@ for outcome, expected_output in [
                 outcome=outcome,
             )
         )
+
+
+@fixture
+def mock_rich_console():
+    return Mock(spec=Console)
+
+
+@fixture
+def writer(console=mock_rich_console):
+    yield TestResultWriter(
+        console, Suite([]), TestOutputStyle.LIVE, [TestProgressStyle.INLINE], None
+    )
+
+
+for left, right in [
+    ("abc", "abd"),
+    (123, 124),
+    ({"hello": "world"}, {"helo", "world"}),
+    ({"a": "b"}, [1, 2, 3, 4]),
+]:
+
+    @test("TestResultWriter.get_pretty_comparison_failure handles assert *==* failure")
+    def _(lhs=left, rhs=right, writer=writer, console=mock_rich_console):
+        failure = TestFailure("fail", lhs, rhs, 1, Comparison.Equals, "test")
+        failure_renderable: ConsoleRenderable = writer.get_pretty_comparison_failure(
+            failure
+        )
+        padding = next(failure_renderable.__rich_console__(console, None))
+        text = padding.renderable
+
+        # Don't check anything more than this. We just want to exercise this
+        # code and ensure it doesn't error. The rendering of the diff itself
+        # is tested in detail in test_diff.
+        assert text.plain == "LHS vs RHS shown below"
+
+
+for left, right in [
+    ("a", "bcdef"),
+    (1, [2, 3, 4]),
+    ("a", {"b": 1}),
+]:
+
+    @test("TestResultWriter.get_pretty_comparison_failure handles assert *in* failure")
+    def _(lhs=left, rhs=right, writer=writer):
+        failure = TestFailure("fail", lhs, rhs, 1, Comparison.In, "test")
+        padding: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
+        render_group: RenderGroup = padding.renderable
+
+        lhs_render, rhs_render = render_group.renderables
+
+        assert lhs_render.title.plain == f"The item (of type {type(lhs).__name__})"
+        assert (
+            rhs_render.title.plain
+            == f"was not found in the container (of type {type(rhs).__name__})"
+        )
+
+
+for left, right in [
+    ("a", "abc"),
+    (1, [1, 2, 3, 4]),
+    ("a", {"a": 1}),
+]:
+
+    @test(
+        "TestResultWriter.get_pretty_comparison_failure handles assert *not in* failure"
+    )
+    def _(lhs=left, rhs=right, writer=writer):
+        failure = TestFailure("fail", lhs, rhs, 1, Comparison.NotIn, "test")
+        padding: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
+        render_group: RenderGroup = padding.renderable
+
+        lhs_render, rhs_render = render_group.renderables
+
+        assert lhs_render.title.plain == f"The item (of type {type(lhs).__name__})"
+        assert (
+            rhs_render.title.plain
+            == f"was found in the container (of type {type(rhs).__name__})"
+        )
+
+
+pretty_registered_comparisons = (Comparison.In, Comparison.NotIn, Comparison.Equals)
+non_pretty_registered_comparisons = (
+    c for c in Comparison if c not in pretty_registered_comparisons
+)
+
+for comparison in non_pretty_registered_comparisons:
+
+    @test(
+        "TestResultWriter.get_pretty_comparison_failure handles unregistered comparison failures"
+    )
+    def _(comparison=comparison, writer=writer):
+        failure = TestFailure("fail", "a", "b", 1, comparison, "test")
+        renderable: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
+
+        assert renderable == Text("", end="")
+
+
+@test("TestResultWriter.output_all_test_results returns empty list if suite is empty")
+def _(console=mock_rich_console):
+    suite = Suite([])
+    result_writer = TestResultWriter(
+        console=console,
+        suite=suite,
+        test_output_style=TestOutputStyle.TEST_PER_LINE,
+        progress_styles=[TestProgressStyle.INLINE],
+        config_path=None,
+    )
+
+    result = result_writer.output_all_test_results(_ for _ in ())
+    assert result == []
+    assert not console.print.called

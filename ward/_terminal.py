@@ -33,6 +33,7 @@ from rich.live import Live
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
+from rich.pretty import Pretty
 from rich.progress import (
     BarColumn,
     Progress,
@@ -88,7 +89,7 @@ theme = Theme(
         "usedby": "#9285F6",
     }
 )
-console = Console(theme=theme, highlighter=NullHighlighter())
+rich_console = Console(theme=theme, highlighter=NullHighlighter())
 
 
 def format_test_id(test_result: TestResult) -> str:
@@ -311,7 +312,7 @@ class TerminalResultProcessor(ResultProcessor):
 
 class TestResultDisplayWidget:
     def __init__(self, num_tests: int, progress_styles: List[TestProgressStyle]):
-        self.console = console
+        self.console = rich_console
         self.num_tests = num_tests
         self.progress_styles = progress_styles
 
@@ -494,7 +495,7 @@ class LiveTestBar(TestResultDisplayWidget):
         self.progress = Progress(
             self.spinner_column,
             self.test_description_column,
-            console=console,
+            console=rich_console,
         )
 
         self.task = self.progress.add_task("", total=num_tests)
@@ -569,10 +570,12 @@ class SuiteProgressBar(TestResultDisplayWidget):
 class TerminalResultsWriter:
     def __init__(
         self,
+        console: Console,
         num_tests: int,
         progress_styles: List[TestProgressStyle],
         widget_types: Iterable[Type[TestResultDisplayWidget]],
     ):
+        self.console = console
         self.widgets = [
             widgets(num_tests=num_tests, progress_styles=progress_styles)
             for widgets in widget_types
@@ -605,7 +608,7 @@ class TerminalResultsWriter:
         results = []
         was_cancelled = False
 
-        console.print()
+        self.console.print()
         with self.live as live:
             try:
                 for idx, result in enumerate(test_results):
@@ -647,12 +650,14 @@ class TestResultWriterBase:
 
     def __init__(
         self,
+        console: Console,
         suite: Suite,
         test_output_style: TestOutputStyle,
         progress_styles: List[TestProgressStyle],
         config_path: Optional[Path],
         show_diff_symbols: bool = False,
     ):
+        self.console = console
         self.suite = suite
         self.test_output_style = test_output_style
         self.progress_styles = progress_styles
@@ -673,13 +678,14 @@ class TestResultWriterBase:
             widget_types.append(SuiteProgressBar)
 
         all_results, was_cancelled = TerminalResultsWriter(
+            console=self.console,
             num_tests=self.suite.num_tests_with_parameterisation,
             progress_styles=self.progress_styles,
             widget_types=widget_types,
         ).run(test_results_gen, fail_limit)
 
         if was_cancelled:
-            console.print(
+            self.console.print(
                 "Run cancelled - results for tests that ran shown below.",
                 style="info",
             )
@@ -694,12 +700,13 @@ class TestResultWriterBase:
         if failed_test_results:
             self.print_divider()
         else:
-            console.print()
+            self.console.print()
+
         return all_results
 
     @staticmethod
     def print_divider() -> None:
-        console.print(Rule(style="muted"))
+        rich_console.print(Rule(style="muted"))
 
     def output_why_test_failed_header(self, test_result: TestResult):
         """
@@ -745,10 +752,10 @@ def get_terminal_size() -> TerminalSize:
     return TerminalSize(height=24, width=80)
 
 
-class SimpleTestResultWrite(TestResultWriterBase):
+class TestResultWriter(TestResultWriterBase):
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
-        console.print(
+        self.console.print(
             Padding(
                 Rule(
                     title=Text(test.description, style="fail.header"),
@@ -761,40 +768,88 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
         if isinstance(err, TestFailure):
-            src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
-
             if err.operator in Comparison:
-                src = "".join(src_lines)
-                src = Syntax(
-                    src,
-                    "python",
-                    start_line=line_num,
-                    line_numbers=True,
-                    highlight_lines={err.error_line},
-                    background_color="default",
-                    theme="ansi_dark",
-                )
-                src = Padding(src, (1, 0, 1, 4))
-                console.print(src)
-
-                if err.operator == Comparison.Equals:
-                    self.print_failure_equals(err)
+                self.console.print(self.get_source(err, test_result))
+                self.console.print(self.get_pretty_comparison_failure(err))
         else:
             self.print_traceback(err)
 
-    def print_failure_equals(self, err: TestFailure):
-        diff_msg = Text("LHS", style="pass.textonly")
-        diff_msg.append(" vs ", style="default")
-        diff_msg.append("RHS", style="fail.textonly")
-        diff_msg.append(" shown below", style="default")
-        console.print(Padding(diff_msg, pad=(0, 0, 1, 2)))
+    def get_source(self, err: TestFailure, test_result: TestResult) -> RenderableType:
+        src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
+        src = Syntax(
+            "".join(src_lines),
+            "python",
+            start_line=line_num,
+            line_numbers=True,
+            highlight_lines={err.error_line},
+            background_color="default",
+            theme="ansi_dark",
+        )
+
+        return Padding(src, (1, 0, 1, 4))
+
+    def get_pretty_comparison_failure(self, err: TestFailure) -> RenderableType:
+        if err.operator is Comparison.Equals:
+            return self.get_pretty_failure_for_equals(err)
+        elif err.operator in {Comparison.In, Comparison.NotIn}:
+            return self.get_pretty_failure_for_in(err)
+        else:
+            return Text("", end="")
+
+    def get_pretty_failure_for_equals(self, err: TestFailure) -> RenderableType:
+        diff_msg = Text.assemble(
+            ("LHS ", "pass.textonly"),
+            ("vs ", "default"),
+            ("RHS ", "fail.textonly"),
+            ("shown below", "default"),
+        )
+
         diff = Diff(
             err.lhs,
             err.rhs,
             width=self.terminal_size.width - 24,
             show_symbols=self.show_diff_symbols,
         )
-        console.print(Padding(diff, pad=(0, 0, 1, 4)))
+
+        return RenderGroup(
+            Padding(diff_msg, pad=(0, 0, 1, 2)),
+            Padding(diff, pad=(0, 0, 1, 4)),
+        )
+
+    def get_pretty_failure_for_in(self, err: TestFailure) -> RenderableType:
+        lhs_msg = Text.assemble(
+            ("The ", "default"),
+            ("item ", "pass.textonly"),
+            *self.of_type(err.lhs),
+        )
+        lhs = Panel(
+            Pretty(err.lhs),
+            title=lhs_msg,
+            title_align="left",
+            border_style="pass.textonly",
+            padding=1,
+        )
+
+        rhs_msg = Text.assemble(
+            ("was not " if err.operator is Comparison.In else "was ", "bold default"),
+            ("found in the ", "default"),
+            ("container ", "fail.textonly"),
+            *self.of_type(err.rhs),
+        )
+        rhs = Panel(
+            Pretty(err.rhs),
+            title=rhs_msg,
+            title_align="left",
+            border_style="fail.textonly",
+            padding=1,
+        )
+
+        return Padding(RenderGroup(lhs, rhs), pad=(0, 0, 1, 2))
+
+    def of_type(self, obj: object) -> Iterator[Tuple[str, str]]:
+        yield "(of type ", "default"
+        yield type(obj).__name__, "bold default"
+        yield ")", "default"
 
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
@@ -803,15 +858,15 @@ class SimpleTestResultWrite(TestResultWriterBase):
             # relevant to end users, so skip over it.
             trace = trace.tb_next
             tb = Traceback.from_exception(err.__class__, err, trace, show_locals=True)
-            console.print(Padding(tb, pad=(0, 4, 1, 4)))
+            self.console.print(Padding(tb, pad=(0, 4, 1, 4)))
         else:
-            console.print(str(err))
+            self.console.print(str(err))
 
     def output_test_result_summary(
         self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
         if show_slowest:
-            console.print(TestTimingStatsPanel(test_results, show_slowest))
+            self.console.print(TestTimingStatsPanel(test_results, show_slowest))
 
         result_table = Table.grid()
         result_table.add_column(justify="right")
@@ -847,9 +902,9 @@ class SimpleTestResultWrite(TestResultWriterBase):
             expand=False,
             border_style=result_style,
         )
-        console.print(result_summary_panel)
+        self.console.print(result_summary_panel)
 
-        console.print(
+        self.console.print(
             Rule(
                 f"[b]{exit_code.clean_name}[/b] in [b]{time_taken:.2f}[/b] seconds",
                 style=result_style,
@@ -859,24 +914,24 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
             captured_stderr_lines = test_result.captured_stderr.split("\n")
-            console.print(Padding(Text("Captured stderr"), pad=(0, 0, 1, 2)))
+            self.console.print(Padding(Text("Captured stderr"), pad=(0, 0, 1, 2)))
             for line in captured_stderr_lines:
-                console.print(Padding(line, pad=(0, 0, 0, 4)))
-            console.print()
+                self.console.print(Padding(line, pad=(0, 0, 0, 4)))
+            self.console.print()
 
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
             captured_stdout_lines = test_result.captured_stdout.split("\n")
-            console.print(Padding(Text("Captured stdout"), pad=(0, 0, 1, 2)))
+            self.console.print(Padding(Text("Captured stdout"), pad=(0, 0, 1, 2)))
             for line in captured_stdout_lines:
-                console.print(Padding(line, pad=(0, 0, 0, 4)))
-            console.print()
+                self.console.print(Padding(line, pad=(0, 0, 0, 4)))
+            self.console.print()
 
     def output_test_failed_location(self, test_result: TestResult):
         if isinstance(test_result.error, TestFailure) or isinstance(
             test_result.error, AssertionError
         ):
-            console.print(
+            self.console.print(
                 Padding(
                     Text(
                         f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}:{test_result.error.error_line}"
@@ -946,7 +1001,7 @@ def output_fixtures(
     fixtures_to_parents, fixtures_to_children = fixture_parents_and_children(fixtures)
 
     for module, fixtures in group_by(fixtures, key=lambda f: f.module_name).items():
-        console.print(Rule(Text(module, style="title")))
+        rich_console.print(Rule(Text(module, style="title")))
 
         for fixture in fixtures:
             fixture_tree = make_fixture_information_tree(
@@ -959,7 +1014,7 @@ def output_fixtures(
                 show_dependencies=show_dependencies,
                 show_dependency_trees=show_dependency_trees,
             )
-            console.print(fixture_tree)
+            rich_console.print(fixture_tree)
 
 
 def make_fixture_information_tree(
