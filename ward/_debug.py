@@ -32,10 +32,20 @@ def _breakpointhook(*args, **kwargs):
     capture_enabled = context.params.get("capture_output")
     capture_active = isinstance(sys.stdout, io.StringIO)
 
+    # Stop an active Live.
+    # It is the responsibility of the test executor
+    # to re-enable the Live.
+    live = console._live
+    if live is not None:
+        live.refresh()
+        live.stop()
+
     if capture_enabled and capture_active:
         sys.stdout = original_stdout
-        console.print("Entering debugger - output capturing disabled.", style="info")
-        return hook(*args, **kwargs)
+        console.print(
+            f"Entering debugger [bold]{hookname}[/] - output capturing disabled.",
+            style="info",
+        )
 
     return hook(*args, **kwargs)
 

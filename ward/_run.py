@@ -112,20 +112,18 @@ hook_module = click.option(
 )
 @click.option(
     "--test-output-style",
-    type=click.Choice(list(TestOutputStyle), case_sensitive=False),
+    type=click.Choice([s.value for s in TestOutputStyle], case_sensitive=False),
     default="test-per-line",
     help="The style of output for displaying individual test results during the run.",
 )
 @click.option(
     "--progress-style",
-    type=click.Choice(list(TestProgressStyle), case_sensitive=False),
+    type=click.Choice([s.value for s in TestProgressStyle], case_sensitive=False),
     multiple=True,
     default=["inline"],
-    help=f"""\
+    help="""\
     The style of progress indicator to use during the run.
     Pass multiple times to enable multiple styles.
-    The '{TestProgressStyle.BAR}' style is not compatible with the
-    '{TestOutputStyle.DOTS_GLOBAL}' and '{TestOutputStyle.DOTS_MODULE}' test output styles.
     """,
 )
 @click.option(
@@ -184,17 +182,9 @@ def test(
     config_params.pop("config")
 
     config = Config(**config_params, plugin_config=config_params.get("plugins", {}))
-    progress_styles = [TestProgressStyle(ps) for ps in progress_style]
 
-    if TestProgressStyle.BAR in progress_styles and test_output_style in {
-        "dots-global",
-        "dots-module",
-    }:
-        raise click.BadOptionUsage(
-            "progress_style",
-            f"The '{TestProgressStyle.BAR}' progress style cannot be used with dots-based "
-            f"test output styles (you asked for '{test_output_style}').",
-        )
+    test_output_style = TestOutputStyle(test_output_style)
+    progress_styles = [TestProgressStyle(ps) for ps in progress_style]
 
     init_breakpointhooks(pdb, sys)
     start_run = default_timer()

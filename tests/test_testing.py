@@ -565,6 +565,24 @@ def _(func=example_test):
     assert len(dest) == 0
 
 
+for outcome, should_fail_session in [
+    (TestOutcome.PASS, False),
+    (TestOutcome.FAIL, True),
+    (TestOutcome.SKIP, False),
+    (TestOutcome.XPASS, True),
+    (TestOutcome.XFAIL, False),
+    (TestOutcome.DRYRUN, False),
+]:
+
+    @test("{outcome}.will_fail_session is `{should_fail_session}`")
+    def _(outcome=outcome, should_fail_session=should_fail_session):
+        assert outcome.will_fail_session is should_fail_session
+
+    @test("{outcome}.{will,wont}_fail_session are opposites")
+    def _(outcome=outcome):
+        assert outcome.will_fail_session is (not outcome.wont_fail_session)
+
+
 @test("fixtures_used_directly_by_tests finds used fixture")
 def _():
     @fixture
