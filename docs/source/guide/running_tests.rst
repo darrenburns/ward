@@ -98,7 +98,7 @@ Customising the output with ``--test-output-style``
 
 As your project grows, it may become impractical to print each test result on its own line. Ward provides alternative test output styles that can be configured using the ``--test-output-style`` option.
 
-``ward --test-output-style [test-per-line|dots-module|dots-global]``
+``ward --test-output-style [test-per-line|dots-module|dots-global|live]``
 
 ``test-per-line`` (default)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -126,6 +126,16 @@ If that is still too verbose, you may wish to represent every test outcome with 
 .. image:: ../_static/dots_global.png
     :align: center
     :alt: Output using dots-global mode
+
+``live``
+^^^^^^^^
+
+Using ``--test-output-style=live`` will cause Ward to output results in the format shown below.
+
+.. image:: ../_static/live_output.gif
+    :align: center
+    :alt: Output using live mode
+
 
 Displaying test session progress with ``--progress-style``
 ----------------------------------------------------------
