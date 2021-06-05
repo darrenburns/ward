@@ -746,7 +746,7 @@ def get_terminal_size() -> TerminalSize:
     return TerminalSize(height=24, width=80)
 
 
-class SimpleTestResultWriter(TestResultWriterBase):
+class TestResultWriter(TestResultWriterBase):
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
         console.print(

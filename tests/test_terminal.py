@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from rich.console import RenderGroup
+from rich.console import ConsoleRenderable, RenderGroup
 from rich.padding import Padding
 from rich.panel import Panel
 from rich.rule import Rule
@@ -9,9 +9,12 @@ from rich.text import Text
 
 from tests.utilities import example_test, testable_test
 from ward import fixture, using
+from ward._suite import Suite
 from ward._terminal import (
     SessionPrelude,
+    TestOutputStyle,
     TestProgressStyle,
+    TestResultWriter,
     TestTimingStatsPanel,
     get_dot,
     get_exit_code,
@@ -19,6 +22,7 @@ from ward._terminal import (
     outcome_to_style,
 )
 from ward._testing import _Timer
+from ward.expect import Comparison, TestFailure
 from ward.models import ExitCode
 from ward.testing import Test, TestOutcome, TestResult, test
 
@@ -276,4 +280,77 @@ for outcome, expected_output in [
                 ),
                 outcome=outcome,
             )
+        )
+
+
+@fixture
+def writer():
+    yield TestResultWriter(
+        Suite([]), TestOutputStyle.LIVE, [TestProgressStyle.INLINE], None
+    )
+
+
+for left, right in [
+    ("abc", "abd"),
+    (123, 124),
+    ({"hello": "world"}, {"helo", "world"}),
+    ({"a": "b"}, [1, 2, 3, 4]),
+]:
+
+    @test("TestResultWriter.get_pretty_comparison_failure handles assert *==* failure")
+    def _(lhs=left, rhs=right, writer=writer):
+        failure = TestFailure("fail", lhs, rhs, 1, Comparison.Equals, "test")
+        failure_renderable: ConsoleRenderable = writer.get_pretty_comparison_failure(
+            failure
+        )
+        padding = next(failure_renderable.__rich_console__(None, None))
+        text = padding.renderable
+
+        # Don't check anything more than this. We just want to exercise this
+        # code and ensure it doesn't error. The rendering of the diff itself
+        # is tested in detail in test_diff.
+        assert text.plain == "LHS vs RHS shown below"
+
+
+for left, right in [
+    ("a", "bcdef"),
+    (1, [2, 3, 4]),
+    ("a", {"b": 1}),
+]:
+
+    @test("TestResultWriter.get_pretty_comparison_failure handles assert *in* failure")
+    def _(lhs=left, rhs=right, writer=writer):
+        failure = TestFailure("fail", lhs, rhs, 1, Comparison.In, "test")
+        padding: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
+        render_group: RenderGroup = padding.renderable
+
+        lhs_render, rhs_render = render_group.renderables
+
+        assert lhs_render.title.plain == f"The item (of type {type(lhs).__name__})"
+        assert (
+            rhs_render.title.plain
+            == f"was not found in the container (of type {type(rhs).__name__})"
+        )
+
+
+for left, right in [
+    ("a", "abc"),
+    (1, [1, 2, 3, 4]),
+    ("a", {"a": 1}),
+]:
+
+    @test(
+        "TestResultWriter.get_pretty_comparison_failure handles assert *not in* failure"
+    )
+    def _(lhs=left, rhs=right, writer=writer):
+        failure = TestFailure("fail", lhs, rhs, 1, Comparison.NotIn, "test")
+        padding: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
+        render_group: RenderGroup = padding.renderable
+
+        lhs_render, rhs_render = render_group.renderables
+
+        assert lhs_render.title.plain == f"The item (of type {type(lhs).__name__})"
+        assert (
+            rhs_render.title.plain
+            == f"was found in the container (of type {type(rhs).__name__})"
         )
