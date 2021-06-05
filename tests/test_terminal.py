@@ -354,3 +354,20 @@ for left, right in [
             rhs_render.title.plain
             == f"was found in the container (of type {type(rhs).__name__})"
         )
+
+
+pretty_registered_comparisons = (Comparison.In, Comparison.NotIn, Comparison.Equals)
+non_pretty_registered_comparisons = (
+    c for c in Comparison if c not in pretty_registered_comparisons
+)
+
+for comparison in non_pretty_registered_comparisons:
+
+    @test(
+        "TestResultWriter.get_pretty_comparison_failure handles unregistered comparison failures"
+    )
+    def _(comparison=comparison, writer=writer):
+        failure = TestFailure("fail", "a", "b", 1, comparison, "test")
+        renderable: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
+
+        assert renderable == Text("", end="")
