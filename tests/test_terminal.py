@@ -1,6 +1,7 @@
 from pathlib import Path
+from unittest.mock import Mock
 
-from rich.console import ConsoleRenderable, RenderGroup
+from rich.console import Console, ConsoleRenderable, RenderGroup
 from rich.padding import Padding
 from rich.panel import Panel
 from rich.rule import Rule
@@ -284,9 +285,14 @@ for outcome, expected_output in [
 
 
 @fixture
-def writer():
+def mock_rich_console():
+    return Mock(spec=Console)
+
+
+@fixture
+def writer(console=mock_rich_console):
     yield TestResultWriter(
-        Suite([]), TestOutputStyle.LIVE, [TestProgressStyle.INLINE], None
+        console, Suite([]), TestOutputStyle.LIVE, [TestProgressStyle.INLINE], None
     )
 
 
@@ -298,12 +304,12 @@ for left, right in [
 ]:
 
     @test("TestResultWriter.get_pretty_comparison_failure handles assert *==* failure")
-    def _(lhs=left, rhs=right, writer=writer):
+    def _(lhs=left, rhs=right, writer=writer, console=mock_rich_console):
         failure = TestFailure("fail", lhs, rhs, 1, Comparison.Equals, "test")
         failure_renderable: ConsoleRenderable = writer.get_pretty_comparison_failure(
             failure
         )
-        padding = next(failure_renderable.__rich_console__(None, None))
+        padding = next(failure_renderable.__rich_console__(console, None))
         text = padding.renderable
 
         # Don't check anything more than this. We just want to exercise this
@@ -371,3 +377,19 @@ for comparison in non_pretty_registered_comparisons:
         renderable: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
 
         assert renderable == Text("", end="")
+
+
+@test("TestResultWriter.output_all_test_results returns empty list if suite is empty")
+def _(console=mock_rich_console):
+    suite = Suite([])
+    result_writer = TestResultWriter(
+        console=console,
+        suite=suite,
+        test_output_style=TestOutputStyle.TEST_PER_LINE,
+        progress_styles=[TestProgressStyle.INLINE],
+        config_path=None,
+    )
+
+    result = result_writer.output_all_test_results(_ for _ in ())
+    assert result == []
+    assert not console.print.called

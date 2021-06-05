@@ -29,9 +29,9 @@ from ward._terminal import (
     TestOutputStyle,
     TestProgressStyle,
     TestResultWriter,
-    console,
     get_exit_code,
     output_fixtures,
+    rich_console,
 )
 from ward._ward_version import __version__
 from ward.config import Config
@@ -207,7 +207,7 @@ def test(
 
     suite = Suite(tests=tests)
     test_results = suite.generate_test_runs(dry_run=dry_run)
-    console.print(
+    rich_console.print(
         SessionPrelude(
             time_to_collect_secs=time_to_collect_secs,
             num_tests_collected=suite.num_tests_with_parameterisation,
@@ -216,6 +216,7 @@ def test(
         )
     )
     writer = TestResultWriter(
+        console=rich_console,
         suite=suite,
         test_output_style=test_output_style,
         progress_styles=progress_styles,
@@ -223,7 +224,7 @@ def test(
         show_diff_symbols=show_diff_symbols,
     )
     for renderable in print_before:
-        console.print(renderable)
+        rich_console.print(renderable)
     test_results = writer.output_all_test_results(test_results, fail_limit=fail_limit)
     exit_code = get_exit_code(test_results)
     time_taken = default_timer() - start_run
@@ -232,7 +233,7 @@ def test(
         config=config, test_results=test_results, status_code=exit_code
     )
     for renderable in render_afters:
-        console.print(renderable)
+        rich_console.print(renderable)
 
     writer.output_test_result_summary(test_results, time_taken, show_slowest)
     sys.exit(exit_code.value)
