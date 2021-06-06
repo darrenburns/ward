@@ -1,6 +1,5 @@
-from io import StringIO
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from rich.console import Console, RenderGroup
 from rich.padding import Padding
@@ -22,7 +21,6 @@ from ward._terminal import (
     get_exit_code,
     get_test_result_line,
     outcome_to_style,
-    theme,
 )
 from ward._testing import _Timer
 from ward.expect import Comparison, TestFailure
@@ -287,13 +285,8 @@ for outcome, expected_output in [
 
 
 @fixture
-def mock_rich_console() -> Console:
-    return Console(
-        file=StringIO(),
-        theme=theme,
-        force_terminal=True,
-        width=80,
-    )
+def mock_rich_console():
+    return Mock(spec=Console)
 
 
 @fixture
