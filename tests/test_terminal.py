@@ -375,7 +375,7 @@ for comparison in Comparison:
         "TestResultWriter.get_pretty_comparison_failure can handle `{comparison.value}` failures"
     )
     def _(comparison=comparison, writer=writer):
-        failure = TestFailure("fail", "a", "b", 1, comparison, "test")
+        failure = TestFailure("fail", "a", "b", 1, comparison, "")
         renderable = writer.get_pretty_comparison_failure(failure)
 
         assert renderable is not None

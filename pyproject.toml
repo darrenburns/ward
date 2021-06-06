@@ -61,6 +61,7 @@ ward = "ward._run:run"
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
+    "pragma: unreachable",
     "def __repr__",
     "raise AssertionError",
     "raise NotImplementedError",

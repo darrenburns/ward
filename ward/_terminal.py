@@ -866,8 +866,8 @@ class TestResultWriter(TestResultWriterBase):
                 ("id ", "default"),
                 (f"{id(err.rhs)}", "bold default"),
             )
-        else:
-            raise Exception("unknown operator")
+        else:  # pragma: unreachable
+            raise Exception(f"Unknown operator: {err.operator!r}")
 
         lhs = Panel(
             Pretty(err.lhs),
