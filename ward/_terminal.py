@@ -779,7 +779,7 @@ class TestResultWriter(TestResultWriterBase):
         if isinstance(err, TestFailure):
             if err.operator in Comparison:
                 self.console.print(self.get_source(err, test_result))
-                self.console.print(self.get_pretty_failure(err))
+                self.console.print(self.get_pretty_comparison_failure(err))
         else:
             self.print_traceback(err)
 
@@ -797,7 +797,7 @@ class TestResultWriter(TestResultWriterBase):
 
         return Padding(src, (1, 0, 1, 4))
 
-    def get_pretty_failure(self, err: TestFailure) -> RenderableType:
+    def get_pretty_comparison_failure(self, err: TestFailure) -> RenderableType:
         parts = [
             self.get_operands(err),
             self.get_diff(err),
