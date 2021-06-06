@@ -1,7 +1,8 @@
+from io import StringIO
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import patch
 
-from rich.console import Console, ConsoleRenderable, RenderGroup
+from rich.console import Console, RenderGroup
 from rich.padding import Padding
 from rich.panel import Panel
 from rich.rule import Rule
@@ -21,6 +22,7 @@ from ward._terminal import (
     get_exit_code,
     get_test_result_line,
     outcome_to_style,
+    theme,
 )
 from ward._testing import _Timer
 from ward.expect import Comparison, TestFailure
@@ -285,8 +287,13 @@ for outcome, expected_output in [
 
 
 @fixture
-def mock_rich_console():
-    return Mock(spec=Console)
+def mock_rich_console() -> Console:
+    return Console(
+        file=StringIO(),
+        theme=theme,
+        force_terminal=True,
+        width=80,
+    )
 
 
 @fixture
@@ -303,19 +310,15 @@ for left, right in [
     ({"a": "b"}, [1, 2, 3, 4]),
 ]:
 
-    @test("TestResultWriter.get_pretty_comparison_failure handles assert *==* failure")
+    @test("TestResultWriter.get_diff handles assert *==* failure")
     def _(lhs=left, rhs=right, writer=writer, console=mock_rich_console):
         failure = TestFailure("fail", lhs, rhs, 1, Comparison.Equals, "test")
-        failure_renderable: ConsoleRenderable = writer.get_pretty_comparison_failure(
-            failure
-        )
-        padding = next(failure_renderable.__rich_console__(console, None))
-        text = padding.renderable
+        diff_render = writer.get_diff(failure)
 
         # Don't check anything more than this. We just want to exercise this
         # code and ensure it doesn't error. The rendering of the diff itself
         # is tested in detail in test_diff.
-        assert text.plain == "LHS vs RHS shown below"
+        assert diff_render.title.plain == "Difference (LHS vs RHS)"
 
 
 for left, right in [
@@ -324,13 +327,10 @@ for left, right in [
     ("a", {"b": 1}),
 ]:
 
-    @test("TestResultWriter.get_pretty_comparison_failure handles assert *in* failure")
+    @test("TestResultWriter.get_operands handles assert *in* failure")
     def _(lhs=left, rhs=right, writer=writer):
         failure = TestFailure("fail", lhs, rhs, 1, Comparison.In, "test")
-        padding: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
-        render_group: RenderGroup = padding.renderable
-
-        lhs_render, rhs_render = render_group.renderables
+        lhs_render, rhs_render = writer.get_operands(failure).renderables
 
         assert lhs_render.title.plain == f"The item (of type {type(lhs).__name__})"
         assert (
@@ -350,10 +350,7 @@ for left, right in [
     )
     def _(lhs=left, rhs=right, writer=writer):
         failure = TestFailure("fail", lhs, rhs, 1, Comparison.NotIn, "test")
-        padding: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
-        render_group: RenderGroup = padding.renderable
-
-        lhs_render, rhs_render = render_group.renderables
+        lhs_render, rhs_render = writer.get_operands(failure).renderables
 
         assert lhs_render.title.plain == f"The item (of type {type(lhs).__name__})"
         assert (
@@ -362,34 +359,29 @@ for left, right in [
         )
 
 
-pretty_registered_comparisons = (Comparison.In, Comparison.NotIn, Comparison.Equals)
-non_pretty_registered_comparisons = (
-    c for c in Comparison if c not in pretty_registered_comparisons
-)
+for comparison in Comparison:
 
-for comparison in non_pretty_registered_comparisons:
-
-    @test(
-        "TestResultWriter.get_pretty_comparison_failure handles unregistered comparison failures"
-    )
+    @test("TestResultWriter.get_pretty_failure can handle {comparison.value} failures")
     def _(comparison=comparison, writer=writer):
         failure = TestFailure("fail", "a", "b", 1, comparison, "test")
-        renderable: ConsoleRenderable = writer.get_pretty_comparison_failure(failure)
+        renderable = writer.get_pretty_failure(failure)
 
-        assert renderable == Text("", end="")
+        assert renderable
 
 
 @test("TestResultWriter.output_all_test_results returns empty list if suite is empty")
 def _(console=mock_rich_console):
     suite = Suite([])
-    result_writer = TestResultWriter(
-        console=console,
-        suite=suite,
-        test_output_style=TestOutputStyle.TEST_PER_LINE,
-        progress_styles=[TestProgressStyle.INLINE],
-        config_path=None,
-    )
 
-    result = result_writer.output_all_test_results(_ for _ in ())
-    assert result == []
-    assert not console.print.called
+    with patch.object(console, "print") as mock:
+        result_writer = TestResultWriter(
+            console=console,
+            suite=suite,
+            test_output_style=TestOutputStyle.TEST_PER_LINE,
+            progress_styles=[TestProgressStyle.INLINE],
+            config_path=None,
+        )
+
+        result = result_writer.output_all_test_results(_ for _ in ())
+        assert result == []
+        assert not mock.called

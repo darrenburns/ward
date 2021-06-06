@@ -32,19 +32,17 @@ assert_func_namespace = {
 }
 
 
-def get_assertion_msg(node: ast.expr) -> str:
-    if node.msg and isinstance(node.msg, ast.Str):
-        msg = node.msg.s
+def get_assertion_msg(node: ast.expr):
+    if node.msg:
+        return node.msg
     else:
-        msg = ""
-    return msg
+        return ast.Str("")
 
 
 def make_call_node(node: ast.expr, func_name: str) -> ast.Expr:
-    msg = get_assertion_msg(node)
     call = ast.Call(
         func=ast.Name(id=func_name, ctx=ast.Load()),
-        args=[node.test.left, node.test.comparators[0], ast.Str(s=msg)],
+        args=[node.test.left, node.test.comparators[0], get_assertion_msg(node)],
         keywords=[],
     )
     new_node = ast.Expr(value=call)

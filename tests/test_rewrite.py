@@ -111,10 +111,11 @@ def _(src="assert 1 == 2, 'msg'"):
 @test("get_assertion_message({src}) returns '{msg}'")
 def _(
     src=each("assert 1 == 2, 'msg'", "assert 1 == 2", "assert 1 == 2, 1"),
-    msg=each("msg", "", ""),
+    msg=each(ast.Constant("msg"), ast.Constant(""), ast.Constant(1)),
 ):
     in_tree = ast.parse(src).body[0]
-    assert msg == get_assertion_msg(in_tree)
+    from_source = get_assertion_msg(in_tree)
+    assert msg.value == from_source.value
 
 
 @test("make_call_node converts `{src}` to correct function call node`")
