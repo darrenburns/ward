@@ -15,11 +15,21 @@ from ward.testing import Test, each
 
 def as_dict(node: ast.AST):
     if isinstance(node, ast.AST):
-        return {
+        d = {
             k: as_dict(v)
             for k, v in vars(node).items()
-            if k not in {"lineno", "col_offset", "ctx", "end_lineno", "end_col_offset"}
+            if k
+            not in {
+                "lineno",
+                "col_offset",
+                "ctx",
+                "end_lineno",
+                "end_col_offset",
+                "kind",
+            }
         }
+        d["_type"] = type(node)
+        return d
     else:
         return node
 
@@ -124,6 +134,7 @@ for msg, expected in [
     (", 'msg'", ast.Str("msg")),
     (", 1", ast.Num(1)),
     (", 1 + 1", ast.BinOp(ast.Num(1), ast.Add(), ast.Num(1))),
+    (", 1 - 1", ast.BinOp(ast.Num(1), ast.Sub(), ast.Num(1))),
 ]:
 
     @test("get_assertion_message({src}) returns '{msg}'")
