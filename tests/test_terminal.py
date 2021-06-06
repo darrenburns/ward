@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from rich.console import Console, RenderGroup
 from rich.padding import Padding
@@ -384,16 +384,14 @@ for comparison in Comparison:
 @test("TestResultWriter.output_all_test_results returns empty list if suite is empty")
 def _(console=mock_rich_console):
     suite = Suite([])
+    result_writer = TestResultWriter(
+        console=console,
+        suite=suite,
+        test_output_style=TestOutputStyle.TEST_PER_LINE,
+        progress_styles=[TestProgressStyle.INLINE],
+        config_path=None,
+    )
 
-    with patch.object(console, "print") as mock:
-        result_writer = TestResultWriter(
-            console=console,
-            suite=suite,
-            test_output_style=TestOutputStyle.TEST_PER_LINE,
-            progress_styles=[TestProgressStyle.INLINE],
-            config_path=None,
-        )
-
-        result = result_writer.output_all_test_results(_ for _ in ())
-        assert result == []
-        assert not mock.called
+    result = result_writer.output_all_test_results(_ for _ in ())
+    assert result == []
+    assert not console.print.called
