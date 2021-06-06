@@ -32,9 +32,9 @@ assert_func_namespace = {
 }
 
 
-def get_assertion_msg(node: ast.expr):
-    if node.msg:
-        return node.msg
+def get_assertion_msg(assertion: ast.Assert) -> ast.expr:
+    if assertion.msg:
+        return assertion.msg
     else:
         return ast.Str("")
 

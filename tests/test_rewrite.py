@@ -13,6 +13,17 @@ from ward._rewrite import (
 from ward.testing import Test, each
 
 
+def as_dict(node: ast.AST):
+    if isinstance(node, ast.AST):
+        return {
+            k: as_dict(v)
+            for k, v in vars(node).items()
+            if k not in {"lineno", "col_offset", "ctx", "end_lineno", "end_col_offset"}
+        }
+    else:
+        return node
+
+
 @testable_test
 def passing_fn():
     assert 1 == 1
@@ -111,11 +122,11 @@ def _(src="assert 1 == 2, 'msg'"):
 @test("get_assertion_message({src}) returns '{msg}'")
 def _(
     src=each("assert 1 == 2, 'msg'", "assert 1 == 2", "assert 1 == 2, 1"),
-    msg=each(ast.Constant("msg"), ast.Constant(""), ast.Constant(1)),
+    msg=each(ast.Str("msg"), ast.Str(""), ast.Num(1)),
 ):
-    in_tree = ast.parse(src).body[0]
+    in_tree: ast.Assert = ast.parse(src).body[0]
     from_source = get_assertion_msg(in_tree)
-    assert msg.value == from_source.value
+    assert as_dict(msg) == as_dict(from_source)
 
 
 @test("make_call_node converts `{src}` to correct function call node`")
