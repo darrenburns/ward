@@ -1,3 +1,5 @@
+.. _running_tests:
+
 Running Tests via the CLI
 =========================
 
