@@ -278,8 +278,12 @@ class SessionPrelude:
             yield f"Loaded config from [b]{path}[/b]."
 
         yield (
-            f"Found [b]{self.num_tests_collected}[/b] tests "
-            f"and [b]{self.num_fixtures_collected}[/b] fixtures "
+            f"""Found [b]{self.num_tests_collected}[/b] {
+                'test' if self.num_tests_collected == 1 else 'tests'
+                } """
+            f"""and [b]{self.num_fixtures_collected}[/b] {
+                'fixture' if self.num_fixtures_collected == 1 else 'fixtures'
+                } """
             f"in [b]{self.time_to_collect_secs:.2f}[/b] seconds."
         )
 
@@ -877,7 +881,10 @@ class TestResultWriter(TestResultWriterBase):
         test_count = sum(outcome_counts.values())
         result_table.add_row(
             Padding(str(test_count), pad=HORIZONTAL_PAD, style="bold"),
-            Padding("Tests Encountered", pad=HORIZONTAL_PAD),
+            Padding(
+                f"{'Test' if test_count==1 else 'Tests' } Encountered",
+                pad=HORIZONTAL_PAD,
+            ),
             style="default",
         )
         for outcome, count in outcome_counts.items():
