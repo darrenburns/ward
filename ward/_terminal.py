@@ -798,10 +798,11 @@ class TestResultWriter(TestResultWriterBase):
         return Padding(src, (1, 0, 1, 4))
 
     def get_pretty_comparison_failure(self, err: TestFailure) -> RenderableType:
+        diff = self.get_diff(err)
         parts = [
-            self.get_operands(err),
-            self.get_diff(err),
-            self.get_message(err),
+            self.get_operands(err) if not diff else None,
+            diff,
+            self.get_assert_message(err),
         ]
         return Padding(
             RenderGroup(*filter(None, parts)),
@@ -897,9 +898,7 @@ class TestResultWriter(TestResultWriterBase):
         yield type(obj).__name__, "bold default"
         yield ")", "default"
 
-    def get_diff(self, err: TestFailure) -> Optional[RenderableType]:
-        diff = None
-
+    def _get_diff(self, err: TestFailure) -> Optional[Diff]:
         if err.operator in EQUALITY_COMPARISONS:
             diff = Diff(
                 err.lhs,
@@ -907,6 +906,11 @@ class TestResultWriter(TestResultWriterBase):
                 width=self.terminal_size.width - 24,
                 show_symbols=self.show_diff_symbols,
             )
+            if diff.sides_are_different:
+                return diff
+
+    def get_diff(self, err: TestFailure) -> Optional[RenderableType]:
+        diff = self._get_diff(err)
 
         if diff is not None:
             return Panel(
@@ -926,7 +930,7 @@ class TestResultWriter(TestResultWriterBase):
         else:
             return None
 
-    def get_message(self, err: TestFailure) -> Optional[RenderableType]:
+    def get_assert_message(self, err: TestFailure) -> Optional[RenderableType]:
         if err.assert_msg:
             return Panel(
                 err.assert_msg,
@@ -948,7 +952,7 @@ class TestResultWriter(TestResultWriterBase):
             # relevant to end users, so skip over it.
             trace = trace.tb_next
             tb = Traceback.from_exception(err.__class__, err, trace, show_locals=True)
-            self.console.print(Padding(tb, pad=(0, 4, 1, 4)))
+            self.console.print(Padding(tb, pad=(0, 2, 1, 2)))
         else:
             self.console.print(str(err))
 
