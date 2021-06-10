@@ -91,7 +91,6 @@ no_implicit_optional = true
 overrides = [
     # These third-party dependencies don't distribute type annotations
     { module = "pprintpp.*", ignore_missing_imports = true },
-    { module = "toml.*", ignore_missing_imports = true },
     { module = "pluggy.*", ignore_missing_imports = true },
     { module = "cucumber_tag_expressions.*", ignore_missing_imports = true },
     { module = "click_completion.*", ignore_missing_imports = true },
