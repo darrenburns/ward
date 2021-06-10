@@ -3,6 +3,7 @@ import inspect
 import io
 import os
 import sys
+from typing import Any
 
 import click
 
@@ -54,7 +55,7 @@ def _get_debugger_hook(hookname: str):
     modname, dot, funcname = hookname.rpartition(".")
     if dot == "":
         modname = "builtins"
-    module = importlib.import_module(modname)
+    module: Any = importlib.import_module(modname)
     if hookname == "pdb.set_trace":
         set_trace = module.Pdb(stdout=original_stdout, skip=["ward*"]).set_trace
         hook = set_trace
