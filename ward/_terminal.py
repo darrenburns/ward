@@ -89,7 +89,7 @@ theme = Theme(
         "usedby": "#9285F6",
     }
 )
-rich_console = Console(theme=theme, highlighter=NullHighlighter())
+rich_console = Console(theme=theme, highlighter=NullHighlighter(), markup=True)
 
 
 def format_test_id(test_result: TestResult) -> str:
@@ -718,7 +718,11 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float, duration: int
+        self,
+        test_results: List[TestResult],
+        time_taken: float,
+        duration: int,
+        show_tips: bool,
     ):
         raise NotImplementedError()
 
@@ -866,7 +870,11 @@ class TestResultWriter(TestResultWriterBase):
             self.console.print(str(err))
 
     def output_test_result_summary(
-        self, test_results: List[TestResult], time_taken: float, show_slowest: int
+        self,
+        test_results: List[TestResult],
+        time_taken: float,
+        show_slowest: int,
+        tips_enabled: bool,
     ):
         if show_slowest:
             self.console.print(TestTimingStatsPanel(test_results, show_slowest))
@@ -904,7 +912,6 @@ class TestResultWriter(TestResultWriterBase):
         result_summary_panel = Panel(
             result_table,
             title="[b default]Results[/b default]",
-            style="none",
             expand=False,
             border_style=result_style,
         )

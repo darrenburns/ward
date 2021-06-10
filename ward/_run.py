@@ -148,13 +148,21 @@ hook_module = click.option(
 @click.option(
     "--show-slowest",
     type=int,
-    help="Record and display duration of n longest running tests",
+    help="Record and display duration of n longest running tests.",
     default=0,
 )
 @click.option(
     "--dry-run/--no-dry-run",
-    help="Print all tests without executing them",
+    help="Print all tests without executing them.",
     default=False,
+)
+@click.option(
+    "--tips/--no-tips",
+    default=True,
+    help="""\
+    If enabled, Ward will display a tip as part of it's output
+    to encourage passive learning.
+    """,
 )
 @click.version_option(version=__version__)
 @click.pass_context
@@ -176,6 +184,7 @@ def test(
     show_diff_symbols: bool,
     dry_run: bool,
     hook_module: Tuple[str],
+    tips: bool,
 ):
     """Run tests."""
     config_params = ctx.params.copy()
@@ -235,7 +244,7 @@ def test(
     for renderable in render_afters:
         rich_console.print(renderable)
 
-    writer.output_test_result_summary(test_results, time_taken, show_slowest)
+    writer.output_test_result_summary(test_results, time_taken, show_slowest, tips)
     sys.exit(exit_code.value)
 
 
