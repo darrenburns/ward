@@ -76,3 +76,35 @@ line-length = 88
 [tool.isort]
 profile = "black"
 line_length = 88
+
+[tool.mypy]
+show_error_codes = true
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+# Disabling incremental mode is required for `warn_unused_configs = true` to work
+incremental = false
+strict_equality = true
+implicit_reexport = false
+no_implicit_optional = true
+overrides = [
+    # These third-party dependencies don't distribute type annotations
+    { module = "pprintpp.*", ignore_missing_imports = true },
+    { module = "toml.*", ignore_missing_imports = true },
+    { module = "pluggy.*", ignore_missing_imports = true },
+    { module = "cucumber_tag_expressions.*", ignore_missing_imports = true },
+    { module = "click_completion.*", ignore_missing_imports = true },
+    { module = "click_default_group.*", ignore_missing_imports = true },
+    # TODO: Remove these lines and fix type-checker errors to gradually introduce mypy
+    { module = "ward.expect.*", ignore_errors = true },
+    { module = "ward._config.*", ignore_errors = true },
+    { module = "ward._fixtures.*", ignore_errors = true },
+    { module = "ward.testing.*", ignore_errors = true },
+    { module = "ward._rewrite.*", ignore_errors = true },
+    { module = "ward._collect.*", ignore_errors = true },
+    { module = "ward._terminal.*", ignore_errors = true },
+    { module = "ward._run.*", ignore_errors = true },
+    { module = "tests.*", ignore_errors = true },
+    { module = "conf.*", ignore_errors = true },  # matches docs/source/conf.py
+]
