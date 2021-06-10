@@ -159,8 +159,8 @@ class Test:
     module_name: str
     id: str = field(default_factory=_generate_id)
     marker: Optional[Marker] = None
-    description: Optional[str] = None
-    param_meta: Optional[ParamMeta] = field(default_factory=ParamMeta)
+    description: str = ""
+    param_meta: ParamMeta = field(default_factory=ParamMeta)
     capture_output: bool = True
     sout: StringIO = field(default_factory=StringIO)
     serr: StringIO = field(default_factory=StringIO)

@@ -61,4 +61,5 @@ repos:
         additional_dependencies:
           - types-pkg_resources
           - rich
-          - types-click
+          - click
+          - tomli
