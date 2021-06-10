@@ -26,7 +26,7 @@ For example,
 ## Pull request guidelines
 
 * Let us know before you start working on something! Someone else may already have started working on the same thing.
-* Prepare your code for review with `make prep` (this will update dependencies, run formatters and linters, and then run the test suite).
+* Prepare your code for review with `make prep` (this will run formatters and linters, and then run the test suite).
 * Ensure `README.md` is updated if necessary.
 * Tests written cover new code, and running `make test` results in a pass.
 
