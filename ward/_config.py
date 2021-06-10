@@ -114,7 +114,7 @@ def set_defaults_from_config(
     path_config_keys = ["path", "exclude"]
     for conf_key, paths in file_config.items():
         if conf_key in path_config_keys:
-            assert isinstance(paths, list), 'value of "path" and "exclude must be list'
+            assert isinstance(paths, list), 'value of "path" and "exclude" must be list'
             relative_path_strs = []
             for path_str in paths:
                 relative_path_strs.append(str((project_root / path_str)))
