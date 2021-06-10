@@ -125,8 +125,8 @@ def _(lhs=molecule_man, rhs=molecule_woman):
     diff_lines: List[Text] = list(diff.__rich_console__(None, None))
 
     assert diff_lines == [
-        "{",
-        "    'age': 29,",
+        Text("{"),
+        Text("    'age': 29,"),
         Text(
             "    'name': 'Molecule Man',",
             spans=[
@@ -143,9 +143,9 @@ def _(lhs=molecule_man, rhs=molecule_woman):
                 Span(25, 29, "red"),
             ],
         ),
-        "    'powers': ['Turning tiny', 'Radiation blast'],",
-        "    'secretIdentity': 'Dan Jukes',",
-        "}",
+        Text("    'powers': ['Turning tiny', 'Radiation blast'],"),
+        Text("    'secretIdentity': 'Dan Jukes',"),
+        Text("}"),
     ]
 
 

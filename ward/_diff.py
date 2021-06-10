@@ -1,5 +1,5 @@
 import difflib
-from typing import Iterator, List, Union
+from typing import Iterator, List
 
 import pprintpp
 from rich.console import Console, ConsoleOptions, RenderResult
@@ -86,20 +86,17 @@ class Diff:
     def build_unified_diff(self) -> RenderResult:
         diff = self.raw_unified_diff()
         prev_marker = ""
-        output_lines: List[Union[Text, str]] = []
+        output_lines: List[Text] = []
         for line in diff:
             if line.startswith("- "):
                 output_lines.append(Text(line[2:], style="green"))
             elif line.startswith("+ "):
                 output_lines.append(Text(line[2:], style="red"))
             elif line.startswith("? "):
-                if isinstance(output_lines[-1], str):
-                    line_to_rewrite = output_lines[-1]
-                else:
-                    line_to_rewrite = output_lines[-1].plain
+                line_to_rewrite = output_lines[-1].plain
                 output_lines[-1] = self.rewrite_line(line, line_to_rewrite, prev_marker)
             else:
-                output_lines.append(line[2:])
+                output_lines.append(Text(line[2:]))
             prev_marker = line[0]
         return output_lines
 
