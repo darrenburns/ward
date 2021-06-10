@@ -278,11 +278,11 @@ class SessionPrelude:
             yield f"Loaded config from [b]{path}[/b]."
 
         test_plural = "test" if self.num_tests_collected == 1 else "tests"
-        fixture_plureal = "fixture" if self.num_fixtures_collected == 1 else "fixtures"
+        fixture_plural = "fixture" if self.num_fixtures_collected == 1 else "fixtures"
 
         yield (
             f"Found [b]{self.num_tests_collected}[/b] {test_plural} "
-            f"and [b]{self.num_fixtures_collected}[/b] {fixture_plureal} "
+            f"and [b]{self.num_fixtures_collected}[/b] {fixture_plural} "
             f"in [b]{self.time_to_collect_secs:.2f}[/b] seconds."
         )
 
