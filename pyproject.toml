@@ -34,7 +34,7 @@ python = "^3.6.1"
 dataclasses = { version = "^0.7", python = "3.6" }
 click = "^8.0.0"
 rich = "^10.0.0"
-toml = "^0.10.1"
+tomli = "^1.0.0"
 pprintpp = "^0.4.0"
 cucumber-tag-expressions = "^2.0.0"
 click-default-group = "^1.2.2"
@@ -91,7 +91,6 @@ no_implicit_optional = true
 overrides = [
     # These third-party dependencies don't distribute type annotations
     { module = "pprintpp.*", ignore_missing_imports = true },
-    { module = "toml.*", ignore_missing_imports = true },
     { module = "pluggy.*", ignore_missing_imports = true },
     { module = "cucumber_tag_expressions.*", ignore_missing_imports = true },
     { module = "click_completion.*", ignore_missing_imports = true },
