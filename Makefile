@@ -38,7 +38,7 @@ update:
 	poetry update
 .PHONY: update
 
-prep: setup update lint test
+prep: setup lint test
 .PHONY: prep
 
 clean:
