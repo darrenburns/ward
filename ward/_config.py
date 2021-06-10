@@ -40,7 +40,7 @@ def read_config_toml(project_root: Path, config_file: str) -> _ConfigDict:
     return ward_config
 
 
-def as_list(conf: _ConfigDict):
+def as_list(conf: _ConfigValue):
     if isinstance(conf, list):
         return conf
     else:
@@ -99,7 +99,7 @@ def set_defaults_from_config(
     file_config = read_config_toml(project_root, _CONFIG_FILE)
 
     if file_config:
-        config_path = project_root / _CONFIG_FILE
+        config_path: Optional[Path] = project_root / _CONFIG_FILE
     else:
         config_path = None
 
@@ -114,6 +114,7 @@ def set_defaults_from_config(
     path_config_keys = ["path", "exclude"]
     for conf_key, paths in file_config.items():
         if conf_key in path_config_keys:
+            assert isinstance(paths, list), 'value of "path" and "exclude" must be list'
             relative_path_strs = []
             for path_str in paths:
                 relative_path_strs.append(str((project_root / path_str)))
