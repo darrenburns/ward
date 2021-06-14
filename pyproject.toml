@@ -100,7 +100,6 @@ overrides = [
     { module = "ward.testing.*", ignore_errors = true },
     { module = "ward._rewrite.*", ignore_errors = true },
     { module = "ward._collect.*", ignore_errors = true },
-    { module = "ward._terminal.*", ignore_errors = true },
     { module = "ward._run.*", ignore_errors = true },
     { module = "tests.*", ignore_errors = true },
     { module = "conf.*", ignore_errors = true },  # matches docs/source/conf.py

@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    Union,
 )
 
 from rich.console import (
@@ -161,7 +162,7 @@ def get_test_result_line(
     grid.add_column()
     grid.add_column()
     grid.add_column()
-    columns = [
+    columns: List[RenderableType] = [
         Padding(outcome_tag, style=test_style, pad=(0, 1, 0, 1 + extra_left_pad)),
         Padding(f"{test_location}{test_case_number}", style="muted", pad=(0, 1, 0, 1)),
         Padding(
@@ -215,15 +216,18 @@ class TestTimingStatsPanel:
         return sorted(data)[int(math.ceil((size * percentile) / 100)) - 1]
 
     def __rich_console__(self, c: Console, co: ConsoleOptions) -> RenderResult:
-        test_results = sorted(
-            self.all_tests_in_session, key=lambda r: r.test.timer.duration, reverse=True
-        )
+        def sort_key(r: TestResult) -> float:
+            assert r.test.timer, "test must've been run already"
+            return r.test.timer.duration
+
+        test_results = sorted(self.all_tests_in_session, key=sort_key, reverse=True)
         grid = Table.grid(padding=(0, 2, 0, 0))
         grid.add_column(justify="right")  # Time taken
         grid.add_column()  # Test ID
         grid.add_column()  # Test description
 
         for result in test_results[: self.num_tests_to_show]:
+            assert result.test.timer, "test must've been run already"
             time_taken_secs = result.test.timer.duration
             time_taken_millis = time_taken_secs * 1000
             test_id = format_test_id(result)
@@ -274,7 +278,7 @@ class SessionPrelude:
         )
         if self.config_path:
             try:
-                path = self.config_path.relative_to(Path.cwd())
+                path: Union[Path, str] = self.config_path.relative_to(Path.cwd())
             except ValueError:
                 path = self.config_path.name
             yield f"Loaded config from [b]{path}[/b]."
@@ -506,7 +510,9 @@ class LiveTestBar(TestResultDisplayWidget):
         self.task = self.progress.add_task("", total=num_tests)
 
     def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
-        return self.progress
+        # Ignore type checkers due to typing problem in `rich`:
+        # `Progress` class signature is not `RichCast` protocol compatible
+        return self.progress  # type: ignore[return-value]
 
     def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
@@ -545,7 +551,7 @@ class SuiteProgressBar(TestResultDisplayWidget):
             finished_style="pass.textonly",
         )
 
-        self.progress = Progress(
+        self.progress: Optional[Progress] = Progress(
             self.spinner_column,
             TimeElapsedColumn(),
             self.bar_column,
@@ -557,9 +563,12 @@ class SuiteProgressBar(TestResultDisplayWidget):
         self.task = self.progress.add_task("Testing...", total=num_tests)
 
     def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
-        return self.progress
+        # Ignore type checkers due to typing problem in `rich`:
+        # `Progress` class signature is not `RichCast` protocol compatible
+        return self.progress  # type: ignore[return-value]
 
     def after_test(self, test_index: int, test_result: TestResult) -> None:
+        assert self.progress is not None, "progress must not be None"
         self.progress.update(self.task, advance=1)
 
         if test_result.outcome.will_fail_session:
@@ -593,9 +602,12 @@ class TerminalResultsWriter:
     def footer(self, results: List[TestResult]) -> RenderableType:
         table = Table.grid()
         table.add_column()
-        for f in filter(
-            None, (component.footer(results) for component in self.widgets)
-        ):
+        footers = (
+            component.footer(results)
+            for component in self.widgets
+            if component.footer(results)
+        )
+        for f in footers:
             table.add_row(f)
 
         return table
@@ -610,7 +622,7 @@ class TerminalResultsWriter:
         and a boolean that is true if the run was cancelled and false otherwise.
         """
         num_failures = 0
-        results = []
+        results: List[TestResult] = []
         was_cancelled = False
 
         self.console.print()
