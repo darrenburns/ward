@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Dict, Iterable, Optional, Union
 
 import click
-import toml
+import tomli
 
 from ward._utilities import find_project_root
 
@@ -26,8 +26,8 @@ def read_config_toml(project_root: Path, config_file: str) -> _ConfigDict:
         return {}
 
     try:
-        pyproject_toml = toml.load(str(path))
-    except (toml.TomlDecodeError, OSError) as e:
+        pyproject_toml = tomli.loads(path.read_text(encoding="utf-8"))
+    except (tomli.TOMLDecodeError, OSError) as e:
         raise click.FileError(
             filename=config_file, hint=f"Error reading {config_file}:\n{e}"
         )
@@ -40,7 +40,7 @@ def read_config_toml(project_root: Path, config_file: str) -> _ConfigDict:
     return ward_config
 
 
-def as_list(conf: _ConfigDict):
+def as_list(conf: _ConfigValue):
     if isinstance(conf, list):
         return conf
     else:
@@ -99,7 +99,7 @@ def set_defaults_from_config(
     file_config = read_config_toml(project_root, _CONFIG_FILE)
 
     if file_config:
-        config_path = project_root / _CONFIG_FILE
+        config_path: Optional[Path] = project_root / _CONFIG_FILE
     else:
         config_path = None
 
@@ -114,6 +114,7 @@ def set_defaults_from_config(
     path_config_keys = ["path", "exclude"]
     for conf_key, paths in file_config.items():
         if conf_key in path_config_keys:
+            assert isinstance(paths, list), 'value of "path" and "exclude" must be list'
             relative_path_strs = []
             for path_str in paths:
                 relative_path_strs.append(str((project_root / path_str)))

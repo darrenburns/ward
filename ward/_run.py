@@ -284,6 +284,7 @@ def test(
 def fixtures(
     ctx: click.Context,
     config: str,
+    project_root: Optional[Path],
     config_path: Optional[Path],
     path: Tuple[str],
     exclude: Tuple[str],
@@ -296,6 +297,7 @@ def fixtures(
     full: bool,
 ):
     """Show information on fixtures."""
+    configure_path(project_root)
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = list(load_modules(mod_infos))

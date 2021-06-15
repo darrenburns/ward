@@ -27,6 +27,8 @@ def find_project_root(paths: Iterable[Path]) -> Optional[Path]:
         if (directory / ".hg").is_dir():
             return directory
 
+    return None
+
 
 def get_absolute_path(object: Any) -> Path:
     return Path(inspect.getfile(object)).absolute()

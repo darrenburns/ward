@@ -8,7 +8,7 @@ exclude = ["tests/resources/"]
 
 [tool.poetry]
 name = "ward"
-version = "0.60.0b0"
+version = "0.61.1b0"
 description = "A modern Python testing framework"
 exclude = ["tests"]
 authors = ["Darren Burns <darrenb900@gmail.com>"]
@@ -23,13 +23,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Quality Assurance",
     "Topic :: Software Development :: Testing",
@@ -38,9 +32,9 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.6.1"
 dataclasses = { version = "^0.7", python = "3.6" }
-click = "^8.0.0"
+click = ">=7,<9"
 rich = "^10.0.0"
-toml = "^0.10.1"
+tomli = "^1.0.0"
 pprintpp = "^0.4.0"
 cucumber-tag-expressions = "^2.0.0"
 click-default-group = "^1.2.2"
@@ -48,8 +42,6 @@ click-completion = "^0.5.2"
 pluggy = "^0.13.1"
 
 [tool.poetry.dev-dependencies]
-black = "^19.9b0"
-flake8 = "^3.7.0"
 Sphinx = "^3.5.1"
 sphinx-rtd-theme = "^0.5.1"
 coverage = {version = "^5.1", extras = ["toml"]}
@@ -83,3 +75,33 @@ line-length = 88
 [tool.isort]
 profile = "black"
 line_length = 88
+
+[tool.mypy]
+show_error_codes = true
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+# Disabling incremental mode is required for `warn_unused_configs = true` to work
+incremental = false
+strict_equality = true
+implicit_reexport = false
+no_implicit_optional = true
+overrides = [
+    # These third-party dependencies don't distribute type annotations
+    { module = "pprintpp.*", ignore_missing_imports = true },
+    { module = "pluggy.*", ignore_missing_imports = true },
+    { module = "cucumber_tag_expressions.*", ignore_missing_imports = true },
+    { module = "click_completion.*", ignore_missing_imports = true },
+    { module = "click_default_group.*", ignore_missing_imports = true },
+    # TODO: Remove these lines and fix type-checker errors to gradually introduce mypy
+    { module = "ward.expect.*", ignore_errors = true },
+    { module = "ward._fixtures.*", ignore_errors = true },
+    { module = "ward.testing.*", ignore_errors = true },
+    { module = "ward._rewrite.*", ignore_errors = true },
+    { module = "ward._collect.*", ignore_errors = true },
+    { module = "ward._terminal.*", ignore_errors = true },
+    { module = "ward._run.*", ignore_errors = true },
+    { module = "tests.*", ignore_errors = true },
+    { module = "conf.*", ignore_errors = true },  # matches docs/source/conf.py
+]

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Generator, List
+from typing import DefaultDict, Dict, Generator, List
 
 from ward._errors import ParameterisationError
 from ward._fixtures import FixtureCache
@@ -33,7 +33,7 @@ class Suite:
         Returns: A dictionary mapping a module Path to the number of tests that can be found within that module.
         """
         module_paths = [test.path for test in self.tests]
-        counts = defaultdict(int)
+        counts: DefaultDict[Path, int] = defaultdict(int)
         for path in module_paths:
             counts[path] += 1
         return counts

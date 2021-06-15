@@ -6,8 +6,8 @@ import pkgutil
 import sys
 from dataclasses import dataclass
 from distutils.sysconfig import get_python_lib
-from importlib._bootstrap import ModuleSpec
-from importlib._bootstrap_external import FileFinder
+from importlib._bootstrap import ModuleSpec  # type: ignore[import]
+from importlib._bootstrap_external import FileFinder  # type: ignore[import]
 from pathlib import Path
 from types import ModuleType
 from typing import Callable, Iterable, List, Optional, Set, Tuple

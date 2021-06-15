@@ -65,7 +65,7 @@ integration tests which target any mobile platform, you might invoke it like so:
 
 ``ward --tags "integration and (ios or android)"``
 
-For a deeper look into tag expressions, see the [running tests](/guide/running-tests) page.
+For a deeper look into tag expressions, see the :ref:`running tests<running_tests>` page.
 
 Using ``assert`` statements
 ---------------------------
@@ -122,7 +122,7 @@ You can also make a reference to a fixture and Ward will resolve and inject it:
             assert left + right == result
 
 Ward also supports parameterised testing by allowing multiple fixtures or
-values to be bound as a keyword argument using the ```each`` function:
+values to be bound as a keyword argument using the ``each`` function:
 
 .. code-block:: python
 

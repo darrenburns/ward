@@ -47,3 +47,19 @@ repos:
     rev: 3.9.2
     hooks:
       - id: flake8
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.901
+    hooks:
+      - id: mypy
+        # This path contains a module with duplicate name so needs to be excluded.
+        # We do it here instead of the more preferable mypy config in pyproject.toml
+        # because mypy's `exclude` doesn't prevent type checking if another module
+        # imports the excluded module.
+        exclude: ^tests/resources/
+        args: [ "--scripts-are-modules" ]
+        # Install type data of third-party dependencies
+        additional_dependencies:
+          - types-pkg_resources
+          - rich
+          - click
+          - tomli

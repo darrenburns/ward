@@ -4,7 +4,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from functools import partial, wraps
 from pathlib import Path
-from typing import Any, AsyncGenerator, Callable, Generator, List, Optional, Union
+from typing import Any, AsyncGenerator, Callable, Generator, List, Union
 
 from ward.models import CollectionMetadata, Scope
 
@@ -23,7 +23,7 @@ class Fixture:
     """
 
     fn: Callable
-    gen: Union[Generator, AsyncGenerator] = None
+    gen: Union[Generator, AsyncGenerator, None] = None
     resolved_val: Any = None
 
     def __hash__(self):
@@ -129,7 +129,7 @@ class Fixture:
                 asyncio.get_event_loop().run_until_complete(awaitable)
 
 
-def fixture(func=None, *, scope: Optional[Union[Scope, str]] = Scope.Test):
+def fixture(func=None, *, scope: Union[Scope, str] = Scope.Test):
     """
     Decorator which will cause the wrapped function to be collected and treated as a fixture.
 
@@ -186,4 +186,4 @@ def using(*using_args, **using_kwargs):
     return decorator_using
 
 
-_DEFINED_FIXTURES = []
+_DEFINED_FIXTURES: List[Fixture] = []
