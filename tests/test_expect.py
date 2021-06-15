@@ -1,3 +1,5 @@
+import inspect
+
 from ward import each, test
 from ward.expect import (
     TestFailure,
@@ -13,6 +15,14 @@ from ward.expect import (
     assert_not_in,
     raises,
 )
+
+
+@test("correct error_line is set")
+def _():
+    assert_lineno = inspect.currentframe().f_lineno + 2
+    with raises(TestFailure) as ctx:
+        assert_equal(0, 1, "msg")
+    assert ctx.raised.error_line == assert_lineno
 
 
 @test("{func.__name__}({lhs}, {rhs}) is None")

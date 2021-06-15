@@ -319,11 +319,14 @@ def assert_greater_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) ->
 
 
 def _prev_frame() -> FrameType:
-    current = inspect.currentframe()
-    if not current:
+    """Return previous stack frame of where this func is called."""
+    this_frame = inspect.currentframe()
+    if not this_frame:
         sys.exit(
             "ERROR: Ward requires an interpreter with Python stack frame support\n"
         )
-    prev = current.f_back
-    assert prev, "_prev_frame should not be called on bottom stack frame"
-    return prev
+    caller_frame = this_frame.f_back
+    assert caller_frame, "the frame where _prev_frame was called must exist"
+    prev_frame = caller_frame.f_back
+    assert prev_frame, "can not call _prev_frame in bottom stack frame"
+    return prev_frame
