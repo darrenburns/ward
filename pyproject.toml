@@ -96,7 +96,6 @@ overrides = [
     { module = "click_completion.*", ignore_missing_imports = true },
     { module = "click_default_group.*", ignore_missing_imports = true },
     # TODO: Remove these lines and fix type-checker errors to gradually introduce mypy
-    { module = "ward.expect.*", ignore_errors = true },
     { module = "ward.testing.*", ignore_errors = true },
     { module = "ward._rewrite.*", ignore_errors = true },
     { module = "ward._collect.*", ignore_errors = true },
