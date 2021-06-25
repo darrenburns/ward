@@ -1,7 +1,9 @@
 import inspect
+import sys
 import types
 from dataclasses import dataclass
 from enum import Enum
+from types import FrameType
 from typing import Any, ContextManager, Generic, Optional, Type, TypeVar, cast
 
 __all__ = [
@@ -88,7 +90,7 @@ def assert_equal(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Raises: TestFailure
     """
     if lhs_val != rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} does not equal {rhs_val}",
             lhs=lhs_val,
@@ -112,7 +114,7 @@ def assert_not_equal(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Raises: TestFailure
     """
     if lhs_val == rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} does equal {rhs_val}",
             lhs=lhs_val,
@@ -136,7 +138,7 @@ def assert_in(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Raises: TestFailure
     """
     if lhs_val not in rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} is not in {rhs_val}",
             lhs=lhs_val,
@@ -161,7 +163,7 @@ def assert_not_in(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Raises: TestFailure
     """
     if lhs_val in rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} is in {rhs_val}",
             lhs=lhs_val,
@@ -185,7 +187,7 @@ def assert_is(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Raises: TestFailure
     """
     if lhs_val is not rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} is not {rhs_val}",
             lhs=lhs_val,
@@ -209,7 +211,7 @@ def assert_is_not(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Raises: TestFailure
     """
     if lhs_val is rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} is {rhs_val}",
             lhs=lhs_val,
@@ -233,7 +235,7 @@ def assert_less_than(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Raises: TestFailure
     """
     if lhs_val >= rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} >= {rhs_val}",
             lhs=lhs_val,
@@ -257,7 +259,7 @@ def assert_less_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) -> No
     Raises: TestFailure
     """
     if lhs_val > rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} > {rhs_val}",
             lhs=lhs_val,
@@ -281,7 +283,7 @@ def assert_greater_than(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     Raises: TestFailure
     """
     if lhs_val <= rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} <= {rhs_val}",
             lhs=lhs_val,
@@ -305,7 +307,7 @@ def assert_greater_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) ->
     Raises: TestFailure
     """
     if lhs_val < rhs_val:
-        error_line_no = inspect.currentframe().f_back.f_lineno
+        error_line_no = _prev_frame().f_lineno
         raise TestFailure(
             f"{lhs_val} < {rhs_val}",
             lhs=lhs_val,
@@ -314,3 +316,17 @@ def assert_greater_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) ->
             operator=Comparison.GreaterThanEqualTo,
             assert_msg=assert_msg,
         )
+
+
+def _prev_frame() -> FrameType:
+    """Return previous stack frame of where this func is called."""
+    this_frame = inspect.currentframe()
+    if not this_frame:
+        sys.exit(
+            "ERROR: Ward requires an interpreter with Python stack frame support\n"
+        )
+    caller_frame = this_frame.f_back
+    assert caller_frame, "the frame where _prev_frame was called must exist"
+    prev_frame = caller_frame.f_back
+    assert prev_frame, "can not call _prev_frame in bottom stack frame"
+    return prev_frame

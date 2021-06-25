@@ -32,6 +32,7 @@ from ward._testing import (
     is_test_module_name,
 )
 from ward._utilities import get_absolute_path
+from ward.expect import TestFailure
 from ward.fixtures import Fixture
 from ward.models import CollectionMetadata, Marker, Scope, SkipMarker, XfailMarker
 
@@ -498,7 +499,7 @@ class TestResult:
 
     test: Test
     outcome: TestOutcome
-    error: Optional[Exception] = None
+    error: Optional[TestFailure] = None
     message: str = ""
     captured_stdout: str = ""
     captured_stderr: str = ""
