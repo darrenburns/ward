@@ -38,7 +38,7 @@ class raises(Generic[_E], ContextManager["raises[_E]"]):
         exc_val: Optional[BaseException],
         exc_tb: Optional[types.TracebackType],
     ) -> bool:
-        if not issubclass(exc_type, self.expected_ex_type):
+        if exc_type and not issubclass(exc_type, self.expected_ex_type):
             raise AssertionError(
                 f"Expected exception {self.expected_ex_type}, but {exc_type} was raised instead."
             )
