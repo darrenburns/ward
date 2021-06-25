@@ -79,6 +79,15 @@ def _():
         raise ValueError
 
 
+@test("ward.raises doesn't raise if the a base class of the error is raised")
+def _():
+    class SubClass(ValueError):
+        pass
+
+    with raises(ValueError):
+        raise SubClass()
+
+
 @test("ward.raises gives access to the raised error afterwards")
 def _():
     err = ValueError("x")
