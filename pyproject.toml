@@ -1,6 +1,6 @@
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.ward]
 path = ["tests"]
@@ -8,7 +8,7 @@ exclude = ["tests/resources/"]
 
 [tool.poetry]
 name = "ward"
-version = "0.61.1b0"
+version = "0.62.0b0"
 description = "A modern Python testing framework"
 exclude = ["tests"]
 authors = ["Darren Burns <darrenb900@gmail.com>"]
@@ -95,12 +95,9 @@ overrides = [
     { module = "click_completion.*", ignore_missing_imports = true },
     { module = "click_default_group.*", ignore_missing_imports = true },
     # TODO: Remove these lines and fix type-checker errors to gradually introduce mypy
-    { module = "ward.expect.*", ignore_errors = true },
-    { module = "ward._fixtures.*", ignore_errors = true },
     { module = "ward.testing.*", ignore_errors = true },
     { module = "ward._rewrite.*", ignore_errors = true },
     { module = "ward._collect.*", ignore_errors = true },
-    { module = "ward._terminal.*", ignore_errors = true },
     { module = "ward._run.*", ignore_errors = true },
     { module = "tests.*", ignore_errors = true },
     { module = "conf.*", ignore_errors = true },  # matches docs/source/conf.py

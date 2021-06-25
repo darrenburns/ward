@@ -1,7 +1,17 @@
 from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Collection, Dict, Iterable, Mapping, Tuple, Union
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from ward.fixtures import Fixture
 from ward.models import Scope
@@ -37,7 +47,7 @@ class FixtureCache:
 
     _scope_cache: ScopeCache = field(default_factory=_scope_cache_factory)
 
-    def _get_subcache(self, scope: Scope) -> Dict[str, Any]:
+    def _get_subcache(self, scope: Scope) -> Dict[ScopeKey, Dict[FixtureKey, Fixture]]:
         return self._scope_cache[scope]
 
     def get_fixtures_at_scope(
@@ -46,7 +56,7 @@ class FixtureCache:
         subcache = self._get_subcache(scope)
         if scope_key not in subcache:
             subcache[scope_key] = {}
-        return subcache.get(scope_key)
+        return subcache[scope_key]
 
     def cache_fixture(self, fixture: Fixture, scope_key: ScopeKey):
         """
@@ -72,7 +82,7 @@ class FixtureCache:
 
     def get(
         self, fixture_key: FixtureKey, scope: Scope, scope_key: ScopeKey
-    ) -> Fixture:
+    ) -> Optional[Fixture]:
         fixtures = self.get_fixtures_at_scope(scope, scope_key)
         return fixtures.get(fixture_key)
 
@@ -100,7 +110,9 @@ def fixture_parents_and_children(
     fixtures_to_parents = {fixture: fixture.parents() for fixture in fixtures}
 
     # not a defaultdict, because we want to have empty entries if no parents when we return
-    fixtures_to_children = {fixture: [] for fixture in fixtures}
+    fixtures_to_children: Mapping[Fixture, List[Fixture]] = {
+        fixture: [] for fixture in fixtures
+    }
     for fixture, parents in fixtures_to_parents.items():
         for parent in parents:
             fixtures_to_children[parent].append(fixture)

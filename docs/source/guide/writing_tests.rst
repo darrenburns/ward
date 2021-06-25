@@ -248,6 +248,9 @@ use ``with raises(<exc_type>) as <exc_object>``:
 Note that ``ex`` is only populated after the context manager exits, so
 be careful with your indentation.
 
+If an instance of a *subclass* of the exception you pass to ``raises`` is raised by the code
+under test, ``raises`` will catch that too.
+
 .. _async_tests:
 
 Testing `async` code

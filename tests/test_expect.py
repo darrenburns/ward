@@ -1,3 +1,5 @@
+import inspect
+
 from ward import each, test
 from ward.expect import (
     TestFailure,
@@ -13,6 +15,14 @@ from ward.expect import (
     assert_not_in,
     raises,
 )
+
+
+@test("correct error_line is set")
+def _():
+    assert_lineno = inspect.currentframe().f_lineno + 2
+    with raises(TestFailure) as ctx:
+        assert_equal(0, 1, "msg")
+    assert ctx.raised.error_line == assert_lineno
 
 
 @test("{func.__name__}({lhs}, {rhs}) is None")
@@ -67,6 +77,15 @@ def _():
 def _():
     with raises(ValueError):
         raise ValueError
+
+
+@test("ward.raises doesn't raise if the a base class of the error is raised")
+def _():
+    class SubClass(ValueError):
+        pass
+
+    with raises(ValueError):
+        raise SubClass()
 
 
 @test("ward.raises gives access to the raised error afterwards")

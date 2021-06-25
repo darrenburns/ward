@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from timeit import default_timer
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
 # Tests declared with the name _, and with the @test decorator
 # have to be stored in here, so that they can later be retrieved.
@@ -39,7 +39,7 @@ def is_test_module_name(module_name: str) -> bool:
 
 
 class _Timer:
-    def __init__(self, duration: Optional[float] = None):
+    def __init__(self, duration: float = 0.0):
         self._start_time = None
         self.duration = duration
 
