@@ -822,7 +822,7 @@ class TestResultWriter(TestResultWriterBase):
             self.get_assert_message(err),
         ]
         return Padding(
-            RenderGroup(*filter(None, parts)),
+            RenderGroup(*(part for part in parts if part)),
             pad=(0, 0, 1, 2),
         )
 
@@ -925,6 +925,7 @@ class TestResultWriter(TestResultWriterBase):
             )
             if diff.sides_are_different:
                 return diff
+        return None
 
     def get_diff(self, err: TestFailure) -> Optional[RenderableType]:
         diff = self._get_diff(err)
