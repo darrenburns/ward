@@ -1,6 +1,6 @@
 import inspect
 
-from ward import each, test
+from ward import each, test, xfail
 from ward.expect import (
     TestFailure,
     assert_equal,
@@ -101,6 +101,13 @@ def _():
     with raises(ValueError) as ctx:
         raise ValueError("xyz")
     assert "y" in str(ctx.raised)
+
+
+@test("ward.raises assertion error if no exception is raised")
+@xfail
+def _():
+    with raises(ValueError):
+        pass
 
 
 @test("ward.raises.raised and try/except include a similar traceback")
