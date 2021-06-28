@@ -951,10 +951,13 @@ class TestResultWriter(TestResultWriterBase):
         if isinstance(test_result.error, TestFailure) or isinstance(
             test_result.error, AssertionError
         ):
+            # Ignore type checkers because `AssertionError` has the attribute
+            # `error_line` dynamically set.
+            error_line = test_result.error.error_line  # type: ignore[union-attr]
             self.console.print(
                 Padding(
                     Text(
-                        f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}:{test_result.error.error_line}"
+                        f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}:{error_line}"
                     ),
                     pad=(1, 0, 0, 2),
                 )

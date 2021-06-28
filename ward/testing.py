@@ -32,7 +32,6 @@ from ward._testing import (
     is_test_module_name,
 )
 from ward._utilities import get_absolute_path
-from ward.expect import TestFailure
 from ward.fixtures import Fixture
 from ward.models import CollectionMetadata, Marker, Scope, SkipMarker, XfailMarker
 
@@ -66,9 +65,9 @@ def each(*args):
 
 
 def skip(
-    func_or_reason: Union[str, Callable] = None,
+    func_or_reason: Union[str, Callable, None] = None,
     *,
-    reason: str = None,
+    reason: Optional[str] = None,
     when: Union[bool, Callable] = True,
 ):
     """
@@ -89,9 +88,9 @@ def skip(
     func = func_or_reason
     marker = SkipMarker(reason=reason, when=when)
     if hasattr(func, "ward_meta"):
-        func.ward_meta.marker = marker
+        func.ward_meta.marker = marker  # type: ignore[attr-defined]
     else:
-        func.ward_meta = CollectionMetadata(marker=marker)
+        func.ward_meta = CollectionMetadata(marker=marker)  # type: ignore[attr-defined]
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -101,9 +100,9 @@ def skip(
 
 
 def xfail(
-    func_or_reason: Union[str, Callable] = None,
+    func_or_reason: Union[str, Callable, None] = None,
     *,
-    reason: str = None,
+    reason: Optional[str] = None,
     when: Union[bool, Callable] = True,
 ):
     """
@@ -125,9 +124,9 @@ def xfail(
     func = func_or_reason
     marker = XfailMarker(reason=reason, when=when)
     if hasattr(func, "ward_meta"):
-        func.ward_meta.marker = marker
+        func.ward_meta.marker = marker  # type: ignore[attr-defined]
     else:
-        func.ward_meta = CollectionMetadata(marker=marker)
+        func.ward_meta = CollectionMetadata(marker=marker)  # type: ignore[attr-defined]
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -203,7 +202,7 @@ class Test:
                     self.fn(**resolved_args)
             except FixtureError as e:
                 outcome = TestOutcome.FAIL
-                error: Optional[Exception] = e
+                error: Optional[BaseException] = e
             except BdbQuit:
                 # We don't want to treat the user quitting the debugger
                 # as an exception, so we'll ignore BdbQuit. This will
@@ -228,9 +227,11 @@ class Test:
                 result = TestResult(self, outcome)
             else:
                 if isinstance(error, AssertionError):
-                    error.error_line = traceback.extract_tb(
+                    error.error_line = traceback.extract_tb(  # type: ignore[attr-defined]
                         error.__traceback__, limit=-1
-                    )[0].lineno
+                    )[
+                        0
+                    ].lineno
                 result = TestResult(
                     self,
                     outcome,
@@ -254,7 +255,7 @@ class Test:
     @property
     def path(self) -> Path:
         """The pathlib.Path to the test module."""
-        return self.fn.ward_meta.path
+        return self.fn.ward_meta.path  # type: ignore[attr-defined]
 
     @property
     def qualified_name(self) -> str:
@@ -499,7 +500,7 @@ class TestResult:
 
     test: Test
     outcome: TestOutcome
-    error: Optional[TestFailure] = None
+    error: Optional[BaseException] = None
     message: str = ""
     captured_stdout: str = ""
     captured_stderr: str = ""
@@ -568,9 +569,7 @@ class TestArgumentResolver:
             if is_fixture(arg)
         }
 
-    def get_default_args(
-        self, func: Optional[Union[Callable, Fixture]] = None
-    ) -> Dict[str, Any]:
+    def get_default_args(self, func: Optional[Callable] = None) -> Dict[str, Any]:
         """
         Returns a mapping of test argument names to values.
 
@@ -585,7 +584,7 @@ class TestArgumentResolver:
 
         # Override the signature if @using is present
         if meta:
-            bound_args = getattr(fn.ward_meta, "bound_args", None)
+            bound_args = getattr(meta, "bound_args", None)
             if bound_args:
                 bound_args.apply_defaults()
                 return bound_args.arguments
@@ -625,10 +624,10 @@ class TestArgumentResolver:
             args_to_inject = self._unpack_resolved(children_resolved)
             if fixture.is_generator_fixture:
                 fixture.gen = arg(**args_to_inject)
-                fixture.resolved_val = next(fixture.gen)
+                fixture.resolved_val = next(fixture.gen)  # type: ignore[arg-type]
             elif fixture.is_async_generator_fixture:
                 fixture.gen = arg(**args_to_inject)
-                awaitable = fixture.gen.__anext__()
+                awaitable = fixture.gen.__anext__()  # type: ignore[union-attr]
                 fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
                     awaitable
                 )
