@@ -22,6 +22,7 @@ from typing import (
     Union,
 )
 
+from rich.columns import Columns
 from rich.console import (
     Console,
     ConsoleOptions,
@@ -55,7 +56,14 @@ from ward._fixtures import FixtureHierarchyMapping, fixture_parents_and_children
 from ward._suite import Suite
 from ward._utilities import group_by
 from ward._ward_version import __version__
-from ward.expect import Comparison, TestFailure
+from ward.expect import (
+    EQUALITY_COMPARISONS,
+    IN_COMPARISONS,
+    INEQUALITY_COMPARISONS,
+    IS_COMPARISONS,
+    Comparison,
+    TestFailure,
+)
 from ward.fixtures import Fixture
 from ward.models import ExitCode, Scope
 from ward.testing import Test, TestOutcome, TestResult, fixtures_used_directly_by_tests
@@ -81,6 +89,7 @@ theme = Theme(
         "xfail.textonly": "#695CC8",
         "muted": "dim",
         "info": "yellow italic",
+        "info.border": "yellow",
         "dryrun": "#ffffff on #162740",
         "rule.line": "#189F4A",
         "fixture.name": "bold #1381E0",
@@ -806,52 +815,84 @@ class TestResultWriter(TestResultWriterBase):
         return Padding(src, (1, 0, 1, 4))
 
     def get_pretty_comparison_failure(self, err: TestFailure) -> RenderableType:
-        if err.operator is Comparison.Equals:
-            return self.get_pretty_failure_for_equals(err)
-        elif err.operator in {Comparison.In, Comparison.NotIn}:
-            return self.get_pretty_failure_for_in(err)
-        else:
-            return Text("", end="")
-
-    def get_pretty_failure_for_equals(self, err: TestFailure) -> RenderableType:
-        diff_msg = Text.assemble(
-            ("LHS ", "pass.textonly"),
-            ("vs ", "default"),
-            ("RHS ", "fail.textonly"),
-            ("shown below", "default"),
+        diff = self.get_diff(err)
+        parts = [
+            self.get_operands(err) if not diff else None,
+            diff,
+        ]
+        return Padding(
+            RenderGroup(*(part for part in parts if part)),
+            pad=(0, 0, 1, 2),
         )
 
-        diff = Diff(
-            err.lhs,
-            err.rhs,
-            width=self.terminal_size.width - 24,
-            show_symbols=self.show_diff_symbols,
-        )
+    def get_operands(self, err: TestFailure) -> Optional[RenderableType]:
+        if err.operator in EQUALITY_COMPARISONS | INEQUALITY_COMPARISONS:
+            description = {
+                Comparison.Equals: "not equal to",
+                Comparison.NotEquals: "equal to",
+                Comparison.LessThan: "not less than",
+                Comparison.LessThanEqualTo: "not less than or equal to",
+                Comparison.GreaterThan: "not greater than",
+                Comparison.GreaterThanEqualTo: "not greater than or equal to",
+            }[err.operator]
 
-        return RenderGroup(
-            Padding(diff_msg, pad=(0, 0, 1, 2)),
-            Padding(diff, pad=(0, 0, 1, 4)),
-        )
+            lhs_msg = Text.assemble(
+                ("The ", "default"),
+                ("LHS ", "pass.textonly"),
+                *self.of_type(err.lhs),
+            )
+            rhs_msg = Text.assemble(
+                (f"was {description} ", "bold default"),
+                ("the ", "default"),
+                ("RHS ", "fail.textonly"),
+                *self.of_type(err.rhs),
+            )
+        elif err.operator in IN_COMPARISONS:
+            lhs_msg = Text.assemble(
+                ("The ", "default"),
+                ("item ", "pass.textonly"),
+                *self.of_type(err.lhs),
+            )
+            rhs_msg = Text.assemble(
+                (
+                    "was not " if err.operator is Comparison.In else "was ",
+                    "bold default",
+                ),
+                ("found in the ", "default"),
+                ("container ", "fail.textonly"),
+                *self.of_type(err.rhs),
+            )
+        elif err.operator in IS_COMPARISONS:
+            lhs_msg = Text.assemble(
+                ("The ", "default"),
+                ("LHS ", "pass.textonly"),
+                *self.of_type(err.lhs),
+                (" with ", "default"),
+                ("id ", "default"),
+                (f"{id(err.lhs)}", "bold default"),
+            )
+            rhs_msg = Text.assemble(
+                (
+                    "was not " if err.operator is Comparison.Is else "was ",
+                    "bold default",
+                ),
+                ("the ", "default"),
+                ("RHS ", "fail.textonly"),
+                *self.of_type(err.rhs),
+                (" with ", "default"),
+                ("id ", "default"),
+                (f"{id(err.rhs)}", "bold default"),
+            )
+        else:  # pragma: unreachable
+            raise Exception(f"Unknown operator: {err.operator!r}")
 
-    def get_pretty_failure_for_in(self, err: TestFailure) -> RenderableType:
-        lhs_msg = Text.assemble(
-            ("The ", "default"),
-            ("item ", "pass.textonly"),
-            *self.of_type(err.lhs),
-        )
         lhs = Panel(
             Pretty(err.lhs),
             title=lhs_msg,
             title_align="left",
             border_style="pass.textonly",
             padding=1,
-        )
-
-        rhs_msg = Text.assemble(
-            ("was not " if err.operator is Comparison.In else "was ", "bold default"),
-            ("found in the ", "default"),
-            ("container ", "fail.textonly"),
-            *self.of_type(err.rhs),
+            expand=True,
         )
         rhs = Panel(
             Pretty(err.rhs),
@@ -859,14 +900,52 @@ class TestResultWriter(TestResultWriterBase):
             title_align="left",
             border_style="fail.textonly",
             padding=1,
+            expand=True,
         )
 
-        return Padding(RenderGroup(lhs, rhs), pad=(0, 0, 1, 2))
+        return Columns(
+            [lhs, rhs],
+            expand=True,
+            padding=0,
+        )
 
     def of_type(self, obj: object) -> Iterator[Tuple[str, str]]:
         yield "(of type ", "default"
         yield type(obj).__name__, "bold default"
         yield ")", "default"
+
+    def _get_diff(self, err: TestFailure) -> Optional[Diff]:
+        if err.operator in EQUALITY_COMPARISONS:
+            diff = Diff(
+                err.lhs,
+                err.rhs,
+                width=self.terminal_size.width - 24,
+                show_symbols=self.show_diff_symbols,
+            )
+            if diff.sides_are_different:
+                return diff
+        return None
+
+    def get_diff(self, err: TestFailure) -> Optional[RenderableType]:
+        diff = self._get_diff(err)
+
+        if diff is not None:
+            return Panel(
+                diff,
+                title=Text.assemble(
+                    ("Difference (", "default"),
+                    ("LHS ", "pass.textonly"),
+                    ("vs ", "default"),
+                    ("RHS", "fail.textonly"),
+                    (")", "default"),
+                ),
+                title_align="left",
+                border_style="info.border",
+                padding=1,
+                expand=True,
+            )
+        else:
+            return None
 
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
@@ -875,7 +954,7 @@ class TestResultWriter(TestResultWriterBase):
             # relevant to end users, so skip over it.
             trace = trace.tb_next
             tb = Traceback.from_exception(err.__class__, err, trace, show_locals=True)
-            self.console.print(Padding(tb, pad=(0, 4, 1, 4)))
+            self.console.print(Padding(tb, pad=(0, 2, 1, 2)))
         else:
             self.console.print(str(err))
 
@@ -948,20 +1027,29 @@ class TestResultWriter(TestResultWriterBase):
             self.console.print()
 
     def output_test_failed_location(self, test_result: TestResult):
-        if isinstance(test_result.error, TestFailure) or isinstance(
-            test_result.error, AssertionError
-        ):
-            # Ignore type checkers because `AssertionError` has the attribute
-            # `error_line` dynamically set.
-            error_line = test_result.error.error_line  # type: ignore[union-attr]
-            self.console.print(
-                Padding(
-                    Text(
-                        f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}:{error_line}"
-                    ),
-                    pad=(1, 0, 0, 2),
-                )
+        assert_msg = Text("")
+        if isinstance(test_result.error, TestFailure):
+            if test_result.error.assert_msg:
+                assert_msg = Text.assemble((" - ", "dim"), test_result.error.assert_msg)
+            else:
+                assert_msg = Text("")
+            output_str = (
+                f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}:"
+                f"{test_result.error.error_line}"
             )
+        else:
+            output_str = (
+                f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}"
+            )
+
+        output_text = Text.assemble(output_str, assert_msg)
+
+        self.console.print(
+            Padding(
+                output_text,
+                pad=(1, 0, 0, 2),
+            )
+        )
 
     def _get_outcome_counts(
         self, test_results: List[TestResult]

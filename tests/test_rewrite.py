@@ -13,6 +13,27 @@ from ward._rewrite import (
 from ward.testing import Test, each
 
 
+def as_dict(node: ast.AST):
+    if isinstance(node, ast.AST):
+        d = {
+            k: as_dict(v)
+            for k, v in vars(node).items()
+            if k
+            not in {
+                "lineno",
+                "col_offset",
+                "ctx",
+                "end_lineno",
+                "end_col_offset",
+                "kind",
+            }
+        }
+        d["_type"] = type(node)
+        return d
+    else:
+        return node
+
+
 @testable_test
 def passing_fn():
     assert 1 == 1
@@ -108,13 +129,19 @@ def _(src="assert 1 == 2, 'msg'"):
     assert out_tree.value.args[2].s == "msg"
 
 
-@test("get_assertion_message({src}) returns '{msg}'")
-def _(
-    src=each("assert 1 == 2, 'msg'", "assert 1 == 2", "assert 1 == 2, 1"),
-    msg=each("msg", "", ""),
-):
-    in_tree = ast.parse(src).body[0]
-    assert msg == get_assertion_msg(in_tree)
+for msg, expected in [
+    ("", ast.Str("")),
+    (", 'msg'", ast.Str("msg")),
+    (", 1", ast.Num(1)),
+    (", 1 + 1", ast.BinOp(ast.Num(1), ast.Add(), ast.Num(1))),
+    (", 1 - 1", ast.BinOp(ast.Num(1), ast.Sub(), ast.Num(1))),
+]:
+
+    @test("get_assertion_message({src}) returns '{msg}'")
+    def _(msg=msg, expected=expected):
+        in_tree: ast.Assert = ast.parse(f"assert 1 == 2{msg}").body[0]
+        from_source = get_assertion_msg(in_tree)
+        assert as_dict(from_source) == as_dict(expected)
 
 
 @test("make_call_node converts `{src}` to correct function call node`")

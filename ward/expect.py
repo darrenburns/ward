@@ -63,23 +63,34 @@ class Comparison(Enum):
     GreaterThanEqualTo = ">="
 
 
+IN_COMPARISONS = {
+    Comparison.In,
+    Comparison.NotIn,
+}
+IS_COMPARISONS = {
+    Comparison.Is,
+    Comparison.IsNot,
+}
+EQUALITY_COMPARISONS = {
+    Comparison.Equals,
+    Comparison.NotEquals,
+}
+INEQUALITY_COMPARISONS = {
+    Comparison.LessThan,
+    Comparison.LessThanEqualTo,
+    Comparison.GreaterThan,
+    Comparison.GreaterThanEqualTo,
+}
+
+
 @dataclass
 class TestFailure(Exception):
-    def __init__(
-        self,
-        message: str,
-        lhs: Any,
-        rhs: Any,
-        error_line: int,
-        operator: Comparison,
-        assert_msg: str,
-    ):
-        self.lhs = lhs
-        self.rhs = rhs
-        self.message = message
-        self.error_line = error_line
-        self.operator = operator
-        self.assert_msg = assert_msg
+    message: str
+    lhs: Any
+    rhs: Any
+    error_line: int
+    operator: Comparison
+    assert_msg: str
 
 
 def assert_equal(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
