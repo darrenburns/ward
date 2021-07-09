@@ -819,7 +819,6 @@ class TestResultWriter(TestResultWriterBase):
         parts = [
             self.get_operands(err) if not diff else None,
             diff,
-            self.get_assert_message(err),
         ]
         return Padding(
             RenderGroup(*(part for part in parts if part)),
@@ -948,21 +947,6 @@ class TestResultWriter(TestResultWriterBase):
         else:
             return None
 
-    def get_assert_message(self, err: TestFailure) -> Optional[RenderableType]:
-        if err.assert_msg:
-            return Panel(
-                err.assert_msg,
-                title=Text.assemble(
-                    ("Message", "default"),
-                ),
-                title_align="left",
-                border_style="info.border",
-                padding=1,
-                expand=True,
-            )
-        else:
-            return None
-
     def print_traceback(self, err):
         trace = getattr(err, "__traceback__", "")
         if trace:
@@ -1043,17 +1027,29 @@ class TestResultWriter(TestResultWriterBase):
             self.console.print()
 
     def output_test_failed_location(self, test_result: TestResult):
-        if isinstance(test_result.error, TestFailure) or isinstance(
-            test_result.error, AssertionError
-        ):
-            self.console.print(
-                Padding(
-                    Text(
-                        f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}:{test_result.error.error_line}"
-                    ),
-                    pad=(1, 0, 0, 2),
-                )
+        assert_msg = Text("")
+        if isinstance(test_result.error, TestFailure):
+            if test_result.error.assert_msg:
+                assert_msg = Text.assemble((" - ", "dim"), test_result.error.assert_msg)
+            else:
+                assert_msg = Text("")
+            output_str = (
+                f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}:"
+                f"{test_result.error.error_line}"
             )
+        else:
+            output_str = (
+                f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}"
+            )
+
+        output_text = Text.assemble(output_str, assert_msg)
+
+        self.console.print(
+            Padding(
+                output_text,
+                pad=(1, 0, 0, 2),
+            )
+        )
 
     def _get_outcome_counts(
         self, test_results: List[TestResult]
