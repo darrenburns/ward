@@ -608,11 +608,11 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "tomli"
-version = "1.0.0"
+version = "1.0.1"
 description = "A lil' TOML parser"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.6,<4.0"
 
 [[package]]
 name = "typed-ast"
@@ -678,7 +678,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "9ee8eb248d096e6eded3f92d9d404eeb191ebc004cc23ec522328eb1463c725e"
+content-hash = "0976d8eb9f5211536e533923c5c2d0718d7dbcce72402a38079211fce40c8000"
 
 [metadata.files]
 alabaster = [
@@ -1047,8 +1047,8 @@ toml = [
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
 ]
 tomli = [
-    {file = "tomli-1.0.0-py3-none-any.whl", hash = "sha256:96e8efdf42dd939192a1cfbb89b72801473a87b2b7aa360b6921f187fa7ce5ef"},
-    {file = "tomli-1.0.0.tar.gz", hash = "sha256:09cb4fc761cdda80ae04ff7235320f8f656c30e0ac01754ce0eaa4b485b8254d"},
+    {file = "tomli-1.0.1-py3-none-any.whl", hash = "sha256:dce66410edbec030792fc81653d8658ff675998076f31c45c0aafb1da824e9c7"},
+    {file = "tomli-1.0.1.tar.gz", hash = "sha256:597db31e0350ef52f55595244ab74915daf8c03c8bda7bfb61a4297ab01f98fe"},
 ]
 typed-ast = [
     {file = "typed_ast-1.4.3-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:2068531575a125b87a41802130fa7e29f26c09a2833fea68d9a40cf33902eba6"},

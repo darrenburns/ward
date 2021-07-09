@@ -42,8 +42,6 @@ click-completion = "^0.5.2"
 pluggy = "^0.13.1"
 
 [tool.poetry.dev-dependencies]
-black = "^19.9b0"
-flake8 = "^3.7.0"
 Sphinx = "^3.5.1"
 sphinx-rtd-theme = "^0.5.1"
 coverage = {version = "^5.1", extras = ["toml"]}
@@ -55,6 +53,7 @@ ward = "ward._run:run"
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
+    "pragma: unreachable",
     "def __repr__",
     "raise AssertionError",
     "raise NotImplementedError",

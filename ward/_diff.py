@@ -9,11 +9,21 @@ from rich.text import Text
 class Diff:
     """Constructs a Diff object to render diff-highlighted code."""
 
-    def __init__(self, lhs, rhs, width, show_symbols=False) -> None:
+    def __init__(
+        self,
+        lhs: object,
+        rhs: object,
+        width: int,
+        show_symbols: bool = False,
+    ) -> None:
         self.width = width
         self.lhs = lhs if isinstance(lhs, str) else pprintpp.pformat(lhs, width=width)
         self.rhs = rhs if isinstance(rhs, str) else pprintpp.pformat(rhs, width=width)
         self.show_symbols = show_symbols
+
+    @property
+    def sides_are_different(self) -> bool:
+        return self.lhs != self.rhs
 
     def raw_unified_diff(self) -> Iterator[str]:
         differ = difflib.Differ()
