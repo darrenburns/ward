@@ -14,6 +14,7 @@ We can declare a fixture using the ``@fixture`` decorator. Let's define a fixtur
 
 .. code-block:: python
 
+    # my_fixtures.py
     from ward import fixture
 
 
@@ -26,6 +27,7 @@ Now lets add a test that will make use of the user fixture.
 .. code-block:: python
 
     from ward import test
+    from my_fixtures import user
 
 
     @test("fetch_user_by_id should return the expected User object")
