@@ -29,7 +29,7 @@ def fake_project_pyproject():
     [tool.ward]
     path = ["a/", "x/y"]
     exclude = ["a/b/"]
-    some_other_config = ["hello", "world"]
+    order = "hello world"
     """
     yield from make_project("pyproject.toml", content)
 

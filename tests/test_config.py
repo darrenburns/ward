@@ -12,6 +12,7 @@ from ward._config import (
     as_list,
     read_config_toml,
     set_defaults_from_config,
+    validate_config_toml,
 )
 
 
@@ -122,6 +123,14 @@ def _(tmp=temp_config_invalid):
         read_config_toml(Path(tempfile.gettempdir()), tmp.name)
 
 
+@test("validate_config_toml raises click.ClickException if conf key is invalid")
+def _():
+    invalid_key = "orderr"
+    with raises(click.ClickException) as exc_info:
+        validate_config_toml({invalid_key: "the key here is invalid"})
+    assert invalid_key in str(exc_info.raised)
+
+
 @test("as_list({arg}) returns {rv}")
 def _(arg=each("x", 1, True, ["a", "b"]), rv=each(["x"], [1], [True], ["a", "b"])):
     assert as_list(arg) == rv
@@ -174,6 +183,6 @@ def _(project_root: Path = fake_project_pyproject):
     assert fake_context.default_map == {
         "exclude": (str(project_root / "a" / "b"),),
         "path": (str(project_root / "a"), str(project_root / "x" / "y")),
-        "some_other_config": ["hello", "world"],
+        "order": "hello world",
     }
     assert fake_context.params["config_path"] == project_root / "pyproject.toml"
