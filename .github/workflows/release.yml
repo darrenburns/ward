@@ -9,12 +9,11 @@ jobs:
     name: Build and publish to PyPI
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
-    - uses: dschep/install-poetry-action@v1.3
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+    - uses: snok/install-poetry@v1.1.6
       with:
-        version: 1.0.3
-        create_virtualenvs: true
+        virtualenvs-create: true
     - name: Publish to PyPI
       run: |
         poetry publish --build --username __token__ --password ${{ secrets.pypi_api_token }}
