@@ -13,7 +13,7 @@ from ward._rewrite import (
 from ward.testing import Test, each
 
 
-def as_dict(node: ast.AST):
+def as_dict(node):
     if isinstance(node, ast.AST):
         d = {
             k: as_dict(v)

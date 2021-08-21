@@ -88,6 +88,8 @@ incremental = false
 strict_equality = true
 implicit_reexport = false
 no_implicit_optional = true
+# Ward tests redefine the name "_" a lot
+disable_error_code = ["no-redef"]
 overrides = [
     # These third-party dependencies don't distribute type annotations
     { module = "pprintpp.*", ignore_missing_imports = true },
@@ -99,6 +101,5 @@ overrides = [
     { module = "ward._rewrite.*", ignore_errors = true },
     { module = "ward._collect.*", ignore_errors = true },
     { module = "ward._run.*", ignore_errors = true },
-    { module = "tests.*", ignore_errors = true },
     { module = "conf.*", ignore_errors = true },  # matches docs/source/conf.py
 ]

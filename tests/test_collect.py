@@ -192,7 +192,7 @@ class StubModuleFinder:
 
 @dataclass
 class StubSourceFileLoader:
-    path: str = PATH
+    path: Path = PATH
 
 
 @fixture
