@@ -91,7 +91,7 @@ def validate_config_toml(conf: _ConfigDict) -> None:
     for conf_key in conf:
         if conf_key not in valid_conf_keys:
             raise click.ClickException(
-                f'Invalid key "{conf_key}" found in pyproject.toml'
+                f"Invalid key {conf_key!r} found in pyproject.toml"
             )
 
 
