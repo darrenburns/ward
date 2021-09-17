@@ -131,7 +131,7 @@ toml = ["toml"]
 
 [[package]]
 name = "cucumber-tag-expressions"
-version = "3.0.1"
+version = "4.0.2"
 description = "Provides tag-expression parser for cucumber/behave"
 category = "main"
 optional = false
@@ -606,7 +606,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "2466806a2c36eca14d40e03b9c0bb4eb03646a1164dd38915f835ec6ae92337a"
+content-hash = "ee452ff9cc238525f07e5b276a110579048d3468c8e766407e618b7a0cf3382a"
 
 [metadata.files]
 alabaster = [
@@ -706,7 +706,7 @@ coverage = [
     {file = "coverage-5.5.tar.gz", hash = "sha256:ebe78fe9a0e874362175b02371bdfbee64d8edc42a044253ddf4ee7d3c15212c"},
 ]
 cucumber-tag-expressions = [
-    {file = "cucumber-tag-expressions-3.0.1.tar.gz", hash = "sha256:71823468f567726332b87f40530b27fc83b35daea6514f5cbb03f0533d96e5be"},
+    {file = "cucumber-tag-expressions-4.0.2.tar.gz", hash = "sha256:4ef4e0513d4c26d42299ffed010ed5e24125b87fc64de2e74b979d4a84c8f522"},
 ]
 dataclasses = [
     {file = "dataclasses-0.8-py3-none-any.whl", hash = "sha256:0201d89fa866f68c8ebd9d08ee6ff50c0b255f8ec63a71c16fda7af82bb887bf"},
