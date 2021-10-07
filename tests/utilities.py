@@ -28,7 +28,7 @@ def testable_test(func):
     )(func)
 
 
-testable_test.path = FORCE_TEST_PATH
+testable_test.path = FORCE_TEST_PATH  # type: ignore[attr-defined]
 
 
 @fixture
@@ -89,8 +89,8 @@ def make_project(root_file: str, file_content: str = ""):
     for path in paths:
         path.mkdir(parents=True, exist_ok=True)
 
-    root_file = tempdir / f"project/{root_file}"
-    with open(root_file, "w+", encoding="utf-8") as f:
+    root_file_path = tempdir / f"project/{root_file}"
+    with open(root_file_path, "w+", encoding="utf-8") as f:
         f.write(file_content)
         f.flush()
         yield (tempdir / "project").resolve()

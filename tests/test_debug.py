@@ -1,3 +1,4 @@
+import importlib
 import inspect
 import os
 from pdb import Pdb
@@ -6,12 +7,7 @@ from unittest import mock
 from unittest.mock import Mock
 
 from ward import _debug, test
-from ward._debug import (
-    _breakpointhook,
-    _get_debugger_hook,
-    importlib,
-    init_breakpointhooks,
-)
+from ward._debug import _breakpointhook, _get_debugger_hook, init_breakpointhooks
 
 
 @test("init_breakpointhooks always patches pdb.set_trace")

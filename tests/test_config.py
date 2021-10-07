@@ -1,5 +1,7 @@
 import tempfile
 import types
+from pathlib import Path
+from typing import IO, Generator
 from unittest import mock
 
 import click
@@ -7,7 +9,6 @@ import click
 from tests.test_util import fake_project_pyproject
 from ward import each, fixture, raises, test
 from ward._config import (
-    Path,
     apply_multi_defaults,
     as_list,
     read_config_toml,
@@ -15,7 +16,7 @@ from ward._config import (
 )
 
 
-def temp_conf(conf: str) -> tempfile._TemporaryFileWrapper:
+def temp_conf(conf: str) -> Generator[IO[bytes], None, None]:
     with tempfile.NamedTemporaryFile(delete=False) as temp:
         temp.write(bytes(conf, encoding="utf-8"))
         temp.seek(0)
