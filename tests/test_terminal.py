@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Union
 from unittest.mock import Mock
 
 from rich.console import Console, RenderGroup
@@ -26,6 +27,8 @@ from ward._testing import _Timer
 from ward.expect import Comparison, TestFailure
 from ward.models import ExitCode
 from ward.testing import Test, TestOutcome, TestResult, test
+
+expected_output: Union[str, Text]
 
 
 @test(

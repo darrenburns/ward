@@ -1211,11 +1211,11 @@ def add_fixture_dependencies_to_tree(
 
 def add_fixture_usages_by_tests_to_tree(node: Tree, used_by: Iterable[Test]) -> None:
     grouped_used_by = group_by(used_by, key=lambda t: t.description)
-    for idx, (description, tests) in enumerate(grouped_used_by.items()):
+    for description, tests in grouped_used_by.items():
         test = tests[0]
         loc = format_test_location(test)
         sep = f" [{len(tests)}]" if len(tests) > 1 else ""
-        node.add(f"[muted]{loc}{sep}[/muted] {test.description}")
+        node.add(f"[muted]{loc}{sep}[/muted] {description}")
 
 
 def make_text_for_fixture(fixture: Fixture, show_scope: bool) -> Text:
