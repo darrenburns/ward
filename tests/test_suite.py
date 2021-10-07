@@ -96,7 +96,7 @@ def _(skipped=skipped_test, example=example_test):
     assert test_runs == expected_runs
 
 
-@test("Suite.generate_test_runs fixture teardown code is ran in the expected order")
+@test("Suite.generate_test_runs fixture teardown code runs in the expected order")
 def _(module=module):
     events = []
 
@@ -122,6 +122,39 @@ def _(module=module):
     list(suite.generate_test_runs())
 
     assert events == [1, 2, 3]
+
+
+@test(
+    "Suite.generate_test_runs exception in teardown of test-scoped fixture fails dependent tests"
+)
+def _(module=module):
+    events = []
+    error_message = "example"
+    teardown_err = ZeroDivisionError(error_message)
+
+    @fixture
+    def fix_a():
+        events.append(1)
+        yield "a"
+        raise teardown_err
+
+    @testable_test
+    def my_test(fix_a=fix_a):
+        assert fix_a == "a"
+
+    test_obj = Test(fn=my_test, module_name=module)
+    suite = Suite(tests=[test_obj])
+
+    results = list(suite.generate_test_runs())
+
+    assert results == [
+        TestResult(
+            test=test_obj,
+            outcome=TestOutcome.FAIL,
+            error=teardown_err,
+            message=error_message,
+        )
+    ]
 
 
 @test("Suite.generate_test_runs tears down deep fixtures")

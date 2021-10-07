@@ -37,7 +37,7 @@ all of your Ward configuration should appear there:
     path = ["unit_tests", "integration_tests"]  # supply multiple paths using a list
     capture-output = false  # enable or disable output capturing (e.g. to use debugger)
     order = "standard"  # or 'random'
-    output-mode = "test-per-line"  # or 'dots-global', 'dot-module'
+    test-output-style = "test-per-line"  # or 'dots-global', 'dot-module'
     fail-limit = 20  # stop the run if 20 fails occur
     search = "my_function"  # search in test body or description
     progress-style = ["bar"]  # display a progress bar during the run

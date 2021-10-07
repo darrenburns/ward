@@ -8,7 +8,7 @@ exclude = ["tests/resources/"]
 
 [tool.poetry]
 name = "ward"
-version = "0.63.0b0"
+version = "0.64.0b0"
 description = "A modern Python testing framework"
 exclude = ["tests"]
 authors = ["Darren Burns <darrenb900@gmail.com>"]
@@ -32,15 +32,15 @@ include = ["ward/py.typed"]
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
-dataclasses = { version = "^0.7", python = "3.6" }
+dataclasses = { version = ">=0.7,<0.9", python = "3.6" }
 click = ">=7,<9"
 rich = "^10.0.0"
 tomli = "^1.0.0"
 pprintpp = "^0.4.0"
-cucumber-tag-expressions = "^2.0.0"
+cucumber-tag-expressions = ">=2.0.0,<5.0.0"
 click-default-group = "^1.2.2"
 click-completion = "^0.5.2"
-pluggy = "^0.13.1"
+pluggy = ">=0.13.1,<2.0.0"
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^3.5.1"
@@ -88,6 +88,8 @@ incremental = false
 strict_equality = true
 implicit_reexport = false
 no_implicit_optional = true
+# Ward tests redefine the name "_" a lot
+disable_error_code = ["no-redef"]
 overrides = [
     # These third-party dependencies don't distribute type annotations
     { module = "pprintpp.*", ignore_missing_imports = true },
@@ -99,6 +101,5 @@ overrides = [
     { module = "ward._rewrite.*", ignore_errors = true },
     { module = "ward._collect.*", ignore_errors = true },
     { module = "ward._run.*", ignore_errors = true },
-    { module = "tests.*", ignore_errors = true },
     { module = "conf.*", ignore_errors = true },  # matches docs/source/conf.py
 ]

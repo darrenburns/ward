@@ -121,7 +121,7 @@ class Fixture:
         """
         # Suppress because we can't know whether there's more code
         # to execute below the yield.
-        with suppress(RuntimeError, StopIteration, StopAsyncIteration):
+        with suppress(StopIteration, StopAsyncIteration):
             if self.is_generator_fixture and self.gen:
                 next(self.gen)
             elif self.is_async_generator_fixture and self.gen:
