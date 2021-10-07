@@ -5,6 +5,7 @@ import click
 import tomli
 
 from ward._utilities import find_project_root
+from ward.config import Config
 
 _ConfigValue = Union[int, str, bool, Iterable[str]]
 _ConfigDict = Dict[str, _ConfigValue]
@@ -74,6 +75,26 @@ def apply_multi_defaults(
     return file_config_only
 
 
+def validate_config_toml(conf: _ConfigDict) -> None:
+    valid_conf_keys = set(Config.__dataclass_fields__)  # type: ignore[attr-defined]
+
+    # These keys are derived from pyproject.toml path so makes no sense
+    # to define them in the file itself
+    valid_conf_keys.remove("config_path")
+    valid_conf_keys.remove("project_root")
+
+    # The key for plugin configuration differs from attr name in the
+    # `Config` dataclass
+    valid_conf_keys.remove("plugin_config")
+    valid_conf_keys.add("plugins")
+
+    for conf_key in conf:
+        if conf_key not in valid_conf_keys:
+            raise click.ClickException(
+                f"Invalid key {conf_key!r} found in pyproject.toml"
+            )
+
+
 def set_defaults_from_config(
     context: click.Context,
     param: click.Parameter,
@@ -97,6 +118,7 @@ def set_defaults_from_config(
         return Path.cwd()
 
     file_config = read_config_toml(project_root, _CONFIG_FILE)
+    validate_config_toml(file_config)
 
     if file_config:
         config_path: Optional[Path] = project_root / _CONFIG_FILE
