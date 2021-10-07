@@ -32,15 +32,15 @@ include = ["ward/py.typed"]
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
-dataclasses = { version = "^0.7", python = "3.6" }
+dataclasses = { version = ">=0.7,<0.9", python = "3.6" }
 click = ">=7,<9"
 rich = "^10.0.0"
 tomli = "^1.0.0"
 pprintpp = "^0.4.0"
-cucumber-tag-expressions = "^2.0.0"
+cucumber-tag-expressions = ">=2.0.0,<5.0.0"
 click-default-group = "^1.2.2"
 click-completion = "^0.5.2"
-pluggy = "^0.13.1"
+pluggy = ">=0.13.1,<2.0.0"
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^3.5.1"
