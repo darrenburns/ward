@@ -120,7 +120,7 @@ def _(cache: FixtureCache = cache, global_fixture=global_fixture):
 
 @test("FixtureCache.teardown_fixtures_for_scope removes Test fixtures from cache")
 def _(cache: FixtureCache = cache, t: Test = my_test):
-    cache.teardown_fixtures_for_scope(Scope.Test, t.id)
+    cache.teardown_fixtures_for_scope(Scope.Test, t.id, capture_output=True)
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Test, t.id)
 
@@ -129,14 +129,16 @@ def _(cache: FixtureCache = cache, t: Test = my_test):
 
 @test("FixtureCache.teardown_fixtures_for_scope runs teardown for Test fixtures")
 def _(cache: FixtureCache = cache, t: Test = my_test, events: List = recorded_events):
-    cache.teardown_fixtures_for_scope(Scope.Test, t.id)
+    cache.teardown_fixtures_for_scope(Scope.Test, t.id, capture_output=False)
 
     assert events == ["teardown t"]
 
 
 @test("FixtureCache.teardown_fixtures_for_scope removes Module fixtures from cache")
 def _(cache: FixtureCache = cache):
-    cache.teardown_fixtures_for_scope(Scope.Module, testable_test.path)
+    cache.teardown_fixtures_for_scope(
+        Scope.Module, testable_test.path, capture_output=True
+    )
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)
 
@@ -145,14 +147,16 @@ def _(cache: FixtureCache = cache):
 
 @test("FixtureCache.teardown_fixtures_for_scope runs teardown for Module fixtures")
 def _(cache: FixtureCache = cache, events: List = recorded_events):
-    cache.teardown_fixtures_for_scope(Scope.Module, testable_test.path)
+    cache.teardown_fixtures_for_scope(
+        Scope.Module, testable_test.path, capture_output=False
+    )
 
     assert events == ["teardown m"]
 
 
 @test("FixtureCache.teardown_global_fixtures removes Global fixtures from cache")
 def _(cache: FixtureCache = cache):
-    cache.teardown_global_fixtures()
+    cache.teardown_global_fixtures(capture_output=True)
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Global, Scope.Global)
 
@@ -161,7 +165,7 @@ def _(cache: FixtureCache = cache):
 
 @test("FixtureCache.teardown_global_fixtures runs teardown of all Global fixtures")
 def _(cache: FixtureCache = cache, events: List = recorded_events):
-    cache.teardown_global_fixtures()
+    cache.teardown_global_fixtures(capture_output=False)
 
     assert events == ["teardown g"]
 

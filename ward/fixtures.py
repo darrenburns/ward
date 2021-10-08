@@ -1,14 +1,15 @@
 import asyncio
 import inspect
-from contextlib import suppress
-from dataclasses import dataclass
+from contextlib import ExitStack, redirect_stderr, redirect_stdout, suppress
+from dataclasses import dataclass, field
 from functools import partial, wraps
+from io import StringIO
 from pathlib import Path
-from typing import Any, AsyncGenerator, Callable, Generator, List, Union
+from typing import Any, AsyncGenerator, Callable, Generator, List, Optional, Union, cast
 
 from ward.models import CollectionMetadata, Scope
 
-__all__ = ["fixture", "using", "Fixture"]
+__all__ = ["fixture", "using", "Fixture", "TeardownResult"]
 
 
 @dataclass
@@ -85,7 +86,7 @@ class Fixture:
     @property
     def is_generator_fixture(self):
         """
-        True if the fixture is a generator function (and thus contains teardown code).
+        True if the fixture is a generator function (and thus may contain teardown code).
         """
         return inspect.isgeneratorfunction(inspect.unwrap(self.fn))
 
@@ -115,18 +116,49 @@ class Fixture:
         """
         return [Fixture(par.default) for par in self.deps().values()]
 
-    def teardown(self):
+    def teardown(self, capture_output: bool) -> "TeardownResult":
         """
         Tears down the fixture by calling `next` or `__anext__()`.
         """
         # Suppress because we can't know whether there's more code
         # to execute below the yield.
-        with suppress(StopIteration, StopAsyncIteration):
-            if self.is_generator_fixture and self.gen:
-                next(self.gen)
-            elif self.is_async_generator_fixture and self.gen:
-                awaitable = self.gen.__anext__()
-                asyncio.get_event_loop().run_until_complete(awaitable)
+        teardown_result = TeardownResult(fixture=self)
+
+        try:
+            with ExitStack() as stack:
+                stack.enter_context(suppress(StopIteration, StopAsyncIteration))
+                if capture_output:
+                    stack.enter_context(redirect_stdout(teardown_result.sout))
+                    stack.enter_context(redirect_stderr(teardown_result.serr))
+
+                if self.is_generator_fixture and self.gen:
+                    next(cast(Generator[Any, Any, Any], self.gen))
+                elif self.is_async_generator_fixture and self.gen:
+                    awaitable = cast(AsyncGenerator[Any, Any], self.gen).__anext__()
+                    asyncio.get_event_loop().run_until_complete(awaitable)
+        except Exception as e:
+            # Note that with StopIterations being suppressed, we have an issue
+            # that if a StopIteration occurs in fixture teardown code, it will
+            # not be recorded as an error in the fixture.
+            teardown_result.captured_exception = e
+
+        teardown_result.sout.close()
+        teardown_result.serr.close()
+        return teardown_result
+
+
+@dataclass
+class TeardownResult:
+    """
+    Contains data associated with execution of fixture teardown code,
+    for example, stdout and stderr that was captured by the framework
+    during this process.
+    """
+
+    fixture: Fixture
+    captured_exception: Optional[Exception] = None
+    sout: StringIO = field(default_factory=StringIO)
+    serr: StringIO = field(default_factory=StringIO)
 
 
 def fixture(func=None, *, scope: Union[Scope, str] = Scope.Test):

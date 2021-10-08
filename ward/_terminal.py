@@ -62,7 +62,7 @@ from ward.expect import (
     INEQUALITY_COMPARISONS,
     IS_COMPARISONS,
     Comparison,
-    TestFailure,
+    TestAssertionFailure,
 )
 from ward.fixtures import Fixture
 from ward.models import ExitCode, Scope
@@ -793,14 +793,16 @@ class TestResultWriter(TestResultWriterBase):
 
     def output_why_test_failed(self, test_result: TestResult):
         err = test_result.error
-        if isinstance(err, TestFailure):
+        if isinstance(err, TestAssertionFailure):
             if err.operator in Comparison:
                 self.console.print(self.get_source(err, test_result))
                 self.console.print(self.get_pretty_comparison_failure(err))
         else:
             self.print_traceback(err)
 
-    def get_source(self, err: TestFailure, test_result: TestResult) -> RenderableType:
+    def get_source(
+        self, err: TestAssertionFailure, test_result: TestResult
+    ) -> RenderableType:
         src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
         src = Syntax(
             "".join(src_lines),
@@ -814,7 +816,9 @@ class TestResultWriter(TestResultWriterBase):
 
         return Padding(src, (1, 0, 1, 4))
 
-    def get_pretty_comparison_failure(self, err: TestFailure) -> RenderableType:
+    def get_pretty_comparison_failure(
+        self, err: TestAssertionFailure
+    ) -> RenderableType:
         diff = self.get_diff(err)
         parts = [
             self.get_operands(err) if not diff else None,
@@ -825,7 +829,7 @@ class TestResultWriter(TestResultWriterBase):
             pad=(0, 0, 1, 2),
         )
 
-    def get_operands(self, err: TestFailure) -> Optional[RenderableType]:
+    def get_operands(self, err: TestAssertionFailure) -> Optional[RenderableType]:
         if err.operator in EQUALITY_COMPARISONS | INEQUALITY_COMPARISONS:
             description = {
                 Comparison.Equals: "not equal to",
@@ -914,7 +918,7 @@ class TestResultWriter(TestResultWriterBase):
         yield type(obj).__name__, "bold default"
         yield ")", "default"
 
-    def _get_diff(self, err: TestFailure) -> Optional[Diff]:
+    def _get_diff(self, err: TestAssertionFailure) -> Optional[Diff]:
         if err.operator in EQUALITY_COMPARISONS:
             diff = Diff(
                 err.lhs,
@@ -926,7 +930,7 @@ class TestResultWriter(TestResultWriterBase):
                 return diff
         return None
 
-    def get_diff(self, err: TestFailure) -> Optional[RenderableType]:
+    def get_diff(self, err: TestAssertionFailure) -> Optional[RenderableType]:
         diff = self._get_diff(err)
 
         if diff is not None:
@@ -1028,7 +1032,7 @@ class TestResultWriter(TestResultWriterBase):
 
     def output_test_failed_location(self, test_result: TestResult):
         assert_msg = Text("")
-        if isinstance(test_result.error, TestFailure):
+        if isinstance(test_result.error, TestAssertionFailure):
             if test_result.error.assert_msg:
                 assert_msg = Text.assemble((" - ", "dim"), test_result.error.assert_msg)
             else:
@@ -1038,6 +1042,8 @@ class TestResultWriter(TestResultWriterBase):
                 f"{test_result.error.error_line}"
             )
         else:
+            # This is what we'd expect to see if the test failed for something like
+            # an error during fixture resolution.
             output_str = (
                 f"Failed at {os.path.relpath(test_result.test.path, Path.cwd())}"
             )

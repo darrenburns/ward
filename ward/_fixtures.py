@@ -13,7 +13,7 @@ from typing import (
     Union,
 )
 
-from ward.fixtures import Fixture
+from ward.fixtures import Fixture, TeardownResult
 from ward.models import Scope
 
 FixtureKey = str
@@ -65,16 +65,21 @@ class FixtureCache:
         fixtures = self.get_fixtures_at_scope(fixture.scope, scope_key)
         fixtures[fixture.key] = fixture
 
-    def teardown_fixtures_for_scope(self, scope: Scope, scope_key: ScopeKey):
+    def teardown_fixtures_for_scope(
+        self, scope: Scope, scope_key: ScopeKey, capture_output: bool
+    ) -> List[TeardownResult]:
         fixture_dict = self.get_fixtures_at_scope(scope, scope_key)
         fixtures = list(fixture_dict.values())
+        teardown_results: List[TeardownResult] = []
         for fixture in fixtures:
-            with suppress(RuntimeError, StopIteration):
-                fixture.teardown()
+            with suppress(RuntimeError):
+                teardown_result = fixture.teardown(capture_output)
+                teardown_results.append(teardown_result)
             del fixture_dict[fixture.key]
+        return teardown_results
 
-    def teardown_global_fixtures(self):
-        self.teardown_fixtures_for_scope(Scope.Global, Scope.Global)
+    def teardown_global_fixtures(self, capture_output: bool):
+        self.teardown_fixtures_for_scope(Scope.Global, Scope.Global, capture_output)
 
     def contains(self, fixture: Fixture, scope: Scope, scope_key: ScopeKey) -> bool:
         fixtures = self.get_fixtures_at_scope(scope, scope_key)

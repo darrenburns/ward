@@ -24,7 +24,7 @@ from ward._terminal import (
     outcome_to_style,
 )
 from ward._testing import _Timer
-from ward.expect import Comparison, TestFailure
+from ward.expect import Comparison, TestAssertionFailure
 from ward.models import ExitCode
 from ward.testing import Test, TestOutcome, TestResult, test
 
@@ -308,7 +308,7 @@ for left, right in [
 
     @test("TestResultWriter.get_diff handles assert `==` failure")
     def _(lhs=left, rhs=right, writer=writer, console=mock_rich_console):
-        failure = TestFailure("fail", lhs, rhs, 1, Comparison.Equals, "test")
+        failure = TestAssertionFailure("fail", lhs, rhs, 1, Comparison.Equals, "test")
         diff_render = writer.get_diff(failure)
 
         # Don't check anything more than this. We just want to exercise this
@@ -325,7 +325,7 @@ for left, right in [
 
     @test("TestResultWriter.get_operands handles assert `in` failure")
     def _(lhs=left, rhs=right, writer=writer):
-        failure = TestFailure("fail", lhs, rhs, 1, Comparison.In, "test")
+        failure = TestAssertionFailure("fail", lhs, rhs, 1, Comparison.In, "test")
         lhs_render, rhs_render = writer.get_operands(failure).renderables
 
         assert lhs_render.title.plain == f"The item (of type {type(lhs).__name__})"
@@ -343,7 +343,7 @@ for left, right in [
 
     @test("TestResultWriter.get_operands handles assert `not in` failure")
     def _(lhs=left, rhs=right, writer=writer):
-        failure = TestFailure("fail", lhs, rhs, 1, Comparison.NotIn, "test")
+        failure = TestAssertionFailure("fail", lhs, rhs, 1, Comparison.NotIn, "test")
         lhs_render, rhs_render = writer.get_operands(failure).renderables
 
         assert lhs_render.title.plain == f"The item (of type {type(lhs).__name__})"
@@ -366,7 +366,7 @@ for comparison, description in [
         "TestResultWriter.get_operands has a specialized description for `{comparison.value}`"
     )
     def _(writer=writer, comparison=comparison, description=description):
-        failure = TestFailure("fail", "a", "b", 1, comparison, "test")
+        failure = TestAssertionFailure("fail", "a", "b", 1, comparison, "test")
         lhs_render, rhs_render = writer.get_operands(failure).renderables
 
         assert description in rhs_render.title.plain
@@ -378,7 +378,7 @@ for comparison in Comparison:
         "TestResultWriter.get_pretty_comparison_failure can handle `{comparison.value}` failures"
     )
     def _(comparison=comparison, writer=writer):
-        failure = TestFailure("fail", "a", "b", 1, comparison, "")
+        failure = TestAssertionFailure("fail", "a", "b", 1, comparison, "")
         renderable = writer.get_pretty_comparison_failure(failure)
 
         assert renderable is not None

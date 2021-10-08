@@ -84,7 +84,7 @@ INEQUALITY_COMPARISONS = {
 
 
 @dataclass
-class TestFailure(Exception):
+class TestAssertionFailure(Exception):
     message: str
     lhs: Any
     rhs: Any
@@ -106,7 +106,7 @@ def assert_equal(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     """
     if lhs_val != rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} does not equal {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
@@ -130,7 +130,7 @@ def assert_not_equal(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     """
     if lhs_val == rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} does equal {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
@@ -154,7 +154,7 @@ def assert_in(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     """
     if lhs_val not in rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} is not in {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
@@ -179,7 +179,7 @@ def assert_not_in(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     """
     if lhs_val in rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} is in {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
@@ -203,7 +203,7 @@ def assert_is(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     """
     if lhs_val is not rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} is not {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
@@ -227,7 +227,7 @@ def assert_is_not(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     """
     if lhs_val is rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} is {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
@@ -251,7 +251,7 @@ def assert_less_than(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     """
     if lhs_val >= rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} >= {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
@@ -275,7 +275,7 @@ def assert_less_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) -> No
     """
     if lhs_val > rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} > {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
@@ -299,7 +299,7 @@ def assert_greater_than(lhs_val: Any, rhs_val: Any, assert_msg: str) -> None:
     """
     if lhs_val <= rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} <= {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,
@@ -323,7 +323,7 @@ def assert_greater_than_equal_to(lhs_val: Any, rhs_val: Any, assert_msg: str) ->
     """
     if lhs_val < rhs_val:
         error_line_no = _prev_frame().f_lineno
-        raise TestFailure(
+        raise TestAssertionFailure(
             f"{lhs_val} < {rhs_val}",
             lhs=lhs_val,
             rhs=rhs_val,

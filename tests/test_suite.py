@@ -124,6 +124,18 @@ def _(module=module):
     assert events == [1, 2, 3]
 
 
+@fixture(scope=Scope.Test)
+def my_fixture():
+    print("A")
+    yield 5
+    print("B")
+
+
+@test("test fixture cleanup output capture", tags=["fixture_test"])
+def _(f=my_fixture):
+    assert f == 5
+
+
 @test(
     "Suite.generate_test_runs exception in teardown of test-scoped fixture fails dependent tests"
 )
