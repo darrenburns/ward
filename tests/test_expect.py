@@ -58,9 +58,11 @@ def _(
         assert_less_than_equal_to,
         assert_greater_than,
         assert_greater_than_equal_to,
+        assert_is,
+        assert_is_not,
     ),
-    lhs=each(1, 1, "a", "a", 2, 2, 1, 1),
-    rhs=each(2, 1, "b", "a", 1, 1, 2, 2),
+    lhs=each(1, 1, "a", "a", 2, 2, 1, 1, "a", "a"),
+    rhs=each(2, 1, "b", "a", 1, 1, 2, 2, "b", "a"),
 ):
     with raises(TestAssertionFailure):
         func(lhs, rhs, "")
