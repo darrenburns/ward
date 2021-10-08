@@ -2,7 +2,7 @@ import inspect
 
 from ward import each, test, xfail
 from ward.expect import (
-    TestFailure,
+    TestAssertionFailure,
     assert_equal,
     assert_greater_than,
     assert_greater_than_equal_to,
@@ -20,7 +20,7 @@ from ward.expect import (
 @test("correct error_line is set")
 def _():
     assert_lineno = inspect.currentframe().f_lineno + 2
-    with raises(TestFailure) as ctx:
+    with raises(TestAssertionFailure) as ctx:
         assert_equal(0, 1, "msg")
     assert ctx.raised.error_line == assert_lineno
 
@@ -58,11 +58,13 @@ def _(
         assert_less_than_equal_to,
         assert_greater_than,
         assert_greater_than_equal_to,
+        assert_is,
+        assert_is_not,
     ),
-    lhs=each(1, 1, "a", "a", 2, 2, 1, 1),
-    rhs=each(2, 1, "b", "a", 1, 1, 2, 2),
+    lhs=each(1, 1, "a", "a", 2, 2, 1, 1, "a", "a"),
+    rhs=each(2, 1, "b", "a", 1, 1, 2, 2, "b", "a"),
 ):
-    with raises(TestFailure):
+    with raises(TestAssertionFailure):
         func(lhs, rhs, "")
 
 

@@ -17,7 +17,7 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://wardpy.com"
 repository = "https://github.com/darrenburns/ward"
-documentation = "https://wardpy.com"
+documentation = "https://ward.readthedocs.io"
 keywords = ["test", "testing", "quality-assurance", "cli", "python3"]
 classifiers = [
     "Development Status :: 4 - Beta",

@@ -206,7 +206,9 @@ def test(
     time_to_collect_secs = default_timer() - start_run
 
     suite = Suite(tests=tests)
-    test_results = suite.generate_test_runs(dry_run=dry_run)
+    test_results = suite.generate_test_runs(
+        dry_run=dry_run, capture_output=capture_output
+    )
     rich_console.print(
         SessionPrelude(
             time_to_collect_secs=time_to_collect_secs,

@@ -5,6 +5,7 @@ from typing import DefaultDict, Dict, Generator, List
 
 from ward._errors import ParameterisationError
 from ward._fixtures import FixtureCache
+from ward.fixtures import TeardownResult
 from ward.models import Scope
 from ward.testing import Test, TestResult
 
@@ -39,7 +40,9 @@ class Suite:
         return counts
 
     def generate_test_runs(
-        self, dry_run: bool = False
+        self,
+        dry_run: bool = False,
+        capture_output: bool = True,
     ) -> Generator[TestResult, None, None]:
         """
         Run tests
@@ -56,17 +59,38 @@ class Suite:
                 continue
             for generated_test in generated_tests:
                 result = generated_test.run(self.cache, dry_run=dry_run)
-                try:
-                    self.cache.teardown_fixtures_for_scope(
-                        Scope.Test, scope_key=generated_test.id
-                    )
-                except Exception as e:
-                    result = test.fail_with_error(e)
+                teardown_results: List[
+                    TeardownResult
+                ] = self.cache.teardown_fixtures_for_scope(
+                    Scope.Test,
+                    scope_key=generated_test.id,
+                    capture_output=capture_output,
+                )
+                if teardown_results:
+                    try:
+                        # There could be exceptions in the teardown code of multiple fixtures
+                        # injected into a single test. Take the first exception and associate
+                        # that with the test.
+                        first_teardown_error_result: TeardownResult = next(
+                            r
+                            for r in teardown_results
+                            if r.captured_exception is not None
+                        )
+                        # Any exceptions that occur during the teardown of a test-scoped fixture
+                        # are considered to be an error in any test that depends on said fixture
+                        result = test.fail_with_error(
+                            first_teardown_error_result.captured_exception  # type: ignore[arg-type]
+                        )
+                    except StopIteration:
+                        # There were no exceptions while tearing down the fixtures.
+                        pass
                 yield result
 
             if num_tests_per_module[test.path] == 0:
                 self.cache.teardown_fixtures_for_scope(
-                    Scope.Module, scope_key=test.path
+                    Scope.Module,
+                    scope_key=test.path,
+                    capture_output=capture_output,
                 )
 
-        self.cache.teardown_global_fixtures()
+        self.cache.teardown_global_fixtures(capture_output=capture_output)

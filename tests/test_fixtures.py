@@ -5,9 +5,9 @@ from tests.utilities import dummy_fixture, testable_test
 from ward import each, fixture, raises, test
 from ward._errors import FixtureError
 from ward._fixtures import FixtureCache, fixture_parents_and_children, is_fixture
-from ward.fixtures import Fixture, using
+from ward.fixtures import Fixture, TeardownResult, using
 from ward.models import Scope
-from ward.testing import Test
+from ward.testing import Test, xfail
 
 
 @fixture
@@ -37,6 +37,8 @@ def global_fixture(events=recorded_events):
     @fixture(scope=Scope.Global)
     def g():
         yield "g"
+        print("stdout")
+        sys.stderr.write("stderr")
         events.append("teardown g")
 
     return g
@@ -47,6 +49,8 @@ def module_fixture(events=recorded_events):
     @fixture(scope=Scope.Module)
     def m():
         yield "m"
+        print("stdout")
+        sys.stderr.write("stderr")
         events.append("teardown m")
 
     return m
@@ -57,6 +61,8 @@ def default_fixture(events=recorded_events):
     @fixture
     def t():
         yield "t"
+        print("stdout")
+        sys.stderr.write("stderr")
         events.append("teardown t")
 
     return t
@@ -120,7 +126,7 @@ def _(cache: FixtureCache = cache, global_fixture=global_fixture):
 
 @test("FixtureCache.teardown_fixtures_for_scope removes Test fixtures from cache")
 def _(cache: FixtureCache = cache, t: Test = my_test):
-    cache.teardown_fixtures_for_scope(Scope.Test, t.id)
+    cache.teardown_fixtures_for_scope(Scope.Test, t.id, capture_output=True)
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Test, t.id)
 
@@ -129,14 +135,97 @@ def _(cache: FixtureCache = cache, t: Test = my_test):
 
 @test("FixtureCache.teardown_fixtures_for_scope runs teardown for Test fixtures")
 def _(cache: FixtureCache = cache, t: Test = my_test, events: List = recorded_events):
-    cache.teardown_fixtures_for_scope(Scope.Test, t.id)
+    cache.teardown_fixtures_for_scope(Scope.Test, t.id, capture_output=False)
 
     assert events == ["teardown t"]
 
 
+@test(
+    "FixtureCache.teardown_fixtures_for_scope captures exceptions that occur in teardown code"
+)
+def _():
+    error = ZeroDivisionError("oh no")
+
+    @fixture
+    def raises_in_teardown():
+        yield "a"
+        print("stdout")
+        sys.stderr.write("stderr")
+        raise error
+
+    @testable_test
+    def t(fix=raises_in_teardown):
+        pass
+
+    cache = FixtureCache()
+    t = Test(t, "")
+    t.resolver.resolve_args(cache)
+
+    teardown_results: List[TeardownResult] = cache.teardown_fixtures_for_scope(
+        scope=Scope.Test, scope_key=t.id, capture_output=True
+    )
+
+    assert len(teardown_results) == 1
+    assert teardown_results[0].captured_exception == error
+    # Ensure that we still capture stdout, stderr on exception
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
+
+
+@xfail(reason="Known issue")
+@test(
+    "FixtureCache.teardown_fixtures_for_scope captures StopIteration that occur in teardown code"
+)
+def _():
+    error = StopIteration("oh no")
+
+    @fixture
+    def raises_in_teardown():
+        yield "a"
+        print("stdout")
+        sys.stderr.write("stderr")
+        raise error
+
+    @testable_test
+    def t(fix=raises_in_teardown):
+        pass
+
+    cache = FixtureCache()
+    t = Test(t, "")
+    t.resolver.resolve_args(cache)
+
+    teardown_results: List[TeardownResult] = cache.teardown_fixtures_for_scope(
+        scope=Scope.Test, scope_key=t.id, capture_output=True
+    )
+
+    assert len(teardown_results) == 1
+    assert teardown_results[0].captured_exception == error
+    # Ensure that we still capture stdout, stderr on exception
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
+
+
+@test(
+    "FixtureCache.teardown_fixtures_for_scope captures output from test-scoped teardown code"
+)
+def _(cache: FixtureCache = cache, t: Test = my_test):
+    teardown_results: List[TeardownResult] = cache.teardown_fixtures_for_scope(
+        Scope.Test, t.id, capture_output=True
+    )
+
+    # There are 4 fixtures injected into the test. Only 2 are test-scoped, and teardown
+    # code only runs in 1 of those.
+    assert len(teardown_results) == 1
+    assert teardown_results[0].captured_exception is None
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
+
+
 @test("FixtureCache.teardown_fixtures_for_scope removes Module fixtures from cache")
 def _(cache: FixtureCache = cache):
-    cache.teardown_fixtures_for_scope(Scope.Module, testable_test.path)
+    cache.teardown_fixtures_for_scope(
+        Scope.Module, testable_test.path, capture_output=True
+    )
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)
 
@@ -145,14 +234,29 @@ def _(cache: FixtureCache = cache):
 
 @test("FixtureCache.teardown_fixtures_for_scope runs teardown for Module fixtures")
 def _(cache: FixtureCache = cache, events: List = recorded_events):
-    cache.teardown_fixtures_for_scope(Scope.Module, testable_test.path)
+    cache.teardown_fixtures_for_scope(
+        Scope.Module, testable_test.path, capture_output=False
+    )
 
     assert events == ["teardown m"]
 
 
+@test(
+    "FixtureCache.teardown_fixtures_for_scope captures output from Module fixture teardown code"
+)
+def _(cache: FixtureCache = cache):
+    teardown_results = cache.teardown_fixtures_for_scope(
+        Scope.Module, testable_test.path, capture_output=True
+    )
+
+    assert len(teardown_results) == 1
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
+
+
 @test("FixtureCache.teardown_global_fixtures removes Global fixtures from cache")
 def _(cache: FixtureCache = cache):
-    cache.teardown_global_fixtures()
+    cache.teardown_global_fixtures(capture_output=True)
 
     fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Global, Scope.Global)
 
@@ -161,12 +265,24 @@ def _(cache: FixtureCache = cache):
 
 @test("FixtureCache.teardown_global_fixtures runs teardown of all Global fixtures")
 def _(cache: FixtureCache = cache, events: List = recorded_events):
-    cache.teardown_global_fixtures()
+    cache.teardown_global_fixtures(capture_output=False)
 
     assert events == ["teardown g"]
 
 
-@test("using decorator sets bound args correctly")
+@test(
+    "FixtureCache.teardown_global_fixtures captures stdout and stderr from teardown code"
+)
+def _(cache: FixtureCache = cache):
+    teardown_results = cache.teardown_global_fixtures(capture_output=True)
+
+    # The cache contains a single global resolved fixture, which writes to sout/serr during teardown
+    assert len(teardown_results) == 1
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
+
+
+@test("the `@using` decorator sets bound args correctly")
 def _():
     @fixture
     def fixture_a():
