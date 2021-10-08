@@ -136,7 +136,41 @@ def _(cache: FixtureCache = cache, t: Test = my_test, events: List = recorded_ev
     assert events == ["teardown t"]
 
 
-@test("FixtureCache.teardown_fixtures_for_scope captures output from teardown code")
+@test(
+    "FixtureCache.teardown_fixtures_for_scope captures exceptions that occur in teardown code"
+)
+def _():
+    error = ZeroDivisionError("oh no")
+
+    @fixture
+    def raises_in_teardown():
+        yield "a"
+        print("stdout")
+        sys.stderr.write("stderr")
+        raise error
+
+    @testable_test
+    def t(fix=raises_in_teardown):
+        pass
+
+    cache = FixtureCache()
+    t = Test(t, "")
+    t.resolver.resolve_args(cache)
+
+    teardown_results: List[TeardownResult] = cache.teardown_fixtures_for_scope(
+        scope=Scope.Test, scope_key=t.id, capture_output=True
+    )
+
+    assert len(teardown_results) == 1
+    assert teardown_results[0].captured_exception == error
+    # Ensure that we still capture stdout, stderr on exception
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
+
+
+@test(
+    "FixtureCache.teardown_fixtures_for_scope captures output from test-scoped teardown code"
+)
 def _(cache: FixtureCache = cache, t: Test = my_test):
     teardown_results: List[TeardownResult] = cache.teardown_fixtures_for_scope(
         Scope.Test, t.id, capture_output=True
