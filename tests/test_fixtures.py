@@ -7,7 +7,7 @@ from ward._errors import FixtureError
 from ward._fixtures import FixtureCache, fixture_parents_and_children, is_fixture
 from ward.fixtures import Fixture, TeardownResult, using
 from ward.models import Scope
-from ward.testing import Test
+from ward.testing import Test, xfail
 
 
 @fixture
@@ -141,6 +141,39 @@ def _(cache: FixtureCache = cache, t: Test = my_test, events: List = recorded_ev
 )
 def _():
     error = ZeroDivisionError("oh no")
+
+    @fixture
+    def raises_in_teardown():
+        yield "a"
+        print("stdout")
+        sys.stderr.write("stderr")
+        raise error
+
+    @testable_test
+    def t(fix=raises_in_teardown):
+        pass
+
+    cache = FixtureCache()
+    t = Test(t, "")
+    t.resolver.resolve_args(cache)
+
+    teardown_results: List[TeardownResult] = cache.teardown_fixtures_for_scope(
+        scope=Scope.Test, scope_key=t.id, capture_output=True
+    )
+
+    assert len(teardown_results) == 1
+    assert teardown_results[0].captured_exception == error
+    # Ensure that we still capture stdout, stderr on exception
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
+
+
+@xfail(reason="Known issue")
+@test(
+    "FixtureCache.teardown_fixtures_for_scope captures StopIteration that occur in teardown code"
+)
+def _():
+    error = StopIteration("oh no")
 
     @fixture
     def raises_in_teardown():
