@@ -37,6 +37,8 @@ def global_fixture(events=recorded_events):
     @fixture(scope=Scope.Global)
     def g():
         yield "g"
+        print("stdout")
+        sys.stderr.write("stderr")
         events.append("teardown g")
 
     return g
@@ -47,6 +49,8 @@ def module_fixture(events=recorded_events):
     @fixture(scope=Scope.Module)
     def m():
         yield "m"
+        print("stdout")
+        sys.stderr.write("stderr")
         events.append("teardown m")
 
     return m
@@ -237,6 +241,19 @@ def _(cache: FixtureCache = cache, events: List = recorded_events):
     assert events == ["teardown m"]
 
 
+@test(
+    "FixtureCache.teardown_fixtures_for_scope captures output from Module fixture teardown code"
+)
+def _(cache: FixtureCache = cache):
+    teardown_results = cache.teardown_fixtures_for_scope(
+        Scope.Module, testable_test.path, capture_output=True
+    )
+
+    assert len(teardown_results) == 1
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
+
+
 @test("FixtureCache.teardown_global_fixtures removes Global fixtures from cache")
 def _(cache: FixtureCache = cache):
     cache.teardown_global_fixtures(capture_output=True)
@@ -253,7 +270,19 @@ def _(cache: FixtureCache = cache, events: List = recorded_events):
     assert events == ["teardown g"]
 
 
-@test("using decorator sets bound args correctly")
+@test(
+    "FixtureCache.teardown_global_fixtures captures stdout and stderr from teardown code"
+)
+def _(cache: FixtureCache = cache):
+    teardown_results = cache.teardown_global_fixtures(capture_output=True)
+
+    # The cache contains a single global resolved fixture, which writes to sout/serr during teardown
+    assert len(teardown_results) == 1
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
+
+
+@test("the `@using` decorator sets bound args correctly")
 def _():
     @fixture
     def fixture_a():

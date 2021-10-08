@@ -78,8 +78,10 @@ class FixtureCache:
             del fixture_dict[fixture.key]
         return teardown_results
 
-    def teardown_global_fixtures(self, capture_output: bool):
-        self.teardown_fixtures_for_scope(Scope.Global, Scope.Global, capture_output)
+    def teardown_global_fixtures(self, capture_output: bool) -> List[TeardownResult]:
+        return self.teardown_fixtures_for_scope(
+            Scope.Global, Scope.Global, capture_output
+        )
 
     def contains(self, fixture: Fixture, scope: Scope, scope_key: ScopeKey) -> bool:
         fixtures = self.get_fixtures_at_scope(scope, scope_key)
