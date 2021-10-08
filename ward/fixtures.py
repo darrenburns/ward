@@ -132,9 +132,9 @@ class Fixture:
                     stack.enter_context(redirect_stderr(teardown_result.serr))
 
                 if self.is_generator_fixture and self.gen:
-                    next(cast(Generator[Any, Any, Any], self.gen))
+                    next(cast(Generator, self.gen))
                 elif self.is_async_generator_fixture and self.gen:
-                    awaitable = cast(AsyncGenerator[Any, Any], self.gen).__anext__()
+                    awaitable = cast(AsyncGenerator, self.gen).__anext__()
                     asyncio.get_event_loop().run_until_complete(awaitable)
         except Exception as e:
             # Note that with StopIterations being suppressed, we have an issue
