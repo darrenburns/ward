@@ -71,17 +71,16 @@ class Suite:
                         # There could be exceptions in the teardown code of multiple fixtures
                         # injected into a single test. Take the first exception and associate
                         # that with the test.
-                        first_teardown_error_result: Exception = next(
-                            r.captured_exception
+                        first_teardown_error_result: TeardownResult = next(
+                            r
                             for r in teardown_results
                             if r.captured_exception is not None
                         )
                         # Any exceptions that occur during the teardown of a test-scoped fixture
                         # are considered to be an error in any test that depends on said fixture
-                        result = test.fail_with_error(first_teardown_error_result)
-
-                        # with open(test.sout, "w+") as test_sout, open(test.serr, "w+") as test_serr:
-
+                        result = test.fail_with_error(
+                            first_teardown_error_result.captured_exception  # type: ignore[arg-type]
+                        )
                     except StopIteration:
                         # There were no exceptions while tearing down the fixtures.
                         pass

@@ -5,7 +5,7 @@ from tests.utilities import dummy_fixture, testable_test
 from ward import each, fixture, raises, test
 from ward._errors import FixtureError
 from ward._fixtures import FixtureCache, fixture_parents_and_children, is_fixture
-from ward.fixtures import Fixture, using
+from ward.fixtures import Fixture, TeardownResult, using
 from ward.models import Scope
 from ward.testing import Test
 
@@ -57,6 +57,8 @@ def default_fixture(events=recorded_events):
     @fixture
     def t():
         yield "t"
+        print("stdout")
+        sys.stderr.write("stderr")
         events.append("teardown t")
 
     return t
@@ -132,6 +134,20 @@ def _(cache: FixtureCache = cache, t: Test = my_test, events: List = recorded_ev
     cache.teardown_fixtures_for_scope(Scope.Test, t.id, capture_output=False)
 
     assert events == ["teardown t"]
+
+
+@test("FixtureCache.teardown_fixtures_for_scope captures output from teardown code")
+def _(cache: FixtureCache = cache, t: Test = my_test):
+    teardown_results: List[TeardownResult] = cache.teardown_fixtures_for_scope(
+        Scope.Test, t.id, capture_output=True
+    )
+
+    # There are 4 fixtures injected into the test. Only 2 are test-scoped, and teardown
+    # code only runs in 1 of those.
+    assert len(teardown_results) == 1
+    assert teardown_results[0].captured_exception is None
+    assert teardown_results[0].sout == "stdout\n"
+    assert teardown_results[0].serr == "stderr"
 
 
 @test("FixtureCache.teardown_fixtures_for_scope removes Module fixtures from cache")

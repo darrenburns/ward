@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 from contextlib import ExitStack, redirect_stderr, redirect_stdout, suppress
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import partial, wraps
 from io import StringIO
 from pathlib import Path
@@ -123,13 +123,15 @@ class Fixture:
         # Suppress because we can't know whether there's more code
         # to execute below the yield.
         teardown_result = TeardownResult(fixture=self)
+        captured_stdout = StringIO()
+        captured_stderr = StringIO()
 
         try:
             with ExitStack() as stack:
                 stack.enter_context(suppress(StopIteration, StopAsyncIteration))
                 if capture_output:
-                    stack.enter_context(redirect_stdout(teardown_result.sout))
-                    stack.enter_context(redirect_stderr(teardown_result.serr))
+                    stack.enter_context(redirect_stdout(captured_stdout))
+                    stack.enter_context(redirect_stderr(captured_stderr))
 
                 if self.is_generator_fixture and self.gen:
                     next(cast(Generator, self.gen))
@@ -142,8 +144,13 @@ class Fixture:
             # not be recorded as an error in the fixture.
             teardown_result.captured_exception = e
 
-        teardown_result.sout.close()
-        teardown_result.serr.close()
+        captured_stdout.seek(0)
+        captured_stderr.seek(0)
+        teardown_result.sout = captured_stdout.read()
+        teardown_result.serr = captured_stderr.read()
+        captured_stdout.close()
+        captured_stderr.close()
+
         return teardown_result
 
 
@@ -157,8 +164,8 @@ class TeardownResult:
 
     fixture: Fixture
     captured_exception: Optional[Exception] = None
-    sout: StringIO = field(default_factory=StringIO)
-    serr: StringIO = field(default_factory=StringIO)
+    sout: str = ""
+    serr: str = ""
 
 
 def fixture(func=None, *, scope: Union[Scope, str] = Scope.Test):
