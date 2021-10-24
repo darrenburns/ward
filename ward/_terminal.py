@@ -277,6 +277,7 @@ class SessionPrelude:
     python_impl: str = field(default=platform.python_implementation())
     python_version: str = field(default=platform.python_version())
     ward_version: str = field(default=__version__)
+    list_of_plugins: Optional[List] = field(default_factory=list)
 
     def __rich_console__(self, c: Console, co: ConsoleOptions) -> RenderResult:
         yield Rule(
@@ -285,6 +286,8 @@ class SessionPrelude:
                 style="title",
             )
         )
+        if self.list_of_plugins:
+            yield f"The list of plugins discovered: {[name for name, plugin in self.list_of_plugins]}"
         if self.config_path:
             try:
                 path: Union[Path, str] = self.config_path.relative_to(Path.cwd())

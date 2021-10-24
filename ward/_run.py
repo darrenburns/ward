@@ -215,6 +215,7 @@ def test(
             num_tests_collected=suite.num_tests_with_parameterisation,
             num_fixtures_collected=len(_DEFINED_FIXTURES),
             config_path=config_path,
+            list_of_plugins=plugins.list_name_plugin(),
         )
     )
     writer = TestResultWriter(
