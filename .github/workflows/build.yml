@@ -45,7 +45,7 @@ jobs:
           poetry run coverage run -m ward
           poetry run coverage xml -i
 
-      - name: Upload coverage report to codecov
-        run: |
-          bash <(curl -s https://codecov.io/bash) -f coverage.xml
-        shell: bash
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
