@@ -59,7 +59,7 @@ def is_vowel(char):
 
 
 def square(x):
-    return x ** 2
+    return x**2
 
 
 @test("group {items!r} by {key.__name__} returns {result}")
