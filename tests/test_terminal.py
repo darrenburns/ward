@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Union
 from unittest.mock import Mock
 
-from rich.console import Console, RenderGroup
+from rich.console import Console, Group
 from rich.padding import Padding
 from rich.panel import Panel
 from rich.rule import Rule
@@ -163,7 +163,7 @@ def timing_stats_expected_table():
 @fixture
 def timing_stats_expected_panel(expected_table=timing_stats_expected_table):
     return Panel(
-        RenderGroup(
+        Group(
             Padding(
                 "Median: [b]4000.00[/b]ms"
                 " [muted]|[/muted] "
@@ -195,7 +195,7 @@ def _(
 ):
     panel: Panel = next(timing_stats_panel.__rich_console__(None, None))
 
-    render_group: RenderGroup = panel.renderable
+    render_group: Group = panel.renderable
     padding: Padding = render_group.renderables[0]
     assert padding.renderable == expected_panel.renderable.renderables[0].renderable
 
@@ -204,7 +204,7 @@ def _(
 def _(timing_stats_panel=timing_stats_panel):
     panel: Panel = next(timing_stats_panel.__rich_console__(None, None))
 
-    render_group: RenderGroup = panel.renderable
+    render_group: Group = panel.renderable
     table: Table = render_group.renderables[1]
 
     assert len(table.rows) == 3
