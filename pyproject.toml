@@ -31,10 +31,10 @@ classifiers = [
 include = ["ward/py.typed"]
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = "^3.7.13"
 dataclasses = { version = ">=0.7,<0.9", python = "3.6" }
 click = ">=7,<9"
-rich = "^10.0.0"
+rich = "^12.2.0"
 tomli = "^1.0.0"
 pprintpp = "^0.4.0"
 cucumber-tag-expressions = ">=2.0.0,<5.0.0"
