@@ -179,7 +179,7 @@ def _(project_root: Path = fake_project_pyproject):
         default_map={},
     )
     with mock.patch.object(Path, "cwd", return_value=project_root / "a" / "d"):
-        set_defaults_from_config(fake_context, None, None)
+        set_defaults_from_config(fake_context, None, None)  # type: ignore[arg-type]
 
     assert fake_context.default_map == {
         "exclude": (str(project_root / "a" / "b"),),
