@@ -521,7 +521,7 @@ class LiveTestBar(TestResultDisplayWidget):
     def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
         # Ignore type checkers due to typing problem in `rich`:
         # `Progress` class signature is not `RichCast` protocol compatible
-        return self.progress  # type: ignore[return-value]
+        return self.progress
 
     def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
@@ -574,7 +574,7 @@ class SuiteProgressBar(TestResultDisplayWidget):
     def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
         # Ignore type checkers due to typing problem in `rich`:
         # `Progress` class signature is not `RichCast` protocol compatible
-        return self.progress  # type: ignore[return-value]
+        return self.progress
 
     def after_test(self, test_index: int, test_result: TestResult) -> None:
         assert self.progress is not None, "progress must not be None"
