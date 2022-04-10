@@ -27,7 +27,7 @@ def read_config_toml(project_root: Path, config_file: str) -> _ConfigDict:
         return {}
 
     try:
-        pyproject_toml = tomli.loads(path.read_text(encoding="utf-8"))
+        pyproject_toml = tomli.loads(path.read_bytes().decode())
     except (tomli.TOMLDecodeError, OSError) as e:
         raise click.FileError(
             filename=config_file, hint=f"Error reading {config_file}:\n{e}"
