@@ -76,7 +76,7 @@ def apply_multi_defaults(
 
 
 def validate_config_toml(conf: _ConfigDict) -> None:
-    valid_conf_keys = set(Config.__dataclass_fields__)  # type: ignore[attr-defined]
+    valid_conf_keys = set(Config.__dataclass_fields__)
 
     # These keys are derived from pyproject.toml path so makes no sense
     # to define them in the file itself

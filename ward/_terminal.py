@@ -23,13 +23,7 @@ from typing import (
 )
 
 from rich.columns import Columns
-from rich.console import (
-    Console,
-    ConsoleOptions,
-    RenderableType,
-    RenderGroup,
-    RenderResult,
-)
+from rich.console import Console, ConsoleOptions, Group, RenderableType, RenderResult
 from rich.highlighter import NullHighlighter
 from rich.live import Live
 from rich.markdown import Markdown
@@ -251,7 +245,7 @@ class TestTimingStatsPanel:
             len(self.all_tests_in_session), self.num_tests_to_show
         )
         panel = Panel(
-            RenderGroup(
+            Group(
                 Padding(
                     f"Median: [b]{self._median_secs * 1000:.2f}[/b]ms"
                     f" [muted]|[/muted] "
@@ -521,7 +515,7 @@ class LiveTestBar(TestResultDisplayWidget):
     def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
         # Ignore type checkers due to typing problem in `rich`:
         # `Progress` class signature is not `RichCast` protocol compatible
-        return self.progress  # type: ignore[return-value]
+        return self.progress
 
     def after_test(self, test_index: int, test_result: TestResult) -> None:
         self.progress.update(self.task, advance=1)
@@ -574,7 +568,7 @@ class SuiteProgressBar(TestResultDisplayWidget):
     def footer(self, test_results: List[TestResult]) -> Optional[RenderableType]:
         # Ignore type checkers due to typing problem in `rich`:
         # `Progress` class signature is not `RichCast` protocol compatible
-        return self.progress  # type: ignore[return-value]
+        return self.progress
 
     def after_test(self, test_index: int, test_result: TestResult) -> None:
         assert self.progress is not None, "progress must not be None"
@@ -825,7 +819,7 @@ class TestResultWriter(TestResultWriterBase):
             diff,
         ]
         return Padding(
-            RenderGroup(*(part for part in parts if part)),
+            Group(*(part for part in parts if part)),
             pad=(0, 0, 1, 2),
         )
 

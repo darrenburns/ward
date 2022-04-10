@@ -106,7 +106,7 @@ def _(cache: FixtureCache = cache, t: Test = my_test, default_fixture=default_fi
 
 @test("FixtureCache.get_fixtures_at_scope correct for Scope.Module")
 def _(cache: FixtureCache = cache, module_fixture=module_fixture):
-    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)
+    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)  # type: ignore[attr-defined]
 
     fixture = list(fixtures_at_scope.values())[0]
 
@@ -224,10 +224,10 @@ def _(cache: FixtureCache = cache, t: Test = my_test):
 @test("FixtureCache.teardown_fixtures_for_scope removes Module fixtures from cache")
 def _(cache: FixtureCache = cache):
     cache.teardown_fixtures_for_scope(
-        Scope.Module, testable_test.path, capture_output=True
+        Scope.Module, testable_test.path, capture_output=True  # type: ignore[attr-defined]
     )
 
-    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)
+    fixtures_at_scope = cache.get_fixtures_at_scope(Scope.Module, testable_test.path)  # type: ignore[attr-defined]
 
     assert fixtures_at_scope == {}
 
@@ -235,7 +235,7 @@ def _(cache: FixtureCache = cache):
 @test("FixtureCache.teardown_fixtures_for_scope runs teardown for Module fixtures")
 def _(cache: FixtureCache = cache, events: List = recorded_events):
     cache.teardown_fixtures_for_scope(
-        Scope.Module, testable_test.path, capture_output=False
+        Scope.Module, testable_test.path, capture_output=False  # type: ignore[attr-defined]
     )
 
     assert events == ["teardown m"]
@@ -246,7 +246,7 @@ def _(cache: FixtureCache = cache, events: List = recorded_events):
 )
 def _(cache: FixtureCache = cache):
     teardown_results = cache.teardown_fixtures_for_scope(
-        Scope.Module, testable_test.path, capture_output=True
+        Scope.Module, testable_test.path, capture_output=True  # type: ignore[attr-defined]
     )
 
     assert len(teardown_results) == 1
