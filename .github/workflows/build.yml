@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: snok/install-poetry@v1.2.1
+      - uses: snok/install-poetry@v1.3.1
         with:
           virtualenvs-create: true
 
