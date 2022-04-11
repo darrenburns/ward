@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest import mock
 from unittest.mock import Mock
 
-from ward import _debug, test
+from ward import test
 from ward._debug import _breakpointhook, _get_debugger_hook, init_breakpointhooks
 
 
@@ -19,22 +19,9 @@ def _():
 
 @test("init_breakpointhooks sets sys.breakpointhook when it's supported")
 def _():
-    old_func = _debug._breakpoint_supported
-    _debug._breakpoint_supported = lambda: True
     mock_sys = SimpleNamespace()
     init_breakpointhooks(pdb_module=Mock(), sys_module=mock_sys)
-    _debug._breakpoint_supported = old_func
     assert mock_sys.breakpointhook == _breakpointhook
-
-
-@test("init_breakpointhooks doesnt set breakpointhook when it's unsupported")
-def _():
-    old_func = _debug._breakpoint_supported
-    _debug._breakpoint_supported = lambda: False
-    mock_sys = SimpleNamespace()
-    init_breakpointhooks(pdb_module=Mock(), sys_module=mock_sys)
-    _debug._breakpoint_supported = old_func
-    assert not hasattr(mock_sys, "breakpointhook")
 
 
 @test("_breakpointhook returns None if PYTHONBREAKPOINT env var is '0'")

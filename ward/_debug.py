@@ -7,16 +7,13 @@ from typing import Any
 
 import click
 
-from ward._config import _breakpoint_supported
 from ward._terminal import rich_console
 
 original_stdout = sys.stdout
 
 
 def init_breakpointhooks(pdb_module, sys_module) -> None:
-    # breakpoint() is Python 3.7+
-    if _breakpoint_supported():
-        sys_module.breakpointhook = _breakpointhook
+    sys_module.breakpointhook = _breakpointhook
     pdb_module.set_trace = _breakpointhook
 
 
