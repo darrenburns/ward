@@ -27,7 +27,7 @@ def read_config_toml(project_root: Path, config_file: str) -> _ConfigDict:
         return {}
 
     try:
-        pyproject_toml = tomli.loads(path.read_text(encoding="utf-8"))
+        pyproject_toml = tomli.loads(path.read_bytes().decode())
     except (tomli.TOMLDecodeError, OSError) as e:
         raise click.FileError(
             filename=config_file, hint=f"Error reading {config_file}:\n{e}"
@@ -76,7 +76,7 @@ def apply_multi_defaults(
 
 
 def validate_config_toml(conf: _ConfigDict) -> None:
-    valid_conf_keys = set(Config.__dataclass_fields__)  # type: ignore[attr-defined]
+    valid_conf_keys = set(Config.__dataclass_fields__)
 
     # These keys are derived from pyproject.toml path so makes no sense
     # to define them in the file itself

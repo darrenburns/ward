@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Union
 from unittest.mock import Mock
 
-from rich.console import Console, RenderGroup
+from rich.console import Console, Group
 from rich.padding import Padding
 from rich.panel import Panel
 from rich.rule import Rule
@@ -93,11 +93,11 @@ def prelude():
 
 @test("SessionPrelude displays correct info when no config supplied")
 def _(prelude: SessionPrelude = prelude):
-    render_iter = prelude.__rich_console__(None, None)
-    assert vars(next(render_iter)) == vars(
+    render_iter = prelude.__rich_console__(None, None)  # type: ignore[arg-type]
+    assert vars(next(render_iter)) == vars(  # type: ignore[call-overload]
         Rule(Text("Ward 1.0.0dev1 | CPython 4.2", style="title"))
     )
-    assert next(render_iter) == (
+    assert next(render_iter) == (  # type: ignore[call-overload]
         "Found [b]123[/b] tests " "and [b]456[/b] fixtures " "in [b]1.23[/b] seconds."
     )
 
@@ -105,9 +105,9 @@ def _(prelude: SessionPrelude = prelude):
 @test("SessionPrelude displays config path when it is supplied")
 def _(prelude: SessionPrelude = prelude):
     prelude.config_path = Path("/path/to/pyproject.toml")
-    render_iter = prelude.__rich_console__(None, None)
-    next(render_iter)
-    assert next(render_iter) == "Loaded config from [b]pyproject.toml[/b]."
+    render_iter = prelude.__rich_console__(None, None)  # type: ignore[arg-type]
+    next(render_iter)  # type: ignore[call-overload]
+    assert next(render_iter) == "Loaded config from [b]pyproject.toml[/b]."  # type: ignore[call-overload]
 
 
 @fixture
@@ -163,7 +163,7 @@ def timing_stats_expected_table():
 @fixture
 def timing_stats_expected_panel(expected_table=timing_stats_expected_table):
     return Panel(
-        RenderGroup(
+        Group(
             Padding(
                 "Median: [b]4000.00[/b]ms"
                 " [muted]|[/muted] "
@@ -195,7 +195,7 @@ def _(
 ):
     panel: Panel = next(timing_stats_panel.__rich_console__(None, None))
 
-    render_group: RenderGroup = panel.renderable
+    render_group: Group = panel.renderable
     padding: Padding = render_group.renderables[0]
     assert padding.renderable == expected_panel.renderable.renderables[0].renderable
 
@@ -204,7 +204,7 @@ def _(
 def _(timing_stats_panel=timing_stats_panel):
     panel: Panel = next(timing_stats_panel.__rich_console__(None, None))
 
-    render_group: RenderGroup = panel.renderable
+    render_group: Group = panel.renderable
     table: Table = render_group.renderables[1]
 
     assert len(table.rows) == 3

@@ -16,21 +16,21 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
-        python-version: [ "3.6", "3.7", "3.8", "3.9", "3.10" ]
+        python-version: [ "3.7", "3.8", "3.9", "3.10" ]
     defaults:
       run:
         shell: bash
 
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3.1.2
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: snok/install-poetry@v1.2.1
+      - uses: snok/install-poetry@v1.3.1
         with:
           virtualenvs-create: true
 

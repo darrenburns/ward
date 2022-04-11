@@ -131,7 +131,7 @@ def _(anonymous_test=anonymous_test):
 @test("Test.run delegates to the function it wraps")
 def _(cache: FixtureCache = cache):
     called_with = None
-    call_kwargs = (), {}
+    call_kwargs = (), {}  # type: ignore[var-annotated]
 
     def func(key="val", **kwargs):
         nonlocal called_with, call_kwargs
@@ -141,13 +141,13 @@ def _(cache: FixtureCache = cache):
     t = Test(fn=func, module_name=mod)
     t.run(cache)
     assert called_with == "val"
-    assert call_kwargs == {"kwargs": {}}
+    assert call_kwargs == {"kwargs": {}}  # type: ignore[comparison-overlap]
 
 
 @test("Test.run delegates to coroutine function it wraps")
 def _(cache: FixtureCache = cache):
     called_with = None
-    call_kwargs = (), {}
+    call_kwargs = (), {}  # type: ignore[var-annotated]
 
     async def func(key="val", **kwargs):
         nonlocal called_with, call_kwargs
@@ -157,7 +157,7 @@ def _(cache: FixtureCache = cache):
     t = Test(fn=func, module_name=mod)
     t.run(cache)
     assert called_with == "val"
-    assert call_kwargs == {"kwargs": {}}
+    assert call_kwargs == {"kwargs": {}}  # type: ignore[comparison-overlap]
 
 
 @test("Test.run returns DRYRUN TestResult when dry_run == True")
@@ -409,7 +409,7 @@ def _(t: Test = anonymous_test):
 def _(t: Test = anonymous_test):
     scope_key = t.scope_key_from(Scope.Module)
 
-    assert scope_key == testable_test.path
+    assert scope_key == testable_test.path  # type: ignore[attr-defined]
 
 
 @test("Test.scope_key_from(Scope.Global) returns Scope.Global")
