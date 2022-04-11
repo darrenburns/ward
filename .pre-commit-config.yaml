@@ -60,6 +60,6 @@ repos:
         # Install type data of third-party dependencies
         additional_dependencies:
           - types-pkg_resources
-          - rich
-          - click
-          - tomli
+          - rich>=12.0.0,<13
+          - click>=7.0.0,<9
+          - tomli>=1.0.0,<3
