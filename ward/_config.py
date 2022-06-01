@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Union
+from typing import Any, Dict, Iterable, Optional, Union
 
 import click
 import tomli
@@ -91,7 +91,7 @@ def set_defaults_from_config(
     context: click.Context,
     param: click.Parameter,
     value: Union[str, int],
-) -> Optional[Path]:
+) -> Dict[str, Any]:
     paths_supplied_via_cli = context.params.get("path")
 
     search_paths = paths_supplied_via_cli
@@ -107,7 +107,7 @@ def set_defaults_from_config(
     else:
         context.params["project_root"] = None
         context.params["config_path"] = None
-        return Path.cwd()
+        return {}
 
     file_config = read_config_toml(project_root, _CONFIG_FILE)
     validate_config_toml(file_config)
