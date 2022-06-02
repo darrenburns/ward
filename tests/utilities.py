@@ -95,3 +95,19 @@ def make_project(root_file: str, file_content: str = ""):
         f.flush()
         yield (tempdir / "project").resolve()
     shutil.rmtree(tempdir / "project")
+
+
+def make_empty_project():
+    tempdir = Path(tempfile.gettempdir())
+    paths = [
+        tempdir / "project/a/b/c",
+        tempdir / "project/a/d",
+        tempdir / "project/a",
+        tempdir / "project/x/y/z",
+    ]
+    for path in paths:
+        path.mkdir(parents=True, exist_ok=True)
+
+    yield (tempdir / "project").resolve()
+
+    shutil.rmtree(tempdir / "project")

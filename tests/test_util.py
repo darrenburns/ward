@@ -1,4 +1,4 @@
-from tests.utilities import make_project
+from tests.utilities import make_empty_project, make_project
 from ward import fixture, test, using
 from ward._utilities import find_project_root, group_by, truncate
 from ward.testing import each
@@ -32,6 +32,11 @@ def fake_project_pyproject():
     order = "hello world"
     """
     yield from make_project("pyproject.toml", content)
+
+
+@fixture
+def fake_project_empty():
+    yield from make_empty_project()
 
 
 @fixture
