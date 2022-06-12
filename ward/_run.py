@@ -179,9 +179,12 @@ def test(
 ):
     """Run tests."""
     config_params = ctx.params.copy()
-    config_params.pop("config")
 
-    config = Config(**config_params, plugin_config=config_params.get("plugins", {}))
+    plugin_config = config_params["config"].get("plugins", {})
+
+    del config_params["config"]
+
+    config = Config(**config_params, plugin_config=plugin_config)
 
     test_output_style = TestOutputStyle(test_output_style)
     progress_styles = [TestProgressStyle(ps) for ps in progress_style]
