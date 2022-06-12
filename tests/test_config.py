@@ -6,7 +6,7 @@ from unittest import mock
 
 import click
 
-from tests.test_util import fake_project_pyproject
+from tests.test_util import fake_project_empty, fake_project_pyproject
 from ward import each, fixture, raises, test
 from ward._config import (
     apply_multi_defaults,
@@ -179,7 +179,7 @@ def _(project_root: Path = fake_project_pyproject):
         default_map={},
     )
     with mock.patch.object(Path, "cwd", return_value=project_root / "a" / "d"):
-        set_defaults_from_config(fake_context, None, None)  # type: ignore[arg-type]
+        assert set_defaults_from_config(fake_context, None, None) == fake_context.default_map  # type: ignore[arg-type]
 
     assert fake_context.default_map == {
         "exclude": (str(project_root / "a" / "b"),),
@@ -187,3 +187,21 @@ def _(project_root: Path = fake_project_pyproject):
         "order": "hello world",
     }
     assert fake_context.params["config_path"] == project_root / "pyproject.toml"
+
+
+@test(
+    "set_defaults_from_config returns {} if project_root does not contain pyproject.toml"
+)
+def _(project_root: Path = fake_project_empty):
+    """
+    This test checks the situation where we're currently
+    present in directory that has no pyproject.toml present
+    """
+    fake_context = types.SimpleNamespace(
+        params={"path": (str(project_root),)},
+        default_map={},
+    )
+    assert set_defaults_from_config(fake_context, None, None) == {}  # type: ignore[arg-type]
+
+    assert fake_context.params["project_root"] is None
+    assert fake_context.params["config_path"] is None
