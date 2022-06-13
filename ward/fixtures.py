@@ -137,7 +137,7 @@ class Fixture:
                     next(cast(Generator, self.gen))
                 elif self.is_async_generator_fixture and self.gen:
                     awaitable = cast(AsyncGenerator, self.gen).__anext__()
-                    asyncio.get_event_loop().run_until_complete(awaitable)
+                    asyncio.run(awaitable)
         except Exception as e:
             # Note that with StopIterations being suppressed, we have an issue
             # that if a StopIteration occurs in fixture teardown code, it will
