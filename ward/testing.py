@@ -197,7 +197,7 @@ class Test:
                 self.format_description(resolved_args)
                 if self.is_async_test:
                     coro = self.fn(**resolved_args)
-                    asyncio.get_event_loop().run_until_complete(coro)
+                    asyncio.run(coro)
                 else:
                     self.fn(**resolved_args)
             except FixtureError as e:
@@ -628,13 +628,9 @@ class TestArgumentResolver:
             elif fixture.is_async_generator_fixture:
                 fixture.gen = arg(**args_to_inject)
                 awaitable = fixture.gen.__anext__()  # type: ignore[union-attr]
-                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
-                    awaitable
-                )
+                fixture.resolved_val = asyncio.run(awaitable)
             elif fixture.is_coroutine_fixture:
-                fixture.resolved_val = asyncio.get_event_loop().run_until_complete(
-                    arg(**args_to_inject)
-                )
+                fixture.resolved_val = asyncio.run(arg(**args_to_inject))
             else:
                 fixture.resolved_val = arg(**args_to_inject)
         except (Exception, SystemExit) as e:
