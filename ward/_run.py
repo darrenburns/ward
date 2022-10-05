@@ -127,6 +127,12 @@ hook_module = click.option(
     """,
 )
 @click.option(
+    "--max-frames",
+    type=int,
+    default=100,
+    help="The maximum number of stack frames to show in tracebacks.",
+)
+@click.option(
     "--order",
     type=click.Choice(["standard", "random"], case_sensitive=False),
     default="standard",
@@ -170,6 +176,7 @@ def test(
     fail_limit: Optional[int],
     test_output_style: str,
     progress_style: List[str],
+    max_frames: int,
     order: str,
     capture_output: bool,
     show_slowest: int,
@@ -227,6 +234,7 @@ def test(
         progress_styles=progress_styles,
         config_path=config_path,
         show_diff_symbols=show_diff_symbols,
+        max_frames=max_frames,
     )
     for renderable in print_before:
         rich_console.print(renderable)

@@ -27,3 +27,4 @@ class Config:
     hook_module: Tuple[str]
     progress_style: Tuple[str]
     plugin_config: Dict[str, Dict[str, Any]]
+    max_frames: int

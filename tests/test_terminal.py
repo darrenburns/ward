@@ -295,7 +295,7 @@ def mock_rich_console():
 @fixture
 def writer(console=mock_rich_console):
     yield TestResultWriter(
-        console, Suite([]), TestOutputStyle.LIVE, [TestProgressStyle.INLINE], None
+        console, Suite([]), TestOutputStyle.LIVE, [TestProgressStyle.INLINE], None, 100
     )
 
 
@@ -393,6 +393,7 @@ def _(console=mock_rich_console):
         test_output_style=TestOutputStyle.TEST_PER_LINE,
         progress_styles=[TestProgressStyle.INLINE],
         config_path=None,
+        max_frames=100,
     )
 
     result = result_writer.output_all_test_results(_ for _ in ())

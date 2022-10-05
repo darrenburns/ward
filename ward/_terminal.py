@@ -675,6 +675,7 @@ class TestResultWriterBase:
         test_output_style: TestOutputStyle,
         progress_styles: List[TestProgressStyle],
         config_path: Optional[Path],
+        max_frames: int,
         show_diff_symbols: bool = False,
     ):
         self.console = console
@@ -684,6 +685,7 @@ class TestResultWriterBase:
         self.config_path = config_path
         self.show_diff_symbols = show_diff_symbols
         self.terminal_size = get_terminal_size()
+        self.max_frames = max_frames
 
     def output_all_test_results(
         self,
@@ -951,7 +953,9 @@ class TestResultWriter(TestResultWriterBase):
             # The first frame contains library internal code which is not
             # relevant to end users, so skip over it.
             trace = trace.tb_next
-            tb = Traceback.from_exception(err.__class__, err, trace, show_locals=True)
+            tb = Traceback.from_exception(
+                err.__class__, err, trace, show_locals=True, max_frames=self.max_frames
+            )
             self.console.print(Padding(tb, pad=(0, 2, 1, 2)))
         else:
             self.console.print(str(err))
