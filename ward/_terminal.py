@@ -93,7 +93,11 @@ theme = Theme(
         "usedby": "#9285F6",
     }
 )
-rich_console = Console(theme=theme, highlighter=NullHighlighter())
+rich_console = Console(
+    theme=theme,
+    highlighter=NullHighlighter(),
+    force_terminal=True if os.environ.get("FORCE_COLOR") else None,
+)
 
 
 def format_test_id(test_result: TestResult) -> str:
