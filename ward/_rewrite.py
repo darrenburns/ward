@@ -1,5 +1,6 @@
 import ast
 import inspect
+import sys
 import textwrap
 import types
 from typing import Iterable, List
@@ -106,10 +107,11 @@ def rewrite_assertion(test: Test) -> Test:
 
     new_tree = RewriteAssert().visit(tree)
 
-    # We dedented the code so that it was a valid tree, now re-apply the indent
-    for child in ast.walk(new_tree):
-        if hasattr(child, "col_offset"):
-            child.col_offset = getattr(child, "col_offset", 0) + col_offset
+    if sys.version_info[:2] < (3, 11):
+        # We dedented the code so that it was a valid tree, now re-apply the indent
+        for child in ast.walk(new_tree):
+            if hasattr(child, "col_offset"):
+                child.col_offset = getattr(child, "col_offset", 0) + col_offset
 
     # Reconstruct the test function
     new_mod_code_obj = compile(new_tree, code_obj.co_filename, "exec")
