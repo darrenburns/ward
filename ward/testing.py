@@ -191,8 +191,7 @@ class Test:
         return isinstance(other, self.__class__) and self.id == other.id
 
     # FIXME:fix linter C901
-    # noqa: C901
-    def run(
+    def run(  # noqa: C901
         self, cache: FixtureCache, dry_run: bool = False, async_library: str = "asyncio"
     ) -> "TestResult":
         with ExitStack() as stack:
