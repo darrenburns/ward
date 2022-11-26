@@ -167,6 +167,28 @@ def _(cache=cache):
     assert result == TestResult(t, outcome=TestOutcome.DRYRUN)
 
 
+@test("Test.run with async_library set as curio works", tags=["curio"])
+def _(cache=cache):
+    async def func():
+        import curio  # type: ignore
+
+        assert curio.meta.curio_running()
+
+    t = Test(fn=func, module_name=mod)
+    result = t.run(cache, async_library="curio")
+    assert result.outcome != TestOutcome.FAIL
+
+
+@test("Test.run with async_library set as bsyncio raises exception")
+def _(cache=cache):
+    async def func():
+        pass
+
+    t = Test(fn=func, module_name=mod)
+    result = t.run(cache, async_library="bsyncio")
+    assert isinstance(result.error, ValueError)
+
+
 TRUTHY_PREDICATES = each(True, lambda: True, 1, "truthy string")
 FALSY_PREDICATES = each(False, lambda: False, 0, "")
 

@@ -1,4 +1,3 @@
-import asyncio
 import collections
 import functools
 import inspect
@@ -135,6 +134,23 @@ def xfail(
     return wrapper
 
 
+def run_coro(coro, async_library="asyncio"):
+    if async_library == "asyncio":
+        import asyncio
+
+        return asyncio.run(coro)
+    elif async_library == "curio":
+        import curio  # type: ignore
+
+        return curio.run(coro)
+    elif async_library == "trio":
+        import trio  # type: ignore
+
+        return trio.run(coro)
+    else:
+        raise ValueError(f"unknown async library {async_library}")
+
+
 @dataclass
 class Test:
     """
@@ -175,7 +191,10 @@ class Test:
         return isinstance(other, self.__class__) and self.id == other.id
 
     # FIXME:fix linter C901
-    def run(self, cache: FixtureCache, dry_run=False) -> "TestResult":  # noqa: C901
+    # noqa: C901
+    def run(
+        self, cache: FixtureCache, dry_run: bool = False, async_library: str = "asyncio"
+    ) -> "TestResult":
         with ExitStack() as stack:
             self.timer = stack.enter_context(_Timer())
             if self.capture_output:
@@ -193,11 +212,13 @@ class Test:
                 return result
 
             try:
-                resolved_args = self.resolver.resolve_args(cache)
+                resolved_args = self.resolver.resolve_args(
+                    cache, async_library=async_library
+                )
                 self.format_description(resolved_args)
                 if self.is_async_test:
                     coro = self.fn(**resolved_args)
-                    asyncio.run(coro)
+                    run_coro(coro, async_library=async_library)
                 else:
                     self.fn(**resolved_args)
             except FixtureError as e:
@@ -524,7 +545,9 @@ class TestArgumentResolver:
     test: "Test"
     iteration: int
 
-    def resolve_args(self, cache: FixtureCache) -> Dict[str, Any]:
+    def resolve_args(
+        self, cache: FixtureCache, async_library="asyncio"
+    ) -> Dict[str, Any]:
         """
         Resolve fixtures and return the resultant name -> Fixture dict.
         If the argument is not a fixture, the raw argument will be used.
@@ -533,16 +556,20 @@ class TestArgumentResolver:
         """
         if self.test.capture_output:
             with redirect_stdout(self.test.sout), redirect_stderr(self.test.serr):
-                return self._resolve_args(cache)
+                return self._resolve_args(cache, async_library=async_library)
         else:
-            return self._resolve_args(cache)
+            return self._resolve_args(cache, async_library=async_library)
 
-    def _resolve_args(self, cache: FixtureCache) -> Dict[str, Any]:
+    def _resolve_args(
+        self, cache: FixtureCache, async_library="asyncio"
+    ) -> Dict[str, Any]:
         args_for_iteration = self._get_args_for_iteration()
         resolved_args: Dict[str, Any] = {}
         for name, arg in args_for_iteration.items():
             if is_fixture(arg):
-                resolved = self._resolve_single_arg(arg, cache)
+                resolved = self._resolve_single_arg(
+                    arg, cache, async_library=async_library
+                )
             else:
                 resolved = arg
             resolved_args[name] = resolved
@@ -594,7 +621,7 @@ class TestArgumentResolver:
         return default_binding.arguments
 
     def _resolve_single_arg(
-        self, arg: Callable, cache: FixtureCache
+        self, arg: Callable, cache: FixtureCache, async_library="asyncio"
     ) -> Union[Any, Fixture]:
         """
         Get the fixture return value
@@ -617,7 +644,9 @@ class TestArgumentResolver:
         children_defaults = self.get_default_args(func=arg)
         children_resolved = {}
         for name, child_fixture in children_defaults.items():
-            child_resolved = self._resolve_single_arg(child_fixture, cache)
+            child_resolved = self._resolve_single_arg(
+                child_fixture, cache, async_library=async_library
+            )
             children_resolved[name] = child_resolved
 
         try:
@@ -628,9 +657,9 @@ class TestArgumentResolver:
             elif fixture.is_async_generator_fixture:
                 fixture.gen = arg(**args_to_inject)
                 awaitable = fixture.gen.__anext__()  # type: ignore[union-attr]
-                fixture.resolved_val = asyncio.run(awaitable)
+                fixture.resolved_val = run_coro(awaitable, async_library=async_library)
             elif fixture.is_coroutine_fixture:
-                fixture.resolved_val = asyncio.run(arg(**args_to_inject))
+                fixture.resolved_val = run_coro(arg(**args_to_inject))
             else:
                 fixture.resolved_val = arg(**args_to_inject)
         except (Exception, SystemExit) as e:

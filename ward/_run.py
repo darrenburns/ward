@@ -156,6 +156,11 @@ hook_module = click.option(
     help="Print all tests without executing them",
     default=False,
 )
+@click.option(
+    "--async-library",
+    help="Which async library to use for running asynchronous tests",
+    default="asyncio",
+)
 @click.version_option(version=__version__)
 @click.pass_context
 def test(
@@ -176,6 +181,7 @@ def test(
     show_diff_symbols: bool,
     dry_run: bool,
     hook_module: Tuple[str],
+    async_library: Optional[str],
 ):
     """Run tests."""
     config_params = ctx.params.copy()
@@ -210,7 +216,7 @@ def test(
 
     suite = Suite(tests=tests)
     test_results = suite.generate_test_runs(
-        dry_run=dry_run, capture_output=capture_output
+        dry_run=dry_run, capture_output=capture_output, async_library=async_library
     )
     rich_console.print(
         SessionPrelude(
