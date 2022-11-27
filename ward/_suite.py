@@ -58,9 +58,7 @@ class Suite:
                 yield test.fail_with_error(e)
                 continue
             for generated_test in generated_tests:
-                result = generated_test.run(
-                    self.cache, dry_run=dry_run
-                )
+                result = generated_test.run(self.cache, dry_run=dry_run)
                 teardown_results: List[
                     TeardownResult
                 ] = self.cache.teardown_fixtures_for_scope(

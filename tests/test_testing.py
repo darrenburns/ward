@@ -4,7 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 from unittest import mock
 
-import sniffio
+import sniffio  # type: ignore
 
 from tests.utilities import FORCE_TEST_PATH, testable_test
 from ward import raises
@@ -169,9 +169,14 @@ def _(cache=cache):
     assert result == TestResult(t, outcome=TestOutcome.DRYRUN)
 
 
-@test("Test.run with async_library set as curio works", tags=["curio"], async_library="curio")
+@test(
+    "Test.run with async_library set as curio works",
+    tags=["curio"],
+    async_library="curio",
+)
 async def _(cache=cache):
     import curio  # type: ignore
+
     assert curio.meta.curio_running()
 
 
@@ -199,7 +204,8 @@ def _(cache=cache):
 @test("Test.run with async_library curio in test constructor runs with curio")
 def _(cache=cache):
     async def func():
-        import curio  # type: ignore
+        import curio
+
         assert curio.meta.curio_running()
 
     t = Test(fn=func, module_name=mod, async_library="curio")

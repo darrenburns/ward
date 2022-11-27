@@ -192,7 +192,9 @@ class Test:
         return isinstance(other, self.__class__) and self.id == other.id
 
     # FIXME:fix linter C901
-    def run(self, cache: FixtureCache, dry_run: bool = False) -> "TestResult":
+    def run(  # noqa: C901
+        self, cache: FixtureCache, dry_run: bool = False
+    ) -> "TestResult":
         async_library = self.async_library
         with ExitStack() as stack:
             self.timer = stack.enter_context(_Timer())
