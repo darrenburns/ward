@@ -183,6 +183,7 @@ class Test:
     ward_meta: CollectionMetadata = field(default_factory=CollectionMetadata)
     timer: Optional["_Timer"] = None
     tags: List[str] = field(default_factory=list)
+    async_library: Optional[str] = "asyncio"
 
     def __hash__(self):
         return hash((self.__class__, self.id))
@@ -191,9 +192,8 @@ class Test:
         return isinstance(other, self.__class__) and self.id == other.id
 
     # FIXME:fix linter C901
-    def run(  # noqa: C901
-        self, cache: FixtureCache, dry_run: bool = False, async_library: str = "asyncio"
-    ) -> "TestResult":
+    def run(self, cache: FixtureCache, dry_run: bool = False) -> "TestResult":
+        async_library = self.async_library
         with ExitStack() as stack:
             self.timer = stack.enter_context(_Timer())
             if self.capture_output:
@@ -423,15 +423,18 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
             else:
                 path = get_absolute_path(unwrapped)
 
+            async_library = kwargs.get("async_library", "asyncio")
             if hasattr(unwrapped, "ward_meta"):
                 unwrapped.ward_meta.description = description
                 unwrapped.ward_meta.tags = tags
                 unwrapped.ward_meta.path = path
+                unwrapped.ward_meta.async_library = async_library
             else:
                 unwrapped.ward_meta = CollectionMetadata(
                     description=description,
                     tags=tags,
                     path=path,
+                    async_library=async_library,
                 )
 
             collect_into = kwargs.get("_collect_into", COLLECTED_TESTS)

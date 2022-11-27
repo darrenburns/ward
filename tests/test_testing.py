@@ -4,6 +4,8 @@ from collections import defaultdict
 from pathlib import Path
 from unittest import mock
 
+import sniffio
+
 from tests.utilities import FORCE_TEST_PATH, testable_test
 from ward import raises
 from ward._errors import ParameterisationError
@@ -167,16 +169,10 @@ def _(cache=cache):
     assert result == TestResult(t, outcome=TestOutcome.DRYRUN)
 
 
-@test("Test.run with async_library set as curio works", tags=["curio"])
-def _(cache=cache):
-    async def func():
-        import curio  # type: ignore
-
-        assert curio.meta.curio_running()
-
-    t = Test(fn=func, module_name=mod)
-    result = t.run(cache, async_library="curio")
-    assert result.outcome != TestOutcome.FAIL
+@test("Test.run with async_library set as curio works", tags=["curio"], async_library="curio")
+async def _(cache=cache):
+    import curio  # type: ignore
+    assert curio.meta.curio_running()
 
 
 @test("Test.run with async_library set as bsyncio raises exception")
@@ -184,9 +180,37 @@ def _(cache=cache):
     async def func():
         pass
 
-    t = Test(fn=func, module_name=mod)
-    result = t.run(cache, async_library="bsyncio")
+    t = Test(fn=func, module_name=mod, async_library="bsyncio")
+    result = t.run(cache)
     assert isinstance(result.error, ValueError)
+
+
+@test("Test.run with no async_library set runs with asyncio")
+def _(cache=cache):
+    async def func():
+        asynclib = sniffio.current_async_library()
+        assert asynclib == "asyncio"
+
+    t = Test(fn=func, module_name=mod)
+    result = t.run(cache)
+    assert result != TestResult(t, outcome=TestOutcome.FAIL)
+
+
+@test("Test.run with async_library curio in test constructor runs with curio")
+def _(cache=cache):
+    async def func():
+        import curio  # type: ignore
+        assert curio.meta.curio_running()
+
+    t = Test(fn=func, module_name=mod, async_library="curio")
+    result = t.run(cache)
+    assert result.error != TestOutcome.FAIL
+
+
+@test("Test.run with asyncio set runs with asyncio", async_library="asyncio")
+async def _(cache=cache):
+    asynclib = sniffio.current_async_library()
+    assert asynclib == "asyncio"
 
 
 TRUTHY_PREDICATES = each(True, lambda: True, 1, "truthy string")

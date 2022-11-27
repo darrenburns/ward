@@ -204,7 +204,7 @@ def test(
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = load_modules(mod_infos)
-    unfiltered_tests = get_tests_in_modules(modules, capture_output)
+    unfiltered_tests = get_tests_in_modules(modules, capture_output, async_library)
     plugins.hook.preprocess_tests(config=config, collected_tests=unfiltered_tests)
     filtered_tests = filter_tests(unfiltered_tests, query=search, tag_expr=tags)
     if config.order == "random":
@@ -216,7 +216,7 @@ def test(
 
     suite = Suite(tests=tests)
     test_results = suite.generate_test_runs(
-        dry_run=dry_run, capture_output=capture_output, async_library=async_library
+        dry_run=dry_run, capture_output=capture_output
     )
     rich_console.print(
         SessionPrelude(

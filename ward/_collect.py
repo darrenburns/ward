@@ -168,7 +168,11 @@ def _build_package_data(module: ModuleType) -> PackageData:
     )
 
 
-def get_tests_in_modules(modules: Iterable, capture_output: bool = True) -> List[Test]:
+def get_tests_in_modules(
+    modules: Iterable,
+    capture_output: bool = True,
+    async_library: str = "asyncio"
+) -> List[Test]:
     tests = []
     for mod in modules:
         mod_name = mod.__name__
@@ -185,6 +189,7 @@ def get_tests_in_modules(modules: Iterable, capture_output: bool = True) -> List
                         description=meta.description or "",
                         capture_output=capture_output,
                         tags=meta.tags or [],
+                        async_library=meta.async_library or async_library
                     )
                 )
     return tests

@@ -43,7 +43,6 @@ class Suite:
         self,
         dry_run: bool = False,
         capture_output: bool = True,
-        async_library: str = "asyncio",
     ) -> Generator[TestResult, None, None]:
         """
         Run tests
@@ -60,7 +59,7 @@ class Suite:
                 continue
             for generated_test in generated_tests:
                 result = generated_test.run(
-                    self.cache, dry_run=dry_run, async_library=async_library
+                    self.cache, dry_run=dry_run
                 )
                 teardown_results: List[
                     TeardownResult
