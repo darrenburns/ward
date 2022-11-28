@@ -1,10 +1,10 @@
 import asyncio
-import curio
 import sys
 from collections import defaultdict
 from pathlib import Path
 from unittest import mock
 
+import curio
 import sniffio  # type: ignore
 
 from tests.utilities import FORCE_TEST_PATH, testable_test
@@ -19,13 +19,13 @@ from ward.testing import (
     TestArgumentResolver,
     TestOutcome,
     TestResult,
+    await_generator,
     each,
     fixtures_used_directly_by_tests,
+    run_coro,
     skip,
     test,
     xfail,
-    run_coro,
-    await_generator,
 )
 
 
@@ -238,10 +238,7 @@ async def _(cache=cache):
     assert curio.meta.curio_running()
 
 
-@test(
-    "Test.run with async_library set as bsyncio raises exception",
-    tags=["async"]
-)
+@test("Test.run with async_library set as bsyncio raises exception", tags=["async"])
 def _(cache=cache):
     async def func():
         pass
@@ -251,10 +248,7 @@ def _(cache=cache):
     assert isinstance(result.error, ValueError)
 
 
-@test(
-    "Test.run with no async_library set runs with asyncio",
-    tags=["async", "asyncio"]
-)
+@test("Test.run with no async_library set runs with asyncio", tags=["async", "asyncio"])
 def _(cache=cache):
     async def func():
         asynclib = sniffio.current_async_library()
@@ -267,7 +261,7 @@ def _(cache=cache):
 
 @test(
     "Test.run with async_library curio in test constructor runs with curio",
-    tags=["async", "curio"]
+    tags=["async", "curio"],
 )
 def _(cache=cache):
     async def func():
@@ -283,7 +277,7 @@ def _(cache=cache):
 @test(
     "Test.run with asyncio set runs with asyncio",
     async_library="asyncio",
-    tags=["async", "asyncio"]
+    tags=["async", "asyncio"],
 )
 async def _(cache=cache):
     asynclib = sniffio.current_async_library()
