@@ -1,6 +1,7 @@
 import asyncio
+
 try:
-    import curio
+    import curio  # type: ignore
 except ModuleNotFoundError:
     pass
 import collections
@@ -668,8 +669,7 @@ class TestArgumentResolver:
                 fixture.gen = arg(**args_to_inject)
                 awaitable = fixture.gen.__anext__()  # type: ignore[union-attr]
                 fixture.resolved_val = await_generator(
-                    awaitable,
-                    async_library=async_library
+                    awaitable, async_library=async_library
                 )
             elif fixture.is_coroutine_fixture:
                 coro = functools.partial(arg, **args_to_inject)
