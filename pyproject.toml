@@ -50,6 +50,10 @@ pre-commit = "^2.13.0"
 [tool.poetry.scripts]
 ward = "ward._run:run"
 
+[tool.poetry.group.test.dependencies]
+curio = "^1.6"
+sniffio = "^1.3.0"
+
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",

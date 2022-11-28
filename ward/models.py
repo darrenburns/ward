@@ -76,6 +76,7 @@ class CollectionMetadata:
     scope: Scope = Scope.Test
     bound_args: Optional[BoundArguments] = None
     path: Optional[Path] = None
+    async_library: Optional[str] = "asyncio"
 
 
 class ExitCode(Enum):

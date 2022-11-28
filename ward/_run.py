@@ -156,6 +156,11 @@ hook_module = click.option(
     help="Print all tests without executing them",
     default=False,
 )
+@click.option(
+    "--async-library",
+    help="Which async library to use for running asynchronous tests",
+    default="asyncio",
+)
 @click.version_option(version=__version__)
 @click.pass_context
 def test(
@@ -176,6 +181,7 @@ def test(
     show_diff_symbols: bool,
     dry_run: bool,
     hook_module: Tuple[str],
+    async_library: Optional[str],
 ):
     """Run tests."""
     config_params = ctx.params.copy()
@@ -198,7 +204,7 @@ def test(
     paths = [Path(p) for p in path]
     mod_infos = get_info_for_modules(paths, exclude)
     modules = load_modules(mod_infos)
-    unfiltered_tests = get_tests_in_modules(modules, capture_output)
+    unfiltered_tests = get_tests_in_modules(modules, capture_output, async_library)
     plugins.hook.preprocess_tests(config=config, collected_tests=unfiltered_tests)
     filtered_tests = filter_tests(unfiltered_tests, query=search, tag_expr=tags)
     if config.order == "random":
