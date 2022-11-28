@@ -1,4 +1,5 @@
 import asyncio
+import curio
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -23,7 +24,64 @@ from ward.testing import (
     skip,
     test,
     xfail,
+    run_coro,
+    await_generator,
 )
+
+
+async def test_generator():
+    for i in range(1):
+        yield i
+
+
+async def test_coro():
+    asynclib = sniffio.current_async_library()
+    if asynclib == "asyncio":
+        asyncio.sleep(0)
+    elif asynclib == "curio":
+        curio.sleep(0)
+    return asynclib
+
+
+@fixture
+def generator():
+    return test_generator()
+
+
+@test("await_generator works with asyncio")
+def _(gen=generator):
+    result = await_generator(gen.__anext__())
+    assert result == 0
+
+
+@test("await_generator works with curio")
+def _(gen=generator):
+    result = await_generator(gen.__anext__(), async_library="curio")
+    assert result == 0
+
+
+@test("await_generator with unsupported async library raises ValueError")
+def _(gen=generator):
+    with raises(ValueError):
+        await_generator(gen.__anext__(), async_library="trio")
+
+
+@test("run_coro works with asyncio")
+def _():
+    result = run_coro(test_coro)
+    assert result is "asyncio"
+
+
+@test("run_coro works with curio")
+def _():
+    result = run_coro(test_coro, async_library="curio")
+    assert result is "curio"
+
+
+@test("run_coro with unsupported async library raises ValueError")
+def _():
+    with raises(ValueError):
+        run_coro(test_coro, async_library="trio")
 
 
 def f():
@@ -171,7 +229,7 @@ def _(cache=cache):
 
 @test(
     "Test.run with async_library set as curio works",
-    tags=["curio"],
+    tags=["curio", "async"],
     async_library="curio",
 )
 async def _(cache=cache):
@@ -180,7 +238,10 @@ async def _(cache=cache):
     assert curio.meta.curio_running()
 
 
-@test("Test.run with async_library set as bsyncio raises exception")
+@test(
+    "Test.run with async_library set as bsyncio raises exception",
+    tags=["async"]
+)
 def _(cache=cache):
     async def func():
         pass
@@ -190,7 +251,10 @@ def _(cache=cache):
     assert isinstance(result.error, ValueError)
 
 
-@test("Test.run with no async_library set runs with asyncio")
+@test(
+    "Test.run with no async_library set runs with asyncio",
+    tags=["async", "asyncio"]
+)
 def _(cache=cache):
     async def func():
         asynclib = sniffio.current_async_library()
@@ -201,7 +265,10 @@ def _(cache=cache):
     assert result != TestResult(t, outcome=TestOutcome.FAIL)
 
 
-@test("Test.run with async_library curio in test constructor runs with curio")
+@test(
+    "Test.run with async_library curio in test constructor runs with curio",
+    tags=["async", "curio"]
+)
 def _(cache=cache):
     async def func():
         import curio
@@ -213,7 +280,11 @@ def _(cache=cache):
     assert result.error != TestOutcome.FAIL
 
 
-@test("Test.run with asyncio set runs with asyncio", async_library="asyncio")
+@test(
+    "Test.run with asyncio set runs with asyncio",
+    async_library="asyncio",
+    tags=["async", "asyncio"]
+)
 async def _(cache=cache):
     asynclib = sniffio.current_async_library()
     assert asynclib == "asyncio"
@@ -389,9 +460,21 @@ async def one():
     yield 1
 
 
+@fixture
+async def one_curio():
+    await curio.sleep(0.00001)
+    yield 1
+
+
 @fixture(scope="module")
 async def two():
     await asyncio.sleep(0.00001)
+    return 2
+
+
+@fixture(scope="module")
+async def two_curio():
+    await curio.sleep(0.00001)
     return 2
 
 
@@ -403,7 +486,14 @@ def three():
 @xfail("intentional failure")
 @test("async/await failing test")
 async def _(one=one, two=two):
-    await asyncio.sleep(0.0001)
+    await curio.sleep(0.0001)
+    assert one + two == 999
+
+
+@xfail("intentional failure and async fixtures with curio")
+@test("async/await failing test", async_library="curio")
+async def _(one=one_curio, two=two_curio):
+    await curio.sleep(0.0001)
     assert one + two == 999
 
 

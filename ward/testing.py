@@ -1,3 +1,8 @@
+import asyncio
+try:
+    import curio
+except ModuleNotFoundError:
+    pass
 import collections
 import functools
 import inspect
@@ -134,19 +139,20 @@ def xfail(
     return wrapper
 
 
+def await_generator(generator, async_library="asyncio"):
+    if async_library == "asyncio":
+        return asyncio.run(generator)
+    elif async_library == "curio":
+        return curio.run(generator)
+    else:
+        raise ValueError(f"unknown async library {async_library}")
+
+
 def run_coro(coro, async_library="asyncio"):
     if async_library == "asyncio":
-        import asyncio
-
-        return asyncio.run(coro)
+        return asyncio.run(coro())
     elif async_library == "curio":
-        import curio  # type: ignore
-
         return curio.run(coro)
-    elif async_library == "trio":
-        import trio  # type: ignore
-
-        return trio.run(coro)
     else:
         raise ValueError(f"unknown async library {async_library}")
 
@@ -218,7 +224,7 @@ class Test:
                 )
                 self.format_description(resolved_args)
                 if self.is_async_test:
-                    coro = self.fn(**resolved_args)
+                    coro = functools.partial(self.fn, **resolved_args)
                     run_coro(coro, async_library=async_library)
                 else:
                     self.fn(**resolved_args)
@@ -661,9 +667,13 @@ class TestArgumentResolver:
             elif fixture.is_async_generator_fixture:
                 fixture.gen = arg(**args_to_inject)
                 awaitable = fixture.gen.__anext__()  # type: ignore[union-attr]
-                fixture.resolved_val = run_coro(awaitable, async_library=async_library)
+                fixture.resolved_val = await_generator(
+                    awaitable,
+                    async_library=async_library
+                )
             elif fixture.is_coroutine_fixture:
-                fixture.resolved_val = run_coro(arg(**args_to_inject))
+                coro = functools.partial(arg, **args_to_inject)
+                fixture.resolved_val = run_coro(coro, async_library=async_library)
             else:
                 fixture.resolved_val = arg(**args_to_inject)
         except (Exception, SystemExit) as e:
