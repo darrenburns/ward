@@ -16,7 +16,7 @@ COLLECTED_TESTS: Dict[Path, List[Callable]] = defaultdict(list)
 
 @dataclass
 class Each:
-    args: Tuple[Any]
+    args: Tuple[Any, ...]
 
     def __getitem__(self, args):
         return self.args[args]

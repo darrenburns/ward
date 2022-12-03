@@ -52,7 +52,7 @@ def dependent_test():
     return Test(fn=_, module_name=mod)
 
 
-@fixture()
+@fixture
 def cache():
     return FixtureCache()
 

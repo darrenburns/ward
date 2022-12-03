@@ -5,7 +5,18 @@ from dataclasses import dataclass
 from functools import partial, wraps
 from io import StringIO
 from pathlib import Path
-from typing import Any, AsyncGenerator, Callable, Generator, List, Optional, Union, cast
+from typing import (
+    Any,
+    AsyncGenerator,
+    Callable,
+    Generator,
+    List,
+    Optional,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
 from ward.models import CollectionMetadata, Scope
 
@@ -168,7 +179,22 @@ class TeardownResult:
     serr: str = ""
 
 
-def fixture(func=None, *, scope: Union[Scope, str] = Scope.Test):
+_T = TypeVar("_T")
+
+
+@overload
+def fixture(func: Callable[..., _T]) -> _T:
+    ...
+
+
+@overload
+def fixture(*, scope: Union[Scope, str]) -> Callable[[Callable[..., _T]], _T]:
+    ...
+
+
+def fixture(
+    func: Callable[..., _T] | None = None, *, scope: Union[Scope, str] = Scope.Test
+) -> Union[_T, Callable[[Callable[..., _T]], _T]]:
     """
     Decorator which will cause the wrapped function to be collected and treated as a fixture.
 
@@ -188,10 +214,10 @@ def fixture(func=None, *, scope: Union[Scope, str] = Scope.Test):
     # is responsible for resolving the value.
     path = Path(inspect.getfile(func)).absolute()
     if hasattr(func, "ward_meta"):
-        func.ward_meta.is_fixture = True
-        func.ward_meta.path = path
+        func.ward_meta.is_fixture = True  # type: ignore[attr-defined]
+        func.ward_meta.path = path  # type: ignore[attr-defined]
     else:
-        func.ward_meta = CollectionMetadata(is_fixture=True, scope=scope, path=path)
+        func.ward_meta = CollectionMetadata(is_fixture=True, scope=scope, path=path)  # type: ignore[attr-defined]
 
     _DEFINED_FIXTURES.append(Fixture(func))
 
@@ -202,7 +228,7 @@ def fixture(func=None, *, scope: Union[Scope, str] = Scope.Test):
     return wrapper
 
 
-def using(*using_args, **using_kwargs):
+def using(*using_args: Any, **using_kwargs: Any) -> Callable[[_T], _T]:
     """
     An alternative to the default param method of injecting fixtures into tests. Allows you to avoid using
     keyword arguments in your test definitions.
