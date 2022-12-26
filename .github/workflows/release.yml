@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4.0.0
+    - uses: actions/setup-python@v4.4.0
       with:
         python-version: '3.10'
     - uses: snok/install-poetry@v1.3.1
