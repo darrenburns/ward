@@ -23,7 +23,7 @@ copyright = "2021, Darren Burns"
 author = "Darren Burns"
 
 # The full version, including alpha/beta/rc tags
-release = "0.67.0b0"
+release = "0.67.1b0"
 
 
 # -- General configuration ---------------------------------------------------
