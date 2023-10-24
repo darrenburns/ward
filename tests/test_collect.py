@@ -186,13 +186,13 @@ PATH = Path("path/to/test_mod.py")
 
 
 class StubModuleFinder:
-    def find_module(self, module_name: str):
+    def find_spec(self, module_name: str):
         return StubSourceFileLoader()
 
 
 @dataclass
 class StubSourceFileLoader:
-    path: Path = PATH
+    origin: Path = PATH
 
 
 @fixture

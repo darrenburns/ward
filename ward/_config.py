@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any, Dict, Iterable, MutableMapping, Optional, Union
 
 import click
 import tomli
@@ -91,7 +91,7 @@ def set_defaults_from_config(
     context: click.Context,
     param: click.Parameter,
     value: Union[str, int],
-) -> Dict[str, Any]:
+) -> MutableMapping[str, Any]:
     paths_supplied_via_cli = context.params.get("path")
 
     search_paths = paths_supplied_via_cli

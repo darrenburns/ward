@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
+        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11", "3.12" ]
     defaults:
       run:
         shell: bash
@@ -30,14 +30,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: snok/install-poetry@v1.3.1
+      - uses: snok/install-poetry@v1
         with:
+          version: 1.3.1
           virtualenvs-create: true
+          virtualenvs.in-project: true
 
       - name: Install dependencies
         run: |
           poetry config experimental.new-installer false
-          poetry config virtualenvs.in-project true
           poetry install --no-interaction
 
       - name: Run tests with Ward

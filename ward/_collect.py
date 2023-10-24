@@ -27,7 +27,7 @@ def is_test_module(module: pkgutil.ModuleInfo) -> bool:
 
 
 def _get_module_path(module: pkgutil.ModuleInfo) -> Path:
-    return Path(module.module_finder.find_module(module.name).path)
+    return Path(module.module_finder.find_spec(module.name).origin)
 
 
 def _is_excluded_module(module: pkgutil.ModuleInfo, exclusions: Iterable[str]) -> bool:
