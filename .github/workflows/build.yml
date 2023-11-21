@@ -39,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: |
           poetry config experimental.new-installer false
-          poetry install --no-interaction
+          poetry install --no-interaction --without dev --without docs
 
       - name: Run tests with Ward
         run: |
