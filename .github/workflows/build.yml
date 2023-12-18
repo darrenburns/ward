@@ -45,8 +45,3 @@ jobs:
         run: |
           poetry run coverage run -m ward
           poetry run coverage xml -i
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          fail_ci_if_error: false
