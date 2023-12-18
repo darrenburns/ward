@@ -5,10 +5,10 @@ import os
 import pkgutil
 import sys
 from dataclasses import dataclass
-from distutils.sysconfig import get_python_lib
 from importlib._bootstrap import ModuleSpec  # type: ignore[import]
 from importlib._bootstrap_external import FileFinder  # type: ignore[import]
 from pathlib import Path
+from sysconfig import get_path
 from types import ModuleType
 from typing import Callable, Iterable, List, Optional, Set, Tuple
 
@@ -27,7 +27,7 @@ def is_test_module(module: pkgutil.ModuleInfo) -> bool:
 
 
 def _get_module_path(module: pkgutil.ModuleInfo) -> Path:
-    return Path(module.module_finder.find_module(module.name).path)
+    return Path(module.module_finder.find_spec(module.name).origin)
 
 
 def _is_excluded_module(module: pkgutil.ModuleInfo, exclusions: Iterable[str]) -> bool:
@@ -113,7 +113,7 @@ def get_info_for_modules(
 
                 # ignore site-packages directories
                 abs_path = dir_path.absolute()
-                if str(abs_path).startswith(get_python_lib()):
+                if str(abs_path).startswith(get_path("platlib")):
                     continue
 
                 # if we have seen this path before, skip it

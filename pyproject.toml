@@ -41,11 +41,15 @@ click-default-group = "^1.2.2"
 click-completion = "^0.5.2"
 pluggy = ">=0.13.1,<2.0.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^2.13.0"
+
+[tool.poetry.group.docs.dependencies]
 Sphinx = "^3.5.1"
 sphinx-rtd-theme = "^0.5.1"
+
+[tool.poetry.group.test.dependencies]
 coverage = {version = "^5.1", extras = ["toml"]}
-pre-commit = "^2.13.0"
 
 [tool.poetry.scripts]
 ward = "ward._run:run"
