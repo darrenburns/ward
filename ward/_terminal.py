@@ -676,6 +676,7 @@ class TestResultWriterBase:
         progress_styles: List[TestProgressStyle],
         config_path: Optional[Path],
         show_diff_symbols: bool = False,
+        show_locals: bool = True,
     ):
         self.console = console
         self.suite = suite
@@ -683,6 +684,7 @@ class TestResultWriterBase:
         self.progress_styles = progress_styles
         self.config_path = config_path
         self.show_diff_symbols = show_diff_symbols
+        self.show_locals = show_locals
         self.terminal_size = get_terminal_size()
 
     def output_all_test_results(
@@ -951,7 +953,9 @@ class TestResultWriter(TestResultWriterBase):
             # The first frame contains library internal code which is not
             # relevant to end users, so skip over it.
             trace = trace.tb_next
-            tb = Traceback.from_exception(err.__class__, err, trace, show_locals=True)
+            tb = Traceback.from_exception(
+                err.__class__, err, trace, show_locals=self.show_locals
+            )
             self.console.print(Padding(tb, pad=(0, 2, 1, 2)))
         else:
             self.console.print(str(err))

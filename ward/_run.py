@@ -152,6 +152,11 @@ hook_module = click.option(
     default=0,
 )
 @click.option(
+    "--show-locals/--hide-locals",
+    help="Print all tests without executing them",
+    default=True,
+)
+@click.option(
     "--dry-run/--no-dry-run",
     help="Print all tests without executing them",
     default=False,
@@ -174,6 +179,7 @@ def test(
     capture_output: bool,
     show_slowest: int,
     show_diff_symbols: bool,
+    show_locals: bool,
     dry_run: bool,
     hook_module: Tuple[str],
 ):
@@ -227,6 +233,7 @@ def test(
         progress_styles=progress_styles,
         config_path=config_path,
         show_diff_symbols=show_diff_symbols,
+        show_locals=show_locals,
     )
     for renderable in print_before:
         rich_console.print(renderable)
