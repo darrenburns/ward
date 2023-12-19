@@ -1,5 +1,4 @@
 import ast
-import inspect
 import sys
 import textwrap
 import types
@@ -93,7 +92,7 @@ def rewrite_assertions_in_tests(tests: Iterable[Test]) -> List[Test]:
 
 def rewrite_assertion(test: Test) -> Test:
     # Get the old code and code object
-    code_lines, line_no = inspect.getsourcelines(test.fn)
+    code_lines, line_no = test.source_lines
 
     code = "".join(code_lines)
     indents = textwrap._leading_whitespace_re.findall(code)

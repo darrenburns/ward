@@ -1,6 +1,5 @@
 import importlib
 import importlib.util
-import inspect
 import os
 import pkgutil
 import sys
@@ -201,12 +200,13 @@ def filter_tests(
     filtered_tests = []
     for test in tests:
         description = test.description or ""
-
+        lines, line_num = test.source_lines
+        source = "".join(lines)
         matches_query = (
             not query
             or query in description
             or query in f"{test.module_name}."
-            or query in inspect.getsource(test.fn)
+            or query in source
             or query in test.qualified_name
         )
 
@@ -229,10 +229,12 @@ def filter_fixtures(
 
     filtered_fixtures = []
     for fixture in fixtures:
+        lines, line_num = fixture.source_lines
+        fixture_source_code = "".join(lines)
         matches_query = (
             not query
             or query in f"{fixture.module_name}."
-            or query in inspect.getsource(fixture.fn)
+            or query in fixture_source_code
             or query in fixture.qualified_name
         )
 

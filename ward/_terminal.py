@@ -1,5 +1,4 @@
 import abc
-import inspect
 import itertools
 import math
 import os
@@ -797,7 +796,7 @@ class TestResultWriter(TestResultWriterBase):
     def get_source(
         self, err: TestAssertionFailure, test_result: TestResult
     ) -> RenderableType:
-        src_lines, line_num = inspect.getsourcelines(test_result.test.fn)
+        src_lines, line_num = test_result.test.source_lines
         src = Syntax(
             "".join(src_lines),
             "python",

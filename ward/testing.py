@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import collections
 import functools
@@ -167,6 +169,7 @@ class Test:
     ward_meta: CollectionMetadata = field(default_factory=CollectionMetadata)
     timer: Optional["_Timer"] = None
     tags: List[str] = field(default_factory=list)
+    _cached_source_lines: tuple[list[str], int] | None = None
 
     def __hash__(self):
         return hash((self.__class__, self.id))
@@ -269,12 +272,19 @@ class Test:
         return inspect.iscoroutinefunction(inspect.unwrap(self.fn))
 
     @property
+    def source_lines(self) -> tuple[list[str], int]:
+        """Retrieve the (possibly cached) result of `inspect.getsourcelines`."""
+        if self._cached_source_lines is None:
+            self._cached_source_lines = inspect.getsourcelines(self.fn)
+        return self._cached_source_lines
+
+    @property
     def line_number(self) -> int:
         """
         The line number the test is defined on. Corresponds to the line the first decorator wrapping the
             test appears on.
         """
-        return inspect.getsourcelines(self.fn)[1]
+        return self.source_lines[1]
 
     @property
     def has_deps(self) -> bool:

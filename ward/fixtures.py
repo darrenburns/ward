@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import inspect
 from contextlib import ExitStack, redirect_stderr, redirect_stdout, suppress
@@ -26,6 +28,7 @@ class Fixture:
     fn: Callable
     gen: Union[Generator, AsyncGenerator, None] = None
     resolved_val: Any = None
+    _cached_source_lines: tuple[list[str], int] | None = None
 
     def __hash__(self):
         return hash(self._id)
@@ -77,11 +80,18 @@ class Fixture:
         return f"{self.module_name}.{name}"
 
     @property
+    def source_lines(self) -> tuple[list[str], int]:
+        """Retrieve the (possibly cached) result of `inspect.getsourcelines`."""
+        if self._cached_source_lines is None:
+            self._cached_source_lines = inspect.getsourcelines(self.fn)
+        return self._cached_source_lines
+
+    @property
     def line_number(self) -> int:
         """
         The line number that the fixture is defined on.
         """
-        return inspect.getsourcelines(self.fn)[1]
+        return self.source_lines[1]
 
     @property
     def is_generator_fixture(self):
