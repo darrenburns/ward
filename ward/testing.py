@@ -18,7 +18,9 @@ from typing import (
     List,
     Mapping,
     Optional,
+    TypeVar,
     Union,
+    overload,
 )
 
 from ward._errors import FixtureError, ParameterisationError
@@ -53,7 +55,10 @@ class ParamMeta:
     group_size: int = 1
 
 
-def each(*args):
+_T = TypeVar("_T")
+
+
+def each(*args: _T) -> _T:
     """
     Used to parameterise tests.
 
@@ -61,15 +66,34 @@ def each(*args):
 
     See documentation for examples.
     """
-    return Each(args)
+    return Each(args)  # type: ignore[return-value]
+
+
+_FuncT = TypeVar("_FuncT", bound=Callable[..., Any])
+
+
+@overload
+def skip(func_or_reason: _FuncT) -> _FuncT:
+    ...
+
+
+@overload
+def skip(
+    func_or_reason: Optional[str] = None,
+    /,
+    *,
+    reason: Optional[str] = None,
+    when: Union[bool, Callable[..., bool]] = True,
+) -> Callable[[_FuncT], _FuncT]:
+    ...
 
 
 def skip(
-    func_or_reason: Union[str, Callable, None] = None,
+    func_or_reason: _FuncT | Optional[str] = None,
     *,
     reason: Optional[str] = None,
-    when: Union[bool, Callable] = True,
-):
+    when: Union[bool, Callable[..., bool]] = True,
+) -> _FuncT | Callable[[_FuncT], _FuncT]:
     """
     Decorator which can be used to optionally skip tests.
 
@@ -99,12 +123,28 @@ def skip(
     return wrapper
 
 
+@overload
+def xfail(func_or_reason: _FuncT) -> _FuncT:
+    ...
+
+
+@overload
 def xfail(
-    func_or_reason: Union[str, Callable, None] = None,
+    func_or_reason: Optional[str] = None,
+    /,
     *,
     reason: Optional[str] = None,
-    when: Union[bool, Callable] = True,
-):
+    when: Union[bool, Callable[..., bool]] = True,
+) -> Callable[[_FuncT], _FuncT]:
+    ...
+
+
+def xfail(
+    func_or_reason: _FuncT | Optional[str] = None,
+    *,
+    reason: Optional[str] = None,
+    when: Union[bool, Callable[..., bool]] = True,
+) -> _FuncT | Callable[[_FuncT], _FuncT]:
     """
     Decorator that can be used to mark a test as "expected to fail".
 
@@ -379,7 +419,9 @@ class Test:
         return self.description
 
 
-def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
+def test(
+    description: str, *args: Any, tags: Optional[List[str]] = None, **kwargs: Any
+) -> Callable[[_FuncT], _FuncT]:
     """
     Decorator used to indicate that the function it wraps should be collected by Ward.
 
