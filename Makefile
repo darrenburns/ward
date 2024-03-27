@@ -1,4 +1,4 @@
-none: clean
+none:clean
 
 help:
 	@echo "make test	test Ward"
@@ -15,13 +15,17 @@ help:
 setup:
 	poetry install
 	poetry run pre-commit install
-.PHONY: requirements
+.PHONY: setup
 
 format:
 	poetry run pre-commit run --all
 .PHONY: format
 
-lint: format
+lint-make:
+	python scripts/lint-make
+.PHONY: lint-make
+
+lint: format lint-make
 .PHONY: lint
 
 test:
