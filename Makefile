@@ -1,4 +1,11 @@
-none: clean
+SHELL := bash
+.SHELLFLAGS := -eux -o pipefail -c
+.DEFAULT_GOAL := setup
+.DELETE_ON_ERROR:  # If a recipe to build a file exits with an error, delete the file.
+.SUFFIXES:  # Remove the default suffixes which are for compiling C projects.
+.NOTPARALLEL:  # Disable use of parallel subprocesses.
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
 
 help:
 	@echo "make test	test Ward"
@@ -15,13 +22,17 @@ help:
 setup:
 	poetry install
 	poetry run pre-commit install
-.PHONY: requirements
+.PHONY: setup
 
 format:
 	poetry run pre-commit run --all
 .PHONY: format
 
-lint: format
+lint-make:
+	python scripts/lint-make
+.PHONY: lint-make
+
+lint: format lint-make
 .PHONY: lint
 
 test:

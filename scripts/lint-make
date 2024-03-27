@@ -1,0 +1,19 @@
+import sys
+
+with open('Makefile', 'rt') as makefile:
+    current_target = None
+    exit_code = 0
+    for line in makefile:
+        words = line.split()
+        if not words:
+            continue
+        elif words[0] == '.PHONY:':
+            phony_target = words[1]
+            if current_target != phony_target:
+                print(f'Error: make target has wrong phony.  Found {phony_target!r}, expected {current_target!r}.')
+                exit_code = 1
+            current_target = None
+        elif words[0].endswith(':'):
+            current_target = words[0][:-1]
+
+sys.exit(exit_code)
