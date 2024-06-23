@@ -3,6 +3,7 @@ import inspect
 import sys
 import textwrap
 import types
+from pathlib import Path
 from typing import Iterable, List
 
 from ward.expect import (
@@ -87,57 +88,11 @@ class RewriteAssert(ast.NodeTransformer):
         return node
 
 
-def rewrite_assertions_in_tests(tests: Iterable[Test]) -> List[Test]:
-    return [rewrite_assertion(test) for test in tests]
-
-
-def rewrite_assertion(test: Test) -> Test:
-    # Get the old code and code object
-    code_lines, line_no = inspect.getsourcelines(test.fn)
-
-    code = "".join(code_lines)
-    indents = textwrap._leading_whitespace_re.findall(code)
-    col_offset = len(indents[0]) if len(indents) > 0 else 0
-    code = textwrap.dedent(code)
-    code_obj = test.fn.__code__
-
-    # Rewrite the AST of the code
-    tree = ast.parse(code)
-    ast.increment_lineno(tree, line_no - 1)
-
+def exec_module(module: types.ModuleType):
+    filename = module.__spec__.origin
+    code = module.__loader__.get_source(module.__name__)
+    tree = ast.parse(code, filename=filename)
     new_tree = RewriteAssert().visit(tree)
-
-    if sys.version_info[:2] < (3, 11):
-        # We dedented the code so that it was a valid tree, now re-apply the indent
-        for child in ast.walk(new_tree):
-            if hasattr(child, "col_offset"):
-                child.col_offset = getattr(child, "col_offset", 0) + col_offset
-
-    # Reconstruct the test function
-    new_mod_code_obj = compile(new_tree, code_obj.co_filename, "exec")
-
-    # TODO: This probably isn't correct for nested closures
-    clo_glob = {}
-    if test.fn.__closure__:
-        clo_glob = test.fn.__closure__[0].cell_contents.__globals__
-
-    # Look through the new module,
-    # find the code object with the same name as the original code object,
-    # and build a new function with the injected assert functions added to the global namespace.
-    # Filtering on the code object name prevents finding other kinds of code objects,
-    # like lambdas stored directly in test function arguments.
-    for const in new_mod_code_obj.co_consts:
-        if isinstance(const, types.CodeType) and const.co_name == code_obj.co_name:
-            new_test_func = types.FunctionType(
-                const,
-                {**assert_func_namespace, **test.fn.__globals__, **clo_glob},
-                test.fn.__name__,
-                test.fn.__defaults__,
-            )
-            new_test_func.ward_meta = test.fn.ward_meta
-            return Test(
-                **{k: vars(test)[k] for k in vars(test) if k != "fn"},
-                fn=new_test_func,
-            )
-
-    return test
+    code = compile(new_tree, filename, "exec", dont_inherit=True)
+    module.__dict__.update(assert_func_namespace)
+    exec(code, module.__dict__)
