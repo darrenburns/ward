@@ -8,6 +8,9 @@
 
 _Ward_ is a Python testing framework with a focus on productivity and readability. It gives you the tools you need to write **well-documented** and **scalable** tests.
 
+> [!IMPORTANT]  
+> I am no longer actively maintaining this project.
+
 <img alt="Ward typical test output example" src="https://user-images.githubusercontent.com/5740731/118399779-a795ff00-b656-11eb-8fca-4ceb03151f3e.png">
 
 ## Features
