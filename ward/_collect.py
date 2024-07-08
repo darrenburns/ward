@@ -15,6 +15,7 @@ from typing import Callable, Iterable, List, Optional, Set, Tuple
 from cucumber_tag_expressions.model import Expression
 
 from ward._errors import CollectionError
+from ward._rewrite import exec_module
 from ward._testing import COLLECTED_TESTS, is_test_module_name
 from ward._utilities import get_absolute_path
 from ward.fixtures import Fixture
@@ -149,7 +150,7 @@ def load_modules(modules: Iterable[pkgutil.ModuleInfo]) -> List[ModuleType]:
             if pkg_data.pkg_root not in sys.path:
                 sys.path.append(str(pkg_data.pkg_root))
             m.__package__ = pkg_data.pkg_name
-            m.__loader__.exec_module(m)
+            exec_module(m)
             loaded_modules.append(m)
 
     return loaded_modules

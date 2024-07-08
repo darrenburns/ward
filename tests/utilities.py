@@ -31,6 +31,10 @@ def testable_test(func):
 testable_test.path = FORCE_TEST_PATH  # type: ignore[attr-defined]
 
 
+def failing_assertion():
+    assert 1 == 2
+
+
 @fixture
 def dummy_fixture():
     """

@@ -22,7 +22,6 @@ from ward._collect import (
 )
 from ward._config import set_defaults_from_config
 from ward._debug import init_breakpointhooks
-from ward._rewrite import rewrite_assertions_in_tests
 from ward._suite import Suite
 from ward._terminal import (
     SessionPrelude,
@@ -204,11 +203,9 @@ def test(
     if config.order == "random":
         shuffle(filtered_tests)
 
-    tests = rewrite_assertions_in_tests(filtered_tests)
-
     time_to_collect_secs = default_timer() - start_run
 
-    suite = Suite(tests=tests)
+    suite = Suite(tests=filtered_tests)
     test_results = suite.generate_test_runs(
         dry_run=dry_run, capture_output=capture_output
     )

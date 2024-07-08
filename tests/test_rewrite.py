@@ -1,6 +1,6 @@
 import ast
 
-from tests.utilities import testable_test
+from tests.utilities import testable_test, failing_assertion
 from ward import fixture, test
 from ward._rewrite import (
     RewriteAssert,
@@ -8,8 +8,8 @@ from ward._rewrite import (
     is_binary_comparison,
     is_comparison_type,
     make_call_node,
-    rewrite_assertions_in_tests,
 )
+from ward.expect import TestAssertionFailure, raises
 from ward.testing import Test, each
 
 
@@ -32,37 +32,6 @@ def as_dict(node):
         return d
     else:
         return node
-
-
-@testable_test
-def passing_fn():
-    assert 1 == 1
-
-
-@testable_test
-def failing_fn():
-    assert 1 == 2
-
-
-@fixture
-def passing():
-    yield Test(fn=passing_fn, module_name="m", id="id-pass")
-
-
-@fixture
-def failing():
-    yield Test(fn=failing_fn, module_name="m", id="id-fail")
-
-
-@test("rewrite_assertions_in_tests returns all tests, keeping metadata")
-def _(p=passing, f=failing):
-    in_tests = [p, f]
-    out_tests = rewrite_assertions_in_tests(in_tests)
-
-    def meta(test):
-        return test.description, test.id, test.module_name, test.fn.ward_meta
-
-    assert [meta(test) for test in in_tests] == [meta(test) for test in out_tests]
 
 
 @test("RewriteAssert.visit_Assert doesn't transform `{src}`")
@@ -121,6 +90,33 @@ def _(
     assert out_tree.value.args[1].id == "y"
     assert out_tree.value.args[2].s == ""
 
+@test("This test suite's assertions are themselves rewritten")
+def _():
+    with raises(TestAssertionFailure):
+        assert 1 == 2
+    with raises(TestAssertionFailure):
+        assert 1 != 1
+    with raises(TestAssertionFailure):
+        assert 1 in ()
+    with raises(TestAssertionFailure):
+        assert 1 not in (1,)
+    with raises(TestAssertionFailure):
+        assert None is Ellipsis
+    with raises(TestAssertionFailure):
+        assert None is not None
+    with raises(TestAssertionFailure):
+        assert 2 < 1
+    with raises(TestAssertionFailure):
+        assert 2 <= 1
+    with raises(TestAssertionFailure):
+        assert 1 > 2
+    with raises(TestAssertionFailure):
+        assert 1 >= 2
+
+@test("Non-test modules' assertions aren't rewritten")
+def _():
+    with raises(AssertionError):
+        failing_assertion()
 
 @test("RewriteAssert.visit_Assert transforms `{src}`")
 def _(src="assert 1 == 2, 'msg'"):
@@ -210,19 +206,3 @@ if True:
         @test("test with indentation level of 2")
         def _():
             assert 2 + 3 == 5
-
-
-@test("rewriter finds correct function when there is a lambda in an each")
-def _():
-    @testable_test
-    def _(x=each(lambda: 5)):
-        assert x == 5
-
-    t = Test(fn=_, module_name="m")
-
-    rewritten = rewrite_assertions_in_tests([t])[0]
-
-    # https://github.com/darrenburns/ward/issues/169
-    # The assertion rewriter thought the lambda function stored in co_consts was the test function,
-    # so it was rebuilding the test function using the lambda as the test instead of the original function.
-    assert rewritten.fn.__code__.co_name != "<lambda>"
