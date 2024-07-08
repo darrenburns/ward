@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import ModuleType
 from typing import Union
 from unittest.mock import Mock
 
@@ -88,6 +89,7 @@ def prelude():
         python_impl="CPython",
         python_version="4.2",
         ward_version="1.0.0dev1",
+        list_of_plugins=[],
     )
 
 
@@ -108,6 +110,14 @@ def _(prelude: SessionPrelude = prelude):
     render_iter = prelude.__rich_console__(None, None)  # type: ignore[arg-type]
     next(render_iter)  # type: ignore[call-overload]
     assert next(render_iter) == "Loaded config from [b]pyproject.toml[/b]."  # type: ignore[call-overload]
+
+
+@test("SessionPrelude displays list of plugins discovered when it is supplied")
+def _(prelude: SessionPrelude = prelude):
+    prelude.list_of_plugins = [("ward", ModuleType("ward"))]
+    render_iter = prelude.__rich_console__(None, None)
+    next(render_iter)
+    assert next(render_iter) == "The list of plugins discovered: ['ward']"
 
 
 @fixture
