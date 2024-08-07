@@ -93,7 +93,10 @@ theme = Theme(
         "usedby": "#9285F6",
     }
 )
-rich_console = Console(theme=theme, highlighter=NullHighlighter())
+in_ci_supporting_color = os.environ.get("GITHUB_ACTIONS") == "true"
+rich_console = Console(
+    theme=theme, highlighter=NullHighlighter(), force_terminal=in_ci_supporting_color
+)
 
 
 def format_test_id(test_result: TestResult) -> str:
