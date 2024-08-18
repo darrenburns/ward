@@ -1,6 +1,8 @@
+import asyncio
 import collections
 import inspect
 from pathlib import Path
+import sys
 from typing import Any, Callable, Dict, Hashable, Iterable, List, Optional, TypeVar
 
 
@@ -43,3 +45,15 @@ def group_by(items: Iterable[T], key: Callable[[T], H]) -> Dict[H, List[T]]:
     for item in items:
         groups[key(item)].append(item)
     return dict(groups)
+
+def get_current_event_loop() -> asyncio.AbstractEventLoop:
+    if sys.version_info < (3, 10):
+        loop = asyncio.get_event_loop()
+    else:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+
+        asyncio.set_event_loop(loop)
+    return loop

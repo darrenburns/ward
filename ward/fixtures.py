@@ -1,4 +1,3 @@
-import asyncio
 import inspect
 from contextlib import ExitStack, redirect_stderr, redirect_stdout, suppress
 from dataclasses import dataclass
@@ -7,6 +6,7 @@ from io import StringIO
 from pathlib import Path
 from typing import Any, AsyncGenerator, Callable, Generator, List, Optional, Union, cast
 
+from ward._utilities import get_current_event_loop
 from ward.models import CollectionMetadata, Scope
 
 __all__ = ["fixture", "using", "Fixture", "TeardownResult"]
@@ -137,7 +137,7 @@ class Fixture:
                     next(cast(Generator, self.gen))
                 elif self.is_async_generator_fixture and self.gen:
                     awaitable = cast(AsyncGenerator, self.gen).__anext__()
-                    asyncio.run(awaitable)
+                    get_current_event_loop().run_until_complete(awaitable)
         except Exception as e:
             # Note that with StopIterations being suppressed, we have an issue
             # that if a StopIteration occurs in fixture teardown code, it will

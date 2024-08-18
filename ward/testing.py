@@ -1,4 +1,3 @@
-import asyncio
 import collections
 import functools
 import inspect
@@ -31,7 +30,7 @@ from ward._testing import (
     _Timer,
     is_test_module_name,
 )
-from ward._utilities import get_absolute_path
+from ward._utilities import get_absolute_path, get_current_event_loop
 from ward.fixtures import Fixture
 from ward.models import CollectionMetadata, Marker, Scope, SkipMarker, XfailMarker
 
@@ -197,7 +196,7 @@ class Test:
                 self.format_description(resolved_args)
                 if self.is_async_test:
                     coro = self.fn(**resolved_args)
-                    asyncio.run(coro)
+                    get_current_event_loop().run_until_complete(coro)
                 else:
                     self.fn(**resolved_args)
             except FixtureError as e:
@@ -628,9 +627,9 @@ class TestArgumentResolver:
             elif fixture.is_async_generator_fixture:
                 fixture.gen = arg(**args_to_inject)
                 awaitable = fixture.gen.__anext__()  # type: ignore[union-attr]
-                fixture.resolved_val = asyncio.run(awaitable)
+                fixture.resolved_val = get_current_event_loop().run_until_complete(awaitable)
             elif fixture.is_coroutine_fixture:
-                fixture.resolved_val = asyncio.run(arg(**args_to_inject))
+                fixture.resolved_val = get_current_event_loop().run_until_complete(arg(**args_to_inject))
             else:
                 fixture.resolved_val = arg(**args_to_inject)
         except (Exception, SystemExit) as e:
