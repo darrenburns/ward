@@ -299,6 +299,18 @@ def writer(console=mock_rich_console):
     )
 
 
+@fixture
+def writer_hiding_locals(console=mock_rich_console):
+    yield TestResultWriter(
+        console,
+        Suite([]),
+        TestOutputStyle.LIVE,
+        [TestProgressStyle.INLINE],
+        None,
+        show_locals=False,
+    )
+
+
 for left, right in [
     ("abc", "abd"),
     (123, 124),
@@ -398,3 +410,46 @@ def _(console=mock_rich_console):
     result = result_writer.output_all_test_results(_ for _ in ())
     assert result == []
     assert not console.print.called
+
+
+@test("TestResultWriter.print_traceback with stacktrace showing locals")
+def _(writer=writer):
+    def internal_func3(**params):
+        return 1 / 0
+
+    def internal_func2(name):
+        age = 18
+        internal_func3(name=name, age=age)
+
+    def internal_func1():
+        name = "John"
+        return internal_func2(name=name)
+
+    try:
+        internal_func1()
+    except ZeroDivisionError as ex:
+        writer.print_traceback(ex)
+
+
+@test("TestResultWriter.print_traceback with stacktrace and hiding locals")
+def _(writer=writer_hiding_locals):
+    def internal_func3(**params):
+        return 1 / 0
+
+    def internal_func2(name):
+        age = 18
+        internal_func3(name=name, age=age)
+
+    def internal_func1():
+        name = "John"
+        return internal_func2(name=name)
+
+    try:
+        internal_func1()
+    except ZeroDivisionError as ex:
+        writer.print_traceback(ex)
+
+
+@test("TestResultWriter.print_traceback without stacktrace")
+def _(writer=writer):
+    writer.print_traceback(Exception("Some error"))

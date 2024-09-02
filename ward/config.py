@@ -23,6 +23,7 @@ class Config:
     capture_output: bool
     show_slowest: int
     show_diff_symbols: bool
+    show_locals: bool
     dry_run: bool
     hook_module: Tuple[str]
     progress_style: Tuple[str]
